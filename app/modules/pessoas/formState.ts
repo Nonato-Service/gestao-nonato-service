@@ -1,6 +1,14 @@
 /** Formulário de gestores/técnicos — estado vazio e mapeamento. */
 
-import type { Gestor, GestorFormState, Tecnico, TecnicoFormState, TecnicoType } from './tipos'
+import type {
+  Gestor,
+  GestorFormState,
+  Tecnico,
+  TecnicoFormState,
+  TecnicoType,
+  TipoGestor,
+  TipoGestorFormState,
+} from './tipos'
 
 export function emptyGestorForm(defaultArea = 'assistencia-tecnica'): GestorFormState {
   return { name: '', email: '', phone: '', address: '', area: defaultArea, photo: '' }
@@ -8,6 +16,10 @@ export function emptyGestorForm(defaultArea = 'assistencia-tecnica'): GestorForm
 
 export function emptyTecnicoForm(type: TecnicoType = 'internal'): TecnicoFormState {
   return { name: '', email: '', phone: '', address: '', type, photo: '' }
+}
+
+export function emptyTipoGestorForm(ordem = 0): TipoGestorFormState {
+  return { id: '', nome: '', cor: '#00c853', icone: '👤', ordem }
 }
 
 export function gestorToForm(g: Gestor): GestorFormState {
@@ -29,6 +41,16 @@ export function tecnicoToForm(t: Tecnico): TecnicoFormState {
     address: t.address,
     type: t.type,
     photo: t.photo || '',
+  }
+}
+
+export function tipoGestorToForm(tipo: TipoGestor): TipoGestorFormState {
+  return {
+    id: tipo.id,
+    nome: tipo.nome,
+    cor: tipo.cor,
+    icone: tipo.icone,
+    ordem: tipo.ordem,
   }
 }
 

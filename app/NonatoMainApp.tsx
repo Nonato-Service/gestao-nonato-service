@@ -628,7 +628,7 @@ import type {
   TecnicoFormState,
   TipoGestorFormState,
 } from './modules/pessoas'
-import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm, emptyTecnicoForm, tecnicoToForm, isTecnicoFormValid, createTecnicoFromForm, updateTecnicoFromForm } from './modules/pessoas'
+import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm, emptyTecnicoForm, tecnicoToForm, isTecnicoFormValid, createTecnicoFromForm, updateTecnicoFromForm, emptyTipoGestorForm, tipoGestorToForm, isTipoGestorFormValid, isTipoGestorEdicaoExistente, tipoGestorIdDuplicado, proximaOrdemTipoGestor, createTipoGestorFromForm, updateTipoGestorFromForm, remapGestoresAreaTipoGestor } from './modules/pessoas'
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
 import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
@@ -1437,7 +1437,7 @@ export default function Dashboard() {
     { id: 'armazem', nome: 'Gestor Armazém', cor: '#00c853', icone: '📦', ordem: 3 }
   ])
   const [showGerenciarTiposGestores, setShowGerenciarTiposGestores] = useState(false)
-  const [tipoGestorForm, setTipoGestorForm] = useState<TipoGestor>({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: 0 })
+  const [tipoGestorForm, setTipoGestorForm] = useState<TipoGestorFormState>(() => emptyTipoGestorForm(0))
   const [editingTipoGestor, setEditingTipoGestor] = useState<TipoGestor | null>(null)
   const [showGestorForm, setShowGestorForm] = useState(false)
   const [editingGestor, setEditingGestor] = useState<Gestor | null>(null)
@@ -11410,14 +11410,13 @@ export default function Dashboard() {
 
   // Funções para gerenciar tipos de gestores
   const handleAddTipoGestor = () => {
-    setEditingTipoGestor({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: 0 })
-    const novaOrdem = tiposGestores.length > 0 ? Math.max(...tiposGestores.map(t => t.ordem)) + 1 : 1
-    setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: novaOrdem })
+    setEditingTipoGestor(emptyTipoGestorForm(0))
+    setTipoGestorForm(emptyTipoGestorForm(proximaOrdemTipoGestor(tiposGestores)))
   }
 
   const handleEditTipoGestor = (tipo: TipoGestor) => {
     setEditingTipoGestor(tipo)
-    setTipoGestorForm({ ...tipo })
+    setTipoGestorForm(tipoGestorToForm(tipo))
     setShowGerenciarTiposGestores(true)
   }
 
@@ -11439,26 +11438,27 @@ export default function Dashboard() {
   const handleSaveTipoGestor = (formOverride?: TipoGestorFormState, editingOverride?: TipoGestor | null): boolean => {
     const form = formOverride ?? tipoGestorForm
     const editing = editingOverride !== undefined ? editingOverride : editingTipoGestor
-    if (!form.nome || !form.id) {
+    if (!isTipoGestorFormValid(form)) {
       alert('Preencha o nome e o ID do tipo')
       return false
     }
 
-    const isEditingExisting = Boolean(editing?.id && tiposGestores.some((t) => t.id === editing.id))
+    const isEditingExisting = isTipoGestorEdicaoExistente(editing, tiposGestores)
 
-    if (!isEditingExisting && tiposGestores.some((t) => t.id === form.id)) {
+    if (!isEditingExisting && tipoGestorIdDuplicado(form.id, tiposGestores)) {
       alert('Já existe um tipo com este ID. Escolha outro nome.')
       return false
     }
 
-    const savedTipoGestor: TipoGestor = { ...form }
+    const savedTipoGestor: TipoGestor =
+      isEditingExisting && editing
+        ? updateTipoGestorFromForm(editing, form)
+        : createTipoGestorFromForm(form)
     let updatedTipos: TipoGestor[]
     if (isEditingExisting && editing) {
       updatedTipos = tiposGestores.map((t) => (t.id === editing.id ? savedTipoGestor : t))
       if (editing.id !== form.id) {
-        const updatedGestores = gestores.map((g) =>
-          g.area === editing.id ? { ...g, area: form.id } : g
-        )
+        const updatedGestores = remapGestoresAreaTipoGestor(gestores, editing.id, form.id)
         setGestores(updatedGestores)
         void saveData('nonato-gestores', updatedGestores)
       }
@@ -11469,8 +11469,7 @@ export default function Dashboard() {
     setTiposGestores(updatedTipos)
     void saveData('nonato-tipos-gestores', updatedTipos)
     setEditingTipoGestor(null)
-    const novaOrdem = updatedTipos.length > 0 ? Math.max(...updatedTipos.map((t) => t.ordem)) + 1 : 1
-    setTipoGestorForm({ id: '', nome: '', cor: '#00c853', icone: '👤', ordem: novaOrdem })
+    setTipoGestorForm(emptyTipoGestorForm(proximaOrdemTipoGestor(updatedTipos)))
     alert(isEditingExisting ? 'Tipo de gestor atualizado com sucesso.' : 'Tipo de gestor cadastrado com sucesso.')
     return true
   }

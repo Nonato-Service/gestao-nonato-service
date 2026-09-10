@@ -12,8 +12,10 @@ import {
   type TipoGestorFormState,
   emptyGestorForm,
   emptyTecnicoForm,
+  emptyTipoGestorForm,
   gestorToForm,
   tecnicoToForm,
+  tipoGestorToForm,
 } from '../../lib/pessoaTypes'
 import { PessoaAvatar, PessoaPhotoField } from './PessoaPhotoField'
 import './gestores-tecnicos.css'
@@ -131,13 +133,9 @@ export function GestoresTecnicosPanel({
 
   const [tiposOpen, setTiposOpen] = useState(false)
   const [editingTipo, setEditingTipo] = useState<TipoGestor | null>(null)
-  const [tipoForm, setTipoForm] = useState<TipoGestorFormState>({
-    id: '',
-    nome: '',
-    cor: '#00c853',
-    icone: '👤',
-    ordem: tiposGestores.length + 1,
-  })
+  const [tipoForm, setTipoForm] = useState<TipoGestorFormState>(() =>
+    emptyTipoGestorForm(tiposGestores.length + 1)
+  )
 
   const q = busca.trim().toLowerCase()
 
@@ -668,13 +666,7 @@ export function GestoresTecnicosPanel({
                   onClick={() => {
                     if (onSaveTipoGestor(tipoForm, editingTipo)) {
                       setEditingTipo(null)
-                      setTipoForm({
-                        id: '',
-                        nome: '',
-                        cor: '#00c853',
-                        icone: '👤',
-                        ordem: tiposGestores.length + 1,
-                      })
+                      setTipoForm(emptyTipoGestorForm(tiposGestores.length + 1))
                     }
                   }}
                 >
@@ -694,7 +686,7 @@ export function GestoresTecnicosPanel({
                         className="gt-btn gt-btn--ghost gt-btn--sm"
                         onClick={() => {
                           setEditingTipo(tipo)
-                          setTipoForm({ ...tipo })
+                          setTipoForm(tipoGestorToForm(tipo))
                         }}
                       >
                         {L.edit}

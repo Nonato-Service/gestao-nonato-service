@@ -2148,6 +2148,28 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia Tecnico no sítio')
   }
+  if (
+    idx.includes('isTipoGestorFormValid') &&
+    idx.includes('createTipoGestorFromForm') &&
+    idx.includes('updateTipoGestorFromForm') &&
+    idx.includes('tipoGestorToForm') &&
+    exists('app/modules/pessoas/tipoGestorFromForm.ts')
+  ) {
+    ok('módulo pessoas exporta TipoGestor form/fromForm')
+  } else {
+    fail('módulo pessoas sem TipoGestor form/fromForm')
+  }
+  if (
+    nma.includes('isTipoGestorFormValid') &&
+    nma.includes('createTipoGestorFromForm') &&
+    nma.includes('updateTipoGestorFromForm') &&
+    nma.includes('tipoGestorToForm') &&
+    nma.includes('remapGestoresAreaTipoGestor')
+  ) {
+    ok('NonatoMainApp usa TipoGestor fromForm do módulo pessoas')
+  } else {
+    fail('NonatoMainApp ainda mapeia TipoGestor no sítio')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/pessoaTypes.ts'), 'utf8')
   if (libTypes.includes("from '../modules/pessoas'") || libTypes.includes('from "../modules/pessoas"')) {
     ok('lib/pessoaTypes re-exporta app/modules/pessoas')

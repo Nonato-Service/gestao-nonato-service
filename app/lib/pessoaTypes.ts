@@ -12,7 +12,9 @@ export type {
 export {
   emptyGestorForm,
   emptyTecnicoForm,
+  emptyTipoGestorForm,
   gestorToForm,
   tecnicoToForm,
+  tipoGestorToForm,
   iniciaisPessoa,
 } from '../modules/pessoas'

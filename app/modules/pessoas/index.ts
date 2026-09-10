@@ -13,8 +13,10 @@ export type {
 export {
   emptyGestorForm,
   emptyTecnicoForm,
+  emptyTipoGestorForm,
   gestorToForm,
   tecnicoToForm,
+  tipoGestorToForm,
   iniciaisPessoa,
 } from './formState'
 
@@ -29,6 +31,16 @@ export {
   createTecnicoFromForm,
   updateTecnicoFromForm,
 } from './tecnicoFromForm'
+
+export {
+  isTipoGestorFormValid,
+  isTipoGestorEdicaoExistente,
+  tipoGestorIdDuplicado,
+  proximaOrdemTipoGestor,
+  createTipoGestorFromForm,
+  updateTipoGestorFromForm,
+  remapGestoresAreaTipoGestor,
+} from './tipoGestorFromForm'
 
 export type { GestorClasse, TecnicoClasse, TecnicoTipoUi } from './classes'
 export { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './classes'
