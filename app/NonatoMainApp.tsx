@@ -788,6 +788,12 @@ import {
   normalizeFechamentoIvaPorRelatorioMap,
   normalizeFechamentoGrupoPorRelatorioMap,
   mesclarComprovantesEmItensFechamento,
+  emptyServicoCadastroFormState,
+  servicoCadastroToFormState,
+  isServicoCadastroFormValid,
+  resolverGrupoIdServicoCadastro,
+  createServicoCadastroFromForm,
+  updateServicoCadastroFromForm,
 } from './modules/fechamento'
 import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
@@ -5603,15 +5609,7 @@ export default function Dashboard() {
     tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
     categoria: 'servico' | 'despesa'
   } | null>(null)
-  const [servicoForm, setServicoForm] = useState({
-    cod: '',
-    nome: '',
-    descricao: '',
-    valor: 0,
-    grupoId: '',
-    tipoCobranca: 'unidade' as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras',
-    categoria: 'servico' as 'servico' | 'despesa'
-  })
+  const [servicoForm, setServicoForm] = useState(() => emptyServicoCadastroFormState())
   const [servicoValorInput, setServicoValorInput] = useState('')
 
   /** Repõe valor das diárias no fechamento quando o cadastro carrega (serviço antigo com valor 0, ex. DDH). */
@@ -12680,15 +12678,10 @@ export default function Dashboard() {
   const handleAddServico = () => {
     setEditingServico(null)
     setServicoValorInput('')
-    setServicoForm({
-      cod: '',
-      nome: '',
-      descricao: '',
-      valor: 0,
+    setServicoForm(emptyServicoCadastroFormState({
       grupoId: servicoGrupoIdPadrao(),
       tipoCobranca: 'unidade',
-      categoria: 'servico'
-    })
+    }))
     setShowServicoForm(true)
   }
 
@@ -12707,15 +12700,13 @@ export default function Dashboard() {
     }
     setEditingServico(null)
     setServicoValorInput('')
-    setServicoForm({
+    setServicoForm(emptyServicoCadastroFormState({
       cod: 'HTT',
       nome: 'Hora técnica trabalhada',
       descricao: 'HORA TECNICA TRABALHADA',
-      valor: 0,
       grupoId: gid,
       tipoCobranca: 'hora',
-      categoria: 'servico',
-    })
+    }))
     setShowServicoForm(true)
   }
 
@@ -12724,13 +12715,8 @@ export default function Dashboard() {
     setEditingServico({ ...servico, valor: valorN })
     setServicoValorInput(servicoValorToInputString(valorN))
     setServicoForm({
-      cod: servico.cod || '',
-      nome: servico.nome,
-      descricao: servico.descricao || '',
-      valor: valorN,
+      ...servicoCadastroToFormState({ ...servico, valor: valorN }),
       grupoId: servico.grupoId || servicoGrupoIdPadrao(),
-      tipoCobranca: servico.tipoCobranca,
-      categoria: servico.categoria
     })
     setShowServicoForm(true)
   }
@@ -12749,48 +12735,30 @@ export default function Dashboard() {
     const form = fromDraft && payload.form ? payload.form : servicoForm
     const valorRaw = fromDraft && typeof payload.valorInput === 'string' ? payload.valorInput : servicoValorInput
     const valor = parseServicoValorInput(valorRaw)
-    if (!String(form?.nome || '').trim() || valor < 0 || Number.isNaN(valor)) {
+    if (!isServicoCadastroFormValid(form, valor)) {
       alert((t as any).preenchaNomeValor || 'Preencha o nome e um valor válido (zero ou maior) para o serviço!')
       return
     }
 
     createAutoBackupBeforeOperation()
 
-    const idsG = new Set((servicoGrupos || []).filter((g) => g && typeof g.id === 'string').map((g) => g.id))
-    const grupoId =
-      typeof form.grupoId === 'string' && idsG.has(form.grupoId)
-        ? form.grupoId
-        : (ordenarServicoGrupos(servicoGrupos)[0]?.id ?? DEFAULT_SERVICO_GRUPO_ID)
+    const grupoId = resolverGrupoIdServicoCadastro(form.grupoId, servicoGrupos)
 
     let updatedServicos: typeof servicos
     let savedServico: typeof servicos[number]
     if (editingServico) {
-      savedServico = {
-        ...editingServico,
-        grupoId,
-        cod: form.cod || undefined,
-        nome: form.nome,
-        descricao: form.descricao || undefined,
-        valor,
-        tipoCobranca: form.tipoCobranca,
-        categoria: form.categoria
-      }
+      savedServico = updateServicoCadastroFromForm(editingServico, form, { grupoId, valor })
       updatedServicos = servicos.map(s =>
         s && s.id === editingServico.id
           ? savedServico
           : s
       ).filter(Boolean) as typeof servicos
     } else {
-      const newServico = {
+      const newServico = createServicoCadastroFromForm(form, {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         grupoId,
-        cod: form.cod || undefined,
-        nome: form.nome,
-        descricao: form.descricao || undefined,
         valor,
-        tipoCobranca: form.tipoCobranca,
-        categoria: form.categoria
-      }
+      })
       savedServico = newServico
       updatedServicos = [...servicos.filter(Boolean), newServico]
     }
@@ -12804,15 +12772,7 @@ export default function Dashboard() {
       return
     }
 
-    setServicoForm({
-      cod: savedServico.cod || '',
-      nome: savedServico.nome,
-      descricao: savedServico.descricao || '',
-      valor: savedServico.valor,
-      grupoId: savedServico.grupoId,
-      tipoCobranca: savedServico.tipoCobranca,
-      categoria: savedServico.categoria
-    })
+    setServicoForm(servicoCadastroToFormState(savedServico))
     setServicoValorInput(servicoValorToInputString(savedServico.valor))
     setEditingServico(savedServico)
     alert((t as any).servicoSalvo || 'Serviço salvo com sucesso!')
@@ -13316,29 +13276,19 @@ export default function Dashboard() {
     setShowServicoForm(false)
     setEditingServico(null)
     setServicoValorInput('')
-    setServicoForm({
-      cod: '',
-      nome: '',
-      descricao: '',
-      valor: 0,
+    setServicoForm(emptyServicoCadastroFormState({
       grupoId: servicoGrupoIdPadrao(),
-      categoria: 'servico',
       tipoCobranca: 'valor-fixo',
-    })
+    }))
   }
 
   const handleAddServicoNoGrupoAtual = () => {
     setEditingServico(null)
     setServicoValorInput('')
-    setServicoForm({
-      cod: '',
-      nome: '',
-      descricao: '',
-      valor: 0,
+    setServicoForm(emptyServicoCadastroFormState({
       grupoId: servicoGrupoSelecionadoId || servicoGrupoIdPadrao(),
       tipoCobranca: 'unidade',
-      categoria: 'servico',
-    })
+    }))
     setShowServicoForm(true)
   }
 
@@ -74527,7 +74477,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, grupoId: servicoGrupoIdPadrao(), categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm(emptyServicoCadastroFormState({ grupoId: servicoGrupoIdPadrao(), tipoCobranca: 'valor-fixo' })); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>

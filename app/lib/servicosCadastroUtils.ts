@@ -2,24 +2,15 @@
 
 import { formatMoneyNumber } from './formatMoney'
 
-export type { ServicoCadastroGrupo } from '../modules/fechamento'
+import type { ServicoCadastroItem } from '../modules/fechamento'
+
+export type { ServicoCadastroGrupo, ServicoCadastroItem } from '../modules/fechamento'
 export {
   DEFAULT_SERVICO_GRUPO_ID,
   ordenarServicoGrupos,
   nomeGrupoTarifaServico,
   migrarServicoLegacyCodNomeDesc,
 } from '../modules/fechamento'
-
-export type ServicoCadastroItem = {
-  id: string
-  grupoId: string
-  cod?: string
-  nome: string
-  descricao?: string
-  valor: number
-  tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
-  categoria: 'servico' | 'despesa'
-}
 
 export const TEMPLATE_SERVICOS_PADRAO: Omit<ServicoCadastroItem, 'id' | 'grupoId'>[] = [
   { cod: 'HTT', nome: 'Hora técnica trabalhada', descricao: 'HORA TECNICA TRABALHADA', valor: 0, tipoCobranca: 'hora', categoria: 'servico' },

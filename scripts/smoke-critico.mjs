@@ -223,6 +223,25 @@ try {
   } else {
     ok('existe app/modules/fechamento/persistMaps.ts')
   }
+  if (
+    idx.includes('isServicoCadastroFormValid') &&
+    idx.includes('createServicoCadastroFromForm') &&
+    idx.includes('updateServicoCadastroFromForm') &&
+    idx.includes('servicoCadastroToFormState') &&
+    exists('app/modules/fechamento/servicoCadastroTipos.ts') &&
+    exists('app/modules/fechamento/servicoCadastroForm.ts') &&
+    exists('app/modules/fechamento/servicoCadastroFromForm.ts')
+  ) {
+    ok('módulo fechamento exporta ServicoCadastro form/fromForm')
+  } else {
+    fail('módulo fechamento sem ServicoCadastro form/fromForm')
+  }
+  const libServicos = fs.readFileSync(path.join(root, 'app/lib/servicosCadastroUtils.ts'), 'utf8')
+  if (libServicos.includes("from '../modules/fechamento'") && libServicos.includes('ServicoCadastroItem')) {
+    ok('servicosCadastroUtils reexporta ServicoCadastroItem do módulo fechamento')
+  } else {
+    fail('servicosCadastroUtils sem reexport do tipo ServicoCadastroItem')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
     ok('NonatoMainApp importa app/modules/fechamento')
@@ -237,6 +256,16 @@ try {
     ok('NonatoMainApp usa persistMaps do módulo fechamento')
   } else {
     fail('NonatoMainApp ainda define keys FECHAMENTO_* localmente / não usa normalize')
+  }
+  if (
+    nma.includes('isServicoCadastroFormValid') &&
+    nma.includes('createServicoCadastroFromForm') &&
+    nma.includes('updateServicoCadastroFromForm') &&
+    nma.includes('servicoCadastroToFormState')
+  ) {
+    ok('NonatoMainApp usa ServicoCadastro fromForm do módulo fechamento')
+  } else {
+    fail('NonatoMainApp ainda mapeia ServicoCadastro no sítio')
   }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)

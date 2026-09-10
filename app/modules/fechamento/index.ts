@@ -38,6 +38,22 @@ export {
   totaisFechamentoLiquidoComIva,
 } from './iva'
 
+export type {
+  ServicoCadastroItem,
+  ServicoCadastroTipoCobranca,
+  ServicoCadastroCategoria,
+} from './servicoCadastroTipos'
+
+export type { ServicoCadastroFormState } from './servicoCadastroForm'
+export { emptyServicoCadastroFormState, servicoCadastroToFormState } from './servicoCadastroForm'
+
+export {
+  isServicoCadastroFormValid,
+  resolverGrupoIdServicoCadastro,
+  createServicoCadastroFromForm,
+  updateServicoCadastroFromForm,
+} from './servicoCadastroFromForm'
+
 export type { ServicoCadastroGrupo } from './grupos'
 export {
   DEFAULT_SERVICO_GRUPO_ID,
