@@ -720,12 +720,19 @@ import {
   calcularFaturaPecasFromForm,
   createFaturaPecasFromForm,
   updateFaturaPecasFromForm,
+  emptyOrdemServicoFormState,
+  ordemServicoToFormState,
+  isOrdemServicoFormValid,
+  calcularTotaisOrdemServico,
+  createOrdemServicoFromForm,
+  updateOrdemServicoFromForm,
   type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
   type OrdemServico,
   type FaturaPecas,
   type FaturaPecasFormState,
+  type OrdemServicoFormState,
   type IVAControle,
   type RelatorioFinanceiro,
   type TipoPeriodoFinanceiro,
@@ -4551,19 +4558,7 @@ export default function Dashboard() {
   const [pedidoAvulsoHubSeed, setPedidoAvulsoHubSeed] = useState<PedidoAvulsoHubSeed | null>(null)
   const [editingOS, setEditingOS] = useState<OrdemServico | null>(null)
   const [editingFatura, setEditingFatura] = useState<FaturaPecas | null>(null)
-  const [osForm, setOSForm] = useState({
-    numeroOS: '',
-    clienteId: '',
-    clienteNome: '',
-    dataAbertura: new Date().toISOString().split('T')[0],
-    status: 'aberta' as 'aberta' | 'em-andamento' | 'concluida' | 'cancelada',
-    valorServico: 0,
-    valorPecas: 0,
-    taxaIVA: 23,
-    observacoes: '',
-    tecnicoResponsavel: '',
-    equipamentoId: ''
-  })
+  const [osForm, setOSForm] = useState<OrdemServicoFormState>(() => emptyOrdemServicoFormState())
   const [faturaForm, setFaturaForm] = useState<FaturaPecasFormState>(() => emptyFaturaPecasFormState())
   
   // Estados para Cliente Prioritário
@@ -14293,36 +14288,22 @@ export default function Dashboard() {
 
   // Funções para Sistema Financeiro
   const handleSaveOS = () => {
-    if (!osForm.numeroOS || !osForm.clienteId) {
+    if (!isOrdemServicoFormValid(osForm)) {
       alert(safeT?.preencherTodosCampos || 'Por favor, preencha todos os campos obrigatórios')
       return
     }
 
     createAutoBackupBeforeOperation()
 
-    const valorSemIVA = osForm.valorServico + osForm.valorPecas
-    const valorIVA = valorSemIVA * (osForm.taxaIVA / 100)
-    const valorTotal = valorSemIVA + valorIVA
+    const totaisOS = calcularTotaisOrdemServico(osForm)
 
     let savedOS: OrdemServico
     if (editingOS) {
-      const updatedOS: OrdemServico = savedOS = {
-        ...editingOS,
-        numeroOS: osForm.numeroOS,
-        clienteId: osForm.clienteId,
-        clienteNome: osForm.clienteNome,
-        dataAbertura: osForm.dataAbertura,
-        status: osForm.status,
-        valorServico: osForm.valorServico,
-        valorPecas: osForm.valorPecas,
-        valorTotal,
-        valorIVA,
-        valorSemIVA,
-        taxaIVA: osForm.taxaIVA,
-        observacoes: osForm.observacoes,
-        tecnicoResponsavel: osForm.tecnicoResponsavel,
-        equipamentoId: osForm.equipamentoId
-      }
+      const updatedOS: OrdemServico = savedOS = updateOrdemServicoFromForm(
+        editingOS,
+        osForm,
+        totaisOS
+      )
       const updatedOSList = ordensServico.map(os => os.id === editingOS.id ? updatedOS : os)
       setOrdensServico(updatedOSList)
       saveData('nonato-ordens-servico', updatedOSList)
@@ -14354,23 +14335,9 @@ export default function Dashboard() {
         }
       }
     } else {
-      const newOS: OrdemServico = savedOS = {
+      const newOS: OrdemServico = savedOS = createOrdemServicoFromForm(osForm, totaisOS, {
         id: Date.now().toString(),
-        numeroOS: osForm.numeroOS,
-        clienteId: osForm.clienteId,
-        clienteNome: osForm.clienteNome,
-        dataAbertura: osForm.dataAbertura,
-        status: osForm.status,
-        valorServico: osForm.valorServico,
-        valorPecas: osForm.valorPecas,
-        valorTotal,
-        valorIVA,
-        valorSemIVA,
-        observacoes: osForm.observacoes,
-        tecnicoResponsavel: osForm.tecnicoResponsavel,
-        equipamentoId: osForm.equipamentoId,
-        faturasPecas: []
-      }
+      })
       const updatedOSList = [...ordensServico, newOS]
       setOrdensServico(updatedOSList)
       saveData('nonato-ordens-servico', updatedOSList)
@@ -14402,19 +14369,7 @@ export default function Dashboard() {
         }
       }
     }
-    setOSForm({
-      numeroOS: savedOS.numeroOS,
-      clienteId: savedOS.clienteId,
-      clienteNome: savedOS.clienteNome,
-      dataAbertura: savedOS.dataAbertura,
-      status: savedOS.status,
-      valorServico: savedOS.valorServico,
-      valorPecas: savedOS.valorPecas,
-      taxaIVA: savedOS.taxaIVA ?? 0,
-      observacoes: savedOS.observacoes ?? '',
-      tecnicoResponsavel: savedOS.tecnicoResponsavel || '',
-      equipamentoId: savedOS.equipamentoId || ''
-    })
+    setOSForm(ordemServicoToFormState(savedOS))
     setEditingOS(savedOS)
     atualizarClientesDevedores()
     alert(safeT?.osSalva || 'Ordem de serviço salva com sucesso!')
@@ -14840,19 +14795,7 @@ export default function Dashboard() {
 
   const openOSEditor = (os: OrdemServico) => {
     setEditingOS(os)
-    setOSForm({
-      numeroOS: os.numeroOS,
-      clienteId: os.clienteId,
-      clienteNome: os.clienteNome,
-      dataAbertura: os.dataAbertura.split('T')[0],
-      status: os.status,
-      valorServico: os.valorServico,
-      valorPecas: os.valorPecas,
-      taxaIVA: (os.valorIVA / os.valorSemIVA) * 100 || 23,
-      observacoes: os.observacoes || '',
-      tecnicoResponsavel: os.tecnicoResponsavel || '',
-      equipamentoId: os.equipamentoId || ''
-    })
+    setOSForm(ordemServicoToFormState(os, { taxaFromValores: true }))
     setShowOSForm(true)
   }
 
@@ -59865,17 +59808,13 @@ A1;Peça exemplo;10`}
                                       if (!rel) return
                                       const clienteObj = clientes.find(c => c.id === rel.clienteId)
                                       setOSForm({
+                                        ...emptyOrdemServicoFormState(),
                                         numeroOS: `OS-${Date.now()}`,
                                         clienteId: rel.clienteId || '',
                                         clienteNome: clienteObj?.nomeEmpresa || rel.cliente || '',
                                         dataAbertura: (rel.data || new Date().toISOString()).split('T')[0],
-                                        status: 'aberta',
-                                        valorServico: 0,
-                                        valorPecas: 0,
-                                        taxaIVA: 23,
                                         observacoes: `${tx.criadaDeRelatorio || 'Criada a partir do relatório'} ${rel.numero}`,
                                         tecnicoResponsavel: rel.tecnico || '',
-                                        equipamentoId: ''
                                       })
                                       setEditingOS(null)
                                       setShowOSForm(true)
@@ -59895,17 +59834,8 @@ A1;Peça exemplo;10`}
                       className="btn-primary"
                       onClick={() => {
                         setOSForm({
+                          ...emptyOrdemServicoFormState(),
                           numeroOS: `OS-${Date.now()}`,
-                          clienteId: '',
-                          clienteNome: '',
-                          dataAbertura: new Date().toISOString().split('T')[0],
-                          status: 'aberta',
-                          valorServico: 0,
-                          valorPecas: 0,
-                          taxaIVA: 23,
-                          observacoes: '',
-                          tecnicoResponsavel: '',
-                          equipamentoId: ''
                         })
                         setEditingOS(null)
                         setShowOSForm(true)

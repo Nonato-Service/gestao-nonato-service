@@ -150,3 +150,14 @@ export {
   createFaturaPecasFromForm,
   updateFaturaPecasFromForm,
 } from './faturaPecasFromForm'
+
+export type { OrdemServicoFormState, OrdemServicoStatus } from './ordemServicoForm'
+export { emptyOrdemServicoFormState, ordemServicoToFormState } from './ordemServicoForm'
+
+export type { OrdemServicoFromFormTotais } from './ordemServicoFromForm'
+export {
+  isOrdemServicoFormValid,
+  calcularTotaisOrdemServico,
+  createOrdemServicoFromForm,
+  updateOrdemServicoFromForm,
+} from './ordemServicoFromForm'

@@ -513,6 +513,28 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia FaturaPecas no sítio')
   }
+  if (
+    idx.includes('isOrdemServicoFormValid') &&
+    idx.includes('createOrdemServicoFromForm') &&
+    idx.includes('updateOrdemServicoFromForm') &&
+    idx.includes('ordemServicoToFormState') &&
+    exists('app/modules/financeiro/ordemServicoForm.ts') &&
+    exists('app/modules/financeiro/ordemServicoFromForm.ts')
+  ) {
+    ok('módulo financeiro exporta OrdemServico form/fromForm')
+  } else {
+    fail('módulo financeiro sem OrdemServico form/fromForm')
+  }
+  if (
+    nma.includes('isOrdemServicoFormValid') &&
+    nma.includes('createOrdemServicoFromForm') &&
+    nma.includes('updateOrdemServicoFromForm') &&
+    nma.includes('ordemServicoToFormState')
+  ) {
+    ok('NonatoMainApp usa OrdemServico fromForm do módulo financeiro')
+  } else {
+    fail('NonatoMainApp ainda mapeia OrdemServico no sítio')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
