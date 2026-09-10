@@ -9,6 +9,8 @@ export type { ClienteDuplicadoMotivo, ClienteCadastroDuplicado } from './cadastr
 export {
   normalizarNomeClienteComparacao,
   normalizarNifClienteComparacao,
+  saoNomesClienteIguais,
+  eVarianteNomeClienteComExtra,
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
   listarClientesNomeSimilarCadastro,

@@ -368,6 +368,9 @@ export function ClienteCadastroForm({
                   <p className="cliente-cadastro-v2__similar-title">
                     {tr('clienteNomesSimilaresTitulo')}
                   </p>
+                  <p className="cliente-cadastro-v2__similar-hint">
+                    {tr('clienteNomesSimilaresPodeGravar')}
+                  </p>
                   <ul className="cliente-cadastro-v2__similar-list">
                     {similarClientes.map((c) => (
                       <li key={c.id}>

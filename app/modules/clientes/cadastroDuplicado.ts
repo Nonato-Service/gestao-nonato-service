@@ -18,6 +18,26 @@ export function normalizarNomeClienteComparacao(nome: string): string {
     .trim()
 }
 
+export function tokensNomeClienteComparacao(nome: string): string[] {
+  return normalizarNomeClienteComparacao(nome).split(' ').filter(Boolean)
+}
+
+/** Só é o mesmo cliente se o nome inteiro for igual (Ferwood ≠ Ferwood Manuel). */
+export function saoNomesClienteIguais(a: string, b: string): boolean {
+  const na = normalizarNomeClienteComparacao(a)
+  const nb = normalizarNomeClienteComparacao(b)
+  return Boolean(na && nb && na === nb)
+}
+
+/** Um nome é o outro com palavras a mais (variante distinta, não duplicado). */
+export function eVarianteNomeClienteComExtra(a: string, b: string): boolean {
+  const ta = tokensNomeClienteComparacao(a)
+  const tb = tokensNomeClienteComparacao(b)
+  if (ta.length === 0 || tb.length === 0 || ta.length === tb.length) return false
+  const [curto, longo] = ta.length < tb.length ? [ta, tb] : [tb, ta]
+  return curto.every((tok, i) => longo[i] === tok)
+}
+
 export function normalizarNifClienteComparacao(nif: string): string {
   return String(nif ?? '').replace(/[\s.\-/]/g, '').toUpperCase()
 }
@@ -42,7 +62,7 @@ export function encontrarClienteDuplicadoCadastro<
   const nomeKey = normalizarNomeClienteComparacao(opts.nomeEmpresa)
   if (!nomeKey) return null
   const byNome = clientes.find(
-    (c) => c.id !== excludeId && normalizarNomeClienteComparacao(c.nomeEmpresa) === nomeKey
+    (c) => c.id !== excludeId && saoNomesClienteIguais(c.nomeEmpresa || '', opts.nomeEmpresa)
   )
   if (byNome) return { cliente: byNome, motivo: 'nome' }
   return null
@@ -84,7 +104,8 @@ export function listarClientesNomeSimilarCadastro<
     if (cliente.id === excludeId) continue
     const existente = normalizarNomeClienteComparacao(cliente.nomeEmpresa || '')
     if (!existente) continue
-    if (existente === nomeKey) continue
+    if (saoNomesClienteIguais(existente, nomeKey)) continue
+    if (eVarianteNomeClienteComExtra(existente, nomeKey)) continue
     if (existente.includes(nomeKey) || nomeKey.includes(existente)) {
       matches.push(cliente)
       if (matches.length >= limit) break

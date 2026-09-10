@@ -4,6 +4,8 @@ export type { ClienteDuplicadoMotivo, ClienteCadastroDuplicado } from '../module
 export {
   normalizarNomeClienteComparacao,
   normalizarNifClienteComparacao,
+  saoNomesClienteIguais,
+  eVarianteNomeClienteComExtra,
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,
   listarClientesNomeSimilarCadastro,

@@ -391,6 +391,44 @@ try {
   } else {
     fail('NonatoMainApp ainda valida/duplica Cliente no sítio ou módulo incompleto')
   }
+  const dupSrc = fs.readFileSync(path.join(root, 'app/modules/clientes/cadastroDuplicado.ts'), 'utf8')
+  if (
+    dupSrc.includes('saoNomesClienteIguais') &&
+    dupSrc.includes('eVarianteNomeClienteComExtra') &&
+    dupSrc.includes('Ferwood ≠ Ferwood Manuel')
+  ) {
+    ok('cadastroDuplicado: nome igual só se o texto inteiro coincidir')
+  } else {
+    fail('cadastroDuplicado sem igualdade exacta de nome (Ferwood ≠ Ferwood Manuel)')
+  }
+  {
+    const norm = (nome) =>
+      String(nome ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    const iguais = (a, b) => {
+      const na = norm(a)
+      const nb = norm(b)
+      return Boolean(na && nb && na === nb)
+    }
+    const casos = [
+      [iguais('FERWOOD', 'ferwood'), true],
+      [iguais('Ferwood.', 'ferwood'), true],
+      [iguais('ferwood', 'ferwood manuel'), false],
+      [iguais('ferwood jose', 'ferwood maria'), false],
+      [iguais('ferwood  manuel', 'Ferwood Manuel'), true],
+    ]
+    if (casos.every(([obtido, esperado]) => obtido === esperado)) {
+      ok('regra de nome: Ferwood Manuel não é duplicado de Ferwood')
+    } else {
+      fail('regra de nome falhou nos casos Ferwood / Ferwood Manuel')
+    }
+  }
   if (
     idx.includes('isEquipamentoClienteFormValid') &&
     idx.includes('createEquipamentoClienteFromForm') &&

@@ -35900,6 +35900,14 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: #fde68a;
 }
 
+.cliente-cadastro-v2__similar-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(253, 230, 138, 0.88);
+  line-height: 1.35;
+}
+
 .cliente-cadastro-v2__similar-list {
   margin: 0;
   padding: 0;
