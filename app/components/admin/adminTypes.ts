@@ -52,6 +52,7 @@ export type {
 } from '../../modules/clientes/prioritarioTipos'
 
 export type { PasswordEntry } from '../../modules/admin/passwords'
+export type { PasswordFormState } from '../../modules/admin/passwordForm'
 
 export type SyncPendingRemote = {
   revision: number

@@ -324,13 +324,17 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { User, UserFormState, PasswordEntry, LogoRelatorio } from './modules/admin'
+import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio } from './modules/admin'
 import {
   createEmptyUserForm,
   userToFormState,
   createUserFromForm,
   updateUserFromForm,
   generatePassword,
+  emptyPasswordForm,
+  isPasswordFormValid,
+  passwordFormMissingField,
+  createPasswordFromForm,
   parseLogosRelatoriosArr,
   preferRicherLogosRelatorios,
 } from './modules/admin'
@@ -1318,7 +1322,7 @@ export default function Dashboard() {
   const [showPasswordManager, setShowPasswordManager] = useState(false)
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
   const [showPasswordForm, setShowPasswordForm] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({ tecnicoName: '', password: '' })
+  const [passwordForm, setPasswordForm] = useState<PasswordFormState>(() => emptyPasswordForm())
   const [showChecklistAccessModal, setShowChecklistAccessModal] = useState(false)
   const [diarioPedidosItems, setDiarioPedidosItems] = useState<DiarioPedidoItem[]>([])
   const [diarioPedidoDraft, setDiarioPedidoDraft] = useState('')
@@ -10951,12 +10955,10 @@ export default function Dashboard() {
 
       // Salvar senha automaticamente no gestor de senhas
       if (userForm.password) {
-        const newPasswordEntry: PasswordEntry = {
-          id: Date.now().toString(),
-          tecnicoName: userForm.name,
-          password: userForm.password,
-          createdAt: new Date().toISOString()
-        }
+        const newPasswordEntry: PasswordEntry = createPasswordFromForm(
+          { tecnicoName: userForm.name, password: userForm.password },
+          { id: Date.now().toString() }
+        )
         const updatedPasswords = [...managedPasswords, newPasswordEntry]
         setManagedPasswords(updatedPasswords)
         saveData('nonato-managed-passwords', updatedPasswords)
@@ -10968,26 +10970,21 @@ export default function Dashboard() {
 
   // Função para salvar senha manualmente criada
   const handleSavePassword = (): boolean => {
-    if (!passwordForm.tecnicoName.trim()) {
+    const missing = passwordFormMissingField(passwordForm)
+    if (missing === 'name') {
       alert(safeT?.fillAllFields || 'Por favor, preencha o nome do técnico!')
       return false
     }
-    if (!passwordForm.password.trim()) {
+    if (missing === 'password' || !isPasswordFormValid(passwordForm)) {
       alert(safeT?.fillAllFields || 'Por favor, preencha ou gere uma senha!')
       return false
     }
 
-    const newPasswordEntry: PasswordEntry = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      tecnicoName: passwordForm.tecnicoName,
-      password: passwordForm.password,
-      createdAt: new Date().toISOString(),
-    }
-
+    const newPasswordEntry: PasswordEntry = createPasswordFromForm(passwordForm)
     const updatedPasswords = [...managedPasswords, newPasswordEntry]
     setManagedPasswords(updatedPasswords)
     saveData('nonato-managed-passwords', updatedPasswords)
-    setPasswordForm({ tecnicoName: '', password: '' })
+    setPasswordForm(emptyPasswordForm())
     return true
   }
 

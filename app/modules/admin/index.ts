@@ -11,5 +11,15 @@ export { createEmptyUserForm, userToFormState } from './userForm'
 export type { PasswordEntry } from './passwords'
 export { generatePassword } from './passwords'
 
+export type { PasswordFormState } from './passwordForm'
+export { emptyPasswordForm, passwordEntryToForm } from './passwordForm'
+
+export {
+  isPasswordFormValid,
+  passwordFormMissingField,
+  createPasswordFromForm,
+  updatePasswordFromForm,
+} from './passwordFromForm'
+
 export type { LogoRelatorio } from './logosRelatorio'
 export { parseLogosRelatoriosArr, preferRicherLogosRelatorios } from './logosRelatorio'

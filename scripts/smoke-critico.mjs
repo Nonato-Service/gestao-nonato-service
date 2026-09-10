@@ -1873,6 +1873,17 @@ try {
     fail('módulo admin incompleto (passwords no index.ts)')
   }
   if (
+    idx.includes('isPasswordFormValid') &&
+    idx.includes('createPasswordFromForm') &&
+    idx.includes('emptyPasswordForm') &&
+    exists('app/modules/admin/passwordForm.ts') &&
+    exists('app/modules/admin/passwordFromForm.ts')
+  ) {
+    ok('módulo admin exporta Password form/fromForm')
+  } else {
+    fail('módulo admin sem Password form/fromForm')
+  }
+  if (
     idx.includes('LogoRelatorio') &&
     idx.includes('parseLogosRelatoriosArr') &&
     idx.includes('preferRicherLogosRelatorios')
@@ -1933,11 +1944,14 @@ try {
   if (
     !nma.includes('type PasswordEntry = {') &&
     !nma.includes('const generatePassword = (length') &&
-    nma.includes('generatePassword')
+    nma.includes('generatePassword') &&
+    nma.includes('isPasswordFormValid') &&
+    nma.includes('createPasswordFromForm') &&
+    nma.includes('emptyPasswordForm')
   ) {
-    ok('NonatoMainApp usa passwords do módulo admin')
+    ok('NonatoMainApp usa passwords/fromForm do módulo admin')
   } else {
-    fail('NonatoMainApp ainda define PasswordEntry/generatePassword localmente')
+    fail('NonatoMainApp ainda define PasswordEntry/generatePassword localmente ou não usa fromForm')
   }
   if (
     !nma.includes('type LogoRelatorio = {') &&

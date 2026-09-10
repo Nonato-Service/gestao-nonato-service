@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
-import type { PasswordEntry, SafeT } from './adminTypes'
+import type { PasswordEntry, PasswordFormState, SafeT } from './adminTypes'
+import { emptyPasswordForm } from '../../modules/admin'
 
 export type AdminPasswordsSectionProps = {
   safeT: SafeT
@@ -11,10 +12,10 @@ export type AdminPasswordsSectionProps = {
   localeDatetimeGeneral: (lang: string) => string
   managedPasswords: PasswordEntry[]
   showPasswordForm: boolean
-  passwordForm: { tecnicoName: string; password: string }
+  passwordForm: PasswordFormState
   visiblePasswords: Set<string>
   setShowPasswordForm: React.Dispatch<React.SetStateAction<boolean>>
-  setPasswordForm: React.Dispatch<React.SetStateAction<{ tecnicoName: string; password: string }>>
+  setPasswordForm: React.Dispatch<React.SetStateAction<PasswordFormState>>
   setVisiblePasswords: React.Dispatch<React.SetStateAction<Set<string>>>
   setManagedPasswords: React.Dispatch<React.SetStateAction<PasswordEntry[]>>
   generatePassword: (length?: number) => string
@@ -288,7 +289,7 @@ export function AdminPasswordsSection(props: AdminPasswordsSectionProps) {
               className="admin-passwords-hub-btn admin-passwords-hub-btn--ghost"
               onClick={() => {
                 setShowPasswordForm(false)
-                setPasswordForm({ tecnicoName: '', password: '' })
+                setPasswordForm(emptyPasswordForm())
               }}
             >
               {tr(safeT, 'cancel', 'Cancelar')}
