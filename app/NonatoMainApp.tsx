@@ -706,11 +706,19 @@ import {
   ensureDefaultFluxoEntriesForBibliotecaIds,
   relatorioServicoFluxoFinanceiroPendente,
   normalizeFechamentoFluxoFinanceiroMap,
+  emptyFaturaPecasFormState,
+  faturaPecasToFormState,
+  isFaturaPecasFormValid,
+  isFaturaPecasValorValido,
+  calcularFaturaPecasFromForm,
+  createFaturaPecasFromForm,
+  updateFaturaPecasFromForm,
   type ClienteDevedor,
   type EstadoCobrancaFinanceiraVisual,
   type EstadoCobrancaFinanceiraGrupoExibicao,
   type OrdemServico,
   type FaturaPecas,
+  type FaturaPecasFormState,
   type IVAControle,
   type RelatorioFinanceiro,
   type TipoPeriodoFinanceiro,
@@ -4549,33 +4557,7 @@ export default function Dashboard() {
     tecnicoResponsavel: '',
     equipamentoId: ''
   })
-  const [faturaForm, setFaturaForm] = useState({
-    numeroFatura: '',
-    ordemServicoId: '',
-    numeroOS: '',
-    clienteId: '',
-    clienteNome: '',
-    equipamentoId: '',
-    equipamentoTexto: '',
-    dataEmissao: new Date().toISOString().split('T')[0],
-    dataVencimento: '',
-    taxaIVA: 23,
-    status: 'pendente' as 'pendente' | 'paga' | 'vencida' | 'cancelada',
-    observacoes: '',
-    arquivoAnexo: '',
-    nomeArquivoOriginal: '',
-    tipoArquivo: '',
-    contaPagamentoEnviada: false,
-    /** Valor sem IVA quando não há linhas de itens (ex.: fatura só digital) */
-    valorManualSemIVA: '',
-    itens: [] as Array<{
-      id: string
-      descricao: string
-      quantidade: number
-      precoUnitario: number
-      codigoPeca?: string
-    }>
-  })
+  const [faturaForm, setFaturaForm] = useState<FaturaPecasFormState>(() => emptyFaturaPecasFormState())
   
   // Estados para Cliente Prioritário
   const [clientePrioritario, setClientePrioritario] = useState<ClientePrioritario | null>(null)
@@ -14441,32 +14423,7 @@ export default function Dashboard() {
     alert(safeT?.osSalva || 'Ordem de serviço salva com sucesso!')
   }
 
-  const resetFaturaFormState = () => ({
-    numeroFatura: '',
-    ordemServicoId: '',
-    numeroOS: '',
-    clienteId: '',
-    clienteNome: '',
-    equipamentoId: '',
-    equipamentoTexto: '',
-    dataEmissao: new Date().toISOString().split('T')[0],
-    dataVencimento: '',
-    taxaIVA: 23,
-    status: 'pendente' as 'pendente' | 'paga' | 'vencida' | 'cancelada',
-    observacoes: '',
-    arquivoAnexo: '',
-    nomeArquivoOriginal: '',
-    tipoArquivo: '',
-    contaPagamentoEnviada: false,
-    valorManualSemIVA: '',
-    itens: [] as Array<{
-      id: string
-      descricao: string
-      quantidade: number
-      precoUnitario: number
-      codigoPeca?: string
-    }>
-  })
+  const resetFaturaFormState = () => emptyFaturaPecasFormState()
 
   const handleFaturaAnexoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const ft = safeT as Record<string, string | undefined>
@@ -14744,79 +14701,36 @@ export default function Dashboard() {
 
   const handleSaveFatura = () => {
     const ft = safeT as Record<string, string | undefined>
-    if (!faturaForm.numeroFatura?.trim() || !faturaForm.clienteId) {
+    if (!isFaturaPecasFormValid(faturaForm)) {
       alert(ft?.preencherTodosCampos || 'Preencha o número da fatura e o cliente.')
       return
     }
 
-    const itensComValor = faturaForm.itens.filter(i => (i.quantidade || 0) > 0 && (i.precoUnitario || 0) > 0)
-    const valorPorItens = itensComValor.reduce((sum, item) => sum + (item.quantidade || 0) * (item.precoUnitario || 0), 0)
-    const manual = parseFloat(String(faturaForm.valorManualSemIVA || '').replace(',', '.')) || 0
-    const valorSemIVA = valorPorItens > 0 ? valorPorItens : manual
-
-    if (valorSemIVA <= 0) {
+    const calc = calcularFaturaPecasFromForm(faturaForm, {
+      itemDigitalId: `digital-${Date.now()}`,
+      itemDigitalDescricao: ft?.faturaItemDigitalDesc || 'Fatura digital (anexo)',
+    })
+    if (!isFaturaPecasValorValido(calc.valorSemIVA)) {
       alert(ft?.faturaErroValor || 'Indique o valor sem IVA (manual) ou adicione linhas de itens com quantidade e preço.')
       return
     }
 
     createAutoBackupBeforeOperation()
 
-    const valorIVA = valorSemIVA * (faturaForm.taxaIVA / 100)
-    const valorTotal = valorSemIVA + valorIVA
-
-    const itensSalvos =
-      itensComValor.length > 0
-        ? itensComValor.map(item => ({
-            ...item,
-            valorTotal: (item.quantidade || 0) * (item.precoUnitario || 0)
-          }))
-        : [
-            {
-              id: `digital-${Date.now()}`,
-              descricao: ft?.faturaItemDigitalDesc || 'Fatura digital (anexo)',
-              quantidade: 1,
-              precoUnitario: valorSemIVA,
-              valorTotal: valorSemIVA
-            }
-          ]
-
-    const basePayload = {
-      numeroFatura: faturaForm.numeroFatura.trim(),
-      ordemServicoId: faturaForm.ordemServicoId || '',
-      numeroOS: faturaForm.numeroOS || '',
-      clienteId: faturaForm.clienteId,
-      clienteNome: faturaForm.clienteNome,
-      equipamentoId: faturaForm.equipamentoId || undefined,
-      equipamentoTexto: faturaForm.equipamentoTexto || undefined,
-      dataEmissao: faturaForm.dataEmissao,
-      dataVencimento: faturaForm.dataVencimento || undefined,
-      valorTotal,
-      valorIVA,
-      valorSemIVA,
-      taxaIVA: faturaForm.taxaIVA,
-      status: faturaForm.status,
-      itens: itensSalvos,
-      observacoes: faturaForm.observacoes || undefined,
-      arquivoAnexo: faturaForm.arquivoAnexo || undefined,
-      nomeArquivoOriginal: faturaForm.nomeArquivoOriginal || undefined,
-      tipoArquivo: faturaForm.arquivoAnexo ? (faturaForm.tipoArquivo || undefined) : undefined,
-      contaPagamentoEnviada: Boolean(faturaForm.contaPagamentoEnviada)
-    }
-
     let savedFatura: FaturaPecas
     if (editingFatura) {
-      const updatedFatura: FaturaPecas = savedFatura = {
-        ...editingFatura,
-        ...basePayload
-      }
+      const updatedFatura: FaturaPecas = savedFatura = updateFaturaPecasFromForm(
+        editingFatura,
+        faturaForm,
+        calc
+      )
       const updatedFaturas = faturasPecas.map(f => f.id === editingFatura.id ? updatedFatura : f)
       setFaturasPecas(updatedFaturas)
       saveData('nonato-faturas-pecas', updatedFaturas)
     } else {
-      const newFatura: FaturaPecas = savedFatura = {
+      const newFatura: FaturaPecas = savedFatura = createFaturaPecasFromForm(faturaForm, calc, {
         id: Date.now().toString(),
-        ...basePayload
-      }
+      })
       const updatedFaturas = [...faturasPecas, newFatura]
       setFaturasPecas(updatedFaturas)
       saveData('nonato-faturas-pecas', updatedFaturas)
@@ -14832,32 +14746,7 @@ export default function Dashboard() {
         saveData('nonato-ordens-servico', updatedOSList)
       }
     }
-    setFaturaForm({
-      numeroFatura: savedFatura.numeroFatura,
-      ordemServicoId: savedFatura.ordemServicoId || '',
-      numeroOS: savedFatura.numeroOS || '',
-      clienteId: savedFatura.clienteId,
-      clienteNome: savedFatura.clienteNome,
-      equipamentoId: savedFatura.equipamentoId || '',
-      equipamentoTexto: savedFatura.equipamentoTexto || '',
-      dataEmissao: savedFatura.dataEmissao,
-      dataVencimento: savedFatura.dataVencimento || '',
-      taxaIVA: savedFatura.taxaIVA,
-      status: savedFatura.status,
-      observacoes: savedFatura.observacoes || '',
-      arquivoAnexo: savedFatura.arquivoAnexo || '',
-      nomeArquivoOriginal: savedFatura.nomeArquivoOriginal || '',
-      tipoArquivo: savedFatura.tipoArquivo || '',
-      contaPagamentoEnviada: Boolean(savedFatura.contaPagamentoEnviada),
-      valorManualSemIVA: savedFatura.valorSemIVA ? String(savedFatura.valorSemIVA) : '',
-      itens: (savedFatura.itens || []).map(item => ({
-        id: item.id,
-        descricao: item.descricao,
-        quantidade: item.quantidade,
-        precoUnitario: item.precoUnitario,
-        codigoPeca: item.codigoPeca
-      }))
-    })
+    setFaturaForm(faturaPecasToFormState(savedFatura))
     setEditingFatura(savedFatura)
     atualizarClientesDevedores()
     alert(safeT?.faturaSalva || 'Fatura salva com sucesso!')
@@ -15801,34 +15690,7 @@ export default function Dashboard() {
       openTab('gestao-financeira', getTabTitle('gestao-financeira'))
       if (fatura) {
         setEditingFatura(fatura)
-        setFaturaForm({
-          numeroFatura: fatura.numeroFatura,
-          ordemServicoId: fatura.ordemServicoId || '',
-          numeroOS: fatura.numeroOS || '',
-          clienteId: fatura.clienteId,
-          clienteNome: fatura.clienteNome,
-          equipamentoId: fatura.equipamentoId || '',
-          equipamentoTexto: fatura.equipamentoTexto || '',
-          dataEmissao:
-            (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) ||
-            new Date().toISOString().split('T')[0],
-          dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
-          taxaIVA: fatura.taxaIVA,
-          status: fatura.status,
-          observacoes: fatura.observacoes || '',
-          arquivoAnexo: fatura.arquivoAnexo || '',
-          nomeArquivoOriginal: fatura.nomeArquivoOriginal || '',
-          tipoArquivo: fatura.tipoArquivo || '',
-          contaPagamentoEnviada: Boolean(fatura.contaPagamentoEnviada),
-          valorManualSemIVA: '',
-          itens: (fatura.itens || []).map((i) => ({
-            id: i.id,
-            descricao: i.descricao,
-            quantidade: i.quantidade,
-            precoUnitario: i.precoUnitario,
-            codigoPeca: i.codigoPeca,
-          })),
-        })
+        setFaturaForm(faturaPecasToFormState(fatura, { valorManualSemIVA: '' }))
         setShowFaturaForm(true)
       } else {
         alert(ft?.hubEqTimelineSemAnexo || 'Anexo da fatura não disponível.')
@@ -60795,32 +60657,7 @@ A1;Peça exemplo;10`}
                               type="button"
                               onClick={() => {
                                 setEditingFatura(fatura)
-                                setFaturaForm({
-                                  numeroFatura: fatura.numeroFatura,
-                                  ordemServicoId: fatura.ordemServicoId || '',
-                                  numeroOS: fatura.numeroOS || '',
-                                  clienteId: fatura.clienteId,
-                                  clienteNome: fatura.clienteNome,
-                                  equipamentoId: fatura.equipamentoId || '',
-                                  equipamentoTexto: fatura.equipamentoTexto || '',
-                                  dataEmissao: (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) || new Date().toISOString().split('T')[0],
-                                  dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
-                                  taxaIVA: fatura.taxaIVA,
-                                  status: fatura.status,
-                                  observacoes: fatura.observacoes || '',
-                                  arquivoAnexo: fatura.arquivoAnexo || '',
-                                  nomeArquivoOriginal: fatura.nomeArquivoOriginal || '',
-                                  tipoArquivo: fatura.tipoArquivo || '',
-                                  contaPagamentoEnviada: Boolean(fatura.contaPagamentoEnviada),
-                                  valorManualSemIVA: '',
-                                  itens: fatura.itens.map(i => ({
-                                    id: i.id,
-                                    descricao: i.descricao,
-                                    quantidade: i.quantidade,
-                                    precoUnitario: i.precoUnitario,
-                                    codigoPeca: i.codigoPeca
-                                  }))
-                                })
+                                setFaturaForm(faturaPecasToFormState(fatura, { valorManualSemIVA: '' }))
                                 setShowFaturaForm(true)
                               }}
                               style={faturaPecasToolbarEditarBtn}

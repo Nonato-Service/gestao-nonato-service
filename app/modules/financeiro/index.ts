@@ -138,3 +138,15 @@ export {
 } from './periodo'
 
 export { buildIvaControlesFromDados, buildRelatorioFinanceiroPeriodo } from './buildPeriodo'
+
+export type { FaturaPecasFormState, FaturaPecasItemForm } from './faturaPecasForm'
+export { emptyFaturaPecasFormState, faturaPecasToFormState } from './faturaPecasForm'
+
+export type { FaturaPecasFromFormCalculos, FaturaPecasItemDigitalOpts } from './faturaPecasFromForm'
+export {
+  isFaturaPecasFormValid,
+  isFaturaPecasValorValido,
+  calcularFaturaPecasFromForm,
+  createFaturaPecasFromForm,
+  updateFaturaPecasFromForm,
+} from './faturaPecasFromForm'

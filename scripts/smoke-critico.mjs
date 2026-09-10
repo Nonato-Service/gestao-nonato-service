@@ -491,6 +491,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define telefones/corpo envio localmente')
   }
+  if (
+    idx.includes('isFaturaPecasFormValid') &&
+    idx.includes('createFaturaPecasFromForm') &&
+    idx.includes('updateFaturaPecasFromForm') &&
+    idx.includes('faturaPecasToFormState') &&
+    exists('app/modules/financeiro/faturaPecasForm.ts') &&
+    exists('app/modules/financeiro/faturaPecasFromForm.ts')
+  ) {
+    ok('módulo financeiro exporta FaturaPecas form/fromForm')
+  } else {
+    fail('módulo financeiro sem FaturaPecas form/fromForm')
+  }
+  if (
+    nma.includes('isFaturaPecasFormValid') &&
+    nma.includes('createFaturaPecasFromForm') &&
+    nma.includes('updateFaturaPecasFromForm') &&
+    nma.includes('faturaPecasToFormState')
+  ) {
+    ok('NonatoMainApp usa FaturaPecas fromForm do módulo financeiro')
+  } else {
+    fail('NonatoMainApp ainda mapeia FaturaPecas no sítio')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
@@ -2490,13 +2512,19 @@ try {
   } else {
     fail('Pedido avulso sem hubSeed')
   }
-  if (
-    nma.includes('equipamentoId: faturaForm.equipamentoId') ||
-    nma.includes('equipamentoId: faturaForm.equipamentoId || undefined')
-  ) {
-    ok('faturaForm grava equipamentoId')
-  } else {
-    fail('faturaForm sem equipamentoId no payload')
+  {
+    const fromForm = exists('app/modules/financeiro/faturaPecasFromForm.ts')
+      ? fs.readFileSync(path.join(root, 'app/modules/financeiro/faturaPecasFromForm.ts'), 'utf8')
+      : ''
+    if (
+      nma.includes('equipamentoId: faturaForm.equipamentoId') ||
+      nma.includes('equipamentoId: faturaForm.equipamentoId || undefined') ||
+      fromForm.includes('equipamentoId: form.equipamentoId || undefined')
+    ) {
+      ok('faturaForm grava equipamentoId')
+    } else {
+      fail('faturaForm sem equipamentoId no payload')
+    }
   }
   if (
     nma.includes("openTab('clientes'") &&
