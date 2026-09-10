@@ -19,7 +19,12 @@ import {
   serverKeyHasMeaningfulData,
 } from '../lib/criticalCadastroKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
-import { ALLOW_PROTECTED_SUBSET_SHRINK_KEYS, isIntentionalSubsetShrink } from '../lib/cadastroShrinkPolicy'
+import {
+  ALLOW_PROTECTED_SUBSET_SHRINK_KEYS,
+  MERGE_ON_SHRINK_KEYS,
+  incomingHasNewIds,
+  isIntentionalSubsetShrink,
+} from '../lib/cadastroShrinkPolicy'
 import {
   RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
   filterByDeletedIds,
@@ -244,7 +249,16 @@ const pendingSaveByKey = new Map<string, Promise<boolean>>()
 const coalesceNextValueByKey = new Map<string, any>()
 
 // Resultado interno do POST ao servidor
-type SaveServerResult = 'ok' | 'blocked' | 'fail'
+type SaveServerResult = 'ok' | 'blocked' | 'fail' | 'auth'
+
+function dispatchSaveAuthRequired(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.dispatchEvent(new CustomEvent('nonato-save-auth-required'))
+  } catch {
+    /* ignorar */
+  }
+}
 
 function dispatchSyncBlocked(key: string, reason: string): void {
   if (typeof window === 'undefined') return
@@ -554,7 +568,10 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
       result = await _doSaveToServer(item.key, item.value, { timeoutMs: 180000 })
     }
     if (result === 'ok') synced++
-    else if (result === 'fail') {
+    else if (result === 'auth') {
+      failed++
+      remaining.push({ ...item, failCount: item.failCount ?? 0 })
+    } else if (result === 'fail') {
       failed++
       remaining.push({ ...item, failCount: (item.failCount ?? 0) + 1 })
     }
@@ -839,6 +856,9 @@ async function shouldBlockShrinkServerOverwrite(key: string, value: unknown): Pr
     if (ALLOW_PROTECTED_SUBSET_SHRINK_KEYS.has(key) && isIntentionalSubsetShrink(existing, value)) {
       return false
     }
+    if (MERGE_ON_SHRINK_KEYS.has(key) || incomingHasNewIds(existing, value)) {
+      return false
+    }
     console.warn(
       `[Nonato] Gravação ignorada: «${key}» tem ${value.length} item(ns) — o servidor tem ${existing.length}; não substituir cadastro maior.`
     )
@@ -1038,14 +1058,29 @@ async function _doSaveToServer(
       isLargePecasBibliotecaJson ||
       isLargeString ||
       (useSaveTextForLogo && typeof value === 'string' && value.length > 40000)
-    const response = await dataApiFetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-      signal: createTimeoutSignal(
-        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 45000)
-      ),
-    })
+    const timeoutMs = opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 45000)
+    const doFetch = () =>
+      dataApiFetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: createTimeoutSignal(timeoutMs),
+      })
+    let response: Response
+    try {
+      response = await doFetch()
+    } catch {
+      await new Promise((r) => setTimeout(r, 700))
+      response = await doFetch()
+    }
+    if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+      await new Promise((r) => setTimeout(r, 800))
+      try {
+        response = await doFetch()
+      } catch {
+        return 'fail'
+      }
+    }
     if (response.ok) {
       markServerReachable()
       /** Não usar value.length local aqui — merge pode ter mais peças que o total real do servidor. */
@@ -1066,6 +1101,10 @@ async function _doSaveToServer(
         /* resposta sem JSON */
       }
       return 'ok'
+    }
+    if (response.status === 401) {
+      dispatchSaveAuthRequired()
+      return 'auth'
     }
     if (response.status === 409) {
       try {
@@ -1103,30 +1142,40 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
   const requestPromise = (async (): Promise<boolean> => {
     let current: any = value
     let lastOk = false
+    let lastBlocked = false
+    let lastAuth = false
     try {
       while (true) {
-        if (!isOnline()) {
-          serverOffline = true
-          enqueueSyncItem(key, current)
-          return false
-        }
         try {
           const result = await _doSaveToServer(key, current)
           if (result === 'ok') {
             lastOk = true
+            lastBlocked = false
+            lastAuth = false
           } else if (result === 'blocked') {
             lastOk = false
-            dispatchSaveServerResult(key, false)
+            lastBlocked = true
+            lastAuth = false
+          } else if (result === 'auth') {
+            lastOk = false
+            lastBlocked = false
+            lastAuth = true
+            enqueueSyncItem(key, current)
           } else {
             lastOk = false
+            lastBlocked = false
+            lastAuth = false
             enqueueSyncItem(key, current)
           }
         } catch (error: any) {
           lastOk = false
-          const isNetworkError = error instanceof TypeError || error?.name === 'AbortError' ||
+          lastBlocked = false
+          lastAuth = false
+          const isAbort = error?.name === 'AbortError'
+          const isNetworkError = error instanceof TypeError || isAbort ||
             (error?.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('CONNECTION_REFUSED')))
           if (isNetworkError) {
-            serverOffline = true
+            if (!isAbort) serverOffline = true
             enqueueSyncItem(key, current)
           }
         }
@@ -1135,7 +1184,7 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
         if (next === undefined) break
         current = next
       }
-      if (!lastOk) dispatchSaveServerResult(key, false)
+      if (!lastOk && !lastBlocked && !lastAuth) dispatchSaveServerResult(key, false)
       return lastOk
     } finally {
       pendingSaveByKey.delete(requestKey)
@@ -3185,8 +3234,8 @@ export async function saveData(
       /* ignorar */
     }
   }
-  if (effectiveAwaitServer && typeof window !== 'undefined') {
-    dispatchSaveServerResult(key, serverOk)
+  if (effectiveAwaitServer && serverOk && typeof window !== 'undefined') {
+    dispatchSaveServerResult(key, true)
   }
   return serverOk
 }

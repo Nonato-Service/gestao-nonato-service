@@ -35,6 +35,7 @@ export function OfflineIndicator() {
   const [lastFailed, setLastFailed] = useState<number | null>(null)
   const [lastConfirmed, setLastConfirmed] = useState<string | null>(null)
   const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
+  const [authMsg, setAuthMsg] = useState<string | null>(null)
   const lastTapAtRef = useRef(0)
   const probeInFlightRef = useRef(false)
   const lastProbeAtRef = useRef(0)
@@ -150,6 +151,7 @@ export function OfflineIndicator() {
           getStoredUiString('saveServerConfirmed', '✓ Confirmado no servidor')
         )
         setLastFailed(null)
+        setAuthMsg(null)
       } else if (detail?.ok === false) {
         setLastFailed(Date.now())
         setLastConfirmed(null)
@@ -164,6 +166,16 @@ export function OfflineIndicator() {
           'Alteração só neste aparelho — o servidor tem dados mais completos ({key}).'
         ).replace('{key}', String(detail?.key ?? ''))
       )
+    }
+
+    const handleAuthRequired = () => {
+      setAuthMsg(
+        getStoredUiString(
+          'saveServerAuthRequired',
+          'Sessão expirada — entre novamente no programa para gravar no servidor.'
+        )
+      )
+      setLastFailed(null)
     }
 
     const handleQueueHydrated = () => refreshPending()
@@ -189,6 +201,7 @@ export function OfflineIndicator() {
     window.addEventListener('nonato-sync-completed', handleSyncCompleted)
     window.addEventListener('nonato-save-server-result', handleSaveResult)
     window.addEventListener('nonato-sync-blocked', handleBlocked)
+    window.addEventListener('nonato-save-auth-required', handleAuthRequired)
     window.addEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
     document.addEventListener('visibilitychange', handleVisibility)
     window.addEventListener('focus', handleVisibility)
@@ -212,6 +225,7 @@ export function OfflineIndicator() {
       window.removeEventListener('nonato-sync-completed', handleSyncCompleted)
       window.removeEventListener('nonato-save-server-result', handleSaveResult)
       window.removeEventListener('nonato-sync-blocked', handleBlocked)
+      window.removeEventListener('nonato-save-auth-required', handleAuthRequired)
       window.removeEventListener('nonato-sync-queue-hydrated', handleQueueHydrated)
       document.removeEventListener('visibilitychange', handleVisibility)
       window.removeEventListener('focus', handleVisibility)
@@ -253,6 +267,13 @@ export function OfflineIndicator() {
     }
   }, [blockedMsg])
 
+  useEffect(() => {
+    if (authMsg) {
+      const t = setTimeout(() => setAuthMsg(null), 20_000)
+      return () => clearTimeout(t)
+    }
+  }, [authMsg])
+
   const showFailed = Boolean(lastFailed) && (pendingCount > 0 || Date.now() - (lastFailed ?? 0) < 12_000)
 
   const hidden =
@@ -261,6 +282,7 @@ export function OfflineIndicator() {
     !lastSync &&
     !lastConfirmed &&
     !blockedMsg &&
+    !authMsg &&
     pendingCount === 0 &&
     !showFailed
 
@@ -268,7 +290,9 @@ export function OfflineIndicator() {
 
   const bg = !online
     ? 'rgba(200, 80, 80, 0.95)'
-    : showFailed
+    : authMsg
+      ? 'rgba(180, 80, 0, 0.95)'
+      : showFailed
       ? 'rgba(220, 60, 60, 0.95)'
       : syncing
         ? 'rgba(0, 150, 255, 0.9)'
@@ -355,6 +379,8 @@ export function OfflineIndicator() {
               'Modo offline — alterações serão enviadas quando voltar a ligar.'
             )}
           </>
+        ) : authMsg ? (
+          <>{authMsg}</>
         ) : blockedMsg ? (
           <>{blockedMsg}</>
         ) : lastConfirmed ? (

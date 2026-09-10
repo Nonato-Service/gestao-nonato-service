@@ -7,7 +7,9 @@ import {
 } from './criticalCadastroKeys'
 import {
   ALLOW_PROTECTED_SUBSET_SHRINK_KEYS,
+  MERGE_ON_SHRINK_KEYS,
   isIntentionalSubsetShrink,
+  mergeProtectedArrayById,
 } from './cadastroShrinkPolicy'
 
 export type ServerCadastroGuardResult =
@@ -19,7 +21,17 @@ export type ServerCadastroGuardResult =
       newCount: number
     }
 
-export { ALLOW_PROTECTED_SUBSET_SHRINK_KEYS, isIntentionalSubsetShrink } from './cadastroShrinkPolicy'
+export {
+  ALLOW_PROTECTED_SUBSET_SHRINK_KEYS,
+  MERGE_ON_SHRINK_KEYS,
+  isIntentionalSubsetShrink,
+  incomingHasNewIds,
+  mergeProtectedArrayById,
+} from './cadastroShrinkPolicy'
+
+export type CadastroWriteResolution =
+  | { ok: true; value: unknown }
+  | { ok: false; guard: Extract<ServerCadastroGuardResult, { allowed: false }> }
 
 function readExistingJsonArray(filePath: string): unknown[] | null {
   if (!fs.existsSync(filePath)) return null
@@ -127,6 +139,25 @@ export function assessServerCadastroWrite(
     return { allowed: false, reason: 'shrink_overwrite', existingCount, newCount }
   }
   return { allowed: true }
+}
+
+/** Decide o valor a gravar: aceite, fundir com o disco, ou recusar. */
+export function resolveCadastroWriteValue(
+  key: string,
+  value: unknown,
+  filePath: string
+): CadastroWriteResolution {
+  const guard = assessServerCadastroWrite(key, value, filePath)
+  if (guard.allowed) return { ok: true, value }
+  if (
+    guard.reason === 'shrink_overwrite' &&
+    MERGE_ON_SHRINK_KEYS.has(key) &&
+    Array.isArray(value)
+  ) {
+    const existing = readExistingJsonArray(filePath) || []
+    return { ok: true, value: mergeProtectedArrayById(existing, value) }
+  }
+  return { ok: false, guard }
 }
 
 /** Guarda para save-text quando o payload JSON parseia para array protegido. */

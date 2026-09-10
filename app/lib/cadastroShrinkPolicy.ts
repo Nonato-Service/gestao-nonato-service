@@ -27,6 +27,49 @@ function itemId(item: unknown): string {
 }
 
 /**
+ * Cadastros mestres: se o aparelho tiver lista incompleta e gravar um novo,
+ * o servidor funde em vez de recusar (409). Não inclui peças (risco de perder fotos).
+ */
+export const MERGE_ON_SHRINK_KEYS = new Set<string>([
+  'nonato-clientes',
+  'nonato-fornecedores',
+  'nonato-gestores',
+  'nonato-tecnicos',
+  'nonato-equipamentos',
+  'nonato-servicos',
+  'nonato-servicos-grupos',
+  'nonato-faturas-pecas',
+  'nonato-ordens-servico',
+  'nonato-comprovantes-despesas',
+])
+
+export function incomingHasNewIds(existing: unknown[], incoming: unknown[]): boolean {
+  const oldIds = new Set(existing.map(itemId).filter(Boolean))
+  for (const item of incoming) {
+    const id = itemId(item)
+    if (id && !oldIds.has(id)) return true
+  }
+  return false
+}
+
+/** Mantém o que o servidor já tem e aplica altas/edições do aparelho. */
+export function mergeProtectedArrayById(existing: unknown[], incoming: unknown[]): unknown[] {
+  const byId = new Map<string, unknown>()
+  const semId: unknown[] = []
+  for (const item of existing) {
+    const id = itemId(item)
+    if (id) byId.set(id, item)
+    else semId.push(item)
+  }
+  for (const item of incoming) {
+    const id = itemId(item)
+    if (id) byId.set(id, item)
+    else semId.push(item)
+  }
+  return [...byId.values(), ...semId]
+}
+
+/**
  * Todos os IDs novos existiam na lista antiga — exclusão intencional, não substituição parcial.
  * Lista vazia NÃO conta: wipe total exige tombstones / outro fluxo — nunca apagar o servidor com `[]`.
  */

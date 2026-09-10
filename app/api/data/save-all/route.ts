@@ -7,7 +7,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
-import { assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
+import { resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,8 +48,9 @@ export async function POST(request: NextRequest) {
         if (jsonFileContentUnchanged(filePath, value)) {
           continue
         }
-        const guard = assessServerCadastroWrite(key, value, filePath)
-        if (!guard.allowed) {
+        const resolved = resolveCadastroWriteValue(key, value, filePath)
+        if (!resolved.ok) {
+          const guard = resolved.guard
           console.warn(
             `[Nonato API save-all] Bloqueado (${guard.reason}): ${key} — servidor ${guard.existingCount}, pedido ${guard.newCount}`
           )
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
           )
           continue
         }
-        writeJsonFileAtomic(filePath, value)
+        writeJsonFileAtomic(filePath, resolved.value)
         saved.push(key)
         dirsWithContentChange.add(targetDir)
       } catch (error: any) {

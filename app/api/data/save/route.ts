@@ -7,7 +7,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
-import { assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
+import { resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
 
 export const runtime = 'nodejs'
@@ -66,8 +66,9 @@ export async function POST(request: NextRequest) {
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
-        const guard = assessServerCadastroWrite(key, value, filePath)
-        if (!guard.allowed) {
+        const resolved = resolveCadastroWriteValue(key, value, filePath)
+        if (!resolved.ok) {
+          const guard = resolved.guard
           console.warn(
             `[Nonato API] Gravação bloqueada (${guard.reason}): ${key} — servidor ${guard.existingCount}, pedido ${guard.newCount}`
           )
@@ -88,11 +89,12 @@ export async function POST(request: NextRequest) {
             { status: 409, headers: jsonHeaders() }
           )
         }
-        writeJsonFileAtomic(filePath, value)
-        if (key === 'nonato-pecas-biblioteca' && Array.isArray(value)) {
+        const writeValue = resolved.value
+        writeJsonFileAtomic(filePath, writeValue)
+        if (key === 'nonato-pecas-biblioteca' && Array.isArray(writeValue)) {
           try {
             const litePath = path.join(targetDir, 'nonato-pecas-biblioteca-lite.json')
-            writeJsonFileAtomic(litePath, buildPecasBibliotecaLite(value))
+            writeJsonFileAtomic(litePath, buildPecasBibliotecaLite(writeValue))
           } catch (liteErr) {
             console.warn('[Nonato API] Falha ao gerar nonato-pecas-biblioteca-lite:', liteErr)
           }

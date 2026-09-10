@@ -2843,6 +2843,30 @@ try {
   } else {
     fail('syncRisk trata chave ausente como lista vazia')
   }
+  const shrinkPol = fs.readFileSync(path.join(root, 'app/lib/cadastroShrinkPolicy.ts'), 'utf8')
+  if (
+    shrinkPol.includes('export function mergeProtectedArrayById') &&
+    shrinkPol.includes("'nonato-clientes'")
+  ) {
+    ok('cadastro: merge por id em shrink (clientes)')
+  } else {
+    fail('cadastroShrinkPolicy sem mergeProtectedArrayById / clientes')
+  }
+  const saveRoute = fs.readFileSync(path.join(root, 'app/api/data/save/route.ts'), 'utf8')
+  if (saveRoute.includes('resolveCadastroWriteValue')) {
+    ok('save API funde cadastro em vez de só recusar')
+  } else {
+    fail('save/route ainda só usa assessServerCadastroWrite')
+  }
+  if (
+    storageSrc.includes('MERGE_ON_SHRINK_KEYS.has(key)') &&
+    storageSrc.includes("result === 'auth'") &&
+    storageSrc.includes('nonato-save-auth-required')
+  ) {
+    ok('save cliente: merge shrink + 401 sem banner vermelho genérico')
+  } else {
+    fail('dataStorage sem MERGE_ON_SHRINK / auth no save')
+  }
   const pecasFix = fs.readFileSync(path.join(root, 'app/api/data/pecas-fix/route.ts'), 'utf8')
   const restoreServ = fs.readFileSync(path.join(root, 'app/api/data/restore-cadastro-servicos/route.ts'), 'utf8')
   if (pecasFix.includes('rejectUnauthenticatedProductionAccess')) {
