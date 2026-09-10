@@ -2578,6 +2578,17 @@ try {
     else fail(`cadastro crítico sem ${k}`)
   }
   const storageSrc = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    storageSrc.includes('opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 45000)') &&
+    storageSrc.includes('payloadStr.length > 80000') &&
+    storageSrc.includes("response.status === 409") &&
+    storageSrc.includes("json?.error === 'cadastro_protected'") &&
+    /SYNC_QUEUE_MAX_FAILS = 5/.test(storageSrc)
+  ) {
+    ok('save servidor: timeout 45s, 409 protegido, fila não descarta à 2.ª falha')
+  } else {
+    fail('save servidor ainda com timeout 5s / 409=fail / MAX_FAILS=2')
+  }
   if (storageSrc.includes('loadAllFromServer({ bootstrap: true })')) {
     ok('pull automático usa bundle bootstrap (sem catálogo ~38 MB)')
   } else {

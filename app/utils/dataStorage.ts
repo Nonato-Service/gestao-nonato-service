@@ -319,7 +319,8 @@ type SyncQueueItem = {
   failCount?: number
 }
 
-const SYNC_QUEUE_MAX_FAILS = 2
+/** Falhas seguidas antes de descartar (deploy Railway / timeout não podem apagar a fila à 2.ª). */
+const SYNC_QUEUE_MAX_FAILS = 5
 const SYNC_QUEUE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 /** Cache em memória quando localStorage enche — fila continua válida + espelho IndexedDB. */
@@ -1031,6 +1032,7 @@ async function _doSaveToServer(
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
     const payloadNeedsSlowUpload =
+      payloadStr.length > 80000 ||
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
       isLargePecasBibliotecaJson ||
@@ -1041,7 +1043,7 @@ async function _doSaveToServer(
       headers: { 'Content-Type': 'application/json' },
       body,
       signal: createTimeoutSignal(
-        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 5000)
+        opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 45000)
       ),
     })
     if (response.ok) {
@@ -1064,6 +1066,17 @@ async function _doSaveToServer(
         /* resposta sem JSON */
       }
       return 'ok'
+    }
+    if (response.status === 409) {
+      try {
+        const json = (await response.json()) as { error?: string; reason?: string }
+        if (json?.error === 'cadastro_protected') {
+          dispatchSyncBlocked(key, String(json.reason || 'shrink'))
+          return 'blocked'
+        }
+      } catch {
+        /* corpo sem JSON */
+      }
     }
     return 'fail'
   } catch {
@@ -1106,7 +1119,6 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
             dispatchSaveServerResult(key, false)
           } else {
             lastOk = false
-            serverOffline = true
             enqueueSyncItem(key, current)
           }
         } catch (error: any) {
