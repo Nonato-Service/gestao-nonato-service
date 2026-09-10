@@ -2070,6 +2070,26 @@ try {
   } else {
     fail('NonatoMainApp ainda define tipos/classes Gestor/Tecnico localmente')
   }
+  if (
+    idx.includes('isGestorFormValid') &&
+    idx.includes('createGestorFromForm') &&
+    idx.includes('updateGestorFromForm') &&
+    exists('app/modules/pessoas/gestorFromForm.ts')
+  ) {
+    ok('módulo pessoas exporta Gestor form/fromForm')
+  } else {
+    fail('módulo pessoas sem Gestor form/fromForm')
+  }
+  if (
+    nma.includes('isGestorFormValid') &&
+    nma.includes('createGestorFromForm') &&
+    nma.includes('updateGestorFromForm') &&
+    nma.includes('gestorToForm')
+  ) {
+    ok('NonatoMainApp usa Gestor fromForm do módulo pessoas')
+  } else {
+    fail('NonatoMainApp ainda mapeia Gestor no sítio')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/pessoaTypes.ts'), 'utf8')
   if (libTypes.includes("from '../modules/pessoas'") || libTypes.includes('from "../modules/pessoas"')) {
     ok('lib/pessoaTypes re-exporta app/modules/pessoas')

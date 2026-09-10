@@ -18,5 +18,11 @@ export {
   iniciaisPessoa,
 } from './formState'
 
+export {
+  isGestorFormValid,
+  createGestorFromForm,
+  updateGestorFromForm,
+} from './gestorFromForm'
+
 export type { GestorClasse, TecnicoClasse, TecnicoTipoUi } from './classes'
 export { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './classes'

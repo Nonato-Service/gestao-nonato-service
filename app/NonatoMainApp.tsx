@@ -628,7 +628,7 @@ import type {
   TecnicoFormState,
   TipoGestorFormState,
 } from './modules/pessoas'
-import { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './modules/pessoas'
+import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm } from './modules/pessoas'
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
 import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
@@ -1441,7 +1441,7 @@ export default function Dashboard() {
   const [editingTipoGestor, setEditingTipoGestor] = useState<TipoGestor | null>(null)
   const [showGestorForm, setShowGestorForm] = useState(false)
   const [editingGestor, setEditingGestor] = useState<Gestor | null>(null)
-  const [gestorForm, setGestorForm] = useState({ name: '', email: '', phone: '', address: '', area: 'assistencia-tecnica', photo: '' })
+  const [gestorForm, setGestorForm] = useState<GestorFormState>(() => emptyGestorForm())
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([])
   const [mensagensComunicacao, setMensagensComunicacao] = useState<MensagemComunicacao[]>([])
   const [gestorAlertaSelecionado, setGestorAlertaSelecionado] = useState<Gestor | null>(null)
@@ -11341,7 +11341,7 @@ export default function Dashboard() {
   const handleAddGestor = () => {
     setEditingGestor(null)
     const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'
-    setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' })
+    setGestorForm(emptyGestorForm(primeiroTipo))
     setShowGestorForm(true)
   }
 
@@ -11366,14 +11366,7 @@ export default function Dashboard() {
 
   const handleEditGestor = (gestor: Gestor) => {
     setEditingGestor(gestor)
-    setGestorForm({ 
-      name: gestor.name, 
-      email: gestor.email, 
-      phone: gestor.phone, 
-      address: gestor.address, 
-      area: gestor.area,
-      photo: gestor.photo || ''
-    })
+    setGestorForm(gestorToForm(gestor))
     setShowGestorForm(true)
     // Garantir que o formulário inline não apareça quando estiver editando
   }
@@ -11389,15 +11382,15 @@ export default function Dashboard() {
   const handleSaveGestor = (formOverride?: GestorFormState, editingOverride?: Gestor | null): boolean => {
     const form = formOverride ?? gestorForm
     const editing = editingOverride !== undefined ? editingOverride : editingGestor
-    if (!form.name || !form.email || !form.phone) {
+    if (!isGestorFormValid(form)) {
       alert(t.fillAllFields)
       return false
     }
 
     const agora = new Date().toISOString()
     const savedGestor: Gestor = editing
-      ? { ...editing, ...form, dataAtualizacao: agora }
-      : { id: Date.now().toString(), ...form, dataAtualizacao: agora }
+      ? updateGestorFromForm(editing, form, { dataAtualizacao: agora })
+      : createGestorFromForm(form, { id: Date.now().toString(), dataAtualizacao: agora })
 
     const isNewGestor = !editing
     const updatedGestores = editing
@@ -11410,7 +11403,7 @@ export default function Dashboard() {
     setShowGestorForm(false)
     setEditingGestor(null)
     const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'
-    setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' })
+    setGestorForm(emptyGestorForm(primeiroTipo))
     alert(isNewGestor ? (t.gestorSaved || 'Gestor cadastrado com sucesso.') : (t.gestorUpdated || 'Gestor atualizado com sucesso.'))
     return true
   }
