@@ -1751,6 +1751,28 @@ try {
   } else {
     fail('lib/checklistTypes não re-exporta o módulo checklist')
   }
+  if (
+    idx.includes('isChecklistTemplateFormValid') &&
+    idx.includes('createChecklistTemplateFromForm') &&
+    idx.includes('updateChecklistTemplateFromForm') &&
+    idx.includes('checklistTemplateToForm') &&
+    exists('app/modules/checklist/templateForm.ts') &&
+    exists('app/modules/checklist/templateFromForm.ts')
+  ) {
+    ok('módulo checklist exporta ChecklistTemplate form/fromForm')
+  } else {
+    fail('módulo checklist sem ChecklistTemplate form/fromForm')
+  }
+  if (
+    nma.includes('isChecklistTemplateFormValid') &&
+    nma.includes('createChecklistTemplateFromForm') &&
+    nma.includes('updateChecklistTemplateFromForm') &&
+    nma.includes('checklistTemplateToForm')
+  ) {
+    ok('NonatoMainApp usa ChecklistTemplate fromForm do módulo checklist')
+  } else {
+    fail('NonatoMainApp ainda mapeia ChecklistTemplate no sítio')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

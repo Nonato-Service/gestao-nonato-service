@@ -899,12 +899,19 @@ import {
 import type {
   ChecklistItemTemplate,
   ChecklistTemplate,
+  ChecklistTemplateFormState,
   ManutencaoChecklist,
   ItemTrabalhoCriacao,
   ParenteChecklist,
   GrupoChecklist,
 } from './modules/checklist'
 import {
+  emptyChecklistTemplateForm,
+  checklistTemplateToForm,
+  checklistTemplateFormMissing,
+  isChecklistTemplateFormValid,
+  createChecklistTemplateFromForm,
+  updateChecklistTemplateFromForm,
   buildManutencoesDoGrupo,
   buildPecasPorGrupoVisualizacao,
   buildChecklistGeradoRecord,
@@ -1836,15 +1843,9 @@ export default function Dashboard() {
   const [checklistTemplates, setChecklistTemplates] = useState<ChecklistTemplate[]>([])
   const [showChecklistTemplateForm, setShowChecklistTemplateForm] = useState(false)
   const [editingChecklistTemplate, setEditingChecklistTemplate] = useState<ChecklistTemplate | null>(null)
-  const [checklistTemplateForm, setChecklistTemplateForm] = useState<{
-    nome: string
-    descricao: string
-    itens: ChecklistItemTemplate[]
-  }>({
-    nome: '',
-    descricao: '',
-    itens: []
-  })
+  const [checklistTemplateForm, setChecklistTemplateForm] = useState<ChecklistTemplateFormState>(() =>
+    emptyChecklistTemplateForm()
+  )
   const [newItemText, setNewItemText] = useState('')
 
   // Estados para Busca de Equipamento no Checklist
@@ -24731,23 +24732,19 @@ export default function Dashboard() {
   }
 
   const handleSaveChecklistTemplate = () => {
-    if (!checklistTemplateForm.nome.trim()) {
+    const missing = checklistTemplateFormMissing(checklistTemplateForm)
+    if (!isChecklistTemplateFormValid(checklistTemplateForm)) {
+      if (missing === 'itens') {
+        alert('Adicione pelo menos um item ao checklist')
+        return
+      }
       alert(safeT?.preencherTodosCampos || 'Por favor, preencha o nome do modelo')
       return
     }
 
-    if (checklistTemplateForm.itens.length === 0) {
-      alert('Adicione pelo menos um item ao checklist')
-      return
-    }
-
-    const newTemplate: ChecklistTemplate = {
-      id: editingChecklistTemplate ? editingChecklistTemplate.id : Date.now().toString(),
-      nome: checklistTemplateForm.nome,
-      descricao: checklistTemplateForm.descricao,
-      itens: checklistTemplateForm.itens,
-      dataCriacao: editingChecklistTemplate ? editingChecklistTemplate.dataCriacao : new Date().toISOString()
-    }
+    const newTemplate: ChecklistTemplate = editingChecklistTemplate
+      ? updateChecklistTemplateFromForm(editingChecklistTemplate, checklistTemplateForm)
+      : createChecklistTemplateFromForm(checklistTemplateForm)
 
     let newTemplates
     if (editingChecklistTemplate) {
@@ -24758,7 +24755,7 @@ export default function Dashboard() {
 
     setChecklistTemplates(newTemplates)
     saveData('nonato-checklist-templates', newTemplates)
-    setChecklistTemplateForm({ nome: newTemplate.nome, descricao: newTemplate.descricao || '', itens: newTemplate.itens })
+    setChecklistTemplateForm(checklistTemplateToForm(newTemplate))
     setEditingChecklistTemplate(newTemplate)
     alert(safeT?.modeloSalvoSucesso || 'Modelo salvo com sucesso!')
   }
@@ -24774,11 +24771,7 @@ export default function Dashboard() {
 
   const handleEditChecklistTemplate = (template: ChecklistTemplate) => {
     setEditingChecklistTemplate(template)
-    setChecklistTemplateForm({
-      nome: template.nome,
-      descricao: template.descricao || '',
-      itens: template.itens
-    })
+    setChecklistTemplateForm(checklistTemplateToForm(template))
     setShowChecklistTemplateForm(true)
   }
 

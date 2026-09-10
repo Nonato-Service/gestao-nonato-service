@@ -106,6 +106,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 86. `app/modules/pessoas/` (isTipoGestorFormValid / fromForm) — feito
 87. `app/modules/admin/` (isPasswordFormValid / fromForm) — feito
 88. `app/modules/sidebar/` (isSidebarButtonFormValid / fromForm) — feito
+89. `app/modules/checklist/` (isChecklistTemplateFormValid / fromForm) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 
