@@ -68,21 +68,22 @@ export function encontrarClienteDuplicadoCadastro<
   return null
 }
 
-/** Só avisa em tempo real quando há dados suficientes para evitar falsos positivos. */
+/**
+ * Em tempo real só bloqueia NIF igual.
+ * Nome exacto NÃO bloqueia enquanto se escreve (Ferwood → Ferwood Manuel);
+ * o nome igual só impede no gravar.
+ */
 export function encontrarClienteDuplicadoCadastroAntecipado<
   T extends { id: string; nomeEmpresa?: string; numeroContribuicaoFiscal?: string },
 >(
   clientes: T[],
   opts: { nomeEmpresa: string; numeroContribuicaoFiscal?: string; excludeId?: string }
 ): ClienteCadastroDuplicado<T> | null {
-  const nomeKey = normalizarNomeClienteComparacao(opts.nomeEmpresa)
   const nifKey = normalizarNifClienteComparacao(opts.numeroContribuicaoFiscal || '')
-  const nomePronto = nomeKey.length >= 3
-  const nifPronto = nifKey.length >= 3
-  if (!nomePronto && !nifPronto) return null
+  if (nifKey.length < 3) return null
   return encontrarClienteDuplicadoCadastro(clientes, {
-    nomeEmpresa: nomePronto ? opts.nomeEmpresa : '',
-    numeroContribuicaoFiscal: nifPronto ? opts.numeroContribuicaoFiscal : '',
+    nomeEmpresa: '',
+    numeroContribuicaoFiscal: opts.numeroContribuicaoFiscal,
     excludeId: opts.excludeId,
   })
 }
@@ -104,9 +105,10 @@ export function listarClientesNomeSimilarCadastro<
     if (cliente.id === excludeId) continue
     const existente = normalizarNomeClienteComparacao(cliente.nomeEmpresa || '')
     if (!existente) continue
-    if (saoNomesClienteIguais(existente, nomeKey)) continue
-    if (eVarianteNomeClienteComExtra(existente, nomeKey)) continue
-    if (existente.includes(nomeKey) || nomeKey.includes(existente)) {
+    const mesmoNome = saoNomesClienteIguais(existente, nomeKey)
+    const variante = eVarianteNomeClienteComExtra(existente, nomeKey)
+    const contem = existente.includes(nomeKey) || nomeKey.includes(existente)
+    if (mesmoNome || variante || contem) {
       matches.push(cliente)
       if (matches.length >= limit) break
     }

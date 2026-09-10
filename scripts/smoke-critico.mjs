@@ -395,7 +395,9 @@ try {
   if (
     dupSrc.includes('saoNomesClienteIguais') &&
     dupSrc.includes('eVarianteNomeClienteComExtra') &&
-    dupSrc.includes('Ferwood ≠ Ferwood Manuel')
+    dupSrc.includes('Ferwood ≠ Ferwood Manuel') &&
+    dupSrc.includes('Nome exacto NÃO bloqueia enquanto se escreve') &&
+    dupSrc.includes("nomeEmpresa: ''")
   ) {
     ok('cadastroDuplicado: nome igual só se o texto inteiro coincidir')
   } else {
