@@ -1521,6 +1521,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define renderBloco*EstadoVisual ou lembreteWA localmente, ou falta conflitoAgenda')
   }
+  if (
+    idx.includes('isAgendamentoFormValid') &&
+    idx.includes('createAgendamentoFromForm') &&
+    idx.includes('updateAgendamentoFromForm') &&
+    idx.includes('agendamentoToFormState') &&
+    exists('app/modules/agenda/agendamentoForm.ts') &&
+    exists('app/modules/agenda/agendamentoFromForm.ts')
+  ) {
+    ok('módulo agenda exporta Agendamento form/fromForm')
+  } else {
+    fail('módulo agenda sem Agendamento form/fromForm')
+  }
+  if (
+    nma.includes('isAgendamentoFormValid') &&
+    nma.includes('createAgendamentoFromForm') &&
+    nma.includes('updateAgendamentoFromForm') &&
+    nma.includes('agendamentoToFormState')
+  ) {
+    ok('NonatoMainApp usa Agendamento fromForm do módulo agenda')
+  } else {
+    fail('NonatoMainApp ainda mapeia Agendamento no sítio')
+  }
 } catch (e) {
   fail(`módulo agenda: ${e.message}`)
 }

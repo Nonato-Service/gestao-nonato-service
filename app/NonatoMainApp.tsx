@@ -258,6 +258,15 @@ import {
   encontrarConflitoTecnicoEmAndamento,
   temConflitosAgendaLegados,
   agendamentoActivoParaConflitoCliente,
+  emptyAgendamentoFormState,
+  agendamentoToFormState,
+  isAgendamentoFormValid,
+  aplicarPeriodoAgendamentoForm,
+  sanitizarAgendamentoFromForm,
+  completarRotuloEquipamentoAgendamento,
+  deveMarcarConclusaoAgendamento,
+  createAgendamentoFromForm,
+  updateAgendamentoFromForm,
 } from './modules/agenda'
 import type { StatusOperacionalAgenda } from './modules/agenda'
 import type { SidebarGroup, SidebarButton, TabType, Tab } from './modules/sidebar'
@@ -3684,34 +3693,7 @@ export default function Dashboard() {
   const [showAgendaModal, setShowAgendaModal] = useState(false)
   const [showAgendaForm, setShowAgendaForm] = useState(false)
   const [editingAgendamento, setEditingAgendamento] = useState<Agendamento | null>(null)
-  const [agendaForm, setAgendaForm] = useState<Agendamento>({
-    id: '',
-    tipo: 'pre-agendamento',
-    tecnico: '',
-    cliente: '',
-    clienteId: '',
-    equipamento: '',
-    equipamentoId: '',
-    data: new Date().toISOString().split('T')[0],
-    hora: '09:00',
-    duracaoEstimada: '2',
-    diasSelecionados: undefined,
-    tipoServico: '',
-    observacoesTecnicas: '',
-    necessidadePecas: false,
-    codigoNotaFiscal: '',
-    pecasAnexadas: [],
-    status: 'pendente',
-    telefone: '',
-    endereco: '',
-    cidade: '',
-    dataCriacao: new Date().toISOString(),
-    relatorioTrabalhoExecutado: '',
-    dataRegistoConclusao: undefined,
-    categoria: 'servico',
-    subtipoPessoal: 'pessoal',
-    assunto: '',
-  })
+  const [agendaForm, setAgendaForm] = useState<Agendamento>(() => emptyAgendamentoFormState())
   const [filtroAgenda, setFiltroAgenda] = useState<
     'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'assuntos-pessoais' | 'visita-tecnica' | 'nenhum' | 'folga' | 'doente' | 'ferias'
   >('todos')
@@ -12781,34 +12763,7 @@ export default function Dashboard() {
   // Funções para Agenda
   const handleAddAgendamento = (categoriaInicial: 'servico' | 'pessoal' = 'servico') => {
     setEditingAgendamento(null)
-    setAgendaForm({
-      id: '',
-      tipo: 'pre-agendamento',
-      tecnico: '',
-      cliente: '',
-      clienteId: '',
-      equipamento: '',
-      equipamentoId: '',
-      data: new Date().toISOString().split('T')[0],
-      hora: '09:00',
-      duracaoEstimada: categoriaInicial === 'pessoal' ? '1' : '2',
-      diasSelecionados: undefined,
-      tipoServico: '',
-      observacoesTecnicas: '',
-      necessidadePecas: false,
-      codigoNotaFiscal: '',
-      pecasAnexadas: [],
-      status: 'pendente',
-      telefone: '',
-      endereco: '',
-      cidade: '',
-      dataCriacao: new Date().toISOString(),
-      relatorioTrabalhoExecutado: '',
-      dataRegistoConclusao: undefined,
-      categoria: categoriaInicial,
-      subtipoPessoal: 'pessoal',
-      assunto: '',
-    })
+    setAgendaForm(emptyAgendamentoFormState({ categoria: categoriaInicial }))
     const hoje = new Date()
     setAgendaPickerMes(hoje.getMonth())
     setAgendaPickerAno(hoje.getFullYear())
@@ -12819,15 +12774,7 @@ export default function Dashboard() {
   const handleEditAgendamento = (agendamento: Agendamento) => {
     setEditingAgendamento(agendamento)
     const resolved = resolveClienteEEquipamentoParaFormularioAgenda(agendamento, clientes)
-    setAgendaForm({
-      ...agendamento,
-      ...resolved,
-      tipo: normalizeTipoAgendamento(agendamento),
-      status: normalizeStatusAgendamento(agendamento),
-      categoria: normalizeCategoriaAgendamento(agendamento),
-      subtipoPessoal: agendamento.subtipoPessoal || 'pessoal',
-      assunto: agendamento.assunto || '',
-    })
+    setAgendaForm(agendamentoToFormState(agendamento, resolved))
     const dias = agendamento.diasSelecionados?.length
       ? [...agendamento.diasSelecionados].sort()
       : []
@@ -12906,81 +12853,25 @@ export default function Dashboard() {
   }
 
   const handleSaveAgendamento = (): boolean => {
-    const pessoal = isAgendamentoPessoal(agendaForm)
-    if (!agendaForm.data || !agendaForm.hora) {
-      alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
-      return false
-    }
-    if (!pessoal && (!agendaForm.tecnico || !agendaForm.cliente)) {
+    if (!isAgendamentoFormValid(agendaForm)) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
       return false
     }
 
-    // Sincroniza rascunho do calendário (mesmo sem clicar «Confirmar dias») e preenche intervalo contínuo.
-    const diasExpandidos = expandirIntervaloDatasContinuo(
-      agendaDiasRascunho.length > 0
-        ? agendaDiasRascunho
-        : agendaForm.diasSelecionados || []
+    const formSanitizado = completarRotuloEquipamentoAgendamento(
+      sanitizarAgendamentoFromForm(aplicarPeriodoAgendamentoForm(agendaForm, agendaDiasRascunho)),
+      clientes
     )
-    const formComPeriodo: Agendamento =
-      diasExpandidos.length > 0
-        ? {
-            ...agendaForm,
-            data: diasExpandidos[0],
-            diasSelecionados: diasExpandidos,
-            duracaoEstimada: String(diasExpandidos.length),
-          }
-        : agendaForm
-
-    const formSanitizado: Agendamento = {
-      ...formComPeriodo,
-      tipo: normalizeTipoAgendamento(formComPeriodo),
-      status: normalizeStatusAgendamento(formComPeriodo),
-      categoria: pessoal ? 'pessoal' : 'servico',
-      subtipoPessoal: pessoal ? formComPeriodo.subtipoPessoal || 'pessoal' : undefined,
-      assunto: pessoal ? String(formComPeriodo.assunto || '').trim() : undefined,
-      ...(pessoal
-        ? {
-            tecnico: '',
-            tipo: 'pre-agendamento',
-            cliente: '',
-            clienteId: '',
-            equipamento: '',
-            equipamentoId: '',
-            telefone: '',
-            endereco: '',
-            cidade: '',
-            necessidadePecas: false,
-            codigoNotaFiscal: '',
-            pecasAnexadas: [],
-          }
-        : {}),
-    }
-
-    if (!pessoal && formSanitizado.equipamentoId && !String(formSanitizado.equipamento || '').trim()) {
-      const cliSave = clientes.find((c) => c.id === formSanitizado.clienteId)
-      const eqSave = cliSave?.equipamentos?.find(
-        (e) => e.numeroSerie === formSanitizado.equipamentoId || e.id === formSanitizado.equipamentoId
-      )
-      if (eqSave) {
-        formSanitizado.equipamento = `${eqSave.modelo} (${eqSave.numeroSerie})`
-      }
-    }
-
-    const statusAntes = editingAgendamento ? normalizeStatusAgendamento(editingAgendamento) : null
-    const statusDepois = normalizeStatusAgendamento(formSanitizado)
-    const marcarConclusao =
-      statusDepois === 'concluido' && statusAntes !== 'concluido'
-        ? { dataRegistoConclusao: new Date().toISOString() }
-        : {}
+    const marcarConclusao = deveMarcarConclusaoAgendamento(editingAgendamento, formSanitizado)
+      ? { dataRegistoConclusao: new Date().toISOString() }
+      : {}
 
     const savedAgendamento: Agendamento = editingAgendamento
-      ? { ...formSanitizado, id: editingAgendamento.id, ...marcarConclusao }
-      : {
-          ...formSanitizado,
+      ? updateAgendamentoFromForm(editingAgendamento, formSanitizado, marcarConclusao)
+      : createAgendamentoFromForm(formSanitizado, {
           id: Date.now().toString(),
           ...marcarConclusao,
-        }
+        })
 
     // Mesmo técnico OU mesmo cliente + dias em comum + activo → bloquear (sem wipe)
     if (agendamentoActivoParaConflitoCliente(savedAgendamento)) {
@@ -43720,29 +43611,7 @@ A1;Peça exemplo;10`}
                       setShowAgendaForm(false); 
                       setEditingAgendamento(null); 
                       setAgendaDiasRascunho([]);
-                      setAgendaForm({ 
-                        id: '', 
-                        tipo: 'pre-agendamento', 
-                        tecnico: '', 
-                        cliente: '', 
-                        clienteId: '', 
-                        equipamento: '', 
-                        equipamentoId: '', 
-                        data: new Date().toISOString().split('T')[0], 
-                        hora: '09:00', 
-                        duracaoEstimada: '2', 
-                        diasSelecionados: undefined,
-                        tipoServico: '', 
-                        observacoesTecnicas: '', 
-                        necessidadePecas: false,
-                        status: 'pendente', 
-                        telefone: '', 
-                        endereco: '', 
-                        cidade: '', 
-                        dataCriacao: new Date().toISOString(),
-                        relatorioTrabalhoExecutado: '',
-                        dataRegistoConclusao: undefined,
-                      }); 
+                      setAgendaForm(emptyAgendamentoFormState()); 
                     }} 
                     style={{ flex: 1, padding: '10px' }}
                   >
@@ -73846,7 +73715,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveAgendamento} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaDiasRascunho([]); setAgendaForm({ id: '', tipo: 'pre-agendamento', tecnico: '', cliente: '', clienteId: '', equipamento: '', equipamentoId: '', data: new Date().toISOString().split('T')[0], hora: '09:00', duracaoEstimada: '2', diasSelecionados: undefined, tipoServico: '', observacoesTecnicas: '', necessidadePecas: false, codigoNotaFiscal: '', pecasAnexadas: [], status: 'pendente', telefone: '', endereco: '', cidade: '', dataCriacao: new Date().toISOString(), relatorioTrabalhoExecutado: '', dataRegistoConclusao: undefined }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaDiasRascunho([]); setAgendaForm(emptyAgendamentoFormState()); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>

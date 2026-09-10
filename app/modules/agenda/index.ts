@@ -85,6 +85,19 @@ export {
   buildMensagemLembreteAgenda,
 } from './lembreteWhatsApp'
 
+export type { AgendamentoFormState } from './agendamentoForm'
+export { emptyAgendamentoFormState, agendamentoToFormState } from './agendamentoForm'
+
+export {
+  isAgendamentoFormValid,
+  aplicarPeriodoAgendamentoForm,
+  sanitizarAgendamentoFromForm,
+  completarRotuloEquipamentoAgendamento,
+  deveMarcarConclusaoAgendamento,
+  createAgendamentoFromForm,
+  updateAgendamentoFromForm,
+} from './agendamentoFromForm'
+
 export {
   normalizeNomeAgenda,
   normalizeNomeClienteAgenda,
