@@ -628,7 +628,7 @@ import type {
   TecnicoFormState,
   TipoGestorFormState,
 } from './modules/pessoas'
-import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm } from './modules/pessoas'
+import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm, emptyTecnicoForm, tecnicoToForm, isTecnicoFormValid, createTecnicoFromForm, updateTecnicoFromForm } from './modules/pessoas'
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
 import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
@@ -1459,7 +1459,7 @@ export default function Dashboard() {
   const [hubMensagemTexto, setHubMensagemTexto] = useState('')
   const [showTecnicoForm, setShowTecnicoForm] = useState(false)
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
-  const [tecnicoForm, setTecnicoForm] = useState({ name: '', email: '', phone: '', address: '', type: 'internal' as 'internal' | 'external' | 'armazem', photo: '' })
+  const [tecnicoForm, setTecnicoForm] = useState<TecnicoFormState>(() => emptyTecnicoForm())
   const [conhecimentoTecnicos, setConhecimentoTecnicos] = useState<ConhecimentoTecnicoEntry[]>([])
   const [tecnicoConhecimentoSelecionado, setTecnicoConhecimentoSelecionado] = useState<string | null>(null)
   const [equipamentos, setEquipamentos] = useState<Equipamento[]>([])
@@ -11485,20 +11485,13 @@ export default function Dashboard() {
     // Se estiver na aba de técnicos internos, definir como interno por padrão
     // Se estiver na aba de técnicos externos, definir como externo por padrão
     const tipoPadrao = tecnicosTipoTab === 'externo' ? 'external' : 'internal'
-    setTecnicoForm({ name: '', email: '', phone: '', address: '', type: tipoPadrao, photo: '' })
+    setTecnicoForm(emptyTecnicoForm(tipoPadrao))
     setShowTecnicoForm(true)
   }
 
   const handleEditTecnico = (tecnico: Tecnico) => {
     setEditingTecnico(tecnico)
-    setTecnicoForm({ 
-      name: tecnico.name, 
-      email: tecnico.email, 
-      phone: tecnico.phone, 
-      address: tecnico.address, 
-      type: tecnico.type,
-      photo: tecnico.photo || ''
-    })
+    setTecnicoForm(tecnicoToForm(tecnico))
     setShowTecnicoForm(true)
   }
 
@@ -11532,19 +11525,15 @@ export default function Dashboard() {
   const handleSaveTecnico = (formOverride?: TecnicoFormState, editingOverride?: Tecnico | null): boolean => {
     const form = formOverride ?? tecnicoForm
     const editing = editingOverride !== undefined ? editingOverride : editingTecnico
-    if (!form.name || !form.email || !form.phone) {
+    if (!isTecnicoFormValid(form)) {
       alert(t.fillAllFields)
       return false
     }
 
     const agora = new Date().toISOString()
     const savedTecnico: Tecnico = editing
-      ? { ...editing, ...form, dataAtualizacao: agora }
-      : {
-          id: Date.now().toString(),
-          ...form,
-          dataAtualizacao: agora,
-        }
+      ? updateTecnicoFromForm(editing, form, { dataAtualizacao: agora })
+      : createTecnicoFromForm(form, { id: Date.now().toString(), dataAtualizacao: agora })
 
     if (editing) {
       const updatedTecnicos = tecnicos.map((t) => (t.id === editing.id ? savedTecnico : t))
@@ -11570,14 +11559,7 @@ export default function Dashboard() {
     }
     setShowTecnicoForm(false)
     setEditingTecnico(null)
-    setTecnicoForm({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      type: 'internal',
-      photo: '',
-    })
+    setTecnicoForm(emptyTecnicoForm())
     alert(
       editing
         ? (t.tecnicoUpdated || 'Técnico atualizado com sucesso.')

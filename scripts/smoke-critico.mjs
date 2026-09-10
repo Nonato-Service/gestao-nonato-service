@@ -2090,6 +2090,26 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia Gestor no sítio')
   }
+  if (
+    idx.includes('isTecnicoFormValid') &&
+    idx.includes('createTecnicoFromForm') &&
+    idx.includes('updateTecnicoFromForm') &&
+    exists('app/modules/pessoas/tecnicoFromForm.ts')
+  ) {
+    ok('módulo pessoas exporta Tecnico form/fromForm')
+  } else {
+    fail('módulo pessoas sem Tecnico form/fromForm')
+  }
+  if (
+    nma.includes('isTecnicoFormValid') &&
+    nma.includes('createTecnicoFromForm') &&
+    nma.includes('updateTecnicoFromForm') &&
+    nma.includes('tecnicoToForm')
+  ) {
+    ok('NonatoMainApp usa Tecnico fromForm do módulo pessoas')
+  } else {
+    fail('NonatoMainApp ainda mapeia Tecnico no sítio')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/pessoaTypes.ts'), 'utf8')
   if (libTypes.includes("from '../modules/pessoas'") || libTypes.includes('from "../modules/pessoas"')) {
     ok('lib/pessoaTypes re-exporta app/modules/pessoas')

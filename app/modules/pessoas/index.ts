@@ -24,5 +24,11 @@ export {
   updateGestorFromForm,
 } from './gestorFromForm'
 
+export {
+  isTecnicoFormValid,
+  createTecnicoFromForm,
+  updateTecnicoFromForm,
+} from './tecnicoFromForm'
+
 export type { GestorClasse, TecnicoClasse, TecnicoTipoUi } from './classes'
 export { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './classes'
