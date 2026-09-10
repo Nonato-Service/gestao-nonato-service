@@ -366,6 +366,10 @@ import {
   createEmptyPecaDesmontadaForm,
   grupoDesmontadoToFormState,
   pecaDesmontadaToFormState,
+  isPecaDesmontadaFormValid,
+  resolverGrupoNomeDesmontado,
+  createPecaDesmontadaFromForm,
+  updatePecaDesmontadaFromForm,
   migrateGruposDesmontadosList,
   migratePecasDesmontadasList,
   precisaRegravarGruposDesmontados,
@@ -13409,23 +13413,19 @@ export default function Dashboard() {
   }
 
   const handleSavePecaDesmontada = () => {
-    if (!pecaDesmontadaForm.numeroPeca || !pecaDesmontadaForm.familia || !pecaDesmontadaForm.nome) {
+    if (!isPecaDesmontadaFormValid(pecaDesmontadaForm)) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
       return
     }
 
+    const grupoNome = resolverGrupoNomeDesmontado(gruposDesmontados, pecaDesmontadaForm.grupoId)
     const savedPecaDesmontada: PecaDesmontada = editingPecaDesmontada
-      ? {
-          ...editingPecaDesmontada,
-          ...pecaDesmontadaForm,
-          grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || ''
-        }
-      : {
+      ? updatePecaDesmontadaFromForm(editingPecaDesmontada, pecaDesmontadaForm, { grupoNome })
+      : createPecaDesmontadaFromForm(pecaDesmontadaForm, {
           id: Date.now().toString(),
-          ...pecaDesmontadaForm,
-          grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || '',
-          dataCriacao: new Date().toISOString()
-        }
+          grupoNome,
+          dataCriacao: new Date().toISOString(),
+        })
 
     if (editingPecaDesmontada) {
       const updated = pecasDesmontadas.map(p => p.id === editingPecaDesmontada.id ? savedPecaDesmontada : p)

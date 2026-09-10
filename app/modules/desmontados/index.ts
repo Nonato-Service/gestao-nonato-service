@@ -16,6 +16,14 @@ export {
   pecaDesmontadaToFormState,
 } from './formState'
 
+export type { PecaDesmontadaFromFormOpts } from './pecaDesmontadaFromForm'
+export {
+  isPecaDesmontadaFormValid,
+  resolverGrupoNomeDesmontado,
+  createPecaDesmontadaFromForm,
+  updatePecaDesmontadaFromForm,
+} from './pecaDesmontadaFromForm'
+
 export {
   migrateGrupoDesmontado,
   migratePecaDesmontada,
