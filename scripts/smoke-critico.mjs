@@ -1866,13 +1866,16 @@ try {
     idx.includes('migrateGruposDesmontadosList') &&
     idx.includes('isPecaDesmontadaFormValid') &&
     idx.includes('createPecaDesmontadaFromForm') &&
-    idx.includes('updatePecaDesmontadaFromForm')
+    idx.includes('updatePecaDesmontadaFromForm') &&
+    idx.includes('isGrupoDesmontadoFormValid') &&
+    idx.includes('createGrupoDesmontadoFromForm') &&
+    idx.includes('updateGrupoDesmontadoFromForm')
   ) {
     ok('módulo desmontados exporta form/migrate')
   } else {
     fail('módulo desmontados incompleto (index.ts)')
   }
-  ;['tipos.ts', 'formState.ts', 'migrate.ts', 'pecaDesmontadaFromForm.ts'].forEach((f) => {
+  ;['tipos.ts', 'formState.ts', 'migrate.ts', 'pecaDesmontadaFromForm.ts', 'grupoDesmontadoFromForm.ts'].forEach((f) => {
     if (exists(`app/modules/desmontados/${f}`)) ok(`existe app/modules/desmontados/${f}`)
     else fail(`falta app/modules/desmontados/${f}`)
   })
@@ -1889,7 +1892,10 @@ try {
     nma.includes('migrateGruposDesmontadosList') &&
     nma.includes('isPecaDesmontadaFormValid') &&
     nma.includes('createPecaDesmontadaFromForm') &&
-    nma.includes('updatePecaDesmontadaFromForm')
+    nma.includes('updatePecaDesmontadaFromForm') &&
+    nma.includes('isGrupoDesmontadoFormValid') &&
+    nma.includes('createGrupoDesmontadoFromForm') &&
+    nma.includes('updateGrupoDesmontadoFromForm')
   ) {
     ok('NonatoMainApp usa desmontados do módulo')
   } else {

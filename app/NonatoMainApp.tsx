@@ -366,6 +366,9 @@ import {
   createEmptyPecaDesmontadaForm,
   grupoDesmontadoToFormState,
   pecaDesmontadaToFormState,
+  isGrupoDesmontadoFormValid,
+  createGrupoDesmontadoFromForm,
+  updateGrupoDesmontadoFromForm,
   isPecaDesmontadaFormValid,
   resolverGrupoNomeDesmontado,
   createPecaDesmontadaFromForm,
@@ -13358,23 +13361,17 @@ export default function Dashboard() {
   }
 
   const handleSaveGrupoDesmontado = () => {
-    if (!grupoDesmontadoForm.numeroGrupo || !grupoDesmontadoForm.familia) {
+    if (!isGrupoDesmontadoFormValid(grupoDesmontadoForm)) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
       return
     }
 
     const savedGrupoDesmontado: GrupoDesmontado = editingGrupoDesmontado
-      ? {
-          ...editingGrupoDesmontado,
-          ...grupoDesmontadoForm,
-          nome: grupoDesmontadoForm.numeroGrupo
-        }
-      : {
+      ? updateGrupoDesmontadoFromForm(editingGrupoDesmontado, grupoDesmontadoForm)
+      : createGrupoDesmontadoFromForm(grupoDesmontadoForm, {
           id: Date.now().toString(),
-          ...grupoDesmontadoForm,
-          nome: grupoDesmontadoForm.numeroGrupo,
-          dataCriacao: new Date().toISOString()
-        }
+          dataCriacao: new Date().toISOString(),
+        })
 
     if (editingGrupoDesmontado) {
       const updated = gruposDesmontados.map(g => g.id === editingGrupoDesmontado.id ? savedGrupoDesmontado : g)
