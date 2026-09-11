@@ -14,6 +14,14 @@ export {
 
 export type { PecaSubstituicao } from './pecaSubstituicao'
 export { createEmptyPecaSubstituicaoForm } from './pecaSubstituicao'
+export type { PecaBibliotecaParaSubstituicao } from './pecaSubstituicaoFromForm'
+export {
+  isPecaSubstituicaoFormValid,
+  createPecaSubstituicaoFromForm,
+  pecaBibliotecaToPecaSubstituicaoForm,
+  createPecaSubstituicaoFromBiblioteca,
+  pecaSubstituicaoCodigoDuplicado,
+} from './pecaSubstituicaoFromForm'
 
 export type {
   RelatorioEquipamentoOrigem,

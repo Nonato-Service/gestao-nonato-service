@@ -173,6 +173,11 @@ import {
   updateDiaTrabalhoFromForm,
   emptyDiaTrabalhoFormWithKmPadrao,
   createEmptyPecaSubstituicaoForm,
+  isPecaSubstituicaoFormValid,
+  createPecaSubstituicaoFromForm,
+  pecaBibliotecaToPecaSubstituicaoForm,
+  createPecaSubstituicaoFromBiblioteca,
+  pecaSubstituicaoCodigoDuplicado,
   createEmptyRelatorioServicoForm,
   relatorioServicoFormMissing,
   isRelatorioServicoFormValid,
@@ -19823,11 +19828,11 @@ export default function Dashboard() {
   }
 
   const handleAddPeca = (destino: 'substituicao' | 'instaladas' = destinoAnexarPecaRelatorio) => {
-    if (!novaPeca.descricao || !novaPeca.codigo || !novaPeca.quantidade) {
+    if (!isPecaSubstituicaoFormValid(novaPeca)) {
       alert(t.fillAllFields)
       return
     }
-    const novaEntrada = { ...novaPeca, id: Date.now().toString() + Math.random().toString(36).substr(2, 9) }
+    const novaEntrada = createPecaSubstituicaoFromForm(novaPeca)
     if (destino === 'instaladas') {
       setRelatorioServicoForm({
         ...relatorioServicoForm,
@@ -19862,13 +19867,7 @@ export default function Dashboard() {
   }
 
   const handleSelecionarPecaBiblioteca = (peca: PecaBiblioteca) => {
-    setNovaPeca({
-      id: '',
-      descricao: peca.nome,
-      codigo: peca.codigo,
-      quantidade: '1',
-      imagem: peca.imagem
-    })
+    setNovaPeca(pecaBibliotecaToPecaSubstituicaoForm(peca))
     setMetodoAdicionarPeca('manual')
   }
 
@@ -19899,25 +19898,15 @@ export default function Dashboard() {
     opts?: { continuarNaBiblioteca?: boolean; destino?: 'substituicao' | 'instaladas' }
   ) => {
     const destino = opts?.destino ?? destinoAnexarPecaRelatorio
-    const codigo = String(peca.codigo ?? '').trim()
-    if (!codigo) return
+    const novaEntrada = createPecaSubstituicaoFromBiblioteca(peca, quantidade)
+    if (!novaEntrada) return
     const listaAtual =
       destino === 'instaladas'
         ? relatorioServicoForm.pecasInstaladas || []
         : relatorioServicoForm.pecasSubstituicao
-    const jaExiste = listaAtual.some(
-      (p) => String(p.codigo ?? '').trim().toLowerCase() === codigo.toLowerCase()
-    )
-    if (jaExiste) {
+    if (pecaSubstituicaoCodigoDuplicado(listaAtual, novaEntrada.codigo)) {
       alert((safeT as any)?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
       return
-    }
-    const novaEntrada = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-      descricao: peca.nome || peca.descricao || '',
-      codigo,
-      quantidade: String(quantidade),
-      imagem: peca.imagem,
     }
     setRelatorioServicoForm((prev) =>
       destino === 'instaladas'

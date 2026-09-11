@@ -1347,6 +1347,27 @@ try {
     fail('NonatoMainApp ainda define PecaSubstituicao localmente ou não usa createEmptyPecaSubstituicaoForm')
   }
   if (
+    idx.includes('isPecaSubstituicaoFormValid') &&
+    idx.includes('createPecaSubstituicaoFromForm') &&
+    idx.includes('createPecaSubstituicaoFromBiblioteca') &&
+    idx.includes('pecaSubstituicaoCodigoDuplicado') &&
+    exists('app/modules/relatorio-servico/pecaSubstituicaoFromForm.ts')
+  ) {
+    ok('módulo relatorio-servico exporta PecaSubstituicao form/fromForm')
+  } else {
+    fail('módulo relatorio-servico sem PecaSubstituicao form/fromForm')
+  }
+  if (
+    nma.includes('isPecaSubstituicaoFormValid') &&
+    nma.includes('createPecaSubstituicaoFromForm') &&
+    nma.includes('createPecaSubstituicaoFromBiblioteca') &&
+    nma.includes('pecaSubstituicaoCodigoDuplicado')
+  ) {
+    ok('NonatoMainApp usa PecaSubstituicao fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia PecaSubstituicao no sítio')
+  }
+  if (
     idx.includes('createEmptyDiaTrabalhoForm')
   ) {
     ok('módulo relatorio-servico exporta createEmptyDiaTrabalhoForm')
