@@ -8,6 +8,7 @@ import { PWA_VERSION } from './lib/pwaVersion'
 // Versão centralizada em pwa-version.json — sincronizada em prebuild/predev (npm run pwa:bump)
 const SW_VERSION = PWA_VERSION
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
+const SW_DISMISSED_UNTIL_LS = 'nonato-pwa-update-dismissed-until'
 const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 
 export function RegisterSW() {
@@ -17,6 +18,7 @@ export function RegisterSW() {
   const reloadHandled = useRef(false)
   const userConfirmedUpdate = useRef(false)
   const lastUpdateCheckAt = useRef(0)
+  const lastInputAt = useRef(Date.now())
 
   useEffect(() => {
     const refreshUiLang = () => setUiLangTick((n) => n + 1)
@@ -32,16 +34,18 @@ export function RegisterSW() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
-    const isDismissedThisSession = () => {
+    const isDismissedQuietly = () => {
       try {
-        return sessionStorage.getItem(SW_DISMISSED_SESSION_KEY) === String(SW_VERSION)
+        if (sessionStorage.getItem(SW_DISMISSED_SESSION_KEY) === String(SW_VERSION)) return true
+        const until = Number(localStorage.getItem(SW_DISMISSED_UNTIL_LS) || 0)
+        return Number.isFinite(until) && until > Date.now()
       } catch {
         return false
       }
     }
 
     const markUpdateAvailable = () => {
-      if (isDismissedThisSession()) return
+      if (isDismissedQuietly()) return
       setUpdateReady(true)
     }
 
@@ -90,8 +94,31 @@ export function RegisterSW() {
       navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
     }
 
+    const markUserInput = () => {
+      lastInputAt.current = Date.now()
+    }
+    window.addEventListener('keydown', markUserInput, true)
+    window.addEventListener('pointerdown', markUserInput, true)
+
+    const applyWaitingWorker = () => {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          if (!reg.waiting) return
+          userConfirmedUpdate.current = true
+          setUpdateReady(false)
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+        })
+        .catch(() => {})
+    }
+
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') checkForUpdates()
+      if (document.visibilityState === 'visible') {
+        checkForUpdates()
+        return
+      }
+      // Sem banner: aplica a versão nova ao sair do ecrã, se não estiver a escrever.
+      if (Date.now() - lastInputAt.current < 120_000) return
+      applyWaitingWorker()
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
 
@@ -106,6 +133,8 @@ export function RegisterSW() {
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('pageshow', onPageShow)
       window.removeEventListener('focus', onPageShow)
+      window.removeEventListener('keydown', markUserInput, true)
+      window.removeEventListener('pointerdown', markUserInput, true)
       navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       teardownAutoSync()
       teardownFlush()
@@ -128,6 +157,7 @@ export function RegisterSW() {
   const handleDismiss = () => {
     try {
       sessionStorage.setItem(SW_DISMISSED_SESSION_KEY, String(SW_VERSION))
+      localStorage.setItem(SW_DISMISSED_UNTIL_LS, String(Date.now() + 24 * 60 * 60 * 1000))
     } catch {
       /* ignorar */
     }

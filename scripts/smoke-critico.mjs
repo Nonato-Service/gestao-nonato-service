@@ -2880,7 +2880,28 @@ try {
   } else {
     fail('restore-cadastro-servicos sem autenticação')
   }
+  const appAuthSrc = fs.readFileSync(path.join(root, 'app/api/auth/appAuth.ts'), 'utf8')
+  if (
+    appAuthSrc.includes('const SESSION_DAYS = 30') &&
+    appAuthSrc.includes("SIGNED_COOKIE_PREFIX = 'v1.'") &&
+    appAuthSrc.includes('signSessionBody')
+  ) {
+    ok('sessão: cookie assinado 30 dias (sobrevive ao deploy)')
+  } else {
+    fail('appAuth ainda com sessão só em ficheiro / 7 dias')
+  }
+  const swReg = fs.readFileSync(path.join(root, 'app/RegisterSW.tsx'), 'utf8')
+  if (swReg.includes('applyWaitingWorker') && swReg.includes('SW_DISMISSED_UNTIL_LS')) {
+    ok('PWA: actualiza em silêncio ao sair do ecrã; DEPOIS vale 24h')
+  } else {
+    fail('RegisterSW sem auto-apply / dismiss 24h')
+  }
   const nmaPull = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (nmaPull.includes('nonato-request-login')) {
+    ok('login: banner de sessão abre o ecrã de entrar')
+  } else {
+    fail('NonatoMainApp sem listener nonato-request-login')
+  }
   if (nmaPull.includes('pulled.status === \'risk\'') || nmaPull.includes('pulled.status === "risk"')) {
     ok('runAutoServerPull respeita risco grave (não aplica bundle incompleto)')
   } else {

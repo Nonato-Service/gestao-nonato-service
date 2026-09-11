@@ -172,7 +172,7 @@ export function OfflineIndicator() {
       setAuthMsg(
         getStoredUiString(
           'saveServerAuthRequired',
-          'Sessão expirada — entre novamente no programa para gravar no servidor.'
+          'Sessão expirada — toque aqui para entrar novamente.'
         )
       )
       setLastFailed(null)
@@ -269,13 +269,6 @@ export function OfflineIndicator() {
     }
   }, [lastConfirmed])
 
-  useEffect(() => {
-    if (authMsg) {
-      const t = setTimeout(() => setAuthMsg(null), 20_000)
-      return () => clearTimeout(t)
-    }
-  }, [authMsg])
-
   const showFailed = Boolean(lastFailed) && showPending && pendingCount > 0 && !authMsg && !lastConfirmed
 
   const hidden =
@@ -347,9 +340,17 @@ export function OfflineIndicator() {
           maxWidth: 'min(92vw, 360px)',
           backgroundColor: bg,
           color: '#fff',
-          cursor: pendingCount > 0 || showFailed || !online ? 'pointer' : undefined,
+          cursor: pendingCount > 0 || showFailed || !online || Boolean(authMsg) ? 'pointer' : undefined,
         }}
         onClick={() => {
+          if (authMsg) {
+            try {
+              window.dispatchEvent(new CustomEvent('nonato-request-login'))
+            } catch {
+              /* ignorar */
+            }
+            return
+          }
           if (!online) {
             void refreshOnlineFromProbe({ force: true, syncIfOnline: true })
             return
@@ -379,7 +380,12 @@ export function OfflineIndicator() {
             )}
           </>
         ) : authMsg ? (
-          <>{authMsg}</>
+          <>
+            {authMsg}{' '}
+            <strong>
+              {getStoredUiString('saveServerAuthRequiredBtn', 'Entrar')}
+            </strong>
+          </>
         ) : showFailed ? (
           <>
             {getStoredUiString(

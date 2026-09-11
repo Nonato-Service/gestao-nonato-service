@@ -8,8 +8,10 @@ import { getDemoContext, isDemoGuestLock, rejectDemoGuestProductionAccess } from
 
 export const APP_SESSION_COOKIE = 'nonato_app_session'
 const SESSIONS_FILE = '_app-auth-sessions.json'
-const SESSION_DAYS = 7
+/** 30 dias: a sessão não cai a cada deploy nem ao fim de uma semana de trabalho. */
+const SESSION_DAYS = 30
 const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60
+const SIGNED_COOKIE_PREFIX = 'v1.'
 
 export type StoredUser = {
   id: string
@@ -267,13 +269,6 @@ export function resetAdminPasswordOnDisk(newPassword: string, email?: string): S
     )
   }
 
-  try {
-    const sessionsPath = path.join(DATA_DIR, SESSIONS_FILE)
-    if (fs.existsSync(sessionsPath)) fs.unlinkSync(sessionsPath)
-  } catch {
-    /* ignorar */
-  }
-
   return toStoredUser({ ...admin, password: senha, isAdmin: true, email: email?.trim() || admin.email })
 }
 
@@ -336,12 +331,95 @@ export function validateAppCredentials(username: string, password: string): Stor
   return null
 }
 
+function sessionHmacSecret(): string {
+  return (
+    process.env.NONATO_SESSION_SECRET?.trim() ||
+    process.env.NONATO_API_SECRET?.trim() ||
+    process.env.NONATO_MASTER_PASSWORD?.trim() ||
+    'nonato-session-hmac-v1'
+  )
+}
+
+type SignedSessionBody = {
+  id: string
+  name: string
+  email: string
+  role: string
+  isAdmin?: boolean
+  isDemoGuest?: boolean
+  demoRecipientId?: string
+  linkedProfileType?: 'gestor' | 'tecnico' | ''
+  linkedProfileId?: string
+  exp: number
+}
+
+function compactUser(user: StoredUser): Omit<SignedSessionBody, 'exp'> {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isAdmin: user.isAdmin,
+    isDemoGuest: user.isDemoGuest,
+    demoRecipientId: user.demoRecipientId,
+    linkedProfileType: user.linkedProfileType,
+    linkedProfileId: user.linkedProfileId,
+  }
+}
+
+function signSessionBody(body: SignedSessionBody): string {
+  const payload = Buffer.from(JSON.stringify(body), 'utf8').toString('base64url')
+  const sig = crypto.createHmac('sha256', sessionHmacSecret()).update(payload).digest('base64url')
+  return `${SIGNED_COOKIE_PREFIX}${payload}.${sig}`
+}
+
+function safeEqualUtf8(a: string, b: string): boolean {
+  const ba = Buffer.from(a)
+  const bb = Buffer.from(b)
+  if (ba.length !== bb.length) return false
+  return crypto.timingSafeEqual(ba, bb)
+}
+
+function readSignedSession(token: string): SignedSessionBody | null {
+  if (!token.startsWith(SIGNED_COOKIE_PREFIX)) return null
+  const rest = token.slice(SIGNED_COOKIE_PREFIX.length)
+  const dot = rest.lastIndexOf('.')
+  if (dot <= 0) return null
+  const payload = rest.slice(0, dot)
+  const sig = rest.slice(dot + 1)
+  const expected = crypto.createHmac('sha256', sessionHmacSecret()).update(payload).digest('base64url')
+  if (!safeEqualUtf8(sig, expected)) return null
+  try {
+    const body = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as SignedSessionBody
+    if (!body?.id || typeof body.exp !== 'number') return null
+    if (body.exp <= Date.now()) return null
+    return body
+  } catch {
+    return null
+  }
+}
+
+function hydrateSignedUser(body: SignedSessionBody): StoredUser {
+  const fallback = toStoredUser({
+    id: body.id,
+    name: body.name,
+    email: body.email,
+    role: body.role,
+    isAdmin: body.isAdmin,
+    isDemoGuest: body.isDemoGuest,
+    demoRecipientId: body.demoRecipientId,
+    linkedProfileType: body.linkedProfileType,
+    linkedProfileId: body.linkedProfileId,
+  })
+  if (body.isDemoGuest) return fallback
+  const users = readJsonArray('nonato-users')
+  const found = users.find((u) => u && String(u.id) === String(body.id))
+  return found ? toStoredUser(found) : fallback
+}
+
 export function createAppSession(user: StoredUser): { token: string; user: StoredUser; maxAge: number } {
-  const token = crypto.randomBytes(32).toString('base64url')
-  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000).toISOString()
-  const store = pruneExpiredSessions(readSessions())
-  store.sessions[token] = { ...user, expiresAt }
-  writeSessions(store)
+  const exp = Date.now() + SESSION_MAX_AGE * 1000
+  const token = signSessionBody({ ...compactUser(user), exp })
   return { token, user, maxAge: SESSION_MAX_AGE }
 }
 
@@ -357,6 +435,8 @@ export function clearAppSession(token: string | null | undefined): void {
 export function getAppSessionFromRequest(request: NextRequest): StoredUser | null {
   const token = request.cookies.get(APP_SESSION_COOKIE)?.value
   if (!token) return null
+  const signed = readSignedSession(token)
+  if (signed) return hydrateSignedUser(signed)
   const store = pruneExpiredSessions(readSessions())
   const session = store.sessions[token]
   if (!session) return null

@@ -6704,6 +6704,21 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
+    const openLogin = () => {
+      try {
+        const cached = loadLastAuthUser()
+        if (cached) setLoginUsuarioInput(String(cached.email || cached.name || ''))
+      } catch {
+        /* ignorar */
+      }
+      setShowPasswordScreen(true)
+      setShowSplashInicial(false)
+    }
+    window.addEventListener('nonato-request-login', openLogin)
+    return () => window.removeEventListener('nonato-request-login', openLogin)
+  }, [])
+
+  useEffect(() => {
     if (!isDemoMode) return
     setExpandedGroups((prev) => {
       if (prev.has('extra')) return prev
