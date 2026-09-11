@@ -1367,6 +1367,27 @@ try {
     fail('NonatoMainApp ainda tem resets literais de DiaTrabalho vazio ou não importa createEmptyDiaTrabalhoForm')
   }
   if (
+    idx.includes('isDiaTrabalhoFormValid') &&
+    idx.includes('createDiaTrabalhoFromForm') &&
+    idx.includes('updateDiaTrabalhoFromForm') &&
+    idx.includes('emptyDiaTrabalhoFormWithKmPadrao') &&
+    exists('app/modules/relatorio-servico/diaTrabalhoFromForm.ts')
+  ) {
+    ok('módulo relatorio-servico exporta DiaTrabalho form/fromForm')
+  } else {
+    fail('módulo relatorio-servico sem DiaTrabalho form/fromForm')
+  }
+  if (
+    nma.includes('isDiaTrabalhoFormValid') &&
+    nma.includes('createDiaTrabalhoFromForm') &&
+    nma.includes('updateDiaTrabalhoFromForm') &&
+    nma.includes('emptyDiaTrabalhoFormWithKmPadrao')
+  ) {
+    ok('NonatoMainApp usa DiaTrabalho fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia DiaTrabalho no sítio')
+  }
+  if (
     idx.includes('criarEquipamentoRelatorioVazio') &&
     idx.includes('createEmptyEquipamentoRelatorioForm') &&
     idx.includes('RelatorioEquipamentoRef')

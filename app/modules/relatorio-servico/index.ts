@@ -3,6 +3,14 @@
 export type { DiaTrabalho, RelatorioServicoNumeroLike, ClienteRelatorioLookup } from './tipos'
 
 export { createEmptyDiaTrabalhoForm } from './diaTrabalhoForm'
+export type { DiaTrabalhoKmPadrao, DiaTrabalhoFromFormOpts } from './diaTrabalhoFromForm'
+export {
+  resolveDiaTrabalhoData,
+  isDiaTrabalhoFormValid,
+  createDiaTrabalhoFromForm,
+  updateDiaTrabalhoFromForm,
+  emptyDiaTrabalhoFormWithKmPadrao,
+} from './diaTrabalhoFromForm'
 
 export type { PecaSubstituicao } from './pecaSubstituicao'
 export { createEmptyPecaSubstituicaoForm } from './pecaSubstituicao'

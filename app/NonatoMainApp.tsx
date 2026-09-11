@@ -168,6 +168,10 @@ import {
   type PastaRelatoriosExcluidosCliente,
   type RelatoriosExcluidosClientesStorage,
   createEmptyDiaTrabalhoForm,
+  isDiaTrabalhoFormValid,
+  createDiaTrabalhoFromForm,
+  updateDiaTrabalhoFromForm,
+  emptyDiaTrabalhoFormWithKmPadrao,
   createEmptyPecaSubstituicaoForm,
   createEmptyRelatorioServicoForm,
   relatorioServicoFormMissing,
@@ -19743,10 +19747,7 @@ export default function Dashboard() {
   const normalizeDateKey = (value?: string): string => diaTrabalhoDataChaveOrdenacao(value)
 
   const handleAddDiaTrabalho = () => {
-    // Apenas a data é obrigatória. Se não houver data no estado, usar a data de hoje (que já aparece no campo)
-    const dataParaUsar = novoDiaTrabalho.data || new Date().toISOString().split('T')[0]
-    
-    if (!dataParaUsar) {
+    if (!isDiaTrabalhoFormValid(novoDiaTrabalho)) {
       alert(t.dataObrigatoria || 'Por favor, preencha a data do dia de trabalho.')
       return
     }
@@ -19754,94 +19755,41 @@ export default function Dashboard() {
     const clienteAtual =
       clientes.find((c) => c.id === relatorioServicoForm.clienteId) ||
       findClienteByRelatorio(clientes, relatorioServicoForm)
-    const { kmIda: kmIdaPadrao, kmRetorno: kmRetornoPadrao } = getKmPadraoDoCliente(clienteAtual)
+    const kmPadrao = getKmPadraoDoCliente(clienteAtual)
+    const existing =
+      editingDiaTrabalhoIndex !== null
+        ? relatorioServicoForm.diasTrabalho[editingDiaTrabalhoIndex]
+        : undefined
+    const diaAtualizado = existing
+      ? updateDiaTrabalhoFromForm(existing, novoDiaTrabalho, {
+          kmPadrao,
+          descricaoMaxChars: WRITING_ASSIST_FIELD_MAX_CHARS,
+        })
+      : createDiaTrabalhoFromForm(novoDiaTrabalho, {
+          kmPadrao,
+          descricaoMaxChars: WRITING_ASSIST_FIELD_MAX_CHARS,
+        })
 
-    let kmIdaVal = normalizeKmForPersist(novoDiaTrabalho.kmIda)
-    let kmRetornoVal = normalizeKmForPersist(novoDiaTrabalho.kmRetorno)
-    if (!kmIdaVal && kmIdaPadrao) kmIdaVal = kmIdaPadrao
-    if (!kmRetornoVal && kmRetornoPadrao) kmRetornoVal = kmRetornoPadrao
-
-    // Calcular KM Total automaticamente
-    const kmIda = parseFloat(kmIdaVal) || 0
-    const kmRetorno = parseFloat(kmRetornoVal) || 0
-    const kmTotal = (kmIda + kmRetorno).toString()
-
-    // Calcular durações se necessário
-    let idaDuracao = novoDiaTrabalho.idaDuracao
-    if (!idaDuracao && novoDiaTrabalho.idaHora && novoDiaTrabalho.idaChegada) {
-      // Calcular duração da ida
-      const [horaInicio, minInicio] = novoDiaTrabalho.idaHora.split(':').map(Number)
-      const [horaFim, minFim] = novoDiaTrabalho.idaChegada.split(':').map(Number)
-      const inicioMinutos = horaInicio * 60 + minInicio
-      const fimMinutos = horaFim * 60 + minFim
-      const diffMinutos = fimMinutos - inicioMinutos
-      const horas = Math.floor(diffMinutos / 60)
-      const minutos = diffMinutos % 60
-      idaDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
-    }
-
-    let retornoDuracao = novoDiaTrabalho.retornoDuracao
-    if (!retornoDuracao && novoDiaTrabalho.retornoSaida && novoDiaTrabalho.retornoChegada) {
-      // Calcular duração do retorno
-      const [horaInicio, minInicio] = novoDiaTrabalho.retornoSaida.split(':').map(Number)
-      const [horaFim, minFim] = novoDiaTrabalho.retornoChegada.split(':').map(Number)
-      const inicioMinutos = horaInicio * 60 + minInicio
-      const fimMinutos = horaFim * 60 + minFim
-      const diffMinutos = fimMinutos - inicioMinutos
-      const horas = Math.floor(diffMinutos / 60)
-      const minutos = diffMinutos % 60
-      retornoDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
-    }
-
-    const diaAtualizado = atualizarCalculosDia({
-      ...novoDiaTrabalho,
-      data: normalizeDateKey(dataParaUsar),
-      id: editingDiaTrabalhoIndex !== null ? relatorioServicoForm.diasTrabalho[editingDiaTrabalhoIndex].id : (Date.now().toString() + Math.random().toString(36).substr(2, 9)),
-      kmTotal,
-      kmIda: kmIdaVal,
-      kmRetorno: kmRetornoVal,
-      descricaoTrabalho: String(novoDiaTrabalho.descricaoTrabalho ?? '').slice(
-        0,
-        WRITING_ASSIST_FIELD_MAX_CHARS
-      ),
+    const updatedDias =
+      editingDiaTrabalhoIndex !== null
+        ? relatorioServicoForm.diasTrabalho.map((dia, i) =>
+            i === editingDiaTrabalhoIndex ? diaAtualizado : dia
+          )
+        : [...relatorioServicoForm.diasTrabalho, diaAtualizado]
+    const diasOrdenados = sortDiasTrabalhoCronologicamente(updatedDias)
+    const totais = calcularTotais(diasOrdenados)
+    setRelatorioServicoForm({
+      ...relatorioServicoForm,
+      diasTrabalho: diasOrdenados,
+      kmsPercorridos: totais.kmsPercorridos,
+      horasTrabalho: totais.horasTrabalho,
+      horasViagem: totais.horasViagem,
     })
-
     if (editingDiaTrabalhoIndex !== null) {
-      const updatedDias = [...relatorioServicoForm.diasTrabalho]
-      updatedDias[editingDiaTrabalhoIndex] = diaAtualizado
-      const diasOrdenados = sortDiasTrabalhoCronologicamente(updatedDias)
-      const totais = calcularTotais(diasOrdenados)
-      setRelatorioServicoForm({
-        ...relatorioServicoForm,
-        diasTrabalho: diasOrdenados,
-        kmsPercorridos: totais.kmsPercorridos,
-        horasTrabalho: totais.horasTrabalho,
-        horasViagem: totais.horasViagem,
-      })
       setEditingDiaTrabalhoIndex(null)
-    } else {
-      const diasOrdenados = sortDiasTrabalhoCronologicamente([
-        ...relatorioServicoForm.diasTrabalho,
-        diaAtualizado,
-      ])
-      const totais = calcularTotais(diasOrdenados)
-      setRelatorioServicoForm({
-        ...relatorioServicoForm,
-        diasTrabalho: diasOrdenados,
-        kmsPercorridos: totais.kmsPercorridos,
-        horasTrabalho: totais.horasTrabalho,
-        horasViagem: totais.horasViagem,
-      })
     }
 
-    setNovoDiaTrabalho(() => {
-      const { kmIda, kmRetorno } = getKmPadraoDoCliente(clienteAtual)
-      return atualizarCalculosDia({
-        ...createEmptyDiaTrabalhoForm(),
-        kmIda,
-        kmRetorno,
-      })
-    })
+    setNovoDiaTrabalho(emptyDiaTrabalhoFormWithKmPadrao(kmPadrao))
   }
 
   /** Prepara o editor para um 2.º bloco de horário na mesma data (sem nova diária). */
