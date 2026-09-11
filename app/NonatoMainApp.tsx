@@ -596,6 +596,11 @@ import {
   enriquecerBlocoEquipamentoPedido,
   montarCamposEquipamentoPedidoPdf,
   type HistoricoEquipamento,
+  type HistoricoEquipamentoTipo,
+  type HistoricoEquipamentoFormState,
+  emptyHistoricoEquipamentoForm,
+  isHistoricoEquipamentoFormValid,
+  createHistoricoEquipamentoFromForm,
   type ItemIncluso,
   type PartEquipamento,
   type Equipamento,
@@ -1611,7 +1616,7 @@ export default function Dashboard() {
   const [equipamentosInfoMecanicaListaLimite, setEquipamentosInfoMecanicaListaLimite] = useState(LISTA_UI_LOTE)
   const [equipamentosModalListaLimite, setEquipamentosModalListaLimite] = useState(LISTA_UI_LOTE)
   const [equipamentoDetailTab, setEquipamentoDetailTab] = useState<'historico' | 'documentos' | 'fotos' | 'itens' | 'etiquetas'>('historico')
-  const [historicoForm, setHistoricoForm] = useState<{ tipo: string; descricao: string; responsavel: string; observacoes: string }>({ tipo: 'outro', descricao: '', responsavel: '', observacoes: '' })
+  const [historicoForm, setHistoricoForm] = useState<HistoricoEquipamentoFormState>(emptyHistoricoEquipamentoForm())
   const [newItemIncluded, setNewItemIncluded] = useState('')
   const [editingItemIncluded, setEditingItemIncluded] = useState<ItemIncluso | null>(null)
   const [itemIncludedForm, setItemIncludedForm] = useState<{ nome: string; imagem?: string }>({ nome: '', imagem: undefined })
@@ -28031,7 +28036,7 @@ export default function Dashboard() {
                               <label style={{ display: 'block', marginBottom: '5px' }}>{t.tipoEvento || 'Tipo de Evento'}</label>
                               <select
                                 value={historicoForm.tipo}
-                                onChange={(e) => setHistoricoForm({ ...historicoForm, tipo: e.target.value })}
+                                onChange={(e) => setHistoricoForm({ ...historicoForm, tipo: e.target.value as HistoricoEquipamentoTipo })}
                                 style={{ width: '100%', padding: '8px', backgroundColor: '#404040', color: '#fff', border: '1px solid rgba(0, 200, 83, 0.3)', borderRadius: '4px' }}
                               >
                                 <option value="manutencao">{t.manutencao || 'Manutenção'}</option>
@@ -28075,18 +28080,11 @@ export default function Dashboard() {
                             <button
                               className="btn-primary"
                               onClick={() => {
-                                if (!historicoForm.descricao.trim()) {
+                                if (!isHistoricoEquipamentoFormValid(historicoForm)) {
                                   alert(t.fillDescription || 'Por favor, preencha a descrição do evento.')
                                   return
                                 }
-                                const novoHistorico: HistoricoEquipamento = {
-                                  id: Date.now().toString(),
-                                  data: new Date().toISOString(),
-                                  tipo: historicoForm.tipo as any,
-                                  descricao: historicoForm.descricao,
-                                  responsavel: historicoForm.responsavel || undefined,
-                                  observacoes: historicoForm.observacoes || undefined
-                                }
+                                const novoHistorico: HistoricoEquipamento = createHistoricoEquipamentoFromForm(historicoForm)
                                 const historicoAtual = viewingEquipamento.historico || []
                                 const equipamentoAtualizado = {
                                   ...viewingEquipamento,
@@ -28098,7 +28096,7 @@ export default function Dashboard() {
                                 setEquipamentos(equipamentosAtualizados)
                                 setViewingEquipamento(equipamentoAtualizado)
                                 saveData('nonato-equipamentos', equipamentosAtualizados)
-                                setHistoricoForm({ tipo: 'outro', descricao: '', responsavel: '', observacoes: '' })
+                                setHistoricoForm(emptyHistoricoEquipamentoForm())
                                 alert(t.eventAddedSuccess || 'Evento adicionado ao histórico com sucesso!')
                               }}
                               style={{ padding: '8px 16px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}

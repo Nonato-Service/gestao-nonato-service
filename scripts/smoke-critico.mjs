@@ -1042,7 +1042,10 @@ try {
     idx.includes('isEquipamentoFormValid') &&
     idx.includes('createEquipamentoFromForm') &&
     idx.includes('updateEquipamentoFromForm') &&
-    idx.includes('equipamentoIdDuplicado')
+    idx.includes('equipamentoIdDuplicado') &&
+    idx.includes('isHistoricoEquipamentoFormValid') &&
+    idx.includes('createHistoricoEquipamentoFromForm') &&
+    idx.includes('emptyHistoricoEquipamentoForm')
   ) {
     ok('módulo equipamentos exporta relatório/etiquetas/formState')
   } else {
@@ -1254,6 +1257,11 @@ try {
   } else {
     ok('existe app/modules/equipamentos/equipamentoFromForm.ts')
   }
+  if (!exists('app/modules/equipamentos/historicoFromForm.ts')) {
+    fail('falta app/modules/equipamentos/historicoFromForm.ts')
+  } else {
+    ok('existe app/modules/equipamentos/historicoFromForm.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/equipamentos'") || nma.includes('from "./modules/equipamentos"')) {
     ok('NonatoMainApp importa app/modules/equipamentos')
@@ -1271,7 +1279,10 @@ try {
     nma.includes('isEquipamentoFormValid') &&
     nma.includes('createEquipamentoFromForm') &&
     nma.includes('updateEquipamentoFromForm') &&
-    nma.includes('equipamentoIdDuplicado')
+    nma.includes('equipamentoIdDuplicado') &&
+    nma.includes('isHistoricoEquipamentoFormValid') &&
+    nma.includes('createHistoricoEquipamentoFromForm') &&
+    nma.includes('emptyHistoricoEquipamentoForm')
   ) {
     ok('NonatoMainApp usa formState/aliases/fromForm do módulo equipamentos')
   } else {

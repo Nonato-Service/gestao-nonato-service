@@ -41,3 +41,11 @@ export {
   createEquipamentoFromForm,
   updateEquipamentoFromForm,
 } from './equipamentoFromForm'
+
+export type { HistoricoEquipamentoTipo, HistoricoEquipamentoFormState } from './historicoForm'
+export { emptyHistoricoEquipamentoForm } from './historicoForm'
+export type { CreateHistoricoEquipamentoFromFormOpts } from './historicoFromForm'
+export {
+  isHistoricoEquipamentoFormValid,
+  createHistoricoEquipamentoFromForm,
+} from './historicoFromForm'
