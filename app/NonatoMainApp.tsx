@@ -170,6 +170,10 @@ import {
   createEmptyDiaTrabalhoForm,
   createEmptyPecaSubstituicaoForm,
   createEmptyRelatorioServicoForm,
+  relatorioServicoFormMissing,
+  isRelatorioServicoFormValid,
+  createRelatorioServicoFromForm,
+  updateRelatorioServicoFromForm,
   criarEquipamentoRelatorioVazio,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
@@ -19458,12 +19462,8 @@ export default function Dashboard() {
 
   const salvarRelatorioServicoAtual = (opts?: { silencioso?: boolean }): RelatorioServico | null => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
-    if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
-      const camposFaltando = []
-      if (!relatorioServicoForm.tecnico) camposFaltando.push('Técnico')
-      if (!relatorioServicoForm.cliente) camposFaltando.push('Cliente')
-      if (!relatorioServicoForm.data) camposFaltando.push('Data')
-      if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
+    if (!isRelatorioServicoFormValid(relatorioServicoForm)) {
+      const camposFaltando = relatorioServicoFormMissing(relatorioServicoForm)
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return null
     }
@@ -19474,28 +19474,16 @@ export default function Dashboard() {
       return null
     }
 
-    // Recalcular todos os dias antes de salvar e ordenar por data (ordem cronológica no PDF e na lista)
-    const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
-    )
-
-    // Calcular totais automaticamente
-    const totais = calcularTotais(diasRecalculados)
-
-    const relatorioToSave: RelatorioServico = prepararRelatorioServicoEquipamentos({
-      ...relatorioServicoForm,
-      diasTrabalho: diasRecalculados,
-      horasTrabalho: totais.horasTrabalho,
-      kmsPercorridos: totais.kmsPercorridos,
-      horasViagem: totais.horasViagem
-    }, equipamentos)
+    const savedRelatorio = editingRelatorioServico
+      ? updateRelatorioServicoFromForm(editingRelatorioServico, relatorioServicoForm, equipamentos)
+      : createRelatorioServicoFromForm(relatorioServicoForm, equipamentos)
 
     const dupRelatorio = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
-      relatorioToSave.numero,
-      relatorioToSave.data,
-      relatorioToSave.clienteId,
-      relatorioToSave.cliente,
+      savedRelatorio.numero,
+      savedRelatorio.data,
+      savedRelatorio.clienteId,
+      savedRelatorio.cliente,
       editingRelatorioServico?.id
     )
     if (dupRelatorio) {
@@ -19505,21 +19493,9 @@ export default function Dashboard() {
       return null
     }
 
-    let updatedRelatorios: RelatorioServico[]
-    let savedRelatorio: RelatorioServico
-
-    if (editingRelatorioServico) {
-      savedRelatorio = { ...relatorioToSave, id: editingRelatorioServico.id }
-      updatedRelatorios = relatoriosServico.map((r) =>
-        r.id === editingRelatorioServico.id ? savedRelatorio : r
-      )
-    } else {
-      savedRelatorio = {
-        ...relatorioToSave,
-        id: Date.now().toString(),
-      }
-      updatedRelatorios = [...relatoriosServico, savedRelatorio]
-    }
+    const updatedRelatorios = editingRelatorioServico
+      ? relatoriosServico.map((r) => (r.id === editingRelatorioServico.id ? savedRelatorio : r))
+      : [...relatoriosServico, savedRelatorio]
 
     setRelatoriosServico(updatedRelatorios)
     snapshotRelatoriosServicoBackup(updatedRelatorios)
@@ -19596,12 +19572,8 @@ export default function Dashboard() {
   // Função para salvar e gerar o relatório
   const handleSaveAndGenerateRelatorio = () => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
-    if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
-      const camposFaltando = []
-      if (!relatorioServicoForm.tecnico) camposFaltando.push('Técnico')
-      if (!relatorioServicoForm.cliente) camposFaltando.push('Cliente')
-      if (!relatorioServicoForm.data) camposFaltando.push('Data')
-      if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
+    if (!isRelatorioServicoFormValid(relatorioServicoForm)) {
+      const camposFaltando = relatorioServicoFormMissing(relatorioServicoForm)
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return
     }
@@ -19612,28 +19584,16 @@ export default function Dashboard() {
       return
     }
 
-    // Recalcular todos os dias antes de salvar e ordenar por data crescente
-    const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
-    )
-
-    // Calcular totais automaticamente
-    const totais = calcularTotais(diasRecalculados)
-
-    const relatorioToSave: RelatorioServico = prepararRelatorioServicoEquipamentos({
-      ...relatorioServicoForm,
-      diasTrabalho: diasRecalculados,
-      horasTrabalho: totais.horasTrabalho,
-      kmsPercorridos: totais.kmsPercorridos,
-      horasViagem: totais.horasViagem
-    }, equipamentos)
+    const savedRelatorio = editingRelatorioServico
+      ? updateRelatorioServicoFromForm(editingRelatorioServico, relatorioServicoForm, equipamentos)
+      : createRelatorioServicoFromForm(relatorioServicoForm, equipamentos)
 
     const dupRelatorioSaveGen = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
-      relatorioToSave.numero,
-      relatorioToSave.data,
-      relatorioToSave.clienteId,
-      relatorioToSave.cliente,
+      savedRelatorio.numero,
+      savedRelatorio.data,
+      savedRelatorio.clienteId,
+      savedRelatorio.cliente,
       editingRelatorioServico?.id
     )
     if (dupRelatorioSaveGen) {
@@ -19643,23 +19603,9 @@ export default function Dashboard() {
       return
     }
 
-    let updatedRelatorios: RelatorioServico[]
-    let savedRelatorio: RelatorioServico
-    
-    if (editingRelatorioServico) {
-      savedRelatorio = { ...relatorioToSave, id: editingRelatorioServico.id }
-      updatedRelatorios = relatoriosServico.map(r => 
-        r.id === editingRelatorioServico.id 
-          ? savedRelatorio
-          : r
-      )
-    } else {
-      savedRelatorio = {
-        ...relatorioToSave,
-        id: Date.now().toString()
-      }
-      updatedRelatorios = [...relatoriosServico, savedRelatorio]
-    }
+    const updatedRelatorios = editingRelatorioServico
+      ? relatoriosServico.map((r) => (r.id === editingRelatorioServico.id ? savedRelatorio : r))
+      : [...relatoriosServico, savedRelatorio]
     
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
@@ -19701,12 +19647,8 @@ export default function Dashboard() {
 
   // Função para apenas gerar PDF do relatório (salva antes para ter dados atualizados; formulário permanece aberto)
   const handleGerarPdfRelatorioServico = () => {
-    if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
-      const camposFaltando = []
-      if (!relatorioServicoForm.tecnico) camposFaltando.push('Técnico')
-      if (!relatorioServicoForm.cliente) camposFaltando.push('Cliente')
-      if (!relatorioServicoForm.data) camposFaltando.push('Data')
-      if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
+    if (!isRelatorioServicoFormValid(relatorioServicoForm)) {
+      const camposFaltando = relatorioServicoFormMissing(relatorioServicoForm)
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return
     }
@@ -19716,23 +19658,15 @@ export default function Dashboard() {
       alert(erroEquipamentosPdf)
       return
     }
-    const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
-    )
-    const totais = calcularTotais(diasRecalculados)
-    const relatorioToSave: RelatorioServico = prepararRelatorioServicoEquipamentos({
-      ...relatorioServicoForm,
-      diasTrabalho: diasRecalculados,
-      horasTrabalho: totais.horasTrabalho,
-      kmsPercorridos: totais.kmsPercorridos,
-      horasViagem: totais.horasViagem
-    }, equipamentos)
+    const savedRelatorio = editingRelatorioServico
+      ? updateRelatorioServicoFromForm(editingRelatorioServico, relatorioServicoForm, equipamentos)
+      : createRelatorioServicoFromForm(relatorioServicoForm, equipamentos)
     const dupRelatorioPdf = encontrarRelatorioServicoDuplicado(
       relatoriosServico,
-      relatorioToSave.numero,
-      relatorioToSave.data,
-      relatorioToSave.clienteId,
-      relatorioToSave.cliente,
+      savedRelatorio.numero,
+      savedRelatorio.data,
+      savedRelatorio.clienteId,
+      savedRelatorio.cliente,
       editingRelatorioServico?.id
     )
     if (dupRelatorioPdf) {
@@ -19741,15 +19675,9 @@ export default function Dashboard() {
       )
       return
     }
-    let savedRelatorio: RelatorioServico
-    let updatedRelatorios: RelatorioServico[]
-    if (editingRelatorioServico) {
-      savedRelatorio = { ...relatorioToSave, id: editingRelatorioServico.id }
-      updatedRelatorios = relatoriosServico.map(r => r.id === editingRelatorioServico.id ? savedRelatorio : r)
-    } else {
-      savedRelatorio = { ...relatorioToSave, id: Date.now().toString() }
-      updatedRelatorios = [...relatoriosServico, savedRelatorio]
-    }
+    const updatedRelatorios = editingRelatorioServico
+      ? relatoriosServico.map((r) => (r.id === editingRelatorioServico.id ? savedRelatorio : r))
+      : [...relatoriosServico, savedRelatorio]
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
     limparRascunhoRelatorioServico()

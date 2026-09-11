@@ -20,6 +20,14 @@ export {
 
 export type { RelatorioServico } from './relatorioServicoForm'
 export { createEmptyRelatorioServicoForm } from './relatorioServicoForm'
+export type { RelatorioServicoFormRequired } from './relatorioServicoFromForm'
+export {
+  relatorioServicoFormMissing,
+  isRelatorioServicoFormValid,
+  buildRelatorioServicoFromForm,
+  createRelatorioServicoFromForm,
+  updateRelatorioServicoFromForm,
+} from './relatorioServicoFromForm'
 
 export type {
   ItemRelatorioExcluidoArquivo,

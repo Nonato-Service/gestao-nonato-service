@@ -1410,6 +1410,27 @@ try {
     fail('NonatoMainApp ainda define RelatorioServico localmente ou não importa createEmptyRelatorioServicoForm')
   }
   if (
+    idx.includes('isRelatorioServicoFormValid') &&
+    idx.includes('relatorioServicoFormMissing') &&
+    idx.includes('createRelatorioServicoFromForm') &&
+    idx.includes('updateRelatorioServicoFromForm') &&
+    exists('app/modules/relatorio-servico/relatorioServicoFromForm.ts')
+  ) {
+    ok('módulo relatorio-servico exporta RelatorioServico form/fromForm')
+  } else {
+    fail('módulo relatorio-servico sem RelatorioServico form/fromForm')
+  }
+  if (
+    nma.includes('isRelatorioServicoFormValid') &&
+    nma.includes('relatorioServicoFormMissing') &&
+    nma.includes('createRelatorioServicoFromForm') &&
+    nma.includes('updateRelatorioServicoFromForm')
+  ) {
+    ok('NonatoMainApp usa RelatorioServico fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia RelatorioServico no sítio')
+  }
+  if (
     idx.includes('ItemRelatorioExcluidoArquivo') &&
     idx.includes('PastaRelatoriosExcluidosCliente') &&
     idx.includes('RelatoriosExcluidosClientesStorage')
