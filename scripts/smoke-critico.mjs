@@ -65,6 +65,7 @@ const critical = [
   'app/modules/fornecedores/index.ts',
   'app/modules/comunicacao/index.ts',
   'app/modules/ordem-preparacao/index.ts',
+  'app/modules/pre-check/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1979,6 +1980,37 @@ try {
   }
 } catch (e) {
   fail(`módulo ordem-preparacao: ${e.message}`)
+}
+
+// 3p-pc) Módulo pre-check (101.º corte — tipos/form/fromForm)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/pre-check/index.ts'), 'utf8')
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    idx.includes('isPreCheckFormValid') &&
+    idx.includes('createPreCheckFromForm') &&
+    idx.includes('emptyPreCheckForm') &&
+    idx.includes('PreCheck') &&
+    exists('app/modules/pre-check/tipos.ts') &&
+    exists('app/modules/pre-check/formState.ts') &&
+    exists('app/modules/pre-check/fromForm.ts')
+  ) {
+    ok('módulo pre-check exporta tipos/form/fromForm')
+  } else {
+    fail('módulo pre-check sem tipos/form/fromForm')
+  }
+  if (
+    nma.includes("from './modules/pre-check'") &&
+    nma.includes('isPreCheckFormValid') &&
+    nma.includes('createPreCheckFromForm') &&
+    nma.includes('emptyPreCheckForm')
+  ) {
+    ok('NonatoMainApp usa PreCheck fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia PreCheck no sítio')
+  }
+} catch (e) {
+  fail(`módulo pre-check: ${e.message}`)
 }
 
 // 3p) Módulo contabilidade (20.º corte modularização — print/HTML)

@@ -970,6 +970,13 @@ import {
   type OrdemPreparacao,
 } from './modules/ordem-preparacao'
 import {
+  emptyPreCheckForm,
+  isPreCheckFormValid,
+  createPreCheckFromForm,
+  type PreCheck,
+  type PreCheckStatus,
+} from './modules/pre-check'
+import {
   mailtoPrefixContabilidade,
   construirTextoPlanoClienteDadosContabilidade,
   buildHtmlClienteDadosContabilidade,
@@ -5676,22 +5683,8 @@ export default function Dashboard() {
   const [preCheckBuscaId, setPreCheckBuscaId] = useState('')
   const [preCheckBuscaNumero, setPreCheckBuscaNumero] = useState('')
   const [preCheckEquipamentoSelecionado, setPreCheckEquipamentoSelecionado] = useState<Equipamento | null>(null)
-  const [preCheckForm, setPreCheckForm] = useState({
-    data: new Date().toISOString().split('T')[0],
-    tecnicoResponsavel: '',
-    observacoes: '',
-    status: 'pendente' as 'aprovado' | 'reprovado' | 'pendente'
-  })
-  const [preCheckList, setPreCheckList] = useState<Array<{
-    id: string
-    equipamentoId: string
-    equipamentoNumero: string
-    data: string
-    tecnicoResponsavel: string
-    observacoes: string
-    status: 'aprovado' | 'reprovado' | 'pendente'
-    equipamento?: Equipamento
-  }>>([])
+  const [preCheckForm, setPreCheckForm] = useState(emptyPreCheckForm())
+  const [preCheckList, setPreCheckList] = useState<PreCheck[]>([])
   const [preCheckBuscaTipo, setPreCheckBuscaTipo] = useState<'id' | 'numero'>('id')
 
   // ===== Inventário do Armazém (Dashboard) =====
@@ -23688,12 +23681,7 @@ export default function Dashboard() {
       const equipamento = equipamentos.find((e) => e.id.toLowerCase() === preCheckBuscaId.trim().toLowerCase())
       if (equipamento) {
         setPreCheckEquipamentoSelecionado(equipamento)
-        setPreCheckForm({
-          data: new Date().toISOString().split('T')[0],
-          tecnicoResponsavel: '',
-          observacoes: '',
-          status: 'pendente'
-        })
+        setPreCheckForm(emptyPreCheckForm())
       } else {
         alert(safeT?.equipamentoNaoEncontrado || 'Equipamento não encontrado')
         setPreCheckEquipamentoSelecionado(null)
@@ -23706,12 +23694,7 @@ export default function Dashboard() {
       const equipamento = equipamentos.find((e) => e.numeroSerie.toLowerCase() === preCheckBuscaNumero.trim().toLowerCase())
       if (equipamento) {
         setPreCheckEquipamentoSelecionado(equipamento)
-        setPreCheckForm({
-          data: new Date().toISOString().split('T')[0],
-          tecnicoResponsavel: '',
-          observacoes: '',
-          status: 'pendente'
-        })
+        setPreCheckForm(emptyPreCheckForm())
       } else {
         alert(safeT?.equipamentoNaoEncontrado || 'Equipamento não encontrado')
         setPreCheckEquipamentoSelecionado(null)
@@ -23723,12 +23706,7 @@ export default function Dashboard() {
     setPreCheckBuscaId('')
     setPreCheckBuscaNumero('')
     setPreCheckEquipamentoSelecionado(null)
-    setPreCheckForm({
-      data: new Date().toISOString().split('T')[0],
-      tecnicoResponsavel: '',
-      observacoes: '',
-      status: 'pendente'
-    })
+    setPreCheckForm(emptyPreCheckForm())
   }
 
   // ===== FUNÇÕES PARA CHECKLIST =====
@@ -23986,21 +23964,12 @@ export default function Dashboard() {
       alert(safeT?.selecioneEquipamento || 'Selecione um equipamento para continuar')
       return
     }
-    if (!preCheckForm.tecnicoResponsavel.trim()) {
+    if (!isPreCheckFormValid(preCheckForm)) {
       alert(safeT?.fillAllFields || 'Por favor, preencha todos os campos')
       return
     }
 
-    const novoPreCheck = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      equipamentoId: preCheckEquipamentoSelecionado.id,
-      equipamentoNumero: preCheckEquipamentoSelecionado.numeroSerie,
-      data: preCheckForm.data,
-      tecnicoResponsavel: preCheckForm.tecnicoResponsavel,
-      observacoes: preCheckForm.observacoes,
-      status: preCheckForm.status,
-      equipamento: preCheckEquipamentoSelecionado
-    }
+    const novoPreCheck = createPreCheckFromForm(preCheckForm, preCheckEquipamentoSelecionado)
 
     const updatedList = [...preCheckList, novoPreCheck]
     setPreCheckList(updatedList)
@@ -55641,7 +55610,7 @@ A1;Peça exemplo;10`}
                       </label>
                       <select
                         value={preCheckForm.status}
-                        onChange={(e) => setPreCheckForm({ ...preCheckForm, status: e.target.value as 'aprovado' | 'reprovado' | 'pendente' })}
+                        onChange={(e) => setPreCheckForm({ ...preCheckForm, status: e.target.value as PreCheckStatus })}
                         style={{
                           width: '100%',
                           padding: '10px',
