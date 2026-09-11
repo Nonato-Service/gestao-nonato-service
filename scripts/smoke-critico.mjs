@@ -1773,6 +1773,28 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ChecklistTemplate no sítio')
   }
+  if (
+    idx.includes('isGrupoChecklistFormValid') &&
+    idx.includes('createGrupoChecklistFromForm') &&
+    idx.includes('updateGrupoChecklistFromForm') &&
+    idx.includes('grupoChecklistToForm') &&
+    exists('app/modules/checklist/grupoForm.ts') &&
+    exists('app/modules/checklist/grupoFromForm.ts')
+  ) {
+    ok('módulo checklist exporta GrupoChecklist form/fromForm')
+  } else {
+    fail('módulo checklist sem GrupoChecklist form/fromForm')
+  }
+  if (
+    nma.includes('isGrupoChecklistFormValid') &&
+    nma.includes('createGrupoChecklistFromForm') &&
+    nma.includes('updateGrupoChecklistFromForm') &&
+    nma.includes('emptyGrupoChecklistForm')
+  ) {
+    ok('NonatoMainApp usa GrupoChecklist fromForm do módulo checklist')
+  } else {
+    fail('NonatoMainApp ainda mapeia GrupoChecklist no sítio')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

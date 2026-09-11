@@ -900,6 +900,7 @@ import type {
   ChecklistItemTemplate,
   ChecklistTemplate,
   ChecklistTemplateFormState,
+  GrupoChecklistFormState,
   ManutencaoChecklist,
   ItemTrabalhoCriacao,
   ParenteChecklist,
@@ -912,6 +913,12 @@ import {
   isChecklistTemplateFormValid,
   createChecklistTemplateFromForm,
   updateChecklistTemplateFromForm,
+  emptyGrupoChecklistForm,
+  grupoChecklistToForm,
+  grupoChecklistFormMissing,
+  isGrupoChecklistFormValid,
+  createGrupoChecklistFromForm,
+  updateGrupoChecklistFromForm,
   buildManutencoesDoGrupo,
   buildPecasPorGrupoVisualizacao,
   buildChecklistGeradoRecord,
@@ -1900,21 +1907,9 @@ export default function Dashboard() {
   const [criacaoChecklistItemForm, setCriacaoChecklistItemForm] = useState<{ tipo: string; descricaoTrabalho: string; necessitaPecas: boolean; origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'; codigoPeca: string; pecasManuais: Array<{ codigo: string; quantia: number }> }>({ tipo: 'Manutenção', descricaoTrabalho: '', necessitaPecas: false, codigoPeca: '', pecasManuais: [] })
   const [showGrupoChecklistForm, setShowGrupoChecklistForm] = useState(false)
   const [editingGrupoChecklist, setEditingGrupoChecklist] = useState<GrupoChecklist | null>(null)
-  const [grupoChecklistForm, setGrupoChecklistForm] = useState<{
-    numeroGrupo: string
-    nomeGrupo: string
-    familia: string
-    tipo: 'basico' | 'equipamentos-aprovados' | 'verificacao-geral-entrega'
-    imagem?: string
-    trabalhosASeremExecutados?: string
-  }>({
-    numeroGrupo: '',
-    nomeGrupo: '',
-    familia: '',
-    tipo: 'basico',
-    imagem: undefined,
-    trabalhosASeremExecutados: ''
-  })
+  const [grupoChecklistForm, setGrupoChecklistForm] = useState<GrupoChecklistFormState>(() =>
+    emptyGrupoChecklistForm()
+  )
   const [filtroFamiliaGrupos, setFiltroFamiliaGrupos] = useState<string>('todas')
   const [novaFamiliaGrupo, setNovaFamiliaGrupo] = useState('')
   const [grupoChecklistModoIdentificacao, setGrupoChecklistModoIdentificacao] = useState<'numero-grupo' | 'id-equipamento'>('numero-grupo')
@@ -24792,32 +24787,19 @@ export default function Dashboard() {
 
   // Funções para Grupos de Checklist
   const handleSaveGrupoChecklist = () => {
-    if (!grupoChecklistForm.numeroGrupo.trim() || !grupoChecklistForm.nomeGrupo.trim()) {
+    const missing = grupoChecklistFormMissing(grupoChecklistForm, novaFamiliaGrupo)
+    if (!isGrupoChecklistFormValid(grupoChecklistForm, novaFamiliaGrupo)) {
+      if (missing === 'familia') {
+        alert(safeT?.selecioneOuCrieFamilia || 'Por favor, selecione uma família ou crie uma nova')
+        return
+      }
       alert(safeT?.preencherTodosCampos || 'Por favor, preencha todos os campos obrigatórios')
       return
     }
 
-    // Se a família for 'nova' mas não tiver valor em novaFamiliaGrupo, usar o valor do campo
-    const familiaFinal = grupoChecklistForm.familia === 'nova' 
-      ? (novaFamiliaGrupo.trim() || grupoChecklistForm.familia)
-      : grupoChecklistForm.familia.trim()
-
-    if (!familiaFinal || familiaFinal === 'nova') {
-      alert(safeT?.selecioneOuCrieFamilia || 'Por favor, selecione uma família ou crie uma nova')
-      return
-    }
-
-    const newGrupo: GrupoChecklist = {
-      id: editingGrupoChecklist ? editingGrupoChecklist.id : Date.now().toString(),
-      numeroGrupo: grupoChecklistForm.numeroGrupo.trim(),
-      nomeGrupo: grupoChecklistForm.nomeGrupo.trim(),
-      familia: familiaFinal,
-      tipo: grupoChecklistForm.tipo,
-      imagem: grupoChecklistForm.imagem || undefined,
-      trabalhosASeremExecutados: grupoChecklistForm.trabalhosASeremExecutados?.trim() || undefined,
-      manutencoes: editingGrupoChecklist ? editingGrupoChecklist.manutencoes : [],
-      dataCriacao: editingGrupoChecklist ? editingGrupoChecklist.dataCriacao : new Date().toISOString()
-    }
+    const newGrupo: GrupoChecklist = editingGrupoChecklist
+      ? updateGrupoChecklistFromForm(editingGrupoChecklist, grupoChecklistForm, novaFamiliaGrupo)
+      : createGrupoChecklistFromForm(grupoChecklistForm, novaFamiliaGrupo)
 
     let newGrupos
     if (editingGrupoChecklist) {
@@ -24829,7 +24811,7 @@ export default function Dashboard() {
     setGruposChecklist(newGrupos)
     saveData('nonato-grupos-checklist', newGrupos)
     setEditingGrupoChecklist(newGrupo)
-    setGrupoChecklistForm({ numeroGrupo: newGrupo.numeroGrupo, nomeGrupo: newGrupo.nomeGrupo, familia: newGrupo.familia, tipo: newGrupo.tipo, imagem: newGrupo.imagem, trabalhosASeremExecutados: newGrupo.trabalhosASeremExecutados || '' })
+    setGrupoChecklistForm(grupoChecklistToForm(newGrupo))
     setNovaFamiliaGrupo(newGrupo.familia)
     alert(safeT?.grupoSalvoSucesso || 'Grupo salvo com sucesso!')
   }
@@ -52722,7 +52704,7 @@ A1;Peça exemplo;10`}
                     <button
                       onClick={() => {
                         setEditingGrupoChecklist(null)
-                        setGrupoChecklistForm({ numeroGrupo: '', nomeGrupo: '', familia: '', tipo: 'basico', imagem: undefined, trabalhosASeremExecutados: '' })
+                        setGrupoChecklistForm(emptyGrupoChecklistForm())
                         setNovaFamiliaGrupo('')
                         setGrupoChecklistModoIdentificacao('numero-grupo')
                         setGrupoChecklistEquipamentoSelecionadoId('')
@@ -53052,15 +53034,11 @@ A1;Peça exemplo;10`}
                             <button
                               onClick={() => {
                                 setEditingGrupoChecklist(grupo)
-                                const familiaGrupo = grupo.familia || safeT?.semFamilia || 'Sem Família'
-                                setGrupoChecklistForm({
-                                  numeroGrupo: grupo.numeroGrupo,
-                                  nomeGrupo: grupo.nomeGrupo,
-                                  familia: familiaGrupo,
-                                  tipo: grupo.tipo || 'basico',
-                                  imagem: grupo.imagem,
-                                  trabalhosASeremExecutados: grupo.trabalhosASeremExecutados || ''
-                                })
+                                setGrupoChecklistForm(
+                                  grupoChecklistToForm(grupo, {
+                                    familiaFallback: safeT?.semFamilia || 'Sem Família',
+                                  })
+                                )
                                 setNovaFamiliaGrupo('')
                                 setGrupoChecklistModoIdentificacao('numero-grupo')
                                 setGrupoChecklistEquipamentoSelecionadoId('')
@@ -53228,7 +53206,7 @@ A1;Peça exemplo;10`}
                       onClick={() => {
                         setShowGrupoChecklistForm(false)
                         setEditingGrupoChecklist(null)
-                        setGrupoChecklistForm({ numeroGrupo: '', nomeGrupo: '', familia: '', tipo: 'basico', imagem: undefined, trabalhosASeremExecutados: '' })
+                        setGrupoChecklistForm(emptyGrupoChecklistForm())
                         setNovaFamiliaGrupo('')
                         setGrupoChecklistModoIdentificacao('numero-grupo')
                         setGrupoChecklistEquipamentoSelecionadoId('')
@@ -53560,7 +53538,7 @@ A1;Peça exemplo;10`}
                         onClick={() => {
                           setShowGrupoChecklistForm(false)
                           setEditingGrupoChecklist(null)
-                          setGrupoChecklistForm({ numeroGrupo: '', nomeGrupo: '', familia: '', tipo: 'basico', imagem: undefined, trabalhosASeremExecutados: '' })
+                          setGrupoChecklistForm(emptyGrupoChecklistForm())
                           setNovaFamiliaGrupo('')
                         }}
                         style={{
