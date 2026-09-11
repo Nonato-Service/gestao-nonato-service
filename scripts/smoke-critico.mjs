@@ -1795,6 +1795,28 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia GrupoChecklist no sítio')
   }
+  if (
+    idx.includes('isManutencaoChecklistFormValid') &&
+    idx.includes('createManutencaoChecklistFromForm') &&
+    idx.includes('updateManutencaoChecklistFromForm') &&
+    idx.includes('manutencaoChecklistToForm') &&
+    exists('app/modules/checklist/manutencaoForm.ts') &&
+    exists('app/modules/checklist/manutencaoFromForm.ts')
+  ) {
+    ok('módulo checklist exporta ManutencaoChecklist form/fromForm')
+  } else {
+    fail('módulo checklist sem ManutencaoChecklist form/fromForm')
+  }
+  if (
+    nma.includes('isManutencaoChecklistFormValid') &&
+    nma.includes('createManutencaoChecklistFromForm') &&
+    nma.includes('updateManutencaoChecklistFromForm') &&
+    nma.includes('emptyManutencaoChecklistForm')
+  ) {
+    ok('NonatoMainApp usa ManutencaoChecklist fromForm do módulo checklist')
+  } else {
+    fail('NonatoMainApp ainda mapeia ManutencaoChecklist no sítio')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

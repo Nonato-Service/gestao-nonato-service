@@ -901,6 +901,7 @@ import type {
   ChecklistTemplate,
   ChecklistTemplateFormState,
   GrupoChecklistFormState,
+  ManutencaoChecklistFormState,
   ManutencaoChecklist,
   ItemTrabalhoCriacao,
   ParenteChecklist,
@@ -919,6 +920,11 @@ import {
   isGrupoChecklistFormValid,
   createGrupoChecklistFromForm,
   updateGrupoChecklistFromForm,
+  emptyManutencaoChecklistForm,
+  manutencaoChecklistToForm,
+  isManutencaoChecklistFormValid,
+  createManutencaoChecklistFromForm,
+  updateManutencaoChecklistFromForm,
   buildManutencoesDoGrupo,
   buildPecasPorGrupoVisualizacao,
   buildChecklistGeradoRecord,
@@ -1917,24 +1923,9 @@ export default function Dashboard() {
   const [grupoSelecionadoParaManutencao, setGrupoSelecionadoParaManutencao] = useState<GrupoChecklist | null>(null)
   const [showManutencaoForm, setShowManutencaoForm] = useState(false)
   const [editingManutencao, setEditingManutencao] = useState<ManutencaoChecklist | null>(null)
-  const [manutencaoForm, setManutencaoForm] = useState<{
-    nome: string
-    avaliacaoFeitaVisual: boolean
-    testeMecanico: boolean
-    testeEletrico: boolean
-    testeOperacional: boolean
-    pecas: Array<{
-      pecaId: string
-      quantidade?: number
-    }>
-  }>({
-    nome: '',
-    avaliacaoFeitaVisual: false,
-    testeMecanico: false,
-    testeEletrico: false,
-    testeOperacional: false,
-    pecas: []
-  })
+  const [manutencaoForm, setManutencaoForm] = useState<ManutencaoChecklistFormState>(() =>
+    emptyManutencaoChecklistForm()
+  )
   const [buscaPecaManutencao, setBuscaPecaManutencao] = useState('')
   const [showBuscaPecaManutencao, setShowBuscaPecaManutencao] = useState(false)
 
@@ -24824,7 +24815,7 @@ export default function Dashboard() {
   }
 
   const handleSaveManutencao = () => {
-    if (!manutencaoForm.nome.trim()) {
+    if (!isManutencaoChecklistFormValid(manutencaoForm)) {
       alert(safeT?.preencherTodosCampos || 'Por favor, preencha o nome da manutenção')
       return
     }
@@ -24834,16 +24825,9 @@ export default function Dashboard() {
       return
     }
 
-    const newManutencao: ManutencaoChecklist = {
-      id: editingManutencao ? editingManutencao.id : Date.now().toString(),
-      nome: manutencaoForm.nome.trim(),
-      avaliacaoFeitaVisual: manutencaoForm.avaliacaoFeitaVisual,
-      testeMecanico: manutencaoForm.testeMecanico,
-      testeEletrico: manutencaoForm.testeEletrico,
-      testeOperacional: manutencaoForm.testeOperacional,
-      pecas: manutencaoForm.pecas || [],
-      dataCriacao: editingManutencao ? editingManutencao.dataCriacao : new Date().toISOString()
-    }
+    const newManutencao: ManutencaoChecklist = editingManutencao
+      ? updateManutencaoChecklistFromForm(editingManutencao, manutencaoForm)
+      : createManutencaoChecklistFromForm(manutencaoForm)
 
     const grupoAtualizado = { ...grupoSelecionadoParaManutencao }
     if (editingManutencao) {
@@ -24862,28 +24846,14 @@ export default function Dashboard() {
     saveData('nonato-grupos-checklist', newGrupos)
     setEditingManutencao(newManutencao)
     setGrupoSelecionadoParaManutencao(grupoAtualizado)
-    setManutencaoForm({
-      nome: newManutencao.nome,
-      avaliacaoFeitaVisual: newManutencao.avaliacaoFeitaVisual,
-      testeMecanico: newManutencao.testeMecanico,
-      testeEletrico: newManutencao.testeEletrico,
-      testeOperacional: newManutencao.testeOperacional,
-      pecas: newManutencao.pecas || []
-    })
+    setManutencaoForm(manutencaoChecklistToForm(newManutencao))
     alert(safeT?.manutencaoSalvaSucesso || 'Manutenção salva com sucesso!')
   }
 
   const handleEditManutencao = (grupo: GrupoChecklist, manutencao: ManutencaoChecklist) => {
     setGrupoSelecionadoParaManutencao(grupo)
     setEditingManutencao(manutencao)
-    setManutencaoForm({
-      nome: manutencao.nome,
-      avaliacaoFeitaVisual: manutencao.avaliacaoFeitaVisual,
-      testeMecanico: manutencao.testeMecanico,
-      testeEletrico: manutencao.testeEletrico,
-      testeOperacional: manutencao.testeOperacional,
-      pecas: manutencao.pecas || []
-    })
+    setManutencaoForm(manutencaoChecklistToForm(manutencao))
     setShowManutencaoForm(true)
   }
 
@@ -53006,14 +52976,7 @@ A1;Peça exemplo;10`}
                               onClick={() => {
                                 setGrupoSelecionadoParaManutencao(grupo)
                                 setEditingManutencao(null)
-                                setManutencaoForm({
-                                  nome: '',
-                                  avaliacaoFeitaVisual: false,
-                                  testeMecanico: false,
-                                  testeEletrico: false,
-                                  testeOperacional: false,
-                                  pecas: []
-                                })
+                                setManutencaoForm(emptyManutencaoChecklistForm())
                                 setShowManutencaoForm(true)
                                 setBuscaPecaManutencao('')
                                 setShowBuscaPecaManutencao(false)
@@ -53564,14 +53527,7 @@ A1;Peça exemplo;10`}
                         setShowManutencaoForm(false)
                         setEditingManutencao(null)
                         setGrupoSelecionadoParaManutencao(null)
-                        setManutencaoForm({
-                          nome: '',
-                          avaliacaoFeitaVisual: false,
-                          testeMecanico: false,
-                          testeEletrico: false,
-                          testeOperacional: false,
-                          pecas: []
-                        })
+                        setManutencaoForm(emptyManutencaoChecklistForm())
                         setBuscaPecaManutencao('')
                         setShowBuscaPecaManutencao(false)
                       }}
@@ -53920,14 +53876,7 @@ A1;Peça exemplo;10`}
                           setShowManutencaoForm(false)
                           setEditingManutencao(null)
                           setGrupoSelecionadoParaManutencao(null)
-                          setManutencaoForm({
-                            nome: '',
-                            avaliacaoFeitaVisual: false,
-                            testeMecanico: false,
-                            testeEletrico: false,
-                            testeOperacional: false,
-                            pecas: []
-                          })
+                          setManutencaoForm(emptyManutencaoChecklistForm())
                           setBuscaPecaManutencao('')
                           setShowBuscaPecaManutencao(false)
                         }}

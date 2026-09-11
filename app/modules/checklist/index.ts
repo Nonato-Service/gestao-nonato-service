@@ -55,3 +55,12 @@ export {
   createGrupoChecklistFromForm,
   updateGrupoChecklistFromForm,
 } from './grupoFromForm'
+
+export type { ManutencaoChecklistFormState } from './manutencaoForm'
+export { emptyManutencaoChecklistForm, manutencaoChecklistToForm } from './manutencaoForm'
+
+export {
+  isManutencaoChecklistFormValid,
+  createManutencaoChecklistFromForm,
+  updateManutencaoChecklistFromForm,
+} from './manutencaoFromForm'
