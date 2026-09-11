@@ -1987,6 +1987,23 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ManutencaoChecklist no sítio')
   }
+  if (
+    idx.includes('isChecklistSalvoFormValid') &&
+    idx.includes('createChecklistSalvoFromForm') &&
+    exists('app/modules/checklist/salvoFromForm.ts')
+  ) {
+    ok('módulo checklist exporta ChecklistSalvo fromForm')
+  } else {
+    fail('módulo checklist sem ChecklistSalvo fromForm')
+  }
+  if (
+    nma.includes('isChecklistSalvoFormValid') &&
+    nma.includes('createChecklistSalvoFromForm')
+  ) {
+    ok('NonatoMainApp usa ChecklistSalvo fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia ChecklistSalvo no sítio')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

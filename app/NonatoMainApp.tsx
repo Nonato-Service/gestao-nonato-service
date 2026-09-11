@@ -975,6 +975,8 @@ import {
   buildPecasPorGrupoVisualizacao,
   buildChecklistGeradoRecord,
   buildPecasArmazemFromChecklist,
+  isChecklistSalvoFormValid,
+  createChecklistSalvoFromForm,
 } from './modules/checklist'
 import {
   emptyOrdemPreparacaoForm,
@@ -23817,30 +23819,26 @@ export default function Dashboard() {
   }
 
   const handleSalvarChecklist = async () => {
-    if (!checklistEquipamentoSelecionado || !checklistTecnicoResponsavel || checklistGruposSelecionados.length === 0) {
+    if (
+      !isChecklistSalvoFormValid(
+        checklistEquipamentoSelecionado,
+        checklistTecnicoResponsavel,
+        checklistGruposSelecionados
+      ) ||
+      !checklistEquipamentoSelecionado
+    ) {
       alert(safeT?.preencherCamposObrigatorios || 'Por favor, preencha todos os campos obrigatórios.')
       return
     }
 
-    const checklistSalvo = {
-      id: `checklist-${Date.now()}`,
-      tipo: 'checklist-gerado',
-      equipamentoId: checklistEquipamentoSelecionado.id,
+    const checklistSalvo = createChecklistSalvoFromForm({
       equipamento: checklistEquipamentoSelecionado,
       data: checklistData,
       tecnicoResponsavel: checklistTecnicoResponsavel,
       tecnicoNome: tecnicos.find(t => t.id === checklistTecnicoResponsavel)?.name || '',
-      grupos: checklistGruposSelecionados.map(g => ({
-        grupoId: g.id,
-        grupo: g,
-        manutencoesSelecionadas: Array.from(checklistManutencoesSelecionadas)
-          .filter(key => key.startsWith(`${g.id}-`))
-          .map(key => key.split('-')[1])
-      })),
-      manutencoesSelecionadas: Array.from(checklistManutencoesSelecionadas),
-      dataCriacao: new Date().toISOString(),
-      status: 'salvo' as 'salvo' | 'gerado' | 'concluido'
-    }
+      gruposSelecionados: checklistGruposSelecionados,
+      manutencoesSelecionadas: checklistManutencoesSelecionadas,
+    })
 
     // Salvar localmente (pode ser expandido para salvar no servidor)
     const checklistsSalvos = JSON.parse(localStorage.getItem('nonato-checklists-salvos') || '[]')

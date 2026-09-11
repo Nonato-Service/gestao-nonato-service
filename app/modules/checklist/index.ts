@@ -64,3 +64,15 @@ export {
   createManutencaoChecklistFromForm,
   updateManutencaoChecklistFromForm,
 } from './manutencaoFromForm'
+
+export type {
+  ChecklistSalvo,
+  ChecklistSalvoGrupo,
+  ChecklistSalvoStatus,
+  CreateChecklistSalvoFromFormInput,
+} from './salvoFromForm'
+export {
+  isChecklistSalvoFormValid,
+  mapChecklistSalvoGrupos,
+  createChecklistSalvoFromForm,
+} from './salvoFromForm'
