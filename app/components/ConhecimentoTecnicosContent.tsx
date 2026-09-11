@@ -15,10 +15,11 @@ import {
   clampConhecimentoNivel,
   conhecimentoEntryExists,
   computeTecnicoStats,
-  createConhecimentoTecnicoEntry,
+  createConhecimentoTecnicoFromForm,
   descricaoKeyForSkill,
   filterConhecimentoByTecnico,
   getDescricaoValue,
+  isConhecimentoTecnicoFormValid,
 } from '../modules/conhecimento-tecnico'
 
 export type { ConhecimentoTecnicoEntry }
@@ -194,12 +195,15 @@ export function ConhecimentoTecnicosContent(props: ConhecimentoTecnicosContentPr
   const stats = computeTecnicoStats(conhecimentosDoTecnico)
 
   const addConhecimento = (equipamentoTipoId: string, equipamentoTipoNome: string) => {
-    if (!tecnicoConhecimentoSelecionado) return
-    if (conhecimentoEntryExists(conhecimentoTecnicos, tecnicoConhecimentoSelecionado, equipamentoTipoId)) {
+    const tecnicoId = tecnicoConhecimentoSelecionado || ''
+    if (!isConhecimentoTecnicoFormValid({ tecnicoId, equipamentoTipoId })) {
       return
     }
-    const novo = createConhecimentoTecnicoEntry({
-      tecnicoId: tecnicoConhecimentoSelecionado,
+    if (conhecimentoEntryExists(conhecimentoTecnicos, tecnicoId, equipamentoTipoId)) {
+      return
+    }
+    const novo = createConhecimentoTecnicoFromForm({
+      tecnicoId,
       equipamentoTipoId,
       equipamentoTipoNome,
     })

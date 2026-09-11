@@ -2773,6 +2773,15 @@ try {
     if (exists(`app/modules/conhecimento-tecnico/${f}`)) ok(`existe app/modules/conhecimento-tecnico/${f}`)
     else fail(`falta app/modules/conhecimento-tecnico/${f}`)
   }
+  if (
+    idx.includes('isConhecimentoTecnicoFormValid') &&
+    idx.includes('createConhecimentoTecnicoFromForm') &&
+    exists('app/modules/conhecimento-tecnico/fromForm.ts')
+  ) {
+    ok('módulo conhecimento-tecnico exporta fromForm')
+  } else {
+    fail('módulo conhecimento-tecnico sem fromForm')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
     nma.includes("from './modules/conhecimento-tecnico'") ||
@@ -2802,7 +2811,8 @@ try {
   }
   if (
     !content.includes('export type ConhecimentoTecnicoEntry = {') &&
-    content.includes('createConhecimentoTecnicoEntry') &&
+    content.includes('isConhecimentoTecnicoFormValid') &&
+    content.includes('createConhecimentoTecnicoFromForm') &&
     content.includes('computeTecnicoStats') &&
     content.includes('buildTiposEquipamentoOpcoes')
   ) {

@@ -1,5 +1,6 @@
 /** Helpers puros — normalize / create / filter / stats / opções de equipamento. */
 
+import { createConhecimentoTecnicoFromForm } from './fromForm'
 import type {
   ConhecimentoSkillField,
   ConhecimentoTecnicoEntry,
@@ -109,16 +110,8 @@ export function createConhecimentoTecnicoEntry(input: {
   equipamentoTipoNome: string
   id?: string
 }): ConhecimentoTecnicoEntry {
-  return {
-    id: input.id ?? `ct-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    tecnicoId: input.tecnicoId,
-    equipamentoTipoId: input.equipamentoTipoId,
-    equipamentoTipoNome: input.equipamentoTipoNome,
-    mecanico: 0,
-    eletrico: 0,
-    software: 0,
-    programacao: 0,
-  }
+  const { id, ...form } = input
+  return createConhecimentoTecnicoFromForm(form, { id })
 }
 
 /** Estatísticas agregadas (média, expert, contagem) sobre uma lista de entradas. */

@@ -19,3 +19,12 @@ export {
   computeTecnicoStats,
   buildTiposEquipamentoOpcoes,
 } from './entries'
+
+export type {
+  ConhecimentoTecnicoFormPayload,
+  CreateConhecimentoTecnicoFromFormOpts,
+} from './fromForm'
+export {
+  isConhecimentoTecnicoFormValid,
+  createConhecimentoTecnicoFromForm,
+} from './fromForm'
