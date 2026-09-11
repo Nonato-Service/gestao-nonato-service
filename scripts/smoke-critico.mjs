@@ -1860,6 +1860,20 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia OrdemPreparacao no sítio')
   }
+  if (
+    idx.includes('createFormularioChecklistFromOrdem') &&
+    idx.includes('FormularioChecklistFromOrdem') &&
+    exists('app/modules/ordem-preparacao/formularioChecklistFromOrdem.ts')
+  ) {
+    ok('módulo ordem-preparacao exporta createFormularioChecklistFromOrdem')
+  } else {
+    fail('módulo ordem-preparacao sem createFormularioChecklistFromOrdem')
+  }
+  if (nma.includes('createFormularioChecklistFromOrdem')) {
+    ok('NonatoMainApp usa createFormularioChecklistFromOrdem do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia formulário de ordem no sítio')
+  }
 } catch (e) {
   fail(`módulo ordem-preparacao: ${e.message}`)
 }

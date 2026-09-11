@@ -940,6 +940,7 @@ import {
   isOrdemPreparacaoFormValid,
   createOrdemPreparacaoFromForm,
   updateOrdemPreparacaoFromForm,
+  createFormularioChecklistFromOrdem,
   type OrdemPreparacao,
 } from './modules/ordem-preparacao'
 import {
@@ -24225,61 +24226,12 @@ export default function Dashboard() {
   }
 
   const handleGerarFormularioChecklist = async () => {
-    if (!ordemPreparacaoForm.codiceSmeUp) {
+    if (!isOrdemPreparacaoFormValid(ordemPreparacaoForm)) {
       alert(safeT?.opFillMandatory || 'Preencha o Código SME_UP (ID ou Nº Série) para gerar o formulário.')
       return
     }
 
-    // Criar formulário/checklist baseado na ordem de preparação
-    const novoFormulario = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      ordemPreparacaoId: (ordemPreparacaoForm as any).id || null,
-      codiceSmeUp: ordemPreparacaoForm.codiceSmeUp,
-      descrizione: ordemPreparacaoForm.descrizione,
-      modello: ordemPreparacaoForm.modello,
-      cliente: ordemPreparacaoForm.cliente,
-      marca: ordemPreparacaoForm.marca,
-      tecnicoResponsabile: ordemPreparacaoForm.tecnicoResponsabile,
-      familia: ordemPreparacaoForm.famiglia,
-      nazione: ordemPreparacaoForm.nazione,
-      installazione: ordemPreparacaoForm.installazione,
-      testRun: ordemPreparacaoForm.testRun,
-      materialeLavorato: ordemPreparacaoForm.materialeLavorato,
-      materialeLavoratoAltro: ordemPreparacaoForm.materialeLavoratoAltro,
-      tipologiaImpiallaggiatura: ordemPreparacaoForm.tipologiaImpiallaggiatura,
-      tipologiaImpiallaggiaturaAltro: ordemPreparacaoForm.tipologiaImpiallaggiaturaAltro,
-      colore: ordemPreparacaoForm.colore,
-      coloreAltro: ordemPreparacaoForm.coloreAltro,
-      dimensioniMax: ordemPreparacaoForm.dimensioniMax,
-      dimensioniMin: ordemPreparacaoForm.dimensioniMin,
-      dimensioniAltro: ordemPreparacaoForm.dimensioniAltro,
-      tipologiaBordo: ordemPreparacaoForm.tipologiaBordo,
-      tipologiaBordoAltro: ordemPreparacaoForm.tipologiaBordoAltro,
-      spessoreBordo: ordemPreparacaoForm.spessoreBordo,
-      spessoreBordoAltro: ordemPreparacaoForm.spessoreBordoAltro,
-      tipoColla: ordemPreparacaoForm.tipoColla,
-      tipoCollaAltro: ordemPreparacaoForm.tipoCollaAltro,
-      griglieProtezione: ordemPreparacaoForm.griglieProtezione,
-      griglieProtezioneAggiunte: ordemPreparacaoForm.griglieProtezioneAggiunte,
-      utensiliFornitiCliente: ordemPreparacaoForm.utensiliFornitiCliente,
-      utensiliQuali: ordemPreparacaoForm.utensiliQuali,
-      utensiliFornitiPrimaTestRun: ordemPreparacaoForm.utensiliFornitiPrimaTestRun,
-      utensiliCaricoFerwood: ordemPreparacaoForm.utensiliCaricoFerwood,
-      tappetoEvacuazione: ordemPreparacaoForm.tappetoEvacuazione,
-      ventose: ordemPreparacaoForm.ventose,
-      materialeTestRunFornitoCliente: ordemPreparacaoForm.materialeTestRunFornitoCliente,
-      materialeTestRunQualiQta: ordemPreparacaoForm.materialeTestRunQualiQta,
-      materialeTestRunMagazzinoFW: ordemPreparacaoForm.materialeTestRunMagazzinoFW,
-      linguaDestinazione: ordemPreparacaoForm.linguaDestinazione,
-      manualistica: ordemPreparacaoForm.manualistica,
-      adesivi: ordemPreparacaoForm.adesivi,
-      noteProduzione: ordemPreparacaoForm.noteProduzione,
-      impressoes: ordemPreparacaoForm.impressoes,
-      dataCriacao: new Date().toISOString(),
-      status: 'pendente' as 'pendente' | 'em-andamento' | 'concluido' | 'cancelado',
-      checklistItens: [] as any[],
-      observacoesTecnico: ''
-    }
+    const novoFormulario = createFormularioChecklistFromOrdem(ordemPreparacaoForm)
 
     // Adicionar à lista de formulários
     const novasFormularios = [...formulariosChecklistTecnicos, novoFormulario]
