@@ -11,3 +11,11 @@ export {
 export { normalizeDiarioAnexos } from './normalize'
 export { diarioPedidoTituloECorpo, diarioPedidoLinhasTarefas } from './texto'
 export { compressImageFileToJpegDataUrl } from './compressImage'
+export type { CreateDiarioPedidoFromFormOpts, UpdateDiarioPedidoFromFormOpts } from './fromForm'
+export {
+  isDiarioPedidoConteudoValid,
+  buildDiarioPedidoTexto,
+  cloneDiarioPedidoAnexos,
+  createDiarioPedidoFromForm,
+  updateDiarioPedidoFromForm,
+} from './fromForm'

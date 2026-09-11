@@ -335,6 +335,11 @@ import {
   diarioPedidoTituloECorpo,
   diarioPedidoLinhasTarefas,
   compressImageFileToJpegDataUrl,
+  isDiarioPedidoConteudoValid,
+  buildDiarioPedidoTexto,
+  cloneDiarioPedidoAnexos,
+  createDiarioPedidoFromForm,
+  updateDiarioPedidoFromForm,
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
 import {
@@ -25499,7 +25504,7 @@ export default function Dashboard() {
             className="btn-primary ns-diario-btn ns-diario-btn--primary"
             onClick={() => {
               const tarefasBloco = diarioPedidoDraft.trim()
-              if (!tarefasBloco && diarioPedidoComposerAnexos.length === 0) return
+              if (!isDiarioPedidoConteudoValid(tarefasBloco, diarioPedidoComposerAnexos)) return
               let nomeCliente = ''
               let clienteCadastroId: string | undefined
               if (diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__') {
@@ -25529,14 +25534,8 @@ export default function Dashboard() {
                 )
                 return
               }
-              const texto =
-                tarefasBloco.length > 0 ? `${nomeCliente}\n${tarefasBloco}` : `${nomeCliente}\n`
-              const id = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-              const criadoEm = new Date().toISOString()
-              const anexos =
-                diarioPedidoComposerAnexos.length > 0
-                  ? diarioPedidoComposerAnexos.map((a) => ({ ...a }))
-                  : undefined
+              const texto = buildDiarioPedidoTexto(nomeCliente, tarefasBloco)
+              const anexos = cloneDiarioPedidoAnexos(diarioPedidoComposerAnexos)
               const lembreteFields = diarioComposeLembreteAtivo
                 ? applyDiarioLembretePatch(
                     {},
@@ -25547,21 +25546,14 @@ export default function Dashboard() {
                     }
                   )
                 : { lembreteAtivo: false as const }
+              const novoPedido = createDiarioPedidoFromForm(
+                { texto, anexos },
+                { clienteCadastroId, extra: lembreteFields }
+              )
               setDiarioPedidoEditandoId(null)
               setDiarioPedidoEditDraft('')
               setDiarioPedidoEditAnexos([])
-              setDiarioPedidosItems((p) => [
-                ...p,
-                {
-                  id,
-                  texto,
-                  status: 'planeado',
-                  criadoEm,
-                  anexos,
-                  ...(clienteCadastroId ? { clienteCadastroId } : {}),
-                  ...lembreteFields,
-                },
-              ])
+              setDiarioPedidosItems((p) => [...p, novoPedido])
               setDiarioPedidoDraft('')
               setDiarioPedidoComposerAnexos([])
               setDiarioComposeClienteSel('')
@@ -25841,7 +25833,7 @@ export default function Dashboard() {
                           className="btn-primary ns-diario-btn ns-diario-btn--primary"
                           onClick={() => {
                             const texto = diarioPedidoEditDraft.trim()
-                            if (!texto && diarioPedidoEditAnexos.length === 0) {
+                            if (!isDiarioPedidoConteudoValid(texto, diarioPedidoEditAnexos)) {
                               window.alert(
                                 (safeT as any)?.diarioPedidosTextoVazioEdit ||
                                   'Escreva texto ou anexe pelo menos uma imagem antes de guardar.'
@@ -25855,22 +25847,15 @@ export default function Dashboard() {
                                 ? clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === titNorm)
                                 : undefined
                             const clienteCadastroIdNext = matchedCli?.id
-                            const anexos =
-                              diarioPedidoEditAnexos.length > 0
-                                ? diarioPedidoEditAnexos.map((a) => ({ ...a }))
-                                : undefined
+                            const anexos = cloneDiarioPedidoAnexos(diarioPedidoEditAnexos)
                             setDiarioPedidosItems((p) =>
                               p.map((x) =>
                                 x.id === item.id
-                                  ? {
-                                      ...x,
+                                  ? updateDiarioPedidoFromForm(x, {
                                       texto,
                                       anexos,
-                                      atualizadoEm: new Date().toISOString(),
-                                      ...(clienteCadastroIdNext
-                                        ? { clienteCadastroId: clienteCadastroIdNext }
-                                        : { clienteCadastroId: undefined }),
-                                    }
+                                      clienteCadastroId: clienteCadastroIdNext,
+                                    })
                                   : x
                               )
                             )

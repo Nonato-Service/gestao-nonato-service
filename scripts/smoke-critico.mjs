@@ -1813,6 +1813,27 @@ try {
   } else {
     fail('NonatoMainApp ainda define compressImageFileToJpegDataUrl localmente')
   }
+  if (
+    idx.includes('isDiarioPedidoConteudoValid') &&
+    idx.includes('createDiarioPedidoFromForm') &&
+    idx.includes('updateDiarioPedidoFromForm') &&
+    idx.includes('buildDiarioPedidoTexto') &&
+    exists('app/modules/diario/fromForm.ts')
+  ) {
+    ok('módulo diario exporta DiarioPedido fromForm')
+  } else {
+    fail('módulo diario sem DiarioPedido fromForm')
+  }
+  if (
+    nma.includes('isDiarioPedidoConteudoValid') &&
+    nma.includes('createDiarioPedidoFromForm') &&
+    nma.includes('updateDiarioPedidoFromForm') &&
+    nma.includes('buildDiarioPedidoTexto')
+  ) {
+    ok('NonatoMainApp usa DiarioPedido fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia DiarioPedido no sítio')
+  }
 } catch (e) {
   fail(`módulo diario: ${e.message}`)
 }
