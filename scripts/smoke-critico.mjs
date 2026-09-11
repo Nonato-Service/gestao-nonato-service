@@ -808,6 +808,25 @@ try {
   } else {
     fail('NonatoMainApp ainda define CategoriaPeca/PecaBiblioteca localmente ou não usa createEmptyPecaBibliotecaForm')
   }
+  if (
+    idx.includes('isPecaBibliotecaFormValid') &&
+    idx.includes('createPecaBibliotecaFromForm') &&
+    idx.includes('updatePecaBibliotecaFromForm') &&
+    exists('app/modules/biblioteca/pecaFromForm.ts')
+  ) {
+    ok('módulo biblioteca exporta PecaBiblioteca form/fromForm')
+  } else {
+    fail('módulo biblioteca sem PecaBiblioteca form/fromForm')
+  }
+  if (
+    nma.includes('isPecaBibliotecaFormValid') &&
+    nma.includes('createPecaBibliotecaFromForm') &&
+    nma.includes('updatePecaBibliotecaFromForm')
+  ) {
+    ok('NonatoMainApp usa PecaBiblioteca fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia PecaBiblioteca no sítio')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

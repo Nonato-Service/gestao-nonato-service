@@ -5,6 +5,12 @@ export type { PecaBibliotecaLike, CategoriaPecaLike, SubcategoriaPecaLike } from
 export type { CategoriaPeca, SubcategoriaPeca, PecaBiblioteca } from './pecaTipos'
 export type { EmptyPecaBibliotecaFormOpts } from './pecaForm'
 export { createEmptyPecaBibliotecaForm } from './pecaForm'
+export type { CreatePecaBibliotecaFromFormOpts } from './pecaFromForm'
+export {
+  isPecaBibliotecaFormValid,
+  createPecaBibliotecaFromForm,
+  updatePecaBibliotecaFromForm,
+} from './pecaFromForm'
 
 export type { BibliotecaNovidadesMsgTemplates } from './aviso'
 export {

@@ -158,6 +158,9 @@ import {
   type SubcategoriaPeca,
   type PecaBiblioteca,
   createEmptyPecaBibliotecaForm,
+  isPecaBibliotecaFormValid,
+  createPecaBibliotecaFromForm,
+  updatePecaBibliotecaFromForm,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
@@ -20442,15 +20445,14 @@ export default function Dashboard() {
 
       const form = pecaBibliotecaFormRef.current
       const editing = editingPecaBibliotecaRef.current
-      const nome = (form.nome || '').trim()
-      const codigo = (form.codigo || '').trim()
 
-      if (!nome || !codigo) {
+      if (!isPecaBibliotecaFormValid(form)) {
         alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
         return false
       }
 
       const idEdicao = resolverIdEdicaoPecaBiblioteca(form, editing, pecasBiblioteca)
+      const codigo = (form.codigo || '').trim()
       if (pecaBibliotecaCodigoDuplicado(codigo, idEdicao || undefined)) {
         alert(
           safeT?.codigoPecaBibliotecaDuplicado ||
@@ -20466,33 +20468,14 @@ export default function Dashboard() {
         categoriasPecas
       )
 
-      let updatedPecas: PecaBiblioteca[]
-      if (idEdicao) {
-        updatedPecas = pecasBiblioteca.map((p) =>
-          p.id === idEdicao
-            ? {
-                ...form,
-                nome,
-                codigo,
-                id: idEdicao,
-                numeroSequenciaGrupo: numeroSeq,
-                dataCriacao: p.dataCriacao,
-                importacaoPendente: false,
-              }
-            : p
-        )
-      } else {
-        const newPeca: PecaBiblioteca = {
-          ...form,
-          nome,
-          codigo,
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-          numeroSequenciaGrupo: numeroSeq,
-          dataCriacao: new Date().toISOString(),
-          importacaoPendente: false,
-        }
-        updatedPecas = [...pecasBiblioteca, newPeca]
-      }
+      const existing = idEdicao ? pecasBiblioteca.find((p) => p.id === idEdicao) : undefined
+      const updatedPecas = existing
+        ? pecasBiblioteca.map((p) =>
+            p.id === existing.id
+              ? updatePecaBibliotecaFromForm(p, form, { numeroSequenciaGrupo: numeroSeq })
+              : p
+          )
+        : [...pecasBiblioteca, createPecaBibliotecaFromForm(form, { numeroSequenciaGrupo: numeroSeq })]
 
       persistPecasBiblioteca(updatedPecas)
 
