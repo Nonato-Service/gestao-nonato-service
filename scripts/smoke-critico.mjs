@@ -1085,6 +1085,22 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ComprovanteDespesa no sítio')
   }
+  if (
+    idx.includes('formCompComClienteSugerido') &&
+    idx.includes('EstadoClienteParaFormComp')
+  ) {
+    ok('módulo comprovantes exporta formCompComClienteSugerido')
+  } else {
+    fail('módulo comprovantes sem formCompComClienteSugerido')
+  }
+  if (
+    nma.includes('formCompComClienteSugerido') &&
+    !nma.includes('const formCompComClienteSugerido = (')
+  ) {
+    ok('NonatoMainApp usa formCompComClienteSugerido do módulo')
+  } else {
+    fail('NonatoMainApp ainda define formCompComClienteSugerido no sítio')
+  }
 } catch (e) {
   fail(`módulo comprovantes: ${e.message}`)
 }

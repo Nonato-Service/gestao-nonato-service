@@ -2,8 +2,8 @@
 
 export type { ComprovanteDespesa } from './tipos'
 
-export type { ComprovanteDespesaFormState } from './formState'
-export { emptyComprovanteDespesaForm } from './formState'
+export type { ComprovanteDespesaFormState, EstadoClienteParaFormComp } from './formState'
+export { emptyComprovanteDespesaForm, formCompComClienteSugerido } from './formState'
 export type { CreateComprovanteDespesaFromFormOpts } from './fromForm'
 export {
   isComprovanteDespesaClienteNomeValid,

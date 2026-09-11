@@ -566,6 +566,7 @@ import {
   type ComprovanteDespesa,
   type ComprovanteDespesaFormState,
   emptyComprovanteDespesaForm,
+  formCompComClienteSugerido,
   isComprovanteDespesaClienteNomeValid,
   comprovanteDespesaClienteCadastrado,
   dadosDuplicadoComprovanteFromForm,
@@ -47207,38 +47208,13 @@ A1;Peça exemplo;10`}
             reciboRapidoPendingFileRef.current = null
           }
         }
-        const formCompComClienteSugerido = (
-          dataIso: string,
-          horaIso: string | null | undefined,
-          base?: Partial<typeof formComp>
-        ) => {
-          const data = String(dataIso || '').slice(0, 10)
-          const hora = horaIso?.trim() || horaAtualLocal()
-          const estado = estadoClienteParaRecibo(data, hora)
-          return {
-            tipo: (estado.tipoSelecionado === 'pessoal' ? 'pessoal' : 'cliente') as 'cliente' | 'pessoal',
-            cliente: base?.cliente?.trim() ? base.cliente : estado.clienteSelecionado || '',
-            data: data || new Date().toISOString().slice(0, 10),
-            horaUsada: estado.horaUsada || hora,
-            mesCompetencia:
-              typeof base?.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(base.mesCompetencia)
-                ? base.mesCompetencia
-                : (data || new Date().toISOString().slice(0, 10)).slice(0, 7),
-            valorUnitario: base?.valorUnitario ?? 0,
-            quantidade: base?.quantidade ?? 1,
-            descricao: base?.descricao ?? '',
-            imagemBase64: base?.imagemBase64 ?? '',
-            clientesSugeridos: estado.clientesSugeridos,
-            motivoAssociacao: estado.motivoAssociacao,
-          }
-        }
         const abrirFormCompManual = (base?: Partial<typeof formComp>) => {
           const hoje = new Date().toISOString().slice(0, 10)
-          setFormComp(formCompComClienteSugerido(base?.data || hoje, base?.horaUsada || horaAtualLocal(), base))
+          setFormComp(formCompComClienteSugerido(base?.data || hoje, base?.horaUsada || horaAtualLocal(), base, estadoClienteParaRecibo))
           setShowFormComp(true)
         }
         const syncFormCompDataHora = (dataIso: string, horaIso: string) => {
-          setFormComp((prev) => formCompComClienteSugerido(dataIso, horaIso, prev))
+          setFormComp((prev) => formCompComClienteSugerido(dataIso, horaIso, prev, estadoClienteParaRecibo))
         }
         const clientesAtivosPainel = resolverClientesComprovantePorData(new Date().toISOString().slice(0, 10))
         const mapGrupoComprovantes = (() => {
