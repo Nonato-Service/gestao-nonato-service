@@ -342,8 +342,12 @@ try {
   if (
     idx.includes('createEmptyEquipamentoClienteForm') &&
     idx.includes('createEmptyRelatorioEquipamentoForm') &&
+    idx.includes('isRelatorioEquipamentoFormValid') &&
+    idx.includes('createRelatorioEquipamentoFromForm') &&
+    idx.includes('relatorioEquipamentoToForm') &&
     idx.includes('EquipamentoCliente') &&
-    idx.includes('RelatorioEquipamento')
+    idx.includes('RelatorioEquipamento') &&
+    exists('app/modules/clientes/relatorioEquipamentoFromForm.ts')
   ) {
     ok('módulo clientes exporta EquipamentoCliente / RelatorioEquipamento / forms vazios')
   } else {
@@ -352,6 +356,10 @@ try {
   if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
+    nma.includes('isRelatorioEquipamentoFormValid') &&
+    nma.includes('createRelatorioEquipamentoFromForm') &&
+    nma.includes('updateRelatorioEquipamentoFromForm') &&
+    nma.includes('relatorioEquipamentoToForm') &&
     !nma.includes('type RelatorioEquipamento = {') &&
     !nma.includes('type EquipamentoCliente = {')
   ) {

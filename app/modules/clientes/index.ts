@@ -93,7 +93,14 @@ export type { RelatorioEquipamentoFormFields } from './equipamentoClienteForm'
 export {
   createEmptyEquipamentoClienteForm,
   createEmptyRelatorioEquipamentoForm,
+  relatorioEquipamentoToForm,
 } from './equipamentoClienteForm'
+
+export {
+  isRelatorioEquipamentoFormValid,
+  createRelatorioEquipamentoFromForm,
+  updateRelatorioEquipamentoFromForm,
+} from './relatorioEquipamentoFromForm'
 
 export type { EquipamentoClienteFromFormOpts } from './equipamentoClienteFromForm'
 export {

@@ -1,6 +1,6 @@
 /** Formulário vazio do equipamento do cliente (funções puras). */
 
-import type { EquipamentoCliente } from './equipamentoClienteTipos'
+import type { EquipamentoCliente, RelatorioEquipamento } from './equipamentoClienteTipos'
 
 /** Estado inicial / limpo do formulário de equipamento do cliente. */
 export function createEmptyEquipamentoClienteForm(): EquipamentoCliente {
@@ -30,5 +30,12 @@ export function createEmptyRelatorioEquipamentoForm(): RelatorioEquipamentoFormF
   return {
     titulo: '',
     conteudo: '',
+  }
+}
+
+export function relatorioEquipamentoToForm(relatorio: RelatorioEquipamento): RelatorioEquipamentoFormFields {
+  return {
+    titulo: relatorio.titulo,
+    conteudo: relatorio.conteudo,
   }
 }

@@ -459,6 +459,10 @@ import {
   updateClientePrioritarioFromForm,
   createEmptyEquipamentoClienteForm,
   createEmptyRelatorioEquipamentoForm,
+  relatorioEquipamentoToForm,
+  isRelatorioEquipamentoFormValid,
+  createRelatorioEquipamentoFromForm,
+  updateRelatorioEquipamentoFromForm,
   isEquipamentoClienteFormValid,
   createEquipamentoClienteFromForm,
   updateEquipamentoClienteFromForm,
@@ -14980,7 +14984,7 @@ export default function Dashboard() {
 
   const handleEditRelatorio = (relatorio: RelatorioEquipamento) => {
     setEditingRelatorio(relatorio)
-    setRelatorioForm({ titulo: relatorio.titulo, conteudo: relatorio.conteudo })
+    setRelatorioForm(relatorioEquipamentoToForm(relatorio))
     setShowRelatorioForm(true)
     requestAnimationFrame(() => {
       relatoriosEquipamentoModalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -15036,7 +15040,7 @@ export default function Dashboard() {
   }
 
   const handleSaveRelatorio = () => {
-    if (!selectedEquipamentoForRelatorio || !relatorioForm.titulo || !relatorioForm.conteudo) {
+    if (!selectedEquipamentoForRelatorio || !isRelatorioEquipamentoFormValid(relatorioForm)) {
       alert(t.fillAllFields)
       return
     }
@@ -15047,14 +15051,10 @@ export default function Dashboard() {
       if (equipamento) {
         const relatorios = equipamento.relatorios || []
         const savedRelatorio: RelatorioEquipamento = editingRelatorio
-          ? { ...editingRelatorio, titulo: relatorioForm.titulo, conteudo: relatorioForm.conteudo }
-          : {
-              id: Date.now().toString(),
-              titulo: relatorioForm.titulo,
-              conteudo: relatorioForm.conteudo,
-              dataGeracao: new Date().toLocaleString('pt-BR'),
-              equipamentoId: equipamento.numeroSerie
-            }
+          ? updateRelatorioEquipamentoFromForm(editingRelatorio, relatorioForm)
+          : createRelatorioEquipamentoFromForm(relatorioForm, {
+              equipamentoId: equipamento.numeroSerie,
+            })
 
         const updatedRelatorios: RelatorioEquipamento[] = editingRelatorio
           ? relatorios.map(r =>
@@ -15075,7 +15075,7 @@ export default function Dashboard() {
         setClientes(updatedClientes)
         saveData('nonato-clientes', updatedClientes)
         setSelectedEquipamentoForRelatorio({ ...selectedEquipamentoForRelatorio, equipamento: updatedEquipamento })
-        setRelatorioForm({ titulo: savedRelatorio.titulo, conteudo: savedRelatorio.conteudo })
+        setRelatorioForm(relatorioEquipamentoToForm(savedRelatorio))
         setEditingRelatorio(savedRelatorio)
         alert((t as any).relatorioSaved || 'Relatório salvo com sucesso!')
       }
