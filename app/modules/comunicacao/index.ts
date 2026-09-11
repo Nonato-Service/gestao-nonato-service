@@ -17,3 +17,12 @@ export {
   filterMensagensNaoLidas,
   countMensagensNaoLidas,
 } from './visibilidade'
+
+export type {
+  MensagemComunicacaoFormPayload,
+  CreateMensagemComunicacaoFromFormOpts,
+} from './fromForm'
+export {
+  isMensagemComunicacaoFormValid,
+  createMensagemComunicacaoFromForm,
+} from './fromForm'

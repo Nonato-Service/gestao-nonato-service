@@ -2985,6 +2985,23 @@ try {
   } else {
     fail('NonatoMainApp ainda define MensagemComunicacao/PecaSolicitadaArmazem localmente')
   }
+  if (
+    idx.includes('isMensagemComunicacaoFormValid') &&
+    idx.includes('createMensagemComunicacaoFromForm') &&
+    exists('app/modules/comunicacao/fromForm.ts')
+  ) {
+    ok('módulo comunicação exporta MensagemComunicacao fromForm')
+  } else {
+    fail('módulo comunicação sem MensagemComunicacao fromForm')
+  }
+  if (
+    nma.includes('isMensagemComunicacaoFormValid') &&
+    nma.includes('createMensagemComunicacaoFromForm')
+  ) {
+    ok('NonatoMainApp usa MensagemComunicacao fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia MensagemComunicacao no sítio')
+  }
 } catch (e) {
   fail(`módulo comunicação: ${e.message}`)
 }

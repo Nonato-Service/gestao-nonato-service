@@ -411,6 +411,8 @@ import {
   resolveCommunicationIdentity,
   filterMensagensVisiveis,
   filterMensagensNaoLidas,
+  isMensagemComunicacaoFormValid,
+  createMensagemComunicacaoFromForm,
 } from './modules/comunicacao'
 import type {
   GrupoDesmontado,
@@ -2786,7 +2788,7 @@ export default function Dashboard() {
     }
 
     const handleEnviar = () => {
-      if (!assunto.trim() || !mensagem.trim()) {
+      if (!isMensagemComunicacaoFormValid({ assunto, mensagem })) {
         alert(safeT?.preencherTodosCampos || 'Por favor, preencha todos os campos')
         return
       }
@@ -3352,7 +3354,7 @@ export default function Dashboard() {
     }, [tipoDestinatario, classeDestinatario, gestores])
 
     const handleEnviar = () => {
-      if (!assunto.trim() || !mensagem.trim()) {
+      if (!isMensagemComunicacaoFormValid({ assunto, mensagem })) {
         alert(safeT?.preencherTodosCampos || 'Por favor, preencha todos os campos')
         return
       }
@@ -14104,21 +14106,23 @@ export default function Dashboard() {
           setMensagensComunicacao(prev => {
             const assunto = (safeT?.ordemServicoConcluida || 'Ordem de Serviço concluída') + ' - ' + updatedOS.numeroOS
             const texto = (safeT?.ordemServicoConcluida || 'Ordem de Serviço concluída') + ': ' + updatedOS.numeroOS + '\n' + (safeT?.cliente || 'Cliente') + ': ' + updatedOS.clienteNome + '\n' + (safeT?.tecnicoResponsavel || 'Técnico responsável') + ': ' + (updatedOS.tecnicoResponsavel || '-')
-            const novas = gestoresInd.map((g: Gestor) => ({
-              id: Date.now().toString() + '-' + g.id + '-' + Math.random().toString(36).slice(2),
-              remetenteId: 'sistema',
-              remetenteNome: 'Sistema',
-              remetenteTipo: 'gestor' as const,
-              remetenteClasse: 'gestor-industrial' as const,
-              destinatarioId: g.id,
-              destinatarioNome: g.name,
-              destinatarioTipo: 'gestor' as const,
-              destinatarioClasse: 'gestor-industrial' as const,
-              assunto,
-              mensagem: texto,
-              dataEnvio: new Date().toISOString(),
-              lida: false
-            }))
+            const novas = gestoresInd.map((g: Gestor) =>
+              createMensagemComunicacaoFromForm(
+                {
+                  remetenteId: 'sistema',
+                  remetenteNome: 'Sistema',
+                  remetenteTipo: 'gestor',
+                  remetenteClasse: 'gestor-industrial',
+                  destinatarioId: g.id,
+                  destinatarioNome: g.name,
+                  destinatarioTipo: 'gestor',
+                  destinatarioClasse: 'gestor-industrial',
+                  assunto,
+                  mensagem: texto,
+                },
+                { id: Date.now().toString() + '-' + g.id + '-' + Math.random().toString(36).slice(2) }
+              )
+            )
             const next = [...prev, ...novas]
             saveData('nonato-mensagens-comunicacao', next)
             return next
@@ -14138,21 +14142,23 @@ export default function Dashboard() {
           setMensagensComunicacao(prev => {
             const assunto = (safeT?.ordemServicoConcluida || 'Ordem de Serviço concluída') + ' - ' + newOS.numeroOS
             const texto = (safeT?.ordemServicoConcluida || 'Ordem de Serviço concluída') + ': ' + newOS.numeroOS + '\n' + (safeT?.cliente || 'Cliente') + ': ' + newOS.clienteNome + '\n' + (safeT?.tecnicoResponsavel || 'Técnico responsável') + ': ' + (newOS.tecnicoResponsavel || '-')
-            const novas = gestoresInd.map((g: Gestor) => ({
-              id: Date.now().toString() + '-' + g.id + '-' + Math.random().toString(36).slice(2),
-              remetenteId: 'sistema',
-              remetenteNome: 'Sistema',
-              remetenteTipo: 'gestor' as const,
-              remetenteClasse: 'gestor-industrial' as const,
-              destinatarioId: g.id,
-              destinatarioNome: g.name,
-              destinatarioTipo: 'gestor' as const,
-              destinatarioClasse: 'gestor-industrial' as const,
-              assunto,
-              mensagem: texto,
-              dataEnvio: new Date().toISOString(),
-              lida: false
-            }))
+            const novas = gestoresInd.map((g: Gestor) =>
+              createMensagemComunicacaoFromForm(
+                {
+                  remetenteId: 'sistema',
+                  remetenteNome: 'Sistema',
+                  remetenteTipo: 'gestor',
+                  remetenteClasse: 'gestor-industrial',
+                  destinatarioId: g.id,
+                  destinatarioNome: g.name,
+                  destinatarioTipo: 'gestor',
+                  destinatarioClasse: 'gestor-industrial',
+                  assunto,
+                  mensagem: texto,
+                },
+                { id: Date.now().toString() + '-' + g.id + '-' + Math.random().toString(36).slice(2) }
+              )
+            )
             const next = [...prev, ...novas]
             saveData('nonato-mensagens-comunicacao', next)
             return next
@@ -50337,35 +50343,37 @@ A1;Peça exemplo;10`}
                             const motivoTexto = (motivoSolicitacaoPecasExecucao || '').trim()
                             const msgTextoBase = equipInfo ? `${safeT?.equipamentoId || 'Equipamento'}: ${equipInfo.id || '-'} | ${equipInfo.modelo || '-'} | ${equipInfo.numeroSerie || '-'}\n${safeT?.tecnicoResponsavel || 'Técnico'}: ${checklistGeradoVisualizar.tecnicoNome || '-'}\n${safeT?.pecasSolicitadas || 'Peças solicitadas'}: ${pecas.length}` : `${safeT?.pecasSolicitadas || 'Peças solicitadas'}: ${pecas.length}`
                             const msgTexto = motivoTexto ? `${msgTextoBase}\n\n${safeT?.motivoOuRazaoSolicitacaoPecas || 'Motivo/razão da solicitação'}:\n${motivoTexto}` : msgTextoBase
-                            const novasMensagens: MensagemComunicacao[] = gestoresInd.map((gestor: Gestor) => ({
-                              id: `solicitacao-pecas-${checklistId}-${gestor.id}-${Date.now()}`,
-                              remetenteId: 'sistema-checklist',
-                              remetenteNome: checklistGeradoVisualizar.tecnicoNome || 'Sistema',
-                              remetenteTipo: 'tecnico',
-                              remetenteClasse: 'tecnico-interno',
-                              destinatarioId: gestor.id,
-                              destinatarioNome: gestor.name,
-                              destinatarioTipo: 'gestor',
-                              destinatarioClasse: 'gestor-industrial',
-                              assunto,
-                              mensagem: msgTexto,
-                              motivoSolicitacaoPecas: motivoTexto || undefined,
-                              dataEnvio: new Date().toISOString(),
-                              lida: false,
-                              tipoMensagem: 'solicitacao-pecas',
-                              checklistId,
-                              equipamentoId: idEquipamentoChecklist,
-                              equipamentoNumeroSerie: numeroSerieEquip || undefined,
-                              statusSolicitacao: 'pendente',
-                              pecasSolicitadas: pecas.map((p: any) => ({
-                                id: p.id,
-                                codigo: p.codigo || p.codigoPeca,
-                                nome: p.nome || p.descricao,
-                                quantidade: p.quantidade || 1,
-                                tecnicoSolicitante: p.tecnicoSolicitante || p.tecnico,
-                                dataSolicitacao: p.dataSolicitacao
-                              }))
-                            }))
+                            const novasMensagens: MensagemComunicacao[] = gestoresInd.map((gestor: Gestor) =>
+                              createMensagemComunicacaoFromForm(
+                                {
+                                  remetenteId: 'sistema-checklist',
+                                  remetenteNome: checklistGeradoVisualizar.tecnicoNome || 'Sistema',
+                                  remetenteTipo: 'tecnico',
+                                  remetenteClasse: 'tecnico-interno',
+                                  destinatarioId: gestor.id,
+                                  destinatarioNome: gestor.name,
+                                  destinatarioTipo: 'gestor',
+                                  destinatarioClasse: 'gestor-industrial',
+                                  assunto,
+                                  mensagem: msgTexto,
+                                  motivoSolicitacaoPecas: motivoTexto || undefined,
+                                  tipoMensagem: 'solicitacao-pecas',
+                                  checklistId,
+                                  equipamentoId: idEquipamentoChecklist,
+                                  equipamentoNumeroSerie: numeroSerieEquip || undefined,
+                                  statusSolicitacao: 'pendente',
+                                  pecasSolicitadas: pecas.map((p: any) => ({
+                                    id: p.id,
+                                    codigo: p.codigo || p.codigoPeca,
+                                    nome: p.nome || p.descricao,
+                                    quantidade: p.quantidade || 1,
+                                    tecnicoSolicitante: p.tecnicoSolicitante || p.tecnico,
+                                    dataSolicitacao: p.dataSolicitacao
+                                  }))
+                                },
+                                { id: `solicitacao-pecas-${checklistId}-${gestor.id}-${Date.now()}` }
+                              )
+                            )
                             setMensagensComunicacao(prev => [...prev, ...novasMensagens])
                             await saveData('nonato-mensagens-comunicacao', [...mensagensComunicacao, ...novasMensagens])
                             alert(safeT?.solicitacaoEnviadaGestorIndustrial || 'Solicitação de peças enviada para o(s) gestor(es) industrial(is).')
@@ -51362,23 +51370,23 @@ A1;Peça exemplo;10`}
                                         
                                         // Enviar mensagem para cada gestor industrial
                                         for (const gestor of gestoresIndustriais) {
-                                          const novaMensagem: MensagemComunicacao = {
-                                            id: Date.now().toString() + '-' + gestor.id,
-                                            remetenteId: 'sistema',
-                                            remetenteNome: 'Sistema',
-                                            remetenteTipo: 'sistema',
-                                            remetenteClasse: 'gestor-industrial',
-                                            remetenteArea: 'industrial',
-                                            destinatarioId: gestor.id,
-                                            destinatarioNome: gestor.name,
-                                            destinatarioTipo: 'gestor',
-                                            destinatarioClasse: 'gestor-industrial',
-                                            destinatarioTipoTecnico: undefined,
-                                            assunto: `${safeT?.checklistConcluido || 'Checklist Concluído'} - ${equipamentoInfo?.id || 'ID'}`,
-                                            mensagem: mensagemTexto,
-                                            dataEnvio: new Date().toISOString(),
-                                            lida: false
-                                          }
+                                          const novaMensagem = createMensagemComunicacaoFromForm(
+                                            {
+                                              remetenteId: 'sistema',
+                                              remetenteNome: 'Sistema',
+                                              remetenteTipo: 'sistema',
+                                              remetenteClasse: 'gestor-industrial',
+                                              remetenteArea: 'industrial',
+                                              destinatarioId: gestor.id,
+                                              destinatarioNome: gestor.name,
+                                              destinatarioTipo: 'gestor',
+                                              destinatarioClasse: 'gestor-industrial',
+                                              destinatarioTipoTecnico: undefined,
+                                              assunto: `${safeT?.checklistConcluido || 'Checklist Concluído'} - ${equipamentoInfo?.id || 'ID'}`,
+                                              mensagem: mensagemTexto,
+                                            },
+                                            { id: Date.now().toString() + '-' + gestor.id }
+                                          )
                                           
                                           setMensagensComunicacao((prev) => [...prev, novaMensagem])
                                           await saveData('nonato-mensagens-comunicacao', [...mensagensComunicacao, novaMensagem])
@@ -55942,12 +55950,7 @@ A1;Peça exemplo;10`}
                   tecnicos={tecnicos}
                   tiposGestores={tiposGestores}
                   onEnviarMensagem={(mensagem) => {
-                    const novaMensagem: MensagemComunicacao = {
-                      id: Date.now().toString(),
-                      ...mensagem,
-                      dataEnvio: new Date().toISOString(),
-                      lida: false
-                    }
+                    const novaMensagem = createMensagemComunicacaoFromForm(mensagem)
                     setMensagensComunicacao([...mensagensComunicacao, novaMensagem])
                     saveData('nonato-mensagens-comunicacao', [...mensagensComunicacao, novaMensagem])
                     alert(safeT?.mensagemEnviada || 'Mensagem enviada com sucesso!')
@@ -56039,12 +56042,7 @@ A1;Peça exemplo;10`}
                       tecnicoTipo={tecnicos.find(t => t.id === tecnicoSelecionado)?.type === 'internal' ? 'tecnico-interno' : 'tecnico-externo'}
                       gestores={gestores}
                       onEnviarMensagem={(mensagem) => {
-                        const novaMensagem: MensagemComunicacao = {
-                          id: Date.now().toString(),
-                          ...mensagem,
-                          dataEnvio: new Date().toISOString(),
-                          lida: false
-                        }
+                        const novaMensagem = createMensagemComunicacaoFromForm(mensagem)
                         setMensagensComunicacao([...mensagensComunicacao, novaMensagem])
                         saveData('nonato-mensagens-comunicacao', [...mensagensComunicacao, novaMensagem])
                         alert(safeT?.mensagemEnviada || 'Mensagem enviada com sucesso!')
@@ -56127,7 +56125,7 @@ A1;Peça exemplo;10`}
             }).sort((a, b) => new Date(a.dataEnvio).getTime() - new Date(b.dataEnvio).getTime())
           : []
         const enviarMensagemPrivada = () => {
-          if (!hubUsuarioEfetivo || hubDestinatarioSelecionado.length === 0 || !hubAssunto.trim() || !hubMensagemTexto.trim()) return
+          if (!hubUsuarioEfetivo || hubDestinatarioSelecionado.length === 0 || !isMensagemComunicacaoFormValid({ assunto: hubAssunto, mensagem: hubMensagemTexto })) return
           const assunto = hubAssunto.trim()
           const texto = hubMensagemTexto.trim()
           const remetenteNome = hubUsuarioEfetivo.nome
@@ -56145,25 +56143,25 @@ A1;Peça exemplo;10`}
             const destinatarioNome = destGestor?.name ?? destTecnico?.name ?? ''
             const destinatarioTipo = destGestor ? 'gestor' as const : 'tecnico' as const
             const destinatarioClasse = destGestor ? getGestorClasse(destGestor) : getTecnicoClasse(destTecnico)
-            return {
-              id: `${Date.now()}-${destId}-${Math.random().toString(36).slice(2)}`,
-              remetenteId: hubUsuarioEfetivo.id,
-              remetenteNome,
-              remetenteTipo,
-              remetenteClasse: remetenteClasse as any,
-              remetenteArea:
-                hubUsuarioEfetivo.tipo === 'gestor' && 'area' in hubUsuarioEfetivo
-                  ? (hubUsuarioEfetivo as { area?: MensagemComunicacao['remetenteArea'] }).area
-                  : undefined,
-              destinatarioId: destId,
-              destinatarioNome,
-              destinatarioTipo,
-              destinatarioClasse: destinatarioClasse as any,
-              assunto,
-              mensagem: texto,
-              dataEnvio: new Date().toISOString(),
-              lida: false
-            }
+            return createMensagemComunicacaoFromForm(
+              {
+                remetenteId: hubUsuarioEfetivo.id,
+                remetenteNome,
+                remetenteTipo,
+                remetenteClasse: remetenteClasse as any,
+                remetenteArea:
+                  hubUsuarioEfetivo.tipo === 'gestor' && 'area' in hubUsuarioEfetivo
+                    ? (hubUsuarioEfetivo as { area?: MensagemComunicacao['remetenteArea'] }).area
+                    : undefined,
+                destinatarioId: destId,
+                destinatarioNome,
+                destinatarioTipo,
+                destinatarioClasse: destinatarioClasse as any,
+                assunto,
+                mensagem: texto,
+              },
+              { id: `${Date.now()}-${destId}-${Math.random().toString(36).slice(2)}` }
+            )
           })
           setMensagensComunicacao(prev => {
             const next = [...prev, ...novas]
@@ -56586,12 +56584,7 @@ A1;Peça exemplo;10`}
                   tecnicos={tecnicos}
                   tiposGestores={tiposGestores}
                   onEnviarMensagem={(mensagem) => {
-                    const novaMensagem: MensagemComunicacao = {
-                      id: Date.now().toString(),
-                      ...mensagem,
-                      dataEnvio: new Date().toISOString(),
-                      lida: false
-                    }
+                    const novaMensagem = createMensagemComunicacaoFromForm(mensagem)
                     setMensagensComunicacao([...mensagensComunicacao, novaMensagem])
                     saveData('nonato-mensagens-comunicacao', [...mensagensComunicacao, novaMensagem])
                     alert(safeT?.mensagemEnviada || 'Mensagem enviada com sucesso!')
@@ -57854,38 +57847,42 @@ A1;Peça exemplo;10`}
                                     const textoAviso = `${safeT?.pecasSeparadasPodemRetirar || 'Peças separadas – está OK, já podem ser retiradas.'}\n${safeT?.equipamentoId || 'Equipamento'}: ${item.equipamentoId || '-'}\n${safeT?.pecasSolicitadas || 'Peças'}: ${(item.pecasSolicitadas || []).map((p: any) => `${p.codigo || p.nome} (Qtd: ${p.quantidade ?? 1})`).join(', ')}`
                                     const novasMensagens: MensagemComunicacao[] = []
                                     if (gestor) {
-                                      novasMensagens.push({
-                                        id: `aviso-retirada-gestor-${item.id}-${Date.now()}`,
-                                        remetenteId: 'armazem',
-                                        remetenteNome: 'Armazém',
-                                        remetenteTipo: 'armazem',
-                                        remetenteClasse: 'armazem',
-                                        destinatarioId: gestor.id,
-                                        destinatarioNome: gestor.name,
-                                        destinatarioTipo: 'gestor',
-                                        destinatarioClasse: gestor.area === 'industrial' ? 'gestor-industrial' : 'gestor',
-                                        assunto: safeT?.pecasSeparadasAviso || 'Peças separadas – já podem ser retiradas',
-                                        mensagem: textoAviso,
-                                        dataEnvio: new Date().toISOString(),
-                                        lida: false
-                                      })
+                                      novasMensagens.push(
+                                        createMensagemComunicacaoFromForm(
+                                          {
+                                            remetenteId: 'armazem',
+                                            remetenteNome: 'Armazém',
+                                            remetenteTipo: 'armazem',
+                                            remetenteClasse: 'armazem',
+                                            destinatarioId: gestor.id,
+                                            destinatarioNome: gestor.name,
+                                            destinatarioTipo: 'gestor',
+                                            destinatarioClasse: gestor.area === 'industrial' ? 'gestor-industrial' : 'gestor',
+                                            assunto: safeT?.pecasSeparadasAviso || 'Peças separadas – já podem ser retiradas',
+                                            mensagem: textoAviso,
+                                          },
+                                          { id: `aviso-retirada-gestor-${item.id}-${Date.now()}` }
+                                        )
+                                      )
                                     }
                                     if (tecnico) {
-                                      novasMensagens.push({
-                                        id: `aviso-retirada-tecnico-${item.id}-${Date.now()}`,
-                                        remetenteId: 'armazem',
-                                        remetenteNome: 'Armazém',
-                                        remetenteTipo: 'armazem',
-                                        remetenteClasse: 'armazem',
-                                        destinatarioId: tecnico.id,
-                                        destinatarioNome: tecnico.name,
-                                        destinatarioTipo: 'tecnico',
-                                        destinatarioClasse: tecnico.type === 'internal' ? 'tecnico-interno' : 'tecnico-externo',
-                                        assunto: safeT?.pecasSeparadasAviso || 'Peças separadas – já podem ser retiradas',
-                                        mensagem: textoAviso,
-                                        dataEnvio: new Date().toISOString(),
-                                        lida: false
-                                      })
+                                      novasMensagens.push(
+                                        createMensagemComunicacaoFromForm(
+                                          {
+                                            remetenteId: 'armazem',
+                                            remetenteNome: 'Armazém',
+                                            remetenteTipo: 'armazem',
+                                            remetenteClasse: 'armazem',
+                                            destinatarioId: tecnico.id,
+                                            destinatarioNome: tecnico.name,
+                                            destinatarioTipo: 'tecnico',
+                                            destinatarioClasse: tecnico.type === 'internal' ? 'tecnico-interno' : 'tecnico-externo',
+                                            assunto: safeT?.pecasSeparadasAviso || 'Peças separadas – já podem ser retiradas',
+                                            mensagem: textoAviso,
+                                          },
+                                          { id: `aviso-retirada-tecnico-${item.id}-${Date.now()}` }
+                                        )
+                                      )
                                     }
                                     if (novasMensagens.length > 0) {
                                       const novaListaMensagens = [...mensagensComunicacao, ...novasMensagens]
