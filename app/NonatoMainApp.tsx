@@ -161,6 +161,12 @@ import {
   isPecaBibliotecaFormValid,
   createPecaBibliotecaFromForm,
   updatePecaBibliotecaFromForm,
+  isCategoriaPecaFormValid,
+  createCategoriaPecaFromForm,
+  inserirCategoriaPecaAposRef,
+  isSubcategoriaPecaFormValid,
+  createSubcategoriaPecaFromForm,
+  inserirSubcategoriaPecaAposRef,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,
@@ -40234,17 +40240,13 @@ A1;Peça exemplo;10`}
                       style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                       autoFocus
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter' && novaCategoriaNome.trim()) {
-                          const refId = pecaBibliotecaForm.categoriaId
-                          const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
-                          const newCategoria: CategoriaPeca = {
-                            id: Date.now().toString(),
-                            nome: novaCategoriaNome.trim()
-                          }
-                          const updated =
-                            idx >= 0
-                              ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
-                              : [...categoriasPecas, newCategoria]
+                        if (e.key === 'Enter' && isCategoriaPecaFormValid(novaCategoriaNome)) {
+                          const newCategoria = createCategoriaPecaFromForm(novaCategoriaNome)
+                          const updated = inserirCategoriaPecaAposRef(
+                            categoriasPecas,
+                            newCategoria,
+                            pecaBibliotecaForm.categoriaId
+                          )
                           setCategoriasPecas(updated)
                           saveData('nonato-categorias-pecas', updated)
                           setUltimoGrupoSelecionado(newCategoria.id)
@@ -40267,20 +40269,16 @@ A1;Peça exemplo;10`}
                     <button
                       className="btn-primary"
                       onClick={() => {
-                        if (!novaCategoriaNome.trim()) {
+                        if (!isCategoriaPecaFormValid(novaCategoriaNome)) {
                               alert(safeT?.fillAllFields || 'Preencha o nome da categoria!')
                           return
                         }
-                        const refId = pecaBibliotecaForm.categoriaId
-                        const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
-                        const newCategoria: CategoriaPeca = {
-                          id: Date.now().toString(),
-                          nome: novaCategoriaNome.trim()
-                        }
-                        const updated =
-                          idx >= 0
-                            ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
-                            : [...categoriasPecas, newCategoria]
+                        const newCategoria = createCategoriaPecaFromForm(novaCategoriaNome)
+                        const updated = inserirCategoriaPecaAposRef(
+                          categoriasPecas,
+                          newCategoria,
+                          pecaBibliotecaForm.categoriaId
+                        )
                         setCategoriasPecas(updated)
                         saveData('nonato-categorias-pecas', updated)
                         setUltimoGrupoSelecionado(newCategoria.id)
@@ -40374,31 +40372,15 @@ A1;Peça exemplo;10`}
                           style={{ width: '100%', padding: '10px', backgroundColor: '#484848', color: '#fff', border: '1px solid rgba(0, 168, 107, 0.3)', borderRadius: '4px' }}
                           autoFocus
                           onKeyPress={(e) => {
-                            if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
+                            if (e.key === 'Enter' && isSubcategoriaPecaFormValid(novaSubcategoriaNome, pecaBibliotecaForm.categoriaId)) {
                               const categoriaId = pecaBibliotecaForm.categoriaId
-                              const prevSubId = pecaBibliotecaForm.subcategoriaId
-                              const newSubcategoria: SubcategoriaPeca = {
-                                id: Date.now().toString(),
-                                nome: novaSubcategoriaNome.trim(),
-                                categoriaId
-                              }
-                              const prevIdx =
-                                prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
-                                  ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
-                                  : -1
-                              let updated: SubcategoriaPeca[]
-                              if (prevIdx >= 0) {
-                                updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
-                              } else {
-                                let insertAt = subcategoriasPecas.length
-                                for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
-                                  if (subcategoriasPecas[i].categoriaId === categoriaId) {
-                                    insertAt = i + 1
-                                    break
-                                  }
-                                }
-                                updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
-                              }
+                              if (!categoriaId) return
+                              const newSubcategoria = createSubcategoriaPecaFromForm(novaSubcategoriaNome, categoriaId)
+                              const updated = inserirSubcategoriaPecaAposRef(
+                                subcategoriasPecas,
+                                newSubcategoria,
+                                pecaBibliotecaForm.subcategoriaId
+                              )
                               setSubcategoriasPecas(updated)
                               saveData('nonato-subcategorias-pecas', updated)
                               const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
@@ -40430,29 +40412,12 @@ A1;Peça exemplo;10`}
                               return
                             }
                             const categoriaId = pecaBibliotecaForm.categoriaId
-                            const prevSubId = pecaBibliotecaForm.subcategoriaId
-                            const newSubcategoria: SubcategoriaPeca = {
-                              id: Date.now().toString(),
-                              nome: novaSubcategoriaNome.trim(),
-                              categoriaId
-                            }
-                            const prevIdx =
-                              prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
-                                ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
-                                : -1
-                            let updated: SubcategoriaPeca[]
-                            if (prevIdx >= 0) {
-                              updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
-                            } else {
-                              let insertAt = subcategoriasPecas.length
-                              for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
-                                if (subcategoriasPecas[i].categoriaId === categoriaId) {
-                                  insertAt = i + 1
-                                  break
-                                }
-                              }
-                              updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
-                            }
+                            const newSubcategoria = createSubcategoriaPecaFromForm(novaSubcategoriaNome, categoriaId)
+                            const updated = inserirSubcategoriaPecaAposRef(
+                              subcategoriasPecas,
+                              newSubcategoria,
+                              pecaBibliotecaForm.subcategoriaId
+                            )
                             setSubcategoriasPecas(updated)
                             saveData('nonato-subcategorias-pecas', updated)
                             const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria

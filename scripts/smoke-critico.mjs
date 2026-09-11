@@ -828,6 +828,31 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia PecaBiblioteca no sítio')
   }
+  if (
+    idx.includes('isCategoriaPecaFormValid') &&
+    idx.includes('createCategoriaPecaFromForm') &&
+    idx.includes('inserirCategoriaPecaAposRef') &&
+    idx.includes('isSubcategoriaPecaFormValid') &&
+    idx.includes('createSubcategoriaPecaFromForm') &&
+    idx.includes('inserirSubcategoriaPecaAposRef') &&
+    exists('app/modules/biblioteca/categoriaFromForm.ts')
+  ) {
+    ok('módulo biblioteca exporta CategoriaPeca/SubcategoriaPeca fromForm')
+  } else {
+    fail('módulo biblioteca sem CategoriaPeca/SubcategoriaPeca fromForm')
+  }
+  if (
+    nma.includes('isCategoriaPecaFormValid') &&
+    nma.includes('createCategoriaPecaFromForm') &&
+    nma.includes('inserirCategoriaPecaAposRef') &&
+    nma.includes('isSubcategoriaPecaFormValid') &&
+    nma.includes('createSubcategoriaPecaFromForm') &&
+    nma.includes('inserirSubcategoriaPecaAposRef')
+  ) {
+    ok('NonatoMainApp usa CategoriaPeca/SubcategoriaPeca fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia CategoriaPeca/SubcategoriaPeca no sítio')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }

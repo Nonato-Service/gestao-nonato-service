@@ -11,6 +11,18 @@ export {
   createPecaBibliotecaFromForm,
   updatePecaBibliotecaFromForm,
 } from './pecaFromForm'
+export type {
+  CreateCategoriaPecaFromFormOpts,
+  CreateSubcategoriaPecaFromFormOpts,
+} from './categoriaFromForm'
+export {
+  isCategoriaPecaFormValid,
+  createCategoriaPecaFromForm,
+  inserirCategoriaPecaAposRef,
+  isSubcategoriaPecaFormValid,
+  createSubcategoriaPecaFromForm,
+  inserirSubcategoriaPecaAposRef,
+} from './categoriaFromForm'
 
 export type { BibliotecaNovidadesMsgTemplates } from './aviso'
 export {
