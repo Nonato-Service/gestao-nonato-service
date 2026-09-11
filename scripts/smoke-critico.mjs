@@ -2038,6 +2038,25 @@ try {
   } else {
     fail('NonatoMainApp ainda define SST localmente (tipos/form/envio/print)')
   }
+  if (
+    idx.includes('createSolicitacaoServicoTecnicoFromForm') &&
+    idx.includes('updateSolicitacaoServicoTecnicoFromForm') &&
+    idx.includes('solicitacaoServicoTecnicoToForm') &&
+    exists('app/modules/sst/fromForm.ts')
+  ) {
+    ok('módulo sst exporta SolicitacaoServicoTecnico form/fromForm')
+  } else {
+    fail('módulo sst sem SolicitacaoServicoTecnico form/fromForm')
+  }
+  if (
+    nma.includes('createSolicitacaoServicoTecnicoFromForm') &&
+    nma.includes('updateSolicitacaoServicoTecnicoFromForm') &&
+    nma.includes('solicitacaoServicoTecnicoToForm')
+  ) {
+    ok('NonatoMainApp usa SolicitacaoServicoTecnico fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia SolicitacaoServicoTecnico no sítio')
+  }
 } catch (e) {
   fail(`módulo sst: ${e.message}`)
 }

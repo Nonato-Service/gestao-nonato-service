@@ -343,6 +343,10 @@ import type {
 } from './modules/sst'
 import {
   emptySolicitacaoServicoTecnicoFormState,
+  solicitacaoServicoTecnicoToForm,
+  solicitacaoServicoTecnicoFormFromModelo,
+  createSolicitacaoServicoTecnicoFromForm,
+  updateSolicitacaoServicoTecnicoFromForm,
   enriquecerSolicitacaoComClienteCadastrado,
   mergeClienteSelecionadoSst,
   patchEquipamentoClienteChave,
@@ -40996,11 +41000,10 @@ A1;Peça exemplo;10`}
           const id = editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`
           let formPayload = { ...solicitacaoServicoTecnicoForm }
           if (formPayload.documentoDevolvido?.dados) {
-            const pseudo: SolicitacaoServicoTecnico = {
+            const pseudo = createSolicitacaoServicoTecnicoFromForm(formPayload, {
               id,
-              ...formPayload,
-              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
-            }
+              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao,
+            })
             const enr = enriquecerSolicitacaoComClienteCadastrado(pseudo, clientes)
             formPayload = {
               ...formPayload,
@@ -41015,11 +41018,9 @@ A1;Peça exemplo;10`}
               }
             }
           }
-          const nova: SolicitacaoServicoTecnico = {
-            id,
-            ...formPayload,
-            dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
-          }
+          const nova = editingSolicitacaoServicoTecnico
+            ? updateSolicitacaoServicoTecnicoFromForm(editingSolicitacaoServicoTecnico, formPayload)
+            : createSolicitacaoServicoTecnicoFromForm(formPayload, { id })
           const list = editingSolicitacaoServicoTecnico
             ? solicitacoesServicoTecnico.map(s => s.id === id ? nova : s)
             : [...solicitacoesServicoTecnico, nova]
@@ -41049,11 +41050,10 @@ A1;Peça exemplo;10`}
         const solicitacaoSstComoRegisto = (s?: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
           const base =
             s ||
-            ({
-              id: editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`,
-              ...solicitacaoServicoTecnicoForm,
-              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
-            } as SolicitacaoServicoTecnico)
+            createSolicitacaoServicoTecnicoFromForm(solicitacaoServicoTecnicoForm, {
+              id: editingSolicitacaoServicoTecnico?.id,
+              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao,
+            })
           return enriquecerSolicitacaoComClienteCadastrado(base, clientes)
         }
         const montarHtmlSolicitacao = (rec: SolicitacaoServicoTecnico) => {
@@ -41291,7 +41291,7 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="tab-glass-hero-actions">
                   {!showSolicitacaoServicoTecnicoForm && (
-                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ ...sstModeloBase, clienteId: undefined, assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined, documentoDevolvido: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold' }}>
+                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm(solicitacaoServicoTecnicoFormFromModelo(sstModeloBase)); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold' }}>
                       ➕ {safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação'}
                     </button>
                   )}
@@ -41778,14 +41778,7 @@ A1;Peça exemplo;10`}
                     onClick={() => {
                       setShowSolicitacaoServicoTecnicoForm(true)
                       setEditingSolicitacaoServicoTecnico(null)
-                      setSolicitacaoServicoTecnicoForm({
-                        ...sstModeloBase,
-                        clienteId: undefined,
-                        assinaturaCliente: undefined,
-                        dataAssinaturaCliente: undefined,
-                        dataRecebimento: undefined,
-                        documentoDevolvido: undefined
-                      })
+                      setSolicitacaoServicoTecnicoForm(solicitacaoServicoTecnicoFormFromModelo(sstModeloBase))
                     }}
                     style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer' }}
                   >
@@ -41904,30 +41897,7 @@ A1;Peça exemplo;10`}
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setSolicitacaoServicoTecnicoForm({
-                                      clienteId: s.clienteId,
-                                      nomeCliente: s.nomeCliente,
-                                      identificacaoFiscal: s.identificacaoFiscal,
-                                      emailContato: s.emailContato,
-                                      departamento: s.departamento,
-                                      tipoServico: s.tipoServico,
-                                      localServico: s.localServico,
-                                      horarioPreferido: s.horarioPreferido,
-                                      equipamentoClienteChave: s.equipamentoClienteChave,
-                                      tipoEquipamento: s.tipoEquipamento,
-                                      marca: s.marca,
-                                      modelo: s.modelo,
-                                      numeroSerie: s.numeroSerie,
-                                      problemasApresentados: s.problemasApresentados,
-                                      endereco: s.endereco,
-                                      telefone: s.telefone,
-                                      responsavel: s.responsavel,
-                                      nivelUrgencia: s.nivelUrgencia,
-                                      assinaturaCliente: s.assinaturaCliente,
-                                      dataAssinaturaCliente: s.dataAssinaturaCliente,
-                                      dataRecebimento: s.dataRecebimento,
-                                      documentoDevolvido: s.documentoDevolvido
-                                    })
+                                    setSolicitacaoServicoTecnicoForm(solicitacaoServicoTecnicoToForm(s))
                                     setEditingSolicitacaoServicoTecnico(s)
                                     setShowSolicitacaoServicoTecnicoForm(true)
                                   }}

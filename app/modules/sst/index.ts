@@ -10,6 +10,12 @@ export type {
 } from './tipos'
 
 export { emptySolicitacaoServicoTecnicoFormState } from './formState'
+export {
+  solicitacaoServicoTecnicoToForm,
+  solicitacaoServicoTecnicoFormFromModelo,
+  createSolicitacaoServicoTecnicoFromForm,
+  updateSolicitacaoServicoTecnicoFromForm,
+} from './fromForm'
 
 export {
   enriquecerSolicitacaoComClienteCadastrado,
