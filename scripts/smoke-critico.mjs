@@ -1785,6 +1785,27 @@ try {
   } else {
     fail('protocoloInteligente não importa o módulo protocolo')
   }
+  if (
+    idx.includes('isProtocoloServicoFormValid') &&
+    idx.includes('createProtocoloServicoFromForm') &&
+    idx.includes('updateProtocoloServicoFromForm') &&
+    idx.includes('emptyProtocoloServicoForm') &&
+    exists('app/modules/protocolo/formState.ts') &&
+    exists('app/modules/protocolo/fromForm.ts')
+  ) {
+    ok('módulo protocolo exporta ProtocoloServico form/fromForm')
+  } else {
+    fail('módulo protocolo sem ProtocoloServico form/fromForm')
+  }
+  if (
+    nma.includes('protocoloServicoFormMissing') &&
+    nma.includes('createProtocoloServicoFromForm') &&
+    nma.includes('updateProtocoloServicoFromForm')
+  ) {
+    ok('NonatoMainApp usa ProtocoloServico fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia ProtocoloServico no sítio')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }

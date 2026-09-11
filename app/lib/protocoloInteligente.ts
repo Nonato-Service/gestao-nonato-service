@@ -10,7 +10,6 @@ export type {
 export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from '../modules/protocolo'
 
 import type { ProtocoloBlocoMin, ProtocoloServicoStatus } from '../modules/protocolo'
-import { ensureProtocoloBlocosIds } from '../modules/protocolo'
 
 export type ProtocoloIntelFiltroChip = 'todos' | 'ultimos7d' | 'com_fotos' | 'com_pecas' | 'incompletos'
 
@@ -177,43 +176,7 @@ export function pecasMaisUsadasHistorico(
     .map(([c]) => c)
 }
 
-export function protocoloFormVazio(pdfPadrao: number): ProtocoloFormMin & { relatorioServicoId: string } {
-  return {
-    clienteId: '',
-    equipamentoNumeroSerie: '',
-    situacaoDescricao: '',
-    textoInicial: '',
-    blocos: [],
-    pecasTrocadasCodigos: [],
-    pdfModelo: pdfPadrao,
-    relatorioServicoId: '',
-    condicaoGeral: '',
-    ativoSeguroUso: '',
-    manutencaoNecessaria: '',
-    observacaoCondicoes: '',
-  }
-}
-
-export function formRascunhoDeProtocolo(
-  p: ProtocoloServicoMin & { relatorioServicoId?: string },
-  pdfPadrao: number
-): ProtocoloFormMin & { relatorioServicoId: string } {
-  return {
-    clienteId: p.clienteId || '',
-    equipamentoNumeroSerie: p.equipamentoNumeroSerie || '',
-    situacaoDescricao: typeof p.situacaoDescricao === 'string' ? p.situacaoDescricao : '',
-    textoInicial: p.textoInicial || '',
-    blocos: ensureProtocoloBlocosIds(p.blocos),
-    pecasTrocadasCodigos: [...(p.pecasTrocadasCodigos || [])].map((c) => String(c ?? '')),
-    pdfModelo: p.pdfModelo ?? pdfPadrao,
-    relatorioServicoId: typeof p.relatorioServicoId === 'string' ? p.relatorioServicoId : '',
-    condicaoGeral: typeof p.condicaoGeral === 'string' ? p.condicaoGeral : '',
-    ativoSeguroUso: p.ativoSeguroUso === 'sim' || p.ativoSeguroUso === 'nao' ? p.ativoSeguroUso : '',
-    manutencaoNecessaria:
-      p.manutencaoNecessaria === 'sim' || p.manutencaoNecessaria === 'nao' ? p.manutencaoNecessaria : '',
-    observacaoCondicoes: typeof p.observacaoCondicoes === 'string' ? p.observacaoCondicoes : '',
-  }
-}
+export { emptyProtocoloServicoForm as protocoloFormVazio, protocoloServicoToForm as formRascunhoDeProtocolo } from '../modules/protocolo'
 
 type TemplateDef = {
   id: ProtocoloTemplateId

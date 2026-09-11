@@ -328,7 +328,13 @@ import {
   compressImageFileToJpegDataUrl,
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
-import { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './modules/protocolo'
+import {
+  newProtocoloBlocoId,
+  ensureProtocoloBlocosIds,
+  protocoloServicoFormMissing,
+  createProtocoloServicoFromForm,
+  updateProtocoloServicoFromForm,
+} from './modules/protocolo'
 import type {
   SolicitacaoDocDevolvido,
   SolicitacaoDocDevolvidoCliente,
@@ -30684,14 +30690,12 @@ export default function Dashboard() {
                       type="button"
                       className="btn-primary"
                       onClick={() => {
-                        const temEq = Boolean(protocoloServicoForm.equipamentoNumeroSerie?.trim())
-                        const sitTrim = (protocoloServicoForm.situacaoDescricao || '').trim()
-                        const temSit = Boolean(sitTrim)
-                        if (!protocoloServicoForm.clienteId) {
+                        const missing = protocoloServicoFormMissing(protocoloServicoForm)
+                        if (missing === 'cliente') {
                           alert(protoT?.protocolosServicoAlertClienteObrigatorio || 'Selecione um cliente.')
                           return
                         }
-                        if (!temEq && !temSit) {
+                        if (missing === 'ident') {
                           alert(
                             protoT?.protocolosServicoSelecionarClienteESituacaoEquip ||
                               protoT?.protocolosServicoSelecionarClienteEquipamento ||
@@ -30699,42 +30703,17 @@ export default function Dashboard() {
                           )
                           return
                         }
-                        const dataCriacao =
-                          editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
-                            ? protocolosServico.find((pr) => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()
-                            : new Date().toISOString()
                         const prevProto =
                           editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
                             ? protocolosServico.find((pr) => pr.id === editingProtocoloServicoId)
                             : undefined
-                        const novo: ProtocoloServico = {
-                          id:
-                            editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
-                              ? editingProtocoloServicoId
-                              : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                          clienteId: protocoloServicoForm.clienteId,
-                          equipamentoNumeroSerie: temEq ? protocoloServicoForm.equipamentoNumeroSerie.trim() : '',
-                          situacaoDescricao: temEq ? undefined : sitTrim || undefined,
-                          textoInicial: protocoloServicoForm.textoInicial,
-                          blocos: protocoloServicoForm.blocos,
-                          pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter((c) => c.trim()),
-                          dataCriacao,
-                          pdfModelo: clampProtocoloPdfModelo(protocoloServicoForm.pdfModelo),
-                          relatorioServicoId: (protocoloServicoForm.relatorioServicoId || relatorioAutoSugeridoId || '').trim() || undefined,
-                          status: prevProto?.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
-                          dataConclusao: prevProto?.status === 'executado_enviado' ? prevProto.dataConclusao : undefined,
-                          enviadoVia: prevProto?.status === 'executado_enviado' ? prevProto.enviadoVia : undefined,
-                          condicaoGeral: (protocoloServicoForm.condicaoGeral || '').trim() || undefined,
-                          ativoSeguroUso:
-                            protocoloServicoForm.ativoSeguroUso === 'sim' || protocoloServicoForm.ativoSeguroUso === 'nao'
-                              ? protocoloServicoForm.ativoSeguroUso
-                              : undefined,
-                          manutencaoNecessaria:
-                            protocoloServicoForm.manutencaoNecessaria === 'sim' || protocoloServicoForm.manutencaoNecessaria === 'nao'
-                              ? protocoloServicoForm.manutencaoNecessaria
-                              : undefined,
-                          observacaoCondicoes: (protocoloServicoForm.observacaoCondicoes || '').trim() || undefined,
-                        }
+                        const novo = prevProto
+                          ? updateProtocoloServicoFromForm(prevProto, protocoloServicoForm, {
+                              relatorioServicoIdFallback: relatorioAutoSugeridoId,
+                            })
+                          : createProtocoloServicoFromForm(protocoloServicoForm, {
+                              relatorioServicoIdFallback: relatorioAutoSugeridoId,
+                            })
                         const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                         setProtocolosServico(next)
                         saveData('nonato-protocolos-servico', next)
