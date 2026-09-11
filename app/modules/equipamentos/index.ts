@@ -49,3 +49,12 @@ export {
   isHistoricoEquipamentoFormValid,
   createHistoricoEquipamentoFromForm,
 } from './historicoFromForm'
+
+export type { ItemInclusoFormState } from './itemInclusoForm'
+export { emptyItemInclusoForm } from './itemInclusoForm'
+export type { CreateItemInclusoFromFormOpts } from './itemInclusoFromForm'
+export {
+  isItemInclusoFormValid,
+  createItemInclusoFromForm,
+  updateItemInclusoFromForm,
+} from './itemInclusoFromForm'

@@ -613,6 +613,11 @@ import {
   isHistoricoEquipamentoFormValid,
   createHistoricoEquipamentoFromForm,
   type ItemIncluso,
+  type ItemInclusoFormState,
+  emptyItemInclusoForm,
+  isItemInclusoFormValid,
+  createItemInclusoFromForm,
+  updateItemInclusoFromForm,
   type PartEquipamento,
   type Equipamento,
   type EquipamentoFormState,
@@ -1632,7 +1637,7 @@ export default function Dashboard() {
   const [historicoForm, setHistoricoForm] = useState<HistoricoEquipamentoFormState>(emptyHistoricoEquipamentoForm())
   const [newItemIncluded, setNewItemIncluded] = useState('')
   const [editingItemIncluded, setEditingItemIncluded] = useState<ItemIncluso | null>(null)
-  const [itemIncludedForm, setItemIncludedForm] = useState<{ nome: string; imagem?: string }>({ nome: '', imagem: undefined })
+  const [itemIncludedForm, setItemIncludedForm] = useState<ItemInclusoFormState>(emptyItemInclusoForm())
   const [equipamentoForm, setEquipamentoForm] = useState<EquipamentoFormState>(createEmptyEquipamentoForm())
   const [informacoesMecanicasAba, setInformacoesMecanicasAba] = useState<'cadastro' | 'lista'>('lista')
   const [informacoesMecanicasFiltroFamilia, setInformacoesMecanicasFiltroFamilia] = useState('')
@@ -12266,11 +12271,8 @@ export default function Dashboard() {
   }
 
   const handleAddItem = () => {
-    if (newItem.trim()) {
-      const novoItem: ItemIncluso = {
-        id: Date.now().toString(),
-        nome: newItem.trim()
-      }
+    if (isItemInclusoFormValid(newItem)) {
+      const novoItem = createItemInclusoFromForm({ nome: newItem })
       setEquipamentoForm({
         ...equipamentoForm,
         itemsIncluded: [...(equipamentoForm.itemsIncluded || []), novoItem]
@@ -28464,7 +28466,7 @@ export default function Dashboard() {
                                   className="btn-primary" 
                                   onClick={() => {
                                     const nomeItem = editingItemIncluded ? itemIncludedForm.nome : newItemIncluded
-                                    if (!nomeItem.trim()) {
+                                    if (!isItemInclusoFormValid(nomeItem)) {
                                       alert(t.enterItemName || 'Por favor, digite o nome do item.')
                                       return
                                     }
@@ -28473,7 +28475,7 @@ export default function Dashboard() {
                                       // Editar item existente
                                       const itensAtualizados = itensAtual.map(item => 
                                         item.id === editingItemIncluded.id 
-                                          ? { ...item, nome: itemIncludedForm.nome, imagem: itemIncludedForm.imagem || item.imagem }
+                                          ? updateItemInclusoFromForm(item, itemIncludedForm)
                                           : item
                                       )
                                       const equipamentoAtualizado = { ...viewingEquipamento, itemsIncluded: itensAtualizados }
@@ -28482,14 +28484,13 @@ export default function Dashboard() {
                                       setViewingEquipamento(equipamentoAtualizado)
                                       saveData('nonato-equipamentos', equipamentosAtualizados)
                                       setEditingItemIncluded(null)
-                                      setItemIncludedForm({ nome: '', imagem: undefined })
+                                      setItemIncludedForm(emptyItemInclusoForm())
                                     } else {
                                       // Adicionar novo item
-                                      const novoItem: ItemIncluso = {
-                                        id: Date.now().toString(),
-                                        nome: newItemIncluded.trim(),
+                                      const novoItem = createItemInclusoFromForm({
+                                        nome: newItemIncluded,
                                         imagem: itemIncludedForm.imagem
-                                      }
+                                      })
                                       const itensAtualizados = [...itensAtual, novoItem]
                                       const equipamentoAtualizado = { ...viewingEquipamento, itemsIncluded: itensAtualizados }
                                       const equipamentosAtualizados = equipamentos.map(eq => eq.id === viewingEquipamento.id ? equipamentoAtualizado : eq)
@@ -28497,7 +28498,7 @@ export default function Dashboard() {
                                       setViewingEquipamento(equipamentoAtualizado)
                                       saveData('nonato-equipamentos', equipamentosAtualizados)
                                       setNewItemIncluded('')
-                                      setItemIncludedForm({ nome: '', imagem: undefined })
+                                      setItemIncludedForm(emptyItemInclusoForm())
                                     }
                                   }} 
                                   style={{ flex: 1, padding: '8px 16px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
@@ -28511,7 +28512,7 @@ export default function Dashboard() {
                                     className="btn-primary" 
                                     onClick={() => {
                                       setEditingItemIncluded(null)
-                                      setItemIncludedForm({ nome: '', imagem: undefined })
+                                      setItemIncludedForm(emptyItemInclusoForm())
                                     }} 
                                     style={{ padding: '8px 16px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
                                     onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 200, 83, 0.45)'; e.currentTarget.style.filter = 'brightness(1.15)' }}
