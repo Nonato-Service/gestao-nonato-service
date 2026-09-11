@@ -269,6 +269,25 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ServicoCadastro no sítio')
   }
+  if (
+    idx.includes('isServicoCadastroGrupoNomeValid') &&
+    idx.includes('createServicoCadastroGrupoFromForm') &&
+    idx.includes('updateServicoCadastroGrupoNomeFromForm') &&
+    exists('app/modules/fechamento/grupoFromForm.ts')
+  ) {
+    ok('módulo fechamento exporta ServicoCadastroGrupo fromForm')
+  } else {
+    fail('módulo fechamento sem ServicoCadastroGrupo fromForm')
+  }
+  if (
+    nma.includes('isServicoCadastroGrupoNomeValid') &&
+    nma.includes('createServicoCadastroGrupoFromForm') &&
+    nma.includes('updateServicoCadastroGrupoNomeFromForm')
+  ) {
+    ok('NonatoMainApp usa ServicoCadastroGrupo fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia ServicoCadastroGrupo no sítio')
+  }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)
 }

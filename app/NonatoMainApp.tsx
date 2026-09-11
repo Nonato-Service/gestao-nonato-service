@@ -871,6 +871,9 @@ import {
   resolverGrupoIdServicoCadastro,
   createServicoCadastroFromForm,
   updateServicoCadastroFromForm,
+  isServicoCadastroGrupoNomeValid,
+  createServicoCadastroGrupoFromForm,
+  updateServicoCadastroGrupoNomeFromForm,
 } from './modules/fechamento'
 import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
@@ -12961,34 +12964,34 @@ export default function Dashboard() {
   }
 
   const handleAddServicoGrupo = () => {
-    const nome = novoServicoGrupoNome.trim()
-    if (!nome) {
+    if (!isServicoCadastroGrupoNomeValid(novoServicoGrupoNome)) {
       alert((safeT as any)?.servicosGrupoNomeVazio || 'Digite um nome para o grupo.')
       return
     }
     createAutoBackupBeforeOperation()
-    const maxOrd = servicoGrupos.length ? Math.max(...servicoGrupos.map((g) => g.ordem)) : -1
-    const id = Date.now().toString() + Math.random().toString(36).slice(2, 10)
-    const novo: ServicoCadastroGrupo = { id, nome, ordem: maxOrd + 1 }
+    const novo = createServicoCadastroGrupoFromForm(novoServicoGrupoNome, { grupos: servicoGrupos })
     const next = [...servicoGrupos, novo]
     setServicoGrupos(next)
     setNovoServicoGrupoNome('')
-    setServicoGrupoSelecionadoId(id)
-    setServicoGrupoNomeEdicao(nome)
-    setClienteGrupoTarifaSelecionadoId(id)
+    setServicoGrupoSelecionadoId(novo.id)
+    setServicoGrupoNomeEdicao(novo.nome)
+    setClienteGrupoTarifaSelecionadoId(novo.id)
     void saveData('nonato-servicos-grupos', next)
     alert((safeT as any)?.servicosGrupoSalvo || 'Grupo criado.')
   }
 
   const handleSalvarNomeServicoGrupo = () => {
     if (!servicoGrupoSelecionadoId) return
-    const nome = servicoGrupoNomeEdicao.trim()
-    if (!nome) {
+    if (!isServicoCadastroGrupoNomeValid(servicoGrupoNomeEdicao)) {
       alert((safeT as any)?.servicosGrupoNomeVazio || 'Digite um nome para o grupo.')
       return
     }
     createAutoBackupBeforeOperation()
-    const next = servicoGrupos.map((g) => (g.id === servicoGrupoSelecionadoId ? { ...g, nome } : g))
+    const next = servicoGrupos.map((g) =>
+      g.id === servicoGrupoSelecionadoId
+        ? updateServicoCadastroGrupoNomeFromForm(g, servicoGrupoNomeEdicao)
+        : g
+    )
     setServicoGrupos(next)
     void saveData('nonato-servicos-grupos', next)
   }
@@ -13053,8 +13056,7 @@ export default function Dashboard() {
   }
 
   const handleDuplicarServicoGrupo = (nomeNovo: string, origemId: string) => {
-    const nome = nomeNovo.trim()
-    if (!nome) {
+    if (!isServicoCadastroGrupoNomeValid(nomeNovo)) {
       alert((safeT as any)?.servicosGrupoNomeVazio || 'Digite um nome para o grupo.')
       return
     }
@@ -13064,22 +13066,20 @@ export default function Dashboard() {
       return
     }
     createAutoBackupBeforeOperation()
-    const maxOrd = servicoGrupos.length ? Math.max(...servicoGrupos.map((g) => g.ordem)) : -1
-    const id = Date.now().toString() + Math.random().toString(36).slice(2, 10)
-    const novo: ServicoCadastroGrupo = { id, nome, ordem: maxOrd + 1 }
+    const novo = createServicoCadastroGrupoFromForm(nomeNovo, { grupos: servicoGrupos })
     const novosItens = itensOrigem.map((s) => ({
       ...s,
       id: Date.now().toString() + Math.random().toString(36).slice(2, 10),
-      grupoId: id,
+      grupoId: novo.id,
     }))
     const nextGrupos = [...servicoGrupos, novo]
     const nextServicos = [...servicos, ...novosItens]
     setServicoGrupos(nextGrupos)
     setServicos(nextServicos)
-    setServicoGrupoSelecionadoId(id)
-    setServicoGrupoNomeEdicao(nome)
+    setServicoGrupoSelecionadoId(novo.id)
+    setServicoGrupoNomeEdicao(novo.nome)
     void persistServicosEGrupos(nextServicos, nextGrupos)
-    alert((safeT as any)?.servicosDuplicarGrupoOk || `Grupo «${nome}» criado com ${novosItens.length} item(ns) copiado(s).`)
+    alert((safeT as any)?.servicosDuplicarGrupoOk || `Grupo «${novo.nome}» criado com ${novosItens.length} item(ns) copiado(s).`)
   }
 
   const handleAplicarTemplatePadraoNoGrupo = (grupoId: string) => {

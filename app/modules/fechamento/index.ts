@@ -61,6 +61,13 @@ export {
   nomeGrupoTarifaServico,
   migrarServicoLegacyCodNomeDesc,
 } from './grupos'
+export type { CreateServicoCadastroGrupoFromFormOpts } from './grupoFromForm'
+export {
+  isServicoCadastroGrupoNomeValid,
+  proximaOrdemServicoCadastroGrupo,
+  createServicoCadastroGrupoFromForm,
+  updateServicoCadastroGrupoNomeFromForm,
+} from './grupoFromForm'
 
 export type {
   LabelsFechamentoCobrancaRelatorio,
