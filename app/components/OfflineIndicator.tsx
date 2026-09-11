@@ -14,6 +14,10 @@ import { getStoredUiString } from '../translations'
 const PROBE_FOCUS_DEBOUNCE_MS = 4000
 const PROBE_OFFLINE_INTERVAL_MS = 40_000
 const PENDING_REFRESH_MS = 8_000
+/** Só mostra azul se a fila ficar presa — evita piscar a cada gravar. */
+const PENDING_HOLD_MS = 6_000
+const CONFIRM_HOLD_MS = 2_500
+const CONFIRM_DEBOUNCE_MS = 10_000
 
 function scheduleIdle(fn: () => void): void {
   if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
@@ -34,12 +38,13 @@ export function OfflineIndicator() {
   const [lastSync, setLastSync] = useState<number | null>(null)
   const [lastFailed, setLastFailed] = useState<number | null>(null)
   const [lastConfirmed, setLastConfirmed] = useState<string | null>(null)
-  const [blockedMsg, setBlockedMsg] = useState<string | null>(null)
   const [authMsg, setAuthMsg] = useState<string | null>(null)
+  const [showPending, setShowPending] = useState(false)
   const lastTapAtRef = useRef(0)
   const probeInFlightRef = useRef(false)
   const lastProbeAtRef = useRef(0)
   const lastFocusProbeAtRef = useRef(0)
+  const lastConfirmAtRef = useRef(0)
 
   const refreshPending = () => setPendingCount(getPendingSyncCount())
 
@@ -137,7 +142,6 @@ export function OfflineIndicator() {
 
     const handleSyncCompleted = () => {
       refreshPending()
-      setLastSync(Date.now())
       setLastFailed(null)
       setSyncing(false)
       setOnline(true)
@@ -147,25 +151,21 @@ export function OfflineIndicator() {
       const detail = (e as CustomEvent<{ key?: string; ok?: boolean }>).detail
       if (detail?.ok) {
         setOnline(true)
+        setLastFailed(null)
+        setAuthMsg(null)
+        const now = Date.now()
+        if (now - lastConfirmAtRef.current < CONFIRM_DEBOUNCE_MS) return
+        lastConfirmAtRef.current = now
         setLastConfirmed(
           getStoredUiString('saveServerConfirmed', '✓ Confirmado no servidor')
         )
-        setLastFailed(null)
-        setAuthMsg(null)
       } else if (detail?.ok === false) {
         setLastFailed(Date.now())
-        setLastConfirmed(null)
       }
     }
 
-    const handleBlocked = (e: Event) => {
-      const detail = (e as CustomEvent<{ key?: string; reason?: string }>).detail
-      setBlockedMsg(
-        getStoredUiString(
-          'saveServerBlocked',
-          'Alteração só neste aparelho — o servidor tem dados mais completos ({key}).'
-        ).replace('{key}', String(detail?.key ?? ''))
-      )
+    const handleBlocked = () => {
+      /* Fundo: não pintar laranja a cada chave protegida — o disco não muda. */
     }
 
     const handleAuthRequired = () => {
@@ -254,18 +254,20 @@ export function OfflineIndicator() {
   }, [lastSync, online, pendingCount, syncing, lastFailed])
 
   useEffect(() => {
+    if (pendingCount <= 0) {
+      setShowPending(false)
+      return
+    }
+    const t = setTimeout(() => setShowPending(true), PENDING_HOLD_MS)
+    return () => clearTimeout(t)
+  }, [pendingCount])
+
+  useEffect(() => {
     if (lastConfirmed) {
-      const t = setTimeout(() => setLastConfirmed(null), 5000)
+      const t = setTimeout(() => setLastConfirmed(null), CONFIRM_HOLD_MS)
       return () => clearTimeout(t)
     }
   }, [lastConfirmed])
-
-  useEffect(() => {
-    if (blockedMsg) {
-      const t = setTimeout(() => setBlockedMsg(null), 8000)
-      return () => clearTimeout(t)
-    }
-  }, [blockedMsg])
 
   useEffect(() => {
     if (authMsg) {
@@ -274,16 +276,15 @@ export function OfflineIndicator() {
     }
   }, [authMsg])
 
-  const showFailed = Boolean(lastFailed) && (pendingCount > 0 || Date.now() - (lastFailed ?? 0) < 12_000)
+  const showFailed = Boolean(lastFailed) && showPending && pendingCount > 0 && !authMsg && !lastConfirmed
 
   const hidden =
     online &&
     !syncing &&
     !lastSync &&
     !lastConfirmed &&
-    !blockedMsg &&
     !authMsg &&
-    pendingCount === 0 &&
+    !showPending &&
     !showFailed
 
   if (hidden) return null
@@ -293,14 +294,12 @@ export function OfflineIndicator() {
     : authMsg
       ? 'rgba(180, 80, 0, 0.95)'
       : showFailed
-      ? 'rgba(220, 60, 60, 0.95)'
-      : syncing
-        ? 'rgba(0, 150, 255, 0.9)'
-        : lastConfirmed
-          ? 'rgba(0, 180, 90, 0.95)'
-          : blockedMsg
-            ? 'rgba(180, 100, 0, 0.95)'
-            : pendingCount > 0
+        ? 'rgba(220, 60, 60, 0.95)'
+        : syncing
+          ? 'rgba(0, 150, 255, 0.9)'
+          : lastConfirmed
+            ? 'rgba(0, 180, 90, 0.95)'
+            : showPending
               ? 'rgba(0, 130, 220, 0.92)'
               : 'rgba(0, 200, 100, 0.9)'
 
@@ -381,25 +380,18 @@ export function OfflineIndicator() {
           </>
         ) : authMsg ? (
           <>{authMsg}</>
-        ) : blockedMsg ? (
-          <>{blockedMsg}</>
-        ) : lastConfirmed ? (
-          <>{lastConfirmed}</>
-        ) : syncing ? (
-          <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
         ) : showFailed ? (
           <>
-            {pendingCount > 0
-              ? getStoredUiString(
-                  'offlineSyncFailed',
-                  '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
-                ).replace('{n}', String(pendingCount))
-              : getStoredUiString(
-                  'saveServerFailed',
-                  '⚠ Não foi possível confirmar no servidor — as alterações ficam neste aparelho.'
-                )}
+            {getStoredUiString(
+              'offlineSyncFailed',
+              '⚠ {n} alteração(ões) NÃO confirmada(s) no servidor — toque para tentar de novo'
+            ).replace('{n}', String(pendingCount))}
           </>
-        ) : pendingCount > 0 ? (
+        ) : syncing ? (
+          <>{getStoredUiString('offlineSyncing', 'A sincronizar com o servidor…')}</>
+        ) : lastConfirmed ? (
+          <>{lastConfirmed}</>
+        ) : showPending ? (
           <>
             {getStoredUiString(
               'offlineSyncPending',

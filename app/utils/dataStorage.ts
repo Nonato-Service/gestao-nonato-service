@@ -563,9 +563,12 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
         (item.value.startsWith('data:image/') ||
           item.value.startsWith('data:video/') ||
           item.value.startsWith('data:application/pdf')))
-    let result = await _doSaveToServer(item.key, item.value, { timeoutMs: slowUpload ? 120000 : 45000 })
+    let result = await _doSaveToServer(item.key, item.value, {
+      timeoutMs: slowUpload ? 120000 : 45000,
+      silentUi: true,
+    })
     if (result === 'fail' && slowUpload) {
-      result = await _doSaveToServer(item.key, item.value, { timeoutMs: 180000 })
+      result = await _doSaveToServer(item.key, item.value, { timeoutMs: 180000, silentUi: true })
     }
     if (result === 'ok') synced++
     else if (result === 'auth') {
@@ -993,30 +996,33 @@ export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): 
 async function _doSaveToServer(
   key: string,
   value: any,
-  opts?: { timeoutMs?: number }
+  opts?: { timeoutMs?: number; silentUi?: boolean }
 ): Promise<SaveServerResult> {
   if (isNonatoDemoBuild()) return 'ok'
+  const notifyBlock = (reason: string) => {
+    if (!opts?.silentUi) dispatchSyncBlocked(key, reason)
+  }
   if (await shouldBlockEmptyServerOverwrite(key, value)) {
     console.warn(
       `[Nonato] Gravação ignorada: «${key}» vazio não pode substituir o cadastro já guardado no servidor.`
     )
-    dispatchSyncBlocked(key, 'empty')
+    notifyBlock('empty')
     return 'blocked'
   }
   if (await shouldBlockTombstoneShrinkOverwrite(key, value)) {
-    dispatchSyncBlocked(key, 'empty')
+    notifyBlock('empty')
     return 'blocked'
   }
   if (await shouldBlockObjectShrinkServerOverwrite(key, value)) {
-    dispatchSyncBlocked(key, 'empty')
+    notifyBlock('empty')
     return 'blocked'
   }
   if (await shouldBlockShrinkServerOverwrite(key, value)) {
-    dispatchSyncBlocked(key, 'shrink')
+    notifyBlock('shrink')
     return 'blocked'
   }
   if (await shouldBlockPecasImageStripOverwrite(key, value)) {
-    dispatchSyncBlocked(key, 'pecas')
+    notifyBlock('pecas')
     return 'blocked'
   }
   try {
@@ -1110,7 +1116,7 @@ async function _doSaveToServer(
       try {
         const json = (await response.json()) as { error?: string; reason?: string }
         if (json?.error === 'cadastro_protected') {
-          dispatchSyncBlocked(key, String(json.reason || 'shrink'))
+          if (!opts?.silentUi) dispatchSyncBlocked(key, String(json.reason || 'shrink'))
           return 'blocked'
         }
       } catch {

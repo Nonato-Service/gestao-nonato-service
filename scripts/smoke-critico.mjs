@@ -2861,11 +2861,12 @@ try {
   if (
     storageSrc.includes('MERGE_ON_SHRINK_KEYS.has(key)') &&
     storageSrc.includes("result === 'auth'") &&
-    storageSrc.includes('nonato-save-auth-required')
+    storageSrc.includes('nonato-save-auth-required') &&
+    storageSrc.includes('silentUi: true')
   ) {
     ok('save cliente: merge shrink + 401 sem banner vermelho genérico')
   } else {
-    fail('dataStorage sem MERGE_ON_SHRINK / auth no save')
+    fail('dataStorage sem MERGE_ON_SHRINK / auth / silentUi no save')
   }
   const pecasFix = fs.readFileSync(path.join(root, 'app/api/data/pecas-fix/route.ts'), 'utf8')
   const restoreServ = fs.readFileSync(path.join(root, 'app/api/data/restore-cadastro-servicos/route.ts'), 'utf8')
