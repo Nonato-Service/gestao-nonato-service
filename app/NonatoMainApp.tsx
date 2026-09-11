@@ -935,6 +935,14 @@ import {
   buildPecasArmazemFromChecklist,
 } from './modules/checklist'
 import {
+  emptyOrdemPreparacaoForm,
+  ordemPreparacaoToForm,
+  isOrdemPreparacaoFormValid,
+  createOrdemPreparacaoFromForm,
+  updateOrdemPreparacaoFromForm,
+  type OrdemPreparacao,
+} from './modules/ordem-preparacao'
+import {
   mailtoPrefixContabilidade,
   construirTextoPlanoClienteDadosContabilidade,
   buildHtmlClienteDadosContabilidade,
@@ -1934,51 +1942,8 @@ export default function Dashboard() {
   const [showBuscaPecaManutencao, setShowBuscaPecaManutencao] = useState(false)
 
   // Estado para Ordem de Preparação
-  const [ordemPreparacaoForm, setOrdemPreparacaoForm] = useState({
-    codiceSmeUp: '',
-    descrizione: '',
-    modello: '',
-    cliente: '',
-    testRun: false,
-    modalitaVendita: '',
-    marca: '',
-    tecnicoResponsabile: '',
-    nazione: '',
-    installazione: '',
-    famiglia: '',
-    materialeLavorato: [] as string[],
-    materialeLavoratoAltro: '',
-    tipologiaImpiallaggiatura: '',
-    tipologiaImpiallaggiaturaAltro: '',
-    colore: '',
-    coloreAltro: '',
-    dimensioniMax: '',
-    dimensioniMin: '',
-    dimensioniAltro: '',
-    tipologiaBordo: [] as string[],
-    tipologiaBordoAltro: '',
-    spessoreBordo: [] as string[],
-    spessoreBordoAltro: '',
-    tipoColla: [] as string[],
-    tipoCollaAltro: '',
-    griglieProtezione: [] as string[],
-    griglieProtezioneAggiunte: false,
-    utensiliFornitiCliente: false,
-    utensiliQuali: '',
-    utensiliFornitiPrimaTestRun: false,
-    utensiliCaricoFerwood: false,
-    tappetoEvacuazione: false,
-    ventose: '',
-    materialeTestRunFornitoCliente: false,
-    materialeTestRunQualiQta: '',
-    materialeTestRunMagazzinoFW: false,
-    linguaDestinazione: '',
-    manualistica: '',
-    adesivi: '',
-    noteProduzione: '',
-    impressoes: ''
-  })
-  const [ordensPreparacaoSalvas, setOrdensPreparacaoSalvas] = useState<any[]>([])
+  const [ordemPreparacaoForm, setOrdemPreparacaoForm] = useState(() => emptyOrdemPreparacaoForm())
+  const [ordensPreparacaoSalvas, setOrdensPreparacaoSalvas] = useState<OrdemPreparacao[]>([])
   const [buscaOrdem, setBuscaOrdem] = useState('')
   const [buscaTecnico, setBuscaTecnico] = useState('')
   const [tecnicosFiltrados, setTecnicosFiltrados] = useState<Tecnico[]>([])
@@ -24211,83 +24176,31 @@ export default function Dashboard() {
 
   // Funções para Ordem de Preparação
   const handleSaveOrdemPreparacao = async () => {
-    if (!ordemPreparacaoForm.codiceSmeUp) {
+    if (!isOrdemPreparacaoFormValid(ordemPreparacaoForm)) {
       alert(safeT?.opFillMandatory || 'Preencha o Código SME_UP (ID ou Nº Série) para salvar.')
       return
     }
 
-    // Criar nova ordem (mantendo o ID se for edição)
-    const novaOrdem = {
-      ...ordemPreparacaoForm,
-      id: (ordemPreparacaoForm as any).id || Date.now().toString(),
-      dataCriacao: (ordemPreparacaoForm as any).dataCriacao || new Date().toISOString()
-    }
+    const existing = ordemPreparacaoForm.id
+      ? ordensPreparacaoSalvas.find((o) => o.id === ordemPreparacaoForm.id)
+      : undefined
+    const novaOrdem = existing
+      ? updateOrdemPreparacaoFromForm(existing, ordemPreparacaoForm)
+      : createOrdemPreparacaoFromForm(ordemPreparacaoForm)
 
-    // Verificar se já existe (atualização)
-    const index = ordensPreparacaoSalvas.findIndex(o => o.id === novaOrdem.id)
-    let novasOrdens
-    
-    if (index >= 0) {
-      // Atualizar existente
-      novasOrdens = [...ordensPreparacaoSalvas]
-      novasOrdens[index] = novaOrdem
-    } else {
-      // Adicionar nova
-      novasOrdens = [...ordensPreparacaoSalvas, novaOrdem]
-    }
+    const index = ordensPreparacaoSalvas.findIndex((o) => o.id === novaOrdem.id)
+    const novasOrdens =
+      index >= 0
+        ? ordensPreparacaoSalvas.map((o, i) => (i === index ? novaOrdem : o))
+        : [...ordensPreparacaoSalvas, novaOrdem]
 
     setOrdensPreparacaoSalvas(novasOrdens)
     await saveData('nonato-ordens-preparacao', novasOrdens)
-    
-    // Limpar formulário
-    setOrdemPreparacaoForm({
-      codiceSmeUp: '',
-      descrizione: '',
-      modello: '',
-      cliente: '',
-      testRun: false,
-      modalitaVendita: '',
-      marca: '',
-      tecnicoResponsabile: '',
-      nazione: '',
-      installazione: '',
-      famiglia: '',
-      materialeLavorato: [],
-      materialeLavoratoAltro: '',
-      tipologiaImpiallaggiatura: '',
-      tipologiaImpiallaggiaturaAltro: '',
-      colore: '',
-      coloreAltro: '',
-      dimensioniMax: '',
-      dimensioniMin: '',
-      dimensioniAltro: '',
-      tipologiaBordo: [],
-      tipologiaBordoAltro: '',
-      spessoreBordo: [],
-      spessoreBordoAltro: '',
-      tipoColla: [],
-      tipoCollaAltro: '',
-      griglieProtezione: [],
-      griglieProtezioneAggiunte: false,
-      utensiliFornitiCliente: false,
-      utensiliQuali: '',
-      utensiliFornitiPrimaTestRun: false,
-      utensiliCaricoFerwood: false,
-      tappetoEvacuazione: false,
-      ventose: '',
-      materialeTestRunFornitoCliente: false,
-      materialeTestRunQualiQta: '',
-      materialeTestRunMagazzinoFW: false,
-      linguaDestinazione: '',
-      manualistica: '',
-      adesivi: '',
-      noteProduzione: '',
-      impressoes: ''
-    })
-    // Limpar busca de técnico
+
+    setOrdemPreparacaoForm(emptyOrdemPreparacaoForm())
     setBuscaTecnico('')
     setMostrarListaTecnicos(false)
-    
+
     alert(safeT?.opOrderSaved || 'Ordem salva com sucesso!')
   }
 
@@ -24300,8 +24213,8 @@ export default function Dashboard() {
     }
   }
 
-  const handleEditOrdemPreparacao = (ordem: any) => {
-    setOrdemPreparacaoForm(ordem)
+  const handleEditOrdemPreparacao = (ordem: OrdemPreparacao) => {
+    setOrdemPreparacaoForm(ordemPreparacaoToForm(ordem))
     // Preencher o campo de busca de técnico se houver técnico selecionado
     if (ordem.tecnicoResponsabile) {
       setBuscaTecnico(ordem.tecnicoResponsabile)

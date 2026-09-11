@@ -64,6 +64,7 @@ const critical = [
   'app/modules/demo/index.ts',
   'app/modules/fornecedores/index.ts',
   'app/modules/comunicacao/index.ts',
+  'app/modules/ordem-preparacao/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -1827,6 +1828,40 @@ try {
   }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
+}
+
+// 3p-op) Módulo ordem-preparacao (93.º corte — form/fromForm)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/ordem-preparacao/index.ts'), 'utf8')
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    idx.includes('isOrdemPreparacaoFormValid') &&
+    idx.includes('createOrdemPreparacaoFromForm') &&
+    idx.includes('updateOrdemPreparacaoFromForm') &&
+    idx.includes('ordemPreparacaoToForm') &&
+    idx.includes('emptyOrdemPreparacaoForm') &&
+    exists('app/modules/ordem-preparacao/tipos.ts') &&
+    exists('app/modules/ordem-preparacao/formState.ts') &&
+    exists('app/modules/ordem-preparacao/fromForm.ts')
+  ) {
+    ok('módulo ordem-preparacao exporta form/fromForm')
+  } else {
+    fail('módulo ordem-preparacao sem form/fromForm')
+  }
+  if (
+    nma.includes("from './modules/ordem-preparacao'") &&
+    nma.includes('isOrdemPreparacaoFormValid') &&
+    nma.includes('createOrdemPreparacaoFromForm') &&
+    nma.includes('updateOrdemPreparacaoFromForm') &&
+    nma.includes('emptyOrdemPreparacaoForm') &&
+    nma.includes('ordemPreparacaoToForm')
+  ) {
+    ok('NonatoMainApp usa OrdemPreparacao fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia OrdemPreparacao no sítio')
+  }
+} catch (e) {
+  fail(`módulo ordem-preparacao: ${e.message}`)
 }
 
 // 3p) Módulo contabilidade (20.º corte modularização — print/HTML)
