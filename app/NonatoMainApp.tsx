@@ -712,6 +712,8 @@ import {
   findLibraryMatch,
   libraryEntryExists,
   createTranslatorLibraryEntry,
+  isTranslatorLibraryFormValid,
+  createTranslatorLibraryFromForm,
 } from './modules/tradutor'
 import type { ConhecimentoTecnicoEntry } from './modules/conhecimento-tecnico'
 import { normalizeConhecimentoTecnicos } from './modules/conhecimento-tecnico'
@@ -35840,11 +35842,11 @@ export default function Dashboard() {
                         onClick={() => {
                           const src = translatorText.trim()
                           const tgt = (translatedText || quickTranslateResult || '').trim()
-                          if (!src || !tgt) return
+                          if (!isTranslatorLibraryFormValid({ sourceText: src, targetText: tgt })) return
                           if (libraryEntryExists(translatorLibrary, translatorFrom, translatorTo, src)) {
                             alert(safeT?.alreadyInLibrary || 'Já existe na biblioteca para este par de idiomas.'); return
                           }
-                          const newEntry = createTranslatorLibraryEntry({
+                          const newEntry = createTranslatorLibraryFromForm({
                             sourceLang: translatorFrom,
                             sourceText: src,
                             targetLang: translatorTo,
@@ -35940,11 +35942,11 @@ export default function Dashboard() {
                   onClick={() => {
                     const src = libraryEntrySource.trim()
                     const tgt = libraryEntryTarget.trim()
-                    if (!src || !tgt) return
+                    if (!isTranslatorLibraryFormValid({ sourceText: src, targetText: tgt })) return
                     if (libraryEntryExists(translatorLibrary, translatorLibraryFrom, translatorLibraryTo, src)) {
                       alert(safeT?.alreadyInLibrary || 'Já existe para este par.'); return
                     }
-                    const newEntry = createTranslatorLibraryEntry({
+                    const newEntry = createTranslatorLibraryFromForm({
                       sourceLang: translatorLibraryFrom,
                       sourceText: src,
                       targetLang: translatorLibraryTo,

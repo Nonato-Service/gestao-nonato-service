@@ -2740,6 +2740,15 @@ try {
     if (exists(`app/modules/tradutor/${f}`)) ok(`existe app/modules/tradutor/${f}`)
     else fail(`falta app/modules/tradutor/${f}`)
   }
+  if (
+    idx.includes('isTranslatorLibraryFormValid') &&
+    idx.includes('createTranslatorLibraryFromForm') &&
+    exists('app/modules/tradutor/fromForm.ts')
+  ) {
+    ok('módulo tradutor exporta fromForm')
+  } else {
+    fail('módulo tradutor sem fromForm')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/tradutor'") || nma.includes('from "./modules/tradutor"')) {
     ok('NonatoMainApp importa app/modules/tradutor')
@@ -2753,7 +2762,9 @@ try {
     nma.includes('filterLibraryByLangPair') &&
     nma.includes('findLibraryMatch') &&
     nma.includes('libraryEntryExists') &&
-    nma.includes('createTranslatorLibraryEntry')
+    nma.includes('createTranslatorLibraryEntry') &&
+    nma.includes('isTranslatorLibraryFormValid') &&
+    nma.includes('createTranslatorLibraryFromForm')
   ) {
     ok('NonatoMainApp usa tradutor do módulo')
   } else {

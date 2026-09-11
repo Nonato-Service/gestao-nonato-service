@@ -1,5 +1,6 @@
 /** Helpers puros da biblioteca do tradutor (normalize / filtro / match / create). */
 
+import { createTranslatorLibraryFromForm } from './fromForm'
 import type { TranslatorLibraryEntry } from './tipos'
 
 function strOrEmpty(v: unknown): string {
@@ -80,11 +81,6 @@ export function createTranslatorLibraryEntry(input: {
   targetText: string
   id?: string
 }): TranslatorLibraryEntry {
-  return {
-    id: input.id ?? `${Date.now()}${Math.random().toString(36).slice(2)}`,
-    sourceLang: input.sourceLang,
-    sourceText: input.sourceText,
-    targetLang: input.targetLang,
-    targetText: input.targetText,
-  }
+  const { id, ...form } = input
+  return createTranslatorLibraryFromForm(form, { id })
 }
