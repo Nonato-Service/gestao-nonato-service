@@ -413,6 +413,8 @@ import {
   filterMensagensNaoLidas,
   isMensagemComunicacaoFormValid,
   createMensagemComunicacaoFromForm,
+  isPecaSolicitadaArmazemFormValid,
+  createPecaSolicitadaArmazemFromForm,
 } from './modules/comunicacao'
 import type {
   GrupoDesmontado,
@@ -57176,6 +57178,7 @@ A1;Peça exemplo;10`}
                                     <button
                                       className="alerta-mensagens-action-btn alerta-mensagens-action-btn-info"
                                       onClick={async () => {
+                                        if (!isPecaSolicitadaArmazemFormValid({ mensagemId: msg.id, checklistId })) return
                                         const dataEnvioArmazem = new Date().toISOString()
                                         const idsEnvio = msgs.map((x: MensagemComunicacao) => x.id)
                                         setMensagensComunicacao(prev => {
@@ -57187,18 +57190,19 @@ A1;Peça exemplo;10`}
                                           saveData('nonato-mensagens-comunicacao', atualizadas)
                                           return atualizadas
                                         })
-                                        const novaEntrada: PecaSolicitadaArmazem = {
-                                          id: `armazem-${checklistId}-${Date.now()}`,
-                                          mensagemId: msg.id,
-                                          checklistId,
-                                          equipamentoId: msg.equipamentoId || (msg as any).equipamento?.id || '',
-                                          equipamentoNumeroSerie: msg.equipamentoNumeroSerie || undefined,
-                                          nomeSolicitante: msg.remetenteNome || '',
-                                          nomeGestorAprovador: msg.gestorAprovadorNome || gestorAlertaSelecionado?.name || '',
-                                          motivoSolicitacaoPecas: msg.motivoSolicitacaoPecas || undefined,
-                                          pecasSolicitadas: pecas.map((p: any) => ({ id: p.id, codigo: p.codigo, nome: p.nome, quantidade: p.quantidade, tecnicoSolicitante: p.tecnicoSolicitante })),
-                                          dataEnvio: dataEnvioArmazem
-                                        }
+                                        const novaEntrada = createPecaSolicitadaArmazemFromForm(
+                                          {
+                                            mensagemId: msg.id,
+                                            checklistId,
+                                            equipamentoId: msg.equipamentoId || (msg as any).equipamento?.id || '',
+                                            equipamentoNumeroSerie: msg.equipamentoNumeroSerie || undefined,
+                                            nomeSolicitante: msg.remetenteNome || '',
+                                            nomeGestorAprovador: msg.gestorAprovadorNome || gestorAlertaSelecionado?.name || '',
+                                            motivoSolicitacaoPecas: msg.motivoSolicitacaoPecas || undefined,
+                                            pecasSolicitadas: pecas.map((p: any) => ({ id: p.id, codigo: p.codigo, nome: p.nome, quantidade: p.quantidade, tecnicoSolicitante: p.tecnicoSolicitante })),
+                                          },
+                                          { id: `armazem-${checklistId}-${Date.now()}`, dataEnvio: dataEnvioArmazem }
+                                        )
                                         setPecasSolicitadasArmazem(prev => {
                                           const novaLista = [...prev, novaEntrada]
                                           saveData('nonato-pecas-solicitadas-armazem', novaLista)

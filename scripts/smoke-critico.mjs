@@ -3002,6 +3002,23 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia MensagemComunicacao no sítio')
   }
+  if (
+    idx.includes('isPecaSolicitadaArmazemFormValid') &&
+    idx.includes('createPecaSolicitadaArmazemFromForm') &&
+    exists('app/modules/comunicacao/pecaArmazemFromForm.ts')
+  ) {
+    ok('módulo comunicação exporta PecaSolicitadaArmazem fromForm')
+  } else {
+    fail('módulo comunicação sem PecaSolicitadaArmazem fromForm')
+  }
+  if (
+    nma.includes('isPecaSolicitadaArmazemFormValid') &&
+    nma.includes('createPecaSolicitadaArmazemFromForm')
+  ) {
+    ok('NonatoMainApp usa PecaSolicitadaArmazem fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia PecaSolicitadaArmazem no sítio')
+  }
 } catch (e) {
   fail(`módulo comunicação: ${e.message}`)
 }

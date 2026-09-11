@@ -26,3 +26,12 @@ export {
   isMensagemComunicacaoFormValid,
   createMensagemComunicacaoFromForm,
 } from './fromForm'
+
+export type {
+  PecaSolicitadaArmazemFormPayload,
+  CreatePecaSolicitadaArmazemFromFormOpts,
+} from './pecaArmazemFromForm'
+export {
+  isPecaSolicitadaArmazemFormValid,
+  createPecaSolicitadaArmazemFromForm,
+} from './pecaArmazemFromForm'
