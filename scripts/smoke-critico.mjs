@@ -1044,6 +1044,28 @@ try {
   } else {
     fail('NonatoMainApp ainda define templates de envio comprovantes localmente')
   }
+  if (
+    idx.includes('isComprovanteDespesaClienteNomeValid') &&
+    idx.includes('createComprovanteDespesaFromForm') &&
+    idx.includes('emptyComprovanteDespesaForm') &&
+    idx.includes('dadosDuplicadoComprovanteFromForm') &&
+    exists('app/modules/comprovantes/fromForm.ts') &&
+    exists('app/modules/comprovantes/formState.ts')
+  ) {
+    ok('módulo comprovantes exporta ComprovanteDespesa form/fromForm')
+  } else {
+    fail('módulo comprovantes sem ComprovanteDespesa form/fromForm')
+  }
+  if (
+    nma.includes('isComprovanteDespesaClienteNomeValid') &&
+    nma.includes('createComprovanteDespesaFromForm') &&
+    nma.includes('emptyComprovanteDespesaForm') &&
+    nma.includes('dadosDuplicadoComprovanteFromForm')
+  ) {
+    ok('NonatoMainApp usa ComprovanteDespesa fromForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda mapeia ComprovanteDespesa no sítio')
+  }
 } catch (e) {
   fail(`módulo comprovantes: ${e.message}`)
 }

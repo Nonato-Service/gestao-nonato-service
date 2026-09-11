@@ -2,6 +2,16 @@
 
 export type { ComprovanteDespesa } from './tipos'
 
+export type { ComprovanteDespesaFormState } from './formState'
+export { emptyComprovanteDespesaForm } from './formState'
+export type { CreateComprovanteDespesaFromFormOpts } from './fromForm'
+export {
+  isComprovanteDespesaClienteNomeValid,
+  comprovanteDespesaClienteCadastrado,
+  dadosDuplicadoComprovanteFromForm,
+  createComprovanteDespesaFromForm,
+} from './fromForm'
+
 export {
   normalizarTextoOcrRecibo,
   parseTotalEurosFromReceiptText,

@@ -560,6 +560,12 @@ import {
   buildMensagemEnvioComprovantes,
   prefixarMensagemEnvioComTecnico,
   type ComprovanteDespesa,
+  type ComprovanteDespesaFormState,
+  emptyComprovanteDespesaForm,
+  isComprovanteDespesaClienteNomeValid,
+  comprovanteDespesaClienteCadastrado,
+  dadosDuplicadoComprovanteFromForm,
+  createComprovanteDespesaFromForm,
 } from './modules/comprovantes'
 import {
   applyNonatoBrandLogoImgFallback,
@@ -4479,31 +4485,7 @@ export default function Dashboard() {
   const [comprovantesItensLimites, setComprovantesItensLimites] = useState<Record<string, number>>({})
   const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
-  const [formComp, setFormComp] = useState<{
-    tipo: 'cliente' | 'pessoal'
-    cliente: string
-    data: string
-    horaUsada: string
-    mesCompetencia: string
-    valorUnitario: number
-    quantidade: number
-    descricao: string
-    imagemBase64: string
-    clientesSugeridos: ClienteAtivoComprovante[]
-    motivoAssociacao: MotivoAssociacaoRecibo
-  }>({
-    tipo: 'cliente',
-    cliente: '',
-    data: new Date().toISOString().slice(0, 10),
-    horaUsada: horaAtualLocal(),
-    mesCompetencia: new Date().toISOString().slice(0, 7),
-    valorUnitario: 0,
-    quantidade: 1,
-    descricao: '',
-    imagemBase64: '',
-    clientesSugeridos: [],
-    motivoAssociacao: 'perguntar',
-  })
+  const [formComp, setFormComp] = useState<ComprovanteDespesaFormState>(emptyComprovanteDespesaForm())
   const [showFormComp, setShowFormComp] = useState(false)
   /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante */
   const [comprovanteReciboRapido, setComprovanteReciboRapido] = useState<
@@ -47438,70 +47420,23 @@ A1;Peça exemplo;10`}
         const handleAddComprovante = () => {
           if (formComp.tipo === 'cliente') {
             const nome = formComp.cliente.trim()
-            if (!nome) {
+            if (!isComprovanteDespesaClienteNomeValid(formComp)) {
               alert((safeT as any)?.comprovantesSelecioneClienteAlert || 'Selecione um cliente na lista.')
               return
             }
-            if (!clientes.some(c => c.nomeEmpresa === nome)) {
+            if (!comprovanteDespesaClienteCadastrado(clientes, nome)) {
               alert((safeT as any)?.comprovantesClienteNaoCadastrado || 'Escolha um cliente cadastrado no sistema.')
               return
             }
           }
-          const valorTotal = formComp.valorUnitario * formComp.quantidade
-          const dataNorm = String(formComp.data || '').slice(0, 10)
-          const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date().toISOString().slice(0, 7)
-          const mesPick =
-            typeof formComp.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(formComp.mesCompetencia)
-              ? formComp.mesCompetencia
-              : mesFromData
-          const nomeClienteForm = formComp.tipo === 'cliente' ? formComp.cliente.trim() : ''
-          if (
-            bloquearSeDuplicadoComprovante({
-              imagemBase64: formComp.imagemBase64 || undefined,
-              data: dataNorm,
-              valorTotal,
-              tipo: formComp.tipo,
-              cliente: nomeClienteForm,
-            })
-          ) {
+          if (bloquearSeDuplicadoComprovante(dadosDuplicadoComprovanteFromForm(formComp))) {
             return
           }
-          const novo: ComprovanteDespesa = {
-            id: Date.now().toString(),
-            tipo: formComp.tipo,
-            cliente: formComp.tipo === 'cliente' ? formComp.cliente.trim() : '',
-            clienteId:
-              formComp.tipo === 'cliente'
-                ? clientes.find((c) => c.nomeEmpresa === formComp.cliente.trim())?.id ||
-                  undefined
-                : undefined,
-            data: dataNorm || new Date().toISOString().slice(0, 10),
-            mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
-            valorUnitario: formComp.valorUnitario,
-            quantidade: formComp.quantidade,
-            valorTotal,
-            descricao: formComp.descricao.trim() || undefined,
-            imagemBase64: formComp.imagemBase64 || undefined,
-            imagemHash: formComp.imagemBase64 ? hashImagemComprovante(formComp.imagemBase64) : undefined,
-          }
+          const novo = createComprovanteDespesaFromForm(formComp, { clientes })
           const atualizados = [...comprovantesDespesas, novo]
           setComprovantesDespesas(atualizados)
           saveData('nonato-comprovantes-despesas', atualizados)
-          const hoje = new Date().toISOString().slice(0, 10)
-          const mesHoje = hoje.slice(0, 7)
-          setFormComp({
-            tipo: 'cliente',
-            cliente: '',
-            data: hoje,
-            horaUsada: horaAtualLocal(),
-            mesCompetencia: mesHoje,
-            valorUnitario: 0,
-            quantidade: 1,
-            descricao: '',
-            imagemBase64: '',
-            clientesSugeridos: [],
-            motivoAssociacao: 'perguntar',
-          })
+          setFormComp(emptyComprovanteDespesaForm())
           setShowFormComp(false)
         }
         const tituloRelatorio = (safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'
