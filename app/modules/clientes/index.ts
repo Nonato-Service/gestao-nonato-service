@@ -112,6 +112,9 @@ export {
   resolverIndiceEquipamentoClienteEdicao,
 } from './equipamentoClienteFromForm'
 
+export type { RelatorioEquipamentoHistorico, ClienteEquipamentoHistVista } from './relatorioHistorico'
+export { relatorioTemPecas, todasPecasRelatorio } from './relatorioHistorico'
+
 export type {
   HubEqChip,
   HubEqChipTone,

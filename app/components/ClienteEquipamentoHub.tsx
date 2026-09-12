@@ -1,11 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import {
-  ClienteEquipamentoHistoricoPanel,
-  type ClienteEquipamentoHistVista,
-  type RelatorioEquipamentoHistorico,
-} from './ClienteEquipamentoHistoricoPanel'
+import { ClienteEquipamentoHistoricoPanel } from './ClienteEquipamentoHistoricoPanel'
+import type { ClienteEquipamentoHistVista, RelatorioEquipamentoHistorico } from '../modules/clientes'
 import type {
   PedidoOrcamentoRef,
   PedidoAvulsoRef,

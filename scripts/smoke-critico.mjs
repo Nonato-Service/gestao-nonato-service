@@ -377,6 +377,38 @@ try {
     fail('módulo clientes sem EquipamentoCliente / RelatorioEquipamento / createEmpty*')
   }
   if (
+    idx.includes('RelatorioEquipamentoHistorico') &&
+    idx.includes('ClienteEquipamentoHistVista') &&
+    idx.includes('relatorioTemPecas') &&
+    idx.includes('todasPecasRelatorio') &&
+    exists('app/modules/clientes/relatorioHistorico.ts')
+  ) {
+    ok('módulo clientes exporta RelatorioEquipamentoHistorico')
+  } else {
+    fail('módulo clientes sem RelatorioEquipamentoHistorico')
+  }
+  const histPanel = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHistoricoPanel.tsx'), 'utf8')
+  if (
+    (histPanel.includes("from '../modules/clientes'") || histPanel.includes('from "../modules/clientes"')) &&
+    histPanel.includes('relatorioTemPecas') &&
+    histPanel.includes('todasPecasRelatorio') &&
+    !histPanel.includes('export type RelatorioEquipamentoHistorico = {')
+  ) {
+    ok('HistoricoPanel usa RelatorioEquipamentoHistorico do módulo clientes')
+  } else {
+    fail('HistoricoPanel ainda define RelatorioEquipamentoHistorico no sítio')
+  }
+  const hubEq = fs.readFileSync(path.join(root, 'app/components/ClienteEquipamentoHub.tsx'), 'utf8')
+  if (
+    (hubEq.includes("from '../modules/clientes'") || hubEq.includes('from "../modules/clientes"')) &&
+    hubEq.includes('RelatorioEquipamentoHistorico') &&
+    !hubEq.includes('type RelatorioEquipamentoHistorico,')
+  ) {
+    ok('ClienteEquipamentoHub usa RelatorioEquipamentoHistorico do módulo clientes')
+  } else {
+    fail('ClienteEquipamentoHub ainda importa RelatorioEquipamentoHistorico do painel')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&
