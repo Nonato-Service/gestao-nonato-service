@@ -7,24 +7,9 @@ import {
   isNonatoBrandLogoPngSrc,
   NONATO_BRAND_LOGO_PNG_SRC,
 } from '../lib/nonatoBrandAssets'
+import { brandLogoClassName, type NonatoBrandVariant } from '../modules/admin'
 
-/** Variantes visuais derivadas do ficheiro original (filtros CSS — mesma identidade, cor por situação). */
-export type NonatoBrandVariant =
-  | 'original'
-  | 'sucesso'
-  | 'alerta'
-  | 'devedor'
-  | 'financeiro'
-  | 'informacao'
-
-const VARIANT_CLASS: Record<NonatoBrandVariant, string> = {
-  original: 'ns-brand-logo ns-brand-logo--original',
-  sucesso: 'ns-brand-logo ns-brand-logo--sucesso',
-  alerta: 'ns-brand-logo ns-brand-logo--alerta',
-  devedor: 'ns-brand-logo ns-brand-logo--devedor',
-  financeiro: 'ns-brand-logo ns-brand-logo--financeiro',
-  informacao: 'ns-brand-logo ns-brand-logo--informacao',
-}
+export type { NonatoBrandVariant }
 
 export function NonatoBrandLogo({
   variant = 'original',
@@ -53,7 +38,7 @@ export function NonatoBrandLogo({
     <img
       src={resolvedSrc}
       alt={alt}
-      className={`${VARIANT_CLASS[variant] ?? VARIANT_CLASS.original}${isBrandFile ? ' ns-brand-logo--brand-file' : ''} ${className}`.trim()}
+      className={brandLogoClassName(variant, { isBrandFile, className })}
       loading="lazy"
       decoding="async"
       onError={(e) => {

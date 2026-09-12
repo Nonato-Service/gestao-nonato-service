@@ -2867,6 +2867,28 @@ try {
   } else {
     fail('rascunhos de logo ainda definidos em adminTypes ou NonatoMainApp')
   }
+  if (
+    idx.includes('NonatoBrandVariant') &&
+    idx.includes('brandLogoClassName') &&
+    idx.includes('NONATO_BRAND_VARIANT_LABELS') &&
+    exists('app/modules/admin/brandLogo.ts')
+  ) {
+    ok('módulo admin exporta NonatoBrandVariant')
+  } else {
+    fail('módulo admin sem brandLogo')
+  }
+  const brandLogoUi = fs.readFileSync(path.join(root, 'app/components/NonatoBrandLogo.tsx'), 'utf8')
+  const logosHubUi = fs.readFileSync(path.join(root, 'app/components/admin/AdminLogosHub.tsx'), 'utf8')
+  if (
+    brandLogoUi.includes('brandLogoClassName') &&
+    !brandLogoUi.includes('export type NonatoBrandVariant =') &&
+    logosHubUi.includes('NONATO_BRAND_VARIANT_LABELS') &&
+    (logosHubUi.includes("from '../../modules/admin'") || logosHubUi.includes('from "../../modules/admin"'))
+  ) {
+    ok('NonatoBrandLogo/AdminLogosHub usam brandLogo do módulo admin')
+  } else {
+    fail('NonatoBrandVariant ainda definido no componente de logo')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

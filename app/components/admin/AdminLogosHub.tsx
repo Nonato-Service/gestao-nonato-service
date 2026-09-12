@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import { NonatoBrandLogo } from '../NonatoBrandLogo'
+import { NONATO_BRAND_VARIANT_LABELS } from '../../modules/admin'
 import {
   PDF_LOGO_SITUATIONS,
   type PdfLogoSituationId,
@@ -437,19 +438,10 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
             )}
           </p>
           <div className="admin-logos-hub-brand-grid">
-            {(
-              [
-                ['original', tr(safeT, 'brandVariantOriginal', 'Original')],
-                ['sucesso', tr(safeT, 'brandVariantSucesso', 'Sucesso')],
-                ['alerta', tr(safeT, 'brandVariantAlerta', 'Alerta')],
-                ['devedor', tr(safeT, 'brandVariantDevedor', 'Urgência')],
-                ['financeiro', tr(safeT, 'brandVariantFinanceiro', 'Financeiro')],
-                ['informacao', tr(safeT, 'brandVariantInformacao', 'Informação')],
-              ] as const
-            ).map(([variant, label]) => (
+            {NONATO_BRAND_VARIANT_LABELS.map(({ variant, labelKey, fallback }) => (
               <div key={variant} className="admin-logos-hub-brand-item">
                 <NonatoBrandLogo variant={variant} style={{ height: 44, width: 'auto' }} alt="" />
-                <span>{label}</span>
+                <span>{tr(safeT, labelKey, fallback)}</span>
               </div>
             ))}
           </div>

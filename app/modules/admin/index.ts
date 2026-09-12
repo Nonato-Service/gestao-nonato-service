@@ -26,3 +26,10 @@ export type { LogoRelatorio } from './logosRelatorio'
 export { parseLogosRelatoriosArr, preferRicherLogosRelatorios } from './logosRelatorio'
 
 export type { AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from './logoDrafts'
+
+export type { NonatoBrandVariant, NonatoBrandVariantLabel } from './brandLogo'
+export {
+  NONATO_BRAND_VARIANT_CLASS,
+  NONATO_BRAND_VARIANT_LABELS,
+  brandLogoClassName,
+} from './brandLogo'
