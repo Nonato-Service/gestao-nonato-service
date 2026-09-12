@@ -44,3 +44,6 @@ export {
 
 export type { GestorClasse, TecnicoClasse, TecnicoTipoUi } from './classes'
 export { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './classes'
+
+export type { GestoresTecnicosLabels } from './gestoresTecnicosLabels'
+export { tipoTecnicoLabel, tipoTecnicoIcon } from './gestoresTecnicosLabels'

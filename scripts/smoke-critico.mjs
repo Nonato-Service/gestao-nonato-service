@@ -2987,6 +2987,27 @@ try {
   } else {
     fail('lib/pessoaTypes não re-exporta o módulo pessoas')
   }
+  if (
+    idx.includes('GestoresTecnicosLabels') &&
+    idx.includes('tipoTecnicoLabel') &&
+    idx.includes('tipoTecnicoIcon') &&
+    exists('app/modules/pessoas/gestoresTecnicosLabels.ts')
+  ) {
+    ok('módulo pessoas exporta GestoresTecnicosLabels')
+  } else {
+    fail('módulo pessoas sem GestoresTecnicosLabels')
+  }
+  const gtpLabels = fs.readFileSync(path.join(root, 'app/components/pessoas/GestoresTecnicosPanel.tsx'), 'utf8')
+  if (
+    (gtpLabels.includes("from '../../modules/pessoas'") || gtpLabels.includes('from "../../modules/pessoas"')) &&
+    gtpLabels.includes('tipoTecnicoLabel') &&
+    !gtpLabels.includes('export type GestoresTecnicosLabels = {') &&
+    !gtpLabels.includes('function tipoTecnicoLabel(')
+  ) {
+    ok('GestoresTecnicosPanel usa GestoresTecnicosLabels do módulo pessoas')
+  } else {
+    fail('GestoresTecnicosPanel ainda define GestoresTecnicosLabels no sítio')
+  }
 } catch (e) {
   fail(`módulo pessoas: ${e.message}`)
 }
