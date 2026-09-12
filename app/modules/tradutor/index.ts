@@ -26,3 +26,10 @@ export {
   resolveWritingAssistNativeLang,
   formatWritingAssistResultLabel,
 } from './writingAssist'
+
+export type { WritingAssistLabels } from './writingAssistLabels'
+export {
+  WRITING_ASSIST_NATIVE_LS_KEY,
+  writingAssistIsSamePair,
+  formatWritingAssistLangOption,
+} from './writingAssistLabels'

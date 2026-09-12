@@ -3569,6 +3569,29 @@ try {
   } else {
     fail('WritingLanguageAssistModal ainda define WritingAssistLangOption no sítio')
   }
+  if (
+    idx.includes('WritingAssistLabels') &&
+    idx.includes('WRITING_ASSIST_NATIVE_LS_KEY') &&
+    idx.includes('writingAssistIsSamePair') &&
+    idx.includes('formatWritingAssistLangOption') &&
+    exists('app/modules/tradutor/writingAssistLabels.ts')
+  ) {
+    ok('módulo tradutor exporta WritingAssistLabels')
+  } else {
+    fail('módulo tradutor sem writingAssistLabels')
+  }
+  if (
+    writingAssist.includes('WritingAssistLabels') &&
+    writingAssist.includes('WRITING_ASSIST_NATIVE_LS_KEY') &&
+    writingAssist.includes('writingAssistIsSamePair') &&
+    writingAssist.includes('formatWritingAssistLangOption') &&
+    !writingAssist.includes('type Labels = {') &&
+    !writingAssist.includes("const STORAGE_NATIVE = 'nonato-writing-native-lang'")
+  ) {
+    ok('WritingLanguageAssistModal usa WritingAssistLabels do módulo tradutor')
+  } else {
+    fail('WritingLanguageAssistModal ainda define Labels/STORAGE_NATIVE no sítio')
+  }
 } catch (e) {
   fail(`módulo tradutor: ${e.message}`)
 }

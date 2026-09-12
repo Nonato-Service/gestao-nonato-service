@@ -3,45 +3,23 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from '../lib/mymemory-translate'
 import {
+  formatWritingAssistLangOption,
   formatWritingAssistResultLabel,
   resolveWritingAssistNativeLang,
+  writingAssistIsSamePair,
+  WRITING_ASSIST_NATIVE_LS_KEY,
+  type WritingAssistLabels,
   type WritingAssistLangOption,
 } from '../modules/tradutor'
 
-const STORAGE_NATIVE = 'nonato-writing-native-lang'
-
-export type { WritingAssistLangOption }
-
-type Labels = {
-  title: string
-  subtitle: string
-  yourText: string
-  placeholder: string
-  wroteIn: string
-  alsoNeed: string
-  uiHint: string
-  sameLang: string
-  generate: string
-  translating: string
-  resultBase: string
-  resultTranslated: string
-  rememberNative: string
-  close: string
-  copyToClipboard: string
-  copiedToClipboard: string
-  fabTitle: string
-  shortcutHint: string
-  applyOriginalInField: string
-  applyTranslatedInField: string
-  fieldModeHint: string
-}
+export type { WritingAssistLangOption, WritingAssistLabels }
 
 type Props = {
   open: boolean
   onClose: () => void
   selectedLanguage: string
   languageOptions: WritingAssistLangOption[]
-  labels: Labels
+  labels: WritingAssistLabels
   translationError: string
   /** Quando definido, o modal abre com este texto e pode devolver ao campo */
   fieldInitialText?: string
@@ -69,7 +47,7 @@ export function WritingLanguageAssistModal({
   useEffect(() => {
     if (!open) return
     try {
-      const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_NATIVE) : null
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(WRITING_ASSIST_NATIVE_LS_KEY) : null
       setWroteIn(resolveWritingAssistNativeLang(saved, languageOptions))
     } catch {
       setWroteIn('pt-BR')
@@ -94,7 +72,7 @@ export function WritingLanguageAssistModal({
     return () => window.removeEventListener('keydown', onEsc)
   }, [open, onClose])
 
-  const samePair = wroteIn === needIn
+  const samePair = writingAssistIsSamePair(wroteIn, needIn)
 
   const doTranslate = useCallback(async () => {
     const src = draft.trim()
@@ -217,7 +195,7 @@ export function WritingLanguageAssistModal({
                 setWroteIn(v)
                 if (rememberNative) {
                   try {
-                    localStorage.setItem(STORAGE_NATIVE, v)
+                    localStorage.setItem(WRITING_ASSIST_NATIVE_LS_KEY, v)
                   } catch {
                     // ignore
                   }
@@ -235,7 +213,7 @@ export function WritingLanguageAssistModal({
             >
               {languageOptions.map((lang) => (
                 <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.name}
+                  {formatWritingAssistLangOption(lang)}
                 </option>
               ))}
             </select>
@@ -263,7 +241,7 @@ export function WritingLanguageAssistModal({
             >
               {languageOptions.map((lang) => (
                 <option key={lang.code} value={lang.code}>
-                  {lang.flag} {lang.name}
+                  {formatWritingAssistLangOption(lang)}
                 </option>
               ))}
             </select>
@@ -283,7 +261,7 @@ export function WritingLanguageAssistModal({
               setRememberNative(on)
               if (on) {
                 try {
-                  localStorage.setItem(STORAGE_NATIVE, wroteIn)
+                  localStorage.setItem(WRITING_ASSIST_NATIVE_LS_KEY, wroteIn)
                 } catch {
                   // ignore
                 }
