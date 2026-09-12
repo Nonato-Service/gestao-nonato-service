@@ -2956,6 +2956,24 @@ try {
   } else {
     fail('GestaoDemosContent ainda mapeia DemoRecipient no sítio')
   }
+  if (
+    idx.includes('emptyDemoRecipientForm') &&
+    idx.includes('defaultDemoModulesForActions') &&
+    exists('app/modules/demo/formState.ts')
+  ) {
+    ok('módulo demo exporta formState do destinatário')
+  } else {
+    fail('módulo demo sem formState do destinatário')
+  }
+  if (
+    libDemo.includes('emptyDemoRecipientForm') &&
+    libDemo.includes('defaultDemoModulesForActions') &&
+    gestao.includes('emptyDemoRecipientForm')
+  ) {
+    ok('demoManagement/GestaoDemos usam formState do módulo demo')
+  } else {
+    fail('createDefaultDemoLinkForm ainda monta o form vazio no sítio')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }

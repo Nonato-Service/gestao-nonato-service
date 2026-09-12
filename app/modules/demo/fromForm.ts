@@ -1,15 +1,9 @@
 /** Validação e mapeamento puro do destinatário de demonstração. */
 
-import type { DemoModuleMode, DemoRecipientRecord } from './tipos'
+import type { DemoRecipientFormState } from './formState'
+import type { DemoRecipientRecord } from './tipos'
 
-export type DemoRecipientFormPayload = {
-  nome: string
-  email: string
-  observacoes: string
-  demoDays: number
-  demoModules: Record<string, DemoModuleMode>
-  demoPreset?: string
-}
+export type DemoRecipientFormPayload = DemoRecipientFormState
 
 export function isDemoRecipientFormValid(form: Pick<DemoRecipientFormPayload, 'nome'>): boolean {
   return Boolean(form.nome.trim())

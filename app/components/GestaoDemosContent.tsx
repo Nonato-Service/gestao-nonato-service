@@ -10,6 +10,7 @@ import {
   buildDemoWhatsAppUrl,
   countActiveModules,
   createDefaultDemoLinkForm,
+  DEMO_DAYS_DEFAULT,
   DEMO_DAYS_MAX,
   DEMO_DAYS_MIN,
   DEMO_EDITABLE_ACTION_KEYS,
@@ -36,6 +37,7 @@ import type {
 import {
   isDemoRecipientFormValid,
   createDemoRecipientFromForm,
+  emptyDemoRecipientForm,
 } from '../modules/demo'
 import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'
@@ -299,7 +301,12 @@ export function GestaoDemosContent({
     const created = enrichDemoRecipients([novo], demoLinkBaseUrl)[0]!
     setLastCreated(created)
     setDemoListaDetalheId(created.id)
-    setForm((prev) => ({ ...createDefaultDemoLinkForm(), demoModules: prev.demoModules, demoPreset: prev.demoPreset }))
+    setForm((prev) =>
+      emptyDemoRecipientForm(prev.demoModules, {
+        demoDays: DEMO_DAYS_DEFAULT,
+        demoPreset: prev.demoPreset,
+      })
+    )
     setStep('enviados')
   }
 

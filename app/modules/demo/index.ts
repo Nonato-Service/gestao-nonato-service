@@ -14,6 +14,9 @@ export {
   countActiveModules,
 } from './modulesMode'
 
+export type { DemoRecipientFormState, EmptyDemoRecipientFormOpts } from './formState'
+export { defaultDemoModulesForActions, emptyDemoRecipientForm } from './formState'
+
 export type {
   DemoRecipientFormPayload,
   CreateDemoRecipientFromFormOpts,

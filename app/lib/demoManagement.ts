@@ -17,7 +17,11 @@ import type {
   DemoRecipientStatus,
   DemoRecipientWithState,
 } from '../modules/demo'
-import { pickValidDemoModuleModes } from '../modules/demo'
+import {
+  pickValidDemoModuleModes,
+  defaultDemoModulesForActions,
+  emptyDemoRecipientForm,
+} from '../modules/demo'
 
 export const DEMO_DAYS_DEFAULT = 15
 export const DEMO_DAYS_MIN = 1
@@ -370,24 +374,10 @@ export function buildDemoModulesFromPreset(
 }
 
 export function createDefaultDemoLinkForm() {
-  const demoModules = Object.fromEntries(
-    FULL_DEMO_ACTION_KEYS.map((action) => {
-      const mode: DemoModuleMode = DEMO_HIDDEN_ACTIONS.has(action)
-        ? 'hidden'
-        : DEMO_ALLOWED_ACTIONS.has(action)
-          ? 'active'
-          : 'teaser'
-      return [action, mode]
-    })
-  ) as Record<string, DemoModuleMode>
-  return {
-    nome: '',
-    email: '',
-    observacoes: '',
-    demoDays: DEMO_DAYS_DEFAULT,
-    demoModules,
-    demoPreset: 'commercial' as DemoPackagePreset | 'custom',
-  }
+  return emptyDemoRecipientForm(
+    defaultDemoModulesForActions(FULL_DEMO_ACTION_KEYS, DEMO_HIDDEN_ACTIONS, DEMO_ALLOWED_ACTIONS),
+    { demoDays: DEMO_DAYS_DEFAULT, demoPreset: 'commercial' }
+  )
 }
 
 export function enrichDemoRecipients(
