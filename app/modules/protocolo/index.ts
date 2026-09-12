@@ -36,3 +36,6 @@ export {
   avaliarCompletudeProtocolo,
   aplicarFiltroInteligenteChip,
 } from './intelFiltro'
+
+export type { ProtocoloTemplateId } from './intelTemplates'
+export { PROTOCOLO_TEMPLATE_IDS, blocosDeTemplate } from './intelTemplates'

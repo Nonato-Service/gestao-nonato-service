@@ -2419,6 +2419,28 @@ try {
   } else {
     fail('intelFiltro ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('ProtocoloTemplateId') &&
+    idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
+    idx.includes('blocosDeTemplate') &&
+    exists('app/modules/protocolo/intelTemplates.ts')
+  ) {
+    ok('módulo protocolo exporta intelTemplates')
+  } else {
+    fail('módulo protocolo sem intelTemplates')
+  }
+  if (
+    intelFiltroLib.includes("from '../modules/protocolo/intelTemplates'") &&
+    !intelFiltroLib.includes("export type ProtocoloTemplateId = 'diagnostico'") &&
+    !intelFiltroLib.includes('export function blocosDeTemplate(') &&
+    nma.includes('blocosDeTemplate') &&
+    nma.includes('PROTOCOLO_TEMPLATE_IDS') &&
+    nma.includes('ProtocoloTemplateId')
+  ) {
+    ok('NonatoMainApp usa intelTemplates do módulo protocolo')
+  } else {
+    fail('intelTemplates ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
