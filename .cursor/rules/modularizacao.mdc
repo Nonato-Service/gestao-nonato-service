@@ -182,6 +182,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 162. `app/modules/protocolo/` (ProtocoloTemplateId / catálogo / blocosDeTemplate) — feito
 163. `app/modules/protocolo/` (historicoProtocolosCliente / pecasMaisUsadas) — feito
 164. `app/modules/protocolo/` (RelatorioServicoMin / ligação RS) — feito
+165. `app/modules/protocolo/` (status / arquivo executados) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

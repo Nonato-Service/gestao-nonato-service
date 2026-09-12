@@ -44,3 +44,12 @@ export { historicoProtocolosCliente, pecasMaisUsadasHistorico } from './intelHis
 
 export type { RelatorioServicoMin as ProtocoloRelatorioServicoMin } from './intelRelatorio'
 export { relatoriosServicoParaProtocolo, sugerirRelatorioServicoId } from './intelRelatorio'
+
+export type { ProtocoloArquivoItem, GrupoProtocolosExecutadosCliente } from './intelArquivo'
+export {
+  normalizeProtocoloStatus,
+  protocoloEstaEmExecucao,
+  protocoloEstaExecutadoEnviado,
+  dataChaveArquivoProtocolo,
+  agruparProtocolosExecutadosPorClienteEData,
+} from './intelArquivo'

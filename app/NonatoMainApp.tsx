@@ -357,6 +357,9 @@ import {
   pecasMaisUsadasHistorico,
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
+  protocoloEstaEmExecucao,
+  protocoloEstaExecutadoEnviado,
+  agruparProtocolosExecutadosPorClienteEData,
 } from './modules/protocolo'
 import type {
   SolicitacaoDocDevolvido,
@@ -1068,13 +1071,7 @@ import {
   PROTOCOLO_PDF_MODELO_PADRAO,
   clampProtocoloPdfModelo,
 } from './utils/protocoloServicoPdfThemes'
-import {
-  formRascunhoDeProtocolo,
-  protocoloFormVazio,
-  protocoloEstaEmExecucao,
-  protocoloEstaExecutadoEnviado,
-  agruparProtocolosExecutadosPorClienteEData,
-} from './lib/protocoloInteligente'
+import { formRascunhoDeProtocolo, protocoloFormVazio } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
 import { prepareProtocoloWatermarkSrc } from './utils/protocoloPdfWatermark'
 import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'

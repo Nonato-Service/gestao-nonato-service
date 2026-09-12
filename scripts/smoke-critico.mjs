@@ -2482,6 +2482,27 @@ try {
   } else {
     fail('intelRelatorio ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('ProtocoloArquivoItem') &&
+    idx.includes('normalizeProtocoloStatus') &&
+    idx.includes('agruparProtocolosExecutadosPorClienteEData') &&
+    exists('app/modules/protocolo/intelArquivo.ts')
+  ) {
+    ok('módulo protocolo exporta intelArquivo')
+  } else {
+    fail('módulo protocolo sem intelArquivo')
+  }
+  if (
+    intelFiltroLib.includes("from '../modules/protocolo/intelArquivo'") &&
+    !intelFiltroLib.includes('export function normalizeProtocoloStatus(') &&
+    !intelFiltroLib.includes('export function agruparProtocolosExecutadosPorClienteEData<') &&
+    nma.includes('protocoloEstaEmExecucao') &&
+    nma.includes('agruparProtocolosExecutadosPorClienteEData')
+  ) {
+    ok('NonatoMainApp usa intelArquivo do módulo protocolo')
+  } else {
+    fail('intelArquivo ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
