@@ -1,8 +1,12 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { formatBackupBytes, MAX_BACKUP_HISTORY } from '../../lib/adminBackupRegistry'
-import { findBackupByTimestamp, formatCodeBackupFilesLabel } from '../../modules/admin'
+import {
+  findBackupByTimestamp,
+  formatBackupBytes,
+  formatCodeBackupFilesLabel,
+  MAX_BACKUP_HISTORY,
+} from '../../modules/admin'
 import type { AutoBackup, CodeBackup, SafeT } from './adminTypes'
 
 export type AdminBackupSectionProps = {

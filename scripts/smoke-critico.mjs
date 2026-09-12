@@ -3159,6 +3159,30 @@ try {
   } else {
     fail('CodeBackup/AutoBackup ainda definidos em adminTypes ou NonatoMainApp')
   }
+  if (
+    idx.includes('ZipDownloadHistoryEntry') &&
+    idx.includes('formatBackupBytes') &&
+    idx.includes('MAX_BACKUP_HISTORY') &&
+    idx.includes('normalizeZipDownloadHistory') &&
+    exists('app/modules/admin/zipDownloadHistory.ts')
+  ) {
+    ok('módulo admin exporta zipDownloadHistory')
+  } else {
+    fail('módulo admin sem zipDownloadHistory')
+  }
+  const zipLib = fs.readFileSync(path.join(root, 'app/lib/adminBackupRegistry.ts'), 'utf8')
+  if (
+    zipLib.includes("from '../modules/admin/zipDownloadHistory'") &&
+    !zipLib.includes('export type ZipDownloadHistoryEntry = {') &&
+    !zipLib.includes('export function formatBackupBytes(') &&
+    adminBackupUi.includes('formatBackupBytes') &&
+    adminBackupUi.includes('MAX_BACKUP_HISTORY') &&
+    (adminBackupUi.includes("from '../../modules/admin'") || adminBackupUi.includes('from "../../modules/admin"'))
+  ) {
+    ok('AdminBackupSection usa zipDownloadHistory do módulo admin')
+  } else {
+    fail('zipDownloadHistory ainda definido em lib ou AdminBackupSection não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

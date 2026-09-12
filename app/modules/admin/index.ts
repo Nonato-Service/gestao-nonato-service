@@ -43,3 +43,12 @@ export {
 
 export type { CodeBackup, AutoBackup } from './backupTipos'
 export { findBackupByTimestamp, formatCodeBackupFilesLabel } from './backupTipos'
+
+export type { ZipDownloadHistoryEntry } from './zipDownloadHistory'
+export {
+  MAX_BACKUP_HISTORY,
+  ZIP_DOWNLOAD_HISTORY_KEY,
+  formatBackupBytes,
+  normalizeZipDownloadHistory,
+  prependZipDownloadHistory,
+} from './zipDownloadHistory'
