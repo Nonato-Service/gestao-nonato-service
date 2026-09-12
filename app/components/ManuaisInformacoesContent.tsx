@@ -19,8 +19,9 @@ import {
   resolveManuaisDocumentoTipo,
   createManuaisDocumentoFromForm,
   createManuaisImagemFromForm,
+  createBibliaAnexoFromForm,
 } from '../modules/manuais'
-import type { BibliaAnexo, BibliaSecao } from './bibliaNonatoTypes'
+import type { BibliaSecao } from './bibliaNonatoTypes'
 import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, BIBLIA_NONATO_STORAGE_KEY, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
 import {
   manuaisToBibliaStore,
@@ -685,14 +686,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         alert(tr('bibliaAnexoLimite', `Limite de ${BIBLIA_ANEXO_MAX_PER_MODEL} anexos por modelo.`))
         return
       }
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `anx-${Date.now()}`
-      const novo: BibliaAnexo = {
-        id,
-        nome: file.name,
-        mime: file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/octet-stream'),
-        dataUrl: reader.result as string,
-        ...(uploadSecao() ? { secao: uploadSecao() } : {}),
-      }
+      const novo = createBibliaAnexoFromForm(
+        {
+          nome: file.name,
+          mime: resolveManuaisDocumentoTipo(file.name, file.type),
+          dataUrl: reader.result as string,
+          ...(uploadSecao() ? { secao: uploadSecao() } : {}),
+        },
+        { idPrefix: 'anx' }
+      )
       let snapshot: ManuaisModelo[] = []
       setManuaisModelos((prev) => {
         snapshot = prev.map((mo) => {

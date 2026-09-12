@@ -13,6 +13,7 @@ export type {
   CreateManuaisModeloFromFormOpts,
   CreateManuaisDocumentoFromFormOpts,
   CreateManuaisImagemFromFormOpts,
+  CreateBibliaAnexoFromFormOpts,
 } from './fromForm'
 export {
   newManuaisEntityId,
@@ -27,4 +28,6 @@ export {
   createManuaisDocumentoFromForm,
   isManuaisImagemFormValid,
   createManuaisImagemFromForm,
+  isBibliaAnexoFormValid,
+  createBibliaAnexoFromForm,
 } from './fromForm'

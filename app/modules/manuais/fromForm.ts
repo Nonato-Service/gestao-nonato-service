@@ -1,5 +1,6 @@
 /** Validação e mapeamento puro de grupo, modelo, documento e imagem de manuais. */
 
+import type { BibliaAnexo } from '../../components/bibliaNonatoTypes'
 import type { ManuaisDocumento, ManuaisGrupo, ManuaisImagem, ManuaisModelo } from './tipos'
 
 export function newManuaisEntityId(prefix: string, suffix?: string | number): string {
@@ -112,4 +113,27 @@ export function createManuaisImagemFromForm(
   }
   if (form.secao) img.secao = form.secao
   return img
+}
+
+export function isBibliaAnexoFormValid(form: Pick<BibliaAnexo, 'nome' | 'dataUrl'>): boolean {
+  return Boolean(form.nome && form.dataUrl)
+}
+
+export type CreateBibliaAnexoFromFormOpts = {
+  id?: string
+  idPrefix?: string
+}
+
+export function createBibliaAnexoFromForm(
+  form: Omit<BibliaAnexo, 'id'>,
+  opts: CreateBibliaAnexoFromFormOpts = {}
+): BibliaAnexo {
+  const anexo: BibliaAnexo = {
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'anx'),
+    nome: form.nome,
+    mime: form.mime,
+    dataUrl: form.dataUrl,
+  }
+  if (form.secao) anexo.secao = form.secao
+  return anexo
 }
