@@ -11,7 +11,6 @@ import {
   aplicarPatchPedidoFromOrcamentoGerado,
 } from '../lib/clienteEquipamentoOrcamentos'
 import {
-  type OrcamentoWorkflowStatus,
   orcamentoAguardandoConfirmacaoCliente,
   orcamentoPedidoConfirmado,
   orcamentoMercadoriaRecebida,
@@ -23,32 +22,15 @@ import {
   chaveClienteOrcamento,
   clienteNomeMatchesLetraEmQualquerPalavra,
 } from '../lib/orcamentosAlfabeto'
+import {
+  resolverNomeClienteOrcamentoGerado as resolverNomeCliente,
+  type OrcamentoGeradoClienteRef,
+  type OrcamentoGeradoItem,
+} from '../modules/orcamentos'
 
-export type OrcamentoGeradoItem = {
-  id: string
-  numeroOrcamento: string
-  data: string
-  validade?: string
-  descricao?: string
-  observacoes?: string
-  tipo?: string
-  status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
-  workflowStatus?: OrcamentoWorkflowStatus
-  clienteId?: string
-  clienteNome?: string
-  relatorioId?: string
-  relatorioNumero?: string
-  equipamentoChave?: string
-  equipamentoNumeroSerie?: string
-  dadosCliente?: { nomeEmpresa?: string }
-  numeroNotaFiscalEntrega?: string
-  entregaConfirmadaEm?: string
-  geradoEm?: string
-  dataCriacao: string
-  total?: number
-}
+export type { OrcamentoGeradoItem }
 
-type ClienteRef = { id: string; nomeEmpresa: string }
+type ClienteRef = OrcamentoGeradoClienteRef
 
 type Props = {
   orcamentos: OrcamentoGeradoItem[]
@@ -65,18 +47,6 @@ type Props = {
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
 const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
 const PEDIDOS_RELATORIO_KEY = 'nonato-pedidos-orcamento'
-
-function resolverNomeCliente(orc: OrcamentoGeradoItem, clientes: ClienteRef[]): string {
-  const nome = String(orc.clienteNome ?? '').trim()
-  if (nome) return nome
-  if (orc.clienteId) {
-    const c = clientes.find((x) => x.id === orc.clienteId)
-    if (c?.nomeEmpresa) return c.nomeEmpresa
-  }
-  const dados = String(orc.dadosCliente?.nomeEmpresa ?? '').trim()
-  if (dados) return dados
-  return ''
-}
 
 export function OrcamentosGeradosBrowse({
   orcamentos,

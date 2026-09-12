@@ -184,6 +184,9 @@ export {
   normalizeOstPropostaLinhas,
 } from './ostForm'
 
+export type { OrcamentoGeradoItem, OrcamentoGeradoClienteRef } from './geradoTipos'
+export { resolverNomeClienteOrcamentoGerado } from './geradoTipos'
+
 export type { CreateOstPropostaFromFormOpts } from './ostFromForm'
 export {
   resolveOstPropostaNome,

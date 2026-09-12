@@ -802,6 +802,25 @@ try {
   } else {
     fail('OST ainda define proposta/linha no sítio')
   }
+  if (
+    idx.includes('OrcamentoGeradoItem') &&
+    idx.includes('resolverNomeClienteOrcamentoGerado') &&
+    exists('app/modules/orcamentos/geradoTipos.ts')
+  ) {
+    ok('módulo orçamentos exporta OrcamentoGeradoItem')
+  } else {
+    fail('módulo orçamentos sem OrcamentoGeradoItem')
+  }
+  const ogBrowse = fs.readFileSync(path.join(root, 'app/components/OrcamentosGeradosBrowse.tsx'), 'utf8')
+  if (
+    (ogBrowse.includes("from '../modules/orcamentos'") || ogBrowse.includes('from "../modules/orcamentos"')) &&
+    ogBrowse.includes('resolverNomeClienteOrcamentoGerado') &&
+    !ogBrowse.includes('export type OrcamentoGeradoItem = {')
+  ) {
+    ok('OrcamentosGeradosBrowse usa OrcamentoGeradoItem do módulo orçamentos')
+  } else {
+    fail('OrcamentosGeradosBrowse ainda define OrcamentoGeradoItem no sítio')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
