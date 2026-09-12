@@ -431,6 +431,27 @@ try {
     fail('ClienteEquipamentoHub ainda importa RelatorioEquipamentoHistorico do painel')
   }
   if (
+    idx.includes('ClienteFaturaListItem') &&
+    idx.includes('rotuloEquipamentoFatura') &&
+    idx.includes('faturaSemEquipamentoUtil') &&
+    exists('app/modules/clientes/faturaLista.ts')
+  ) {
+    ok('módulo clientes exporta ClienteFaturaListItem')
+  } else {
+    fail('módulo clientes sem ClienteFaturaListItem')
+  }
+  const fatLista = fs.readFileSync(path.join(root, 'app/components/ClienteFaturasSection.tsx'), 'utf8')
+  if (
+    (fatLista.includes("from '../modules/clientes'") || fatLista.includes('from "../modules/clientes"')) &&
+    fatLista.includes('rotuloEquipamentoFatura') &&
+    fatLista.includes('faturaSemEquipamentoUtil') &&
+    !fatLista.includes('export type ClienteFaturaListItem = {')
+  ) {
+    ok('ClienteFaturasSection usa ClienteFaturaListItem do módulo clientes')
+  } else {
+    fail('ClienteFaturasSection ainda define ClienteFaturaListItem no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&

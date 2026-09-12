@@ -112,6 +112,9 @@ export {
   resolverIndiceEquipamentoClienteEdicao,
 } from './equipamentoClienteFromForm'
 
+export type { ClienteFaturaListItem, ClienteFaturaEquipamentoOpt } from './faturaLista'
+export { rotuloEquipamentoFatura, faturaSemEquipamentoUtil } from './faturaLista'
+
 export type { RelatorioEquipamentoHistorico, ClienteEquipamentoHistVista } from './relatorioHistorico'
 export { relatorioTemPecas, todasPecasRelatorio } from './relatorioHistorico'
 
