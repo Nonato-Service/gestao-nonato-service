@@ -7,22 +7,12 @@ import {
   filtrarPorNomeBusca,
   type NomeAlfabetoRow,
 } from '../lib/nomeAlfabetoBusca'
+import {
+  formatAlfabetoIndiceBuscaMeta,
+  type AlfabetoIndiceBuscaLabels,
+} from '../modules/clientes'
 
-export type AlfabetoIndiceBuscaLabels = {
-  buscar?: string
-  nenhumEncontrado?: string
-  selecioneLetra?: string
-  mostrando?: string
-  de?: string
-  itens?: string
-  comInicial?: string
-  outros?: string
-  semItensLetra?: string
-  indiceAz?: string
-  limpar?: string
-  filtrados?: string
-  promptLetra?: string
-}
+export type { AlfabetoIndiceBuscaLabels }
 
 type Props = {
   items: NomeAlfabetoRow[]
@@ -79,13 +69,15 @@ export function AlfabetoIndiceBusca({
       ) : (
         <>
           <div className="cliente-alfabeto-picker__meta">
-            {letraAtiva
-              ? `${countLetraAtiva} ${itemLabel} ${L.comInicial || 'com inicial'} «${
-                  letraAtiva === '#' ? L.outros || 'Outros' : letraAtiva
-                }»${busca.trim() ? ` (${L.de || 'de'} ${filtrados.length} ${L.filtrados || 'filtrados'})` : ''}`
-              : `${L.mostrando || 'Mostrando'} ${filtrados.length} ${L.de || 'de'} ${items.length} ${itemLabel} — ${
-                  L.selecioneLetra || 'selecione uma letra abaixo'
-                }`}
+            {formatAlfabetoIndiceBuscaMeta({
+              labels: L,
+              itemLabel,
+              letraAtiva,
+              countLetraAtiva,
+              busca,
+              filtradosCount: filtrados.length,
+              totalCount: items.length,
+            })}
           </div>
 
           <div className="clientes-alfa-wrap cliente-alfabeto-picker__wrap">

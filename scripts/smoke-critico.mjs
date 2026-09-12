@@ -607,6 +607,25 @@ try {
     fail('ClienteAlfabetoPicker ainda define tipos/meta no sítio')
   }
   if (
+    idx.includes('AlfabetoIndiceBuscaLabels') &&
+    idx.includes('formatAlfabetoIndiceBuscaMeta') &&
+    exists('app/modules/clientes/indiceBusca.ts')
+  ) {
+    ok('módulo clientes exporta índice A–Z genérico')
+  } else {
+    fail('módulo clientes sem indiceBusca')
+  }
+  const indiceBusca = fs.readFileSync(path.join(root, 'app/components/AlfabetoIndiceBusca.tsx'), 'utf8')
+  if (
+    (indiceBusca.includes("from '../modules/clientes'") || indiceBusca.includes('from "../modules/clientes"')) &&
+    indiceBusca.includes('formatAlfabetoIndiceBuscaMeta') &&
+    !indiceBusca.includes('export type AlfabetoIndiceBuscaLabels = {')
+  ) {
+    ok('AlfabetoIndiceBusca usa tipos/meta do módulo clientes')
+  } else {
+    fail('AlfabetoIndiceBusca ainda define tipos/meta no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&
