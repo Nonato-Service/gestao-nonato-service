@@ -68,3 +68,6 @@ export {
 
 export type { VisualId, ShowcaseMenuItem } from './showcaseVisual'
 export { SHOWCASE_MENU, showcaseNavItemClass } from './showcaseVisual'
+
+export type { ShowcaseSlide } from './showcaseSlides'
+export { SHOWCASE_SLIDE_DEFS, buildShowcaseSlides } from './showcaseSlides'

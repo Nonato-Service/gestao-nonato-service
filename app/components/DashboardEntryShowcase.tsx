@@ -1,18 +1,9 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { DashboardShowcaseSlideVisual, type VisualId } from './DashboardShowcaseSlideVisual'
+import { buildShowcaseSlides } from '../modules/sidebar'
+import { DashboardShowcaseSlideVisual } from './DashboardShowcaseSlideVisual'
 import { ShowcaseTypingText } from './ShowcaseTypingText'
-
-type Slide = {
-  id: VisualId
-  title: string
-  desc: string
-  chip: string
-  icon: string
-  accent: string
-  highlight: string
-}
 
 type Props = {
   safeT: Record<string, string | undefined>
@@ -29,121 +20,7 @@ export function DashboardEntryShowcase(props: Props) {
   const { safeT, isCompactLayout, logoSlot, onEnter, enterLabel, note } = props
   const t = safeT as Record<string, string | undefined>
 
-  const slides: Slide[] = useMemo(
-    () => [
-      {
-        id: 'reports',
-        title: t?.dashboardShowcaseSlide1Title || 'Relatórios de serviço',
-        desc:
-          t?.dashboardShowcaseSlide1Desc ||
-          'Protocolos visuais, peças utilizadas, PDF profissional e envio ao cliente — tudo num fluxo claro.',
-        chip: t?.dashboardShowcaseChipReports || 'Relatórios',
-        icon: '📋',
-        accent: '#34d399',
-        highlight: t?.dashboardShowcaseSlide1Highlight || 'PDF e envio automático',
-      },
-      {
-        id: 'clients',
-        title: t?.dashboardShowcaseSlide2Title || 'Clientes e equipamentos',
-        desc:
-          t?.dashboardShowcaseSlide2Desc ||
-          'Cadastro completo, histórico por cliente, IDs de equipamento e rastreio em tempo real.',
-        chip: t?.dashboardShowcaseChipClients || 'Clientes',
-        icon: '👥',
-        accent: '#38bdf8',
-        highlight: t?.dashboardShowcaseSlide2Highlight || 'Histórico e equipamentos',
-      },
-      {
-        id: 'parts',
-        title: t?.dashboardShowcaseSlide3Title || 'Biblioteca de peças',
-        desc:
-          t?.dashboardShowcaseSlide3Desc ||
-          'Catálogo organizado, importação por URL, numeração inteligente e imagens ampliadas.',
-        chip: t?.dashboardShowcaseChipParts || 'Peças',
-        icon: '🔧',
-        accent: '#fbbf24',
-        highlight: t?.dashboardShowcaseSlide3Highlight || 'Stock e catálogo visual',
-      },
-      {
-        id: 'knowledge',
-        title: t?.dashboardShowcaseSlide4Title || 'Centro de conhecimento técnico',
-        desc:
-          t?.dashboardShowcaseSlide4Desc ||
-          'Bíblia, manuais, PDFs e fichas técnicas unificados por família, marca e modelo.',
-        chip: t?.dashboardShowcaseChipKnowledge || 'Conhecimento',
-        icon: '📚',
-        accent: '#a78bfa',
-        highlight: t?.dashboardShowcaseSlide4Highlight || 'Bíblia e manuais técnicos',
-      },
-      {
-        id: 'warehouse',
-        title: t?.dashboardShowcaseSlide5Title || 'Armazém e industrial',
-        desc:
-          t?.dashboardShowcaseSlide5Desc ||
-          'Stock, separação de peças, ordens de preparação e almoxarifado ligados à operação.',
-        chip: t?.dashboardShowcaseChipWarehouse || 'Armazém',
-        icon: '🏭',
-        accent: '#fb7185',
-        highlight: t?.dashboardShowcaseSlide5Highlight || 'Separação e stock',
-      },
-      {
-        id: 'finance',
-        title: t?.dashboardShowcaseSlide6Title || 'Finanças e comunicação',
-        desc:
-          t?.dashboardShowcaseSlide6Desc ||
-          'Orçamentos, custos, mensagens internas e fecho financeiro com transparência.',
-        chip: t?.dashboardShowcaseChipFinance || 'Finanças',
-        icon: '💬',
-        accent: '#2dd4bf',
-        highlight: t?.dashboardShowcaseSlide6Highlight || 'Orçamentos e mensagens',
-      },
-      {
-        id: 'import',
-        title: t?.dashboardShowcaseSlide7Title || 'Importação inteligente de catálogo',
-        desc:
-          t?.dashboardShowcaseSlide7Desc ||
-          'Cole páginas de fornecedores, analise duplicados em vermelho e amarelo e importe só peças novas.',
-        chip: t?.dashboardShowcaseChipImport || 'Importação',
-        icon: '📥',
-        accent: '#f97316',
-        highlight: t?.dashboardShowcaseSlide7Highlight || 'Análise vermelho / amarelo',
-      },
-      {
-        id: 'schedule',
-        title: t?.dashboardShowcaseSlide8Title || 'Diário e agendamento',
-        desc:
-          t?.dashboardShowcaseSlide8Desc ||
-          'Pedidos de serviço, visitas técnicas e estados em tempo real — nada se perde na operação.',
-        chip: t?.dashboardShowcaseChipSchedule || 'Agenda',
-        icon: '📅',
-        accent: '#818cf8',
-        highlight: t?.dashboardShowcaseSlide8Highlight || 'OS e visitas agendadas',
-      },
-      {
-        id: 'equipment',
-        title: t?.dashboardShowcaseSlide9Title || 'Equipamentos e carga',
-        desc:
-          t?.dashboardShowcaseSlide9Desc ||
-          'Sequência de volumes, etiquetas de armazém e rastreio da máquina até ao camião.',
-        chip: t?.dashboardShowcaseChipEquipment || 'Equipamentos',
-        icon: '⚙️',
-        accent: '#e879f9',
-        highlight: t?.dashboardShowcaseSlide9Highlight || 'Volumes T/3 · T/2 · T/1',
-      },
-      {
-        id: 'sync',
-        title: t?.dashboardShowcaseSlide10Title || 'Sincronização em equipa',
-        desc:
-          t?.dashboardShowcaseSlide10Desc ||
-          'Escritório, campo e servidor alinhados — envie e carregue dados em todos os aparelhos.',
-        chip: t?.dashboardShowcaseChipSync || 'Sincronização',
-        icon: '🔄',
-        accent: '#22d3ee',
-        highlight: t?.dashboardShowcaseSlide10Highlight || 'Multi-dispositivo',
-      },
-    ],
-    [t]
-  )
+  const slides = useMemo(() => buildShowcaseSlides(t), [t])
 
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)

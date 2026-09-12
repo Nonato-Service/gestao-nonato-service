@@ -2249,6 +2249,26 @@ try {
   } else {
     fail('VisualId ainda definido em DashboardShowcaseSlideVisual')
   }
+  if (
+    idx.includes('ShowcaseSlide') &&
+    idx.includes('buildShowcaseSlides') &&
+    idx.includes('SHOWCASE_SLIDE_DEFS') &&
+    exists('app/modules/sidebar/showcaseSlides.ts')
+  ) {
+    ok('módulo sidebar exporta ShowcaseSlide')
+  } else {
+    fail('módulo sidebar sem showcaseSlides')
+  }
+  const showcaseEntry = fs.readFileSync(path.join(root, 'app/components/DashboardEntryShowcase.tsx'), 'utf8')
+  if (
+    (showcaseEntry.includes("from '../modules/sidebar'") || showcaseEntry.includes('from "../modules/sidebar"')) &&
+    showcaseEntry.includes('buildShowcaseSlides') &&
+    !showcaseEntry.includes('type Slide = {')
+  ) {
+    ok('DashboardEntryShowcase usa buildShowcaseSlides do módulo sidebar')
+  } else {
+    fail('DashboardEntryShowcase ainda define slides no sítio')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }

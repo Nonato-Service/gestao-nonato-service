@@ -173,6 +173,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 153. `app/modules/admin/` (SyncPendingRemote / revision display) — feito
 154. `app/modules/admin/` (CodeBackup / AutoBackup / find+label) — feito
 155. `app/modules/sidebar/` (VisualId / SHOWCASE_MENU / nav class) — feito
+156. `app/modules/sidebar/` (ShowcaseSlide / buildShowcaseSlides) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 
