@@ -2785,6 +2785,11 @@ try {
   } else {
     ok('existe app/modules/admin/logosRelatorio.ts')
   }
+  if (!exists('app/modules/admin/logoDrafts.ts')) {
+    fail('falta app/modules/admin/logoDrafts.ts')
+  } else {
+    ok('existe app/modules/admin/logoDrafts.ts')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/admin'") || nma.includes('from "./modules/admin"')) {
     ok('NonatoMainApp importa app/modules/admin')
@@ -2847,6 +2852,20 @@ try {
     ok('adminTypes re-exporta User do módulo admin')
   } else {
     fail('adminTypes não re-exporta User do módulo admin')
+  }
+  if (
+    idx.includes('AdminInterfaceLogoDraft') &&
+    idx.includes('AdminBibliotecaLogoDraft') &&
+    adminTypes.includes("from '../../modules/admin/logoDrafts'") &&
+    !adminTypes.includes('export type AdminInterfaceLogoDraft = {') &&
+    !adminTypes.includes('export type AdminBibliotecaLogoDraft = {') &&
+    !nma.includes('type AdminInterfaceLogoDraft = {') &&
+    nma.includes('AdminInterfaceLogoDraft') &&
+    nma.includes('AdminBibliotecaLogoDraft')
+  ) {
+    ok('módulo admin define rascunhos de logo (adminTypes/NMA só usam)')
+  } else {
+    fail('rascunhos de logo ainda definidos em adminTypes ou NonatoMainApp')
   }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)

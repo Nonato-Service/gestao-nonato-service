@@ -24,3 +24,5 @@ export {
 
 export type { LogoRelatorio } from './logosRelatorio'
 export { parseLogosRelatoriosArr, preferRicherLogosRelatorios } from './logosRelatorio'
+
+export type { AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from './logoDrafts'

@@ -368,7 +368,7 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio } from './modules/admin'
+import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from './modules/admin'
 import {
   createEmptyUserForm,
   userToFormState,
@@ -1352,20 +1352,11 @@ export default function Dashboard() {
   const [logoUrlDashboard, setLogoUrlDashboard] = useState<string | null>(null)
   const [logoTypeDashboard, setLogoTypeDashboard] = useState<'image' | 'video' | null>(null)
   /** Rascunho no Administrador (só persiste com «Guardar») — barra lateral / dashboard */
-  type AdminInterfaceLogoDraft = {
-    previewUrl: string
-    isVideo: boolean
-    imageDataUrl?: string
-  }
   const [adminSidebarLogoDraft, setAdminSidebarLogoDraft] = useState<AdminInterfaceLogoDraft | null>(null)
   const [adminDashboardLogoDraft, setAdminDashboardLogoDraft] = useState<AdminInterfaceLogoDraft | null>(null)
   const adminSidebarLogoDraftVideoFileRef = useRef<File | null>(null)
   const adminDashboardLogoDraftVideoFileRef = useRef<File | null>(null)
-  const [adminBibliotecaLogoDraft, setAdminBibliotecaLogoDraft] = useState<{
-    previewUrl: string
-    dataUrl: string
-    fileName: string
-  } | null>(null)
+  const [adminBibliotecaLogoDraft, setAdminBibliotecaLogoDraft] = useState<AdminBibliotecaLogoDraft | null>(null)
   const [adminLogoSavingSidebar, setAdminLogoSavingSidebar] = useState(false)
   const [adminLogoSavingDashboard, setAdminLogoSavingDashboard] = useState(false)
   const [adminBibliotecaLogoSaving, setAdminBibliotecaLogoSaving] = useState(false)

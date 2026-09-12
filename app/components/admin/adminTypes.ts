@@ -2,17 +2,7 @@
 
 export type SafeT = Record<string, string | undefined>
 
-export type AdminInterfaceLogoDraft = {
-  previewUrl: string
-  isVideo: boolean
-  imageDataUrl?: string
-}
-
-export type AdminBibliotecaLogoDraft = {
-  previewUrl: string
-  dataUrl: string
-  fileName: string
-}
+export type { AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from '../../modules/admin/logoDrafts'
 
 export type { LogoRelatorio } from '../../modules/admin/logosRelatorio'
 
