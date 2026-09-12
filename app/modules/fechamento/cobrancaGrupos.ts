@@ -10,11 +10,18 @@ export type RelatorioCobrancaGrupoMin = {
   httLabel?: string
 }
 
-function servicoEhHttCobranca(s: ServicoCadastroItem): boolean {
+export function servicoEhHttCobranca(s: ServicoCadastroItem): boolean {
   return (
     /^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
     /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase())
   )
+}
+
+export function findServicoHttNoGrupo(
+  servicos: ServicoCadastroItem[],
+  grupoId: string
+): ServicoCadastroItem | undefined {
+  return servicos.find((s) => s.grupoId === grupoId && servicoEhHttCobranca(s))
 }
 
 export function buildRelatorioCobrancaGruposOpcoes(
@@ -22,7 +29,7 @@ export function buildRelatorioCobrancaGruposOpcoes(
   servicos: ServicoCadastroItem[]
 ): RelatorioCobrancaGrupoMin[] {
   return ordenarServicoGrupos(grupos).map((g) => {
-    const htt = servicos.find((s) => s.grupoId === g.id && servicoEhHttCobranca(s))
+    const htt = findServicoHttNoGrupo(servicos, g.id)
     const httVal = htt ? formatServicoValorExibicao(htt.valor) : null
     return {
       id: g.id,

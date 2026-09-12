@@ -316,6 +316,7 @@ try {
     idx.includes('RelatorioCobrancaGrupoMin') &&
     idx.includes('buildRelatorioCobrancaGruposOpcoes') &&
     idx.includes('rotuloRelatorioCobrancaGrupoOption') &&
+    idx.includes('findServicoHttNoGrupo') &&
     exists('app/modules/fechamento/cobrancaGrupos.ts')
   ) {
     ok('módulo fechamento exporta RelatorioCobrancaGrupoMin')
@@ -336,6 +337,7 @@ try {
   if (
     nma.includes('buildRelatorioCobrancaGruposOpcoes') &&
     nma.includes('rotuloRelatorioCobrancaGrupoOption') &&
+    nma.includes('findServicoHttNoGrupo') &&
     !nma.includes('httLabel: httVal != null ? `HTT ${httVal} €`') &&
     !nma.includes('httVal != null ? ` — HTT ${httVal} €`')
   ) {

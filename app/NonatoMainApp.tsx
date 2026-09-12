@@ -838,6 +838,7 @@ import {
   formatServicoValorExibicao,
   buildRelatorioCobrancaGruposOpcoes,
   rotuloRelatorioCobrancaGrupoOption,
+  findServicoHttNoGrupo,
   parseServicoValorInput,
   servicoValorToInputString,
   servicoCodParaExibicao,
@@ -12637,12 +12638,7 @@ export default function Dashboard() {
   /** Abre o formulário com HTT pré-preenchido no grupo selecionado (tarifas diferentes por grupo). */
   const handleQuickAddHttNoGrupo = (grupoIdOverride?: string) => {
     const gid = grupoIdOverride || servicoGrupoIdPadrao()
-    const existente = servicos.find(
-      (s) =>
-        s.grupoId === gid &&
-        (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
-          /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
-    )
+    const existente = findServicoHttNoGrupo(servicos, gid)
     if (existente) {
       handleEditServico(existente)
       return
