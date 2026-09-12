@@ -11,52 +11,28 @@ import {
 } from '../context/DocumentoEnvioClienteContext'
 import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
+import type { AnexoContador, CategoriaEntidadeContador, EntidadeContador, PagamentoContador } from '../modules/pagamentos-contador'
+import {
+  createAnexoContadorFromForm,
+  createEntidadeContadorFromForm,
+  createPagamentoContadorFromForm,
+  emptyEntidadeContadorForm,
+  emptyPagamentoContadorForm,
+  isEntidadeContadorFormValid,
+  pagamentoContadorToForm,
+  updatePagamentoContadorFromForm,
+} from '../modules/pagamentos-contador'
+
+export type {
+  AnexoContador,
+  CategoriaEntidadeContador,
+  EntidadeContador,
+  PagamentoContador,
+} from '../modules/pagamentos-contador'
 
 const STORAGE_ENTIDADES = 'nonato-contador-entidades'
 const STORAGE_PAGAMENTOS = 'nonato-contador-pagamentos'
 const MAX_ANEXO_BYTES = 8 * 1024 * 1024
-
-export type CategoriaEntidadeContador =
-  | 'irs'
-  | 'seguranca_social'
-  | 'advogado'
-  | 'contabilista'
-  | 'seguros'
-  | 'outro'
-
-export type EntidadeContador = {
-  id: string
-  nome: string
-  categoria: CategoriaEntidadeContador
-  nif?: string
-  contacto?: string
-  notas?: string
-  ativo: boolean
-  criadoEm: string
-}
-
-export type AnexoContador = {
-  id: string
-  nome: string
-  mime: string
-  base64: string
-  criadoEm: string
-}
-
-export type PagamentoContador = {
-  id: string
-  entidadeId: string
-  entidadeNome: string
-  dataPagamento: string
-  valor: number
-  periodoReferencia: string
-  numeroDocumento?: string
-  descricao?: string
-  status: 'pago' | 'pendente'
-  anexos: AnexoContador[]
-  criadoEm: string
-  atualizadoEm: string
-}
 
 type Props = {
   saveData: (key: string, data: unknown) => Promise<void>
@@ -215,22 +191,6 @@ function labelCategoria(cat: CategoriaEntidadeContador, safeT: Props['safeT']): 
   return map[cat]
 }
 
-function emptyPagamentoForm(entidadeId = ''): Omit<PagamentoContador, 'id' | 'criadoEm' | 'atualizadoEm' | 'anexos' | 'entidadeNome'> & {
-  anexos: AnexoContador[]
-  entidadeNome: string
-} {
-  return {
-    entidadeId,
-    entidadeNome: '',
-    dataPagamento: new Date().toISOString().slice(0, 10),
-    valor: 0,
-    periodoReferencia: '',
-    numeroDocumento: '',
-    descricao: '',
-    status: 'pago',
-    anexos: [],
-  }
-}
 
 export function PagamentosContadorContent({
   saveData,
@@ -262,15 +222,9 @@ export function PagamentosContadorContent({
 
   const [showPagamentoForm, setShowPagamentoForm] = useState(false)
   const [editingPagamentoId, setEditingPagamentoId] = useState<string | null>(null)
-  const [pagamentoForm, setPagamentoForm] = useState(emptyPagamentoForm())
+  const [pagamentoForm, setPagamentoForm] = useState(emptyPagamentoContadorForm())
 
-  const [entidadeForm, setEntidadeForm] = useState({
-    nome: '',
-    categoria: 'irs' as CategoriaEntidadeContador,
-    nif: '',
-    contacto: '',
-    notas: '',
-  })
+  const [entidadeForm, setEntidadeForm] = useState(emptyEntidadeContadorForm())
 
   const anexoInputRef = useRef<HTMLInputElement>(null)
 
@@ -370,23 +324,13 @@ export function PagamentosContadorContent({
   }, [pagamentosFiltrados])
 
   const guardarEntidade = async () => {
-    const nome = entidadeForm.nome.trim()
-    if (!nome) {
+    if (!isEntidadeContadorFormValid(entidadeForm)) {
       alert(tx(safeT, 'pagamentosContadorErroNomeEntidade', 'Indique o nome da entidade.'))
       return
     }
-    const nova: EntidadeContador = {
-      id: `ent-${Date.now()}`,
-      nome,
-      categoria: entidadeForm.categoria,
-      nif: entidadeForm.nif.trim() || undefined,
-      contacto: entidadeForm.contacto.trim() || undefined,
-      notas: entidadeForm.notas.trim() || undefined,
-      ativo: true,
-      criadoEm: new Date().toISOString(),
-    }
+    const nova = createEntidadeContadorFromForm(entidadeForm)
     await persistEntidades([...entidades, nova])
-    setEntidadeForm({ nome: '', categoria: 'irs', nif: '', contacto: '', notas: '' })
+    setEntidadeForm(emptyEntidadeContadorForm())
   }
 
   const toggleEntidadeAtiva = async (id: string) => {
@@ -413,23 +357,13 @@ export function PagamentosContadorContent({
   const abrirNovoPagamento = () => {
     const firstId = entidadesAtivas[0]?.id ?? ''
     setEditingPagamentoId(null)
-    setPagamentoForm(emptyPagamentoForm(firstId))
+    setPagamentoForm(emptyPagamentoContadorForm(firstId))
     setShowPagamentoForm(true)
   }
 
   const abrirEditarPagamento = (p: PagamentoContador) => {
     setEditingPagamentoId(p.id)
-    setPagamentoForm({
-      entidadeId: p.entidadeId,
-      entidadeNome: p.entidadeNome,
-      dataPagamento: p.dataPagamento,
-      valor: p.valor,
-      periodoReferencia: p.periodoReferencia,
-      numeroDocumento: p.numeroDocumento ?? '',
-      descricao: p.descricao ?? '',
-      status: p.status,
-      anexos: [...p.anexos],
-    })
+    setPagamentoForm(pagamentoContadorToForm(p))
     setShowPagamentoForm(true)
   }
 
@@ -454,13 +388,7 @@ export function PagamentosContadorContent({
         r.onerror = () => reject(new Error('read'))
         r.readAsDataURL(file)
       })
-      novos.push({
-        id: `anx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        nome: file.name,
-        mime,
-        base64,
-        criadoEm: new Date().toISOString(),
-      })
+      novos.push(createAnexoContadorFromForm({ nome: file.name, mime, base64 }))
     }
     if (novos.length) {
       setPagamentoForm(prev => ({ ...prev, anexos: [...prev.anexos, ...novos] }))
@@ -485,30 +413,22 @@ export function PagamentosContadorContent({
       alert(tx(safeT, 'pagamentosContadorErroValor', 'Indique um valor superior a zero.'))
       return
     }
-    const now = new Date().toISOString()
-    const payload: PagamentoContador = {
-      id: editingPagamentoId ?? `pag-${Date.now()}`,
-      entidadeId: ent.id,
-      entidadeNome: ent.nome,
-      dataPagamento: pagamentoForm.dataPagamento,
-      valor: Math.round(pagamentoForm.valor * 100) / 100,
-      periodoReferencia: pagamentoForm.periodoReferencia.trim(),
-      numeroDocumento: pagamentoForm.numeroDocumento?.trim() || undefined,
-      descricao: pagamentoForm.descricao?.trim() || undefined,
-      status: pagamentoForm.status,
-      anexos: pagamentoForm.anexos,
-      criadoEm: editingPagamentoId
-        ? pagamentos.find(p => p.id === editingPagamentoId)?.criadoEm ?? now
-        : now,
-      atualizadoEm: now,
-    }
+    const existing = editingPagamentoId
+      ? pagamentos.find(p => p.id === editingPagamentoId)
+      : undefined
+    const payload = existing
+      ? updatePagamentoContadorFromForm(existing, pagamentoForm, { entidadeNome: ent.nome })
+      : createPagamentoContadorFromForm(pagamentoForm, {
+          entidadeNome: ent.nome,
+          id: editingPagamentoId ?? undefined,
+        })
     const next = editingPagamentoId
       ? pagamentos.map(p => (p.id === editingPagamentoId ? payload : p))
       : [...pagamentos, payload]
     await persistPagamentos(next)
     setShowPagamentoForm(false)
     setEditingPagamentoId(null)
-    setPagamentoForm(emptyPagamentoForm())
+    setPagamentoForm(emptyPagamentoContadorForm())
   }
 
   const removerPagamento = async (id: string) => {

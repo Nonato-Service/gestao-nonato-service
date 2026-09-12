@@ -136,6 +136,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 116. `app/modules/manuais/` (createBibliaAnexoFromForm) — feito
 117. `app/modules/demo/` (isDemoRecipientFormValid / fromForm) — feito
 118. `app/modules/demo/` (emptyDemoRecipientForm / formState) — feito
+119. `app/modules/pagamentos-contador/` (tipos / formState / fromForm entidade-pagamento-anexo) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -66,6 +66,7 @@ const critical = [
   'app/modules/comunicacao/index.ts',
   'app/modules/ordem-preparacao/index.ts',
   'app/modules/pre-check/index.ts',
+  'app/modules/pagamentos-contador/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -2976,6 +2977,50 @@ try {
   }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
+}
+
+// 3al) Módulo pagamentos-contador (119.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/pagamentos-contador/index.ts'), 'utf8')
+  if (
+    idx.includes('AnexoContador') &&
+    idx.includes('EntidadeContador') &&
+    idx.includes('PagamentoContador') &&
+    idx.includes('emptyEntidadeContadorForm') &&
+    idx.includes('emptyPagamentoContadorForm') &&
+    idx.includes('createEntidadeContadorFromForm') &&
+    idx.includes('createPagamentoContadorFromForm') &&
+    idx.includes('createAnexoContadorFromForm')
+  ) {
+    ok('módulo pagamentos-contador exporta tipos/formState/fromForm')
+  } else {
+    fail('módulo pagamentos-contador incompleto (index.ts)')
+  }
+  if (
+    exists('app/modules/pagamentos-contador/tipos.ts') &&
+    exists('app/modules/pagamentos-contador/formState.ts') &&
+    exists('app/modules/pagamentos-contador/fromForm.ts')
+  ) {
+    ok('existe app/modules/pagamentos-contador tipos/formState/fromForm')
+  } else {
+    fail('ficheiros do módulo pagamentos-contador em falta')
+  }
+  const pccMod = fs.readFileSync(path.join(root, 'app/components/PagamentosContadorContent.tsx'), 'utf8')
+  if (
+    (pccMod.includes("from '../modules/pagamentos-contador'") ||
+      pccMod.includes('from "../modules/pagamentos-contador"')) &&
+    pccMod.includes('emptyPagamentoContadorForm') &&
+    pccMod.includes('createEntidadeContadorFromForm') &&
+    pccMod.includes('createPagamentoContadorFromForm') &&
+    pccMod.includes('createAnexoContadorFromForm') &&
+    !pccMod.includes('export type AnexoContador = {')
+  ) {
+    ok('PagamentosContadorContent usa tipos/fromForm do módulo pagamentos-contador')
+  } else {
+    fail('PagamentosContadorContent ainda define AnexoContador/entidade/pagamento no sítio')
+  }
+} catch (e) {
+  fail(`módulo pagamentos-contador: ${e.message}`)
 }
 
 try {
