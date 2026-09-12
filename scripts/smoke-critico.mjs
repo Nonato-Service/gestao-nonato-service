@@ -452,6 +452,36 @@ try {
     fail('ClienteFaturasSection ainda define ClienteFaturaListItem no sítio')
   }
   if (
+    idx.includes('ClienteListaLinhasData') &&
+    idx.includes('buildClienteInfAdicional') &&
+    idx.includes('formatNifClienteExibicao') &&
+    exists('app/modules/clientes/listaLinhas.ts')
+  ) {
+    ok('módulo clientes exporta ClienteListaLinhasData')
+  } else {
+    fail('módulo clientes sem ClienteListaLinhasData')
+  }
+  const listaLinhas = fs.readFileSync(path.join(root, 'app/components/ClienteListaLinhas.tsx'), 'utf8')
+  if (
+    (listaLinhas.includes("from '../modules/clientes'") || listaLinhas.includes('from "../modules/clientes"')) &&
+    listaLinhas.includes('buildClienteInfAdicional') &&
+    !listaLinhas.includes('export type ClienteListaLinhasData = {')
+  ) {
+    ok('ClienteListaLinhas usa ClienteListaLinhasData do módulo clientes')
+  } else {
+    fail('ClienteListaLinhas ainda define ClienteListaLinhasData no sítio')
+  }
+  const identChips = fs.readFileSync(path.join(root, 'app/components/ClienteIdentidadeChips.tsx'), 'utf8')
+  if (
+    (identChips.includes("from '../modules/clientes'") || identChips.includes('from "../modules/clientes"')) &&
+    identChips.includes('formatNifClienteExibicao') &&
+    !identChips.includes('export function formatNifClienteExibicao(')
+  ) {
+    ok('ClienteIdentidadeChips re-exporta formatNifClienteExibicao do módulo')
+  } else {
+    fail('ClienteIdentidadeChips ainda define formatNifClienteExibicao no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&

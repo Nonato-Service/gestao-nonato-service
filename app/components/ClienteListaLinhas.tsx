@@ -4,19 +4,10 @@ import { useMemo, type MouseEvent } from 'react'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { translations, translationBundleKey } from '../translations'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
-import { formatNifClienteExibicao } from './ClienteIdentidadeChips'
+import { buildClienteInfAdicional, type ClienteListaLinhasData } from '../modules/clientes'
 
-export type ClienteListaLinhasData = {
-  codigoCliente?: string
-  id?: string
-  nomeEmpresa?: string
-  telefones?: string
-  localidade?: string
-  morada?: string
-  codigoPostal?: string
-  numeroContribuicaoFiscal?: string
-  email?: string
-}
+export type { ClienteListaLinhasData }
+export { buildClienteInfAdicional }
 
 function useListaTr(language: string) {
   return useMemo(() => {
@@ -28,24 +19,6 @@ function useListaTr(language: string) {
     const pt = translations['pt-BR'] as Record<string, string | undefined>
     return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
   }, [language])
-}
-
-export function buildClienteInfAdicional(cliente: ClienteListaLinhasData): string {
-  const localCp = [cliente.localidade, cliente.codigoPostal]
-    .map((x) => String(x || '').trim())
-    .filter((x) => x && !/^x+$/i.test(x))
-    .join(' ')
-    .trim()
-
-  return [
-    cliente.telefones?.trim(),
-    cliente.morada?.trim(),
-    localCp,
-    formatNifClienteExibicao(cliente.numeroContribuicaoFiscal),
-    cliente.email?.trim(),
-  ]
-    .filter(Boolean)
-    .join(' · ')
 }
 
 type Props = {

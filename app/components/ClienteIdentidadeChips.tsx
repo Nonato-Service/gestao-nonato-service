@@ -5,6 +5,8 @@ import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { translations, translationBundleKey } from '../translations'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 
+export { formatNifClienteExibicao } from '../modules/clientes'
+
 type ClienteIdentidade = {
   codigoCliente?: string
   id?: string
@@ -122,9 +124,3 @@ export function ClienteIdentidadeChips({
   )
 }
 
-/** Evita «NIF NIF 123» quando o valor já traz o prefixo. */
-export function formatNifClienteExibicao(nif: string | undefined | null): string {
-  const t = String(nif ?? '').trim()
-  if (!t) return ''
-  return /^nif[\s.:]/i.test(t) ? t : `NIF ${t}`
-}

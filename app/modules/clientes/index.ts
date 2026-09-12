@@ -37,6 +37,9 @@ export {
   ordenarNomesClientes,
 } from './ordenar'
 
+export type { ClienteListaLinhasData } from './listaLinhas'
+export { formatNifClienteExibicao, buildClienteInfAdicional } from './listaLinhas'
+
 export type { ClienteAlfabetoRow } from './busca'
 export {
   filtrarClientesPorBusca,
