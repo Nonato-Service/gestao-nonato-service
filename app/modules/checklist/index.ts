@@ -94,3 +94,6 @@ export type {
   ChecklistBasicoInstancia,
 } from './basicoTipos'
 export { CHECKLIST_BASICO_STORAGE_KEY, newChecklistBasicoId } from './basicoTipos'
+
+export type { ChecklistBasicoEquipamentoResumo } from './basicoEquipamento'
+export { checklistBasicoEquipamentoKey, checklistBasicoEquipamentoLabel } from './basicoEquipamento'

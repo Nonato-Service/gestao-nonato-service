@@ -2675,6 +2675,28 @@ try {
   } else {
     fail('ChecklistBasico ainda definido em lib ou no componente')
   }
+  if (
+    idx.includes('ChecklistBasicoEquipamentoResumo') &&
+    idx.includes('checklistBasicoEquipamentoKey') &&
+    idx.includes('checklistBasicoEquipamentoLabel') &&
+    exists('app/modules/checklist/basicoEquipamento.ts')
+  ) {
+    ok('módulo checklist exporta basicoEquipamento')
+  } else {
+    fail('módulo checklist sem basicoEquipamento')
+  }
+  if (
+    ckBasicoUi.includes('ChecklistBasicoEquipamentoResumo') &&
+    ckBasicoUi.includes('checklistBasicoEquipamentoKey') &&
+    ckBasicoUi.includes('checklistBasicoEquipamentoLabel') &&
+    !ckBasicoUi.includes('type EquipamentoClienteResumo = {') &&
+    !ckBasicoUi.includes('function equipamentoClienteKey(') &&
+    !ckBasicoUi.includes('function equipamentoLabel(')
+  ) {
+    ok('ChecklistBasicoContent usa basicoEquipamento do módulo')
+  } else {
+    fail('EquipamentoClienteResumo ainda definido no ChecklistBasicoContent')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

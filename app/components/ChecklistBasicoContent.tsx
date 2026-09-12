@@ -11,33 +11,24 @@ import {
 } from '../context/DocumentoEnvioClienteContext'
 import {
   CHECKLIST_BASICO_STORAGE_KEY,
+  ChecklistBasicoEquipamentoResumo,
   ChecklistBasicoGrupo,
   ChecklistBasicoInstancia,
   ChecklistBasicoItem,
   ChecklistBasicoItemStatus,
+  checklistBasicoEquipamentoKey,
+  checklistBasicoEquipamentoLabel,
   newChecklistBasicoId,
 } from '../modules/checklist'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
-
-type EquipamentoClienteResumo = {
-  id?: string
-  tipoEquipamento: string
-  modelo: string
-  marca: string
-  numeroSerie: string
-  familia: string
-  grupo: string
-  photo?: string
-  coverPhoto?: string
-}
 
 type ClienteResumo = {
   id: string
   nomeEmpresa: string
   email?: string
   telefones?: string
-  equipamentos: EquipamentoClienteResumo[]
+  equipamentos: ChecklistBasicoEquipamentoResumo[]
 }
 
 type TecnicoResumo = {
@@ -55,20 +46,6 @@ export type ChecklistBasicoContentProps = {
   tecnicos: TecnicoResumo[]
   logoUrl?: string | null
   logoType?: string | null
-}
-
-function equipamentoClienteKey(eq: EquipamentoClienteResumo, index: number): string {
-  const id = (eq.id || '').trim()
-  if (id) return id
-  return `eq-${index}-${(eq.numeroSerie || eq.modelo || 'x').trim()}`
-}
-
-function equipamentoLabel(eq: EquipamentoClienteResumo): string {
-  const parts = [eq.tipoEquipamento, eq.modelo, eq.marca].filter(Boolean)
-  const base = parts.join(' · ').trim()
-  const serie = (eq.numeroSerie || '').trim()
-  if (base && serie) return `${base} — ${serie}`
-  return base || serie || '—'
 }
 
 function todayIsoDate(): string {
@@ -250,9 +227,9 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
   )
 
   const equipamentosCliente = useMemo(() => {
-    if (!clienteSelecionado) return [] as Array<{ key: string; eq: EquipamentoClienteResumo; index: number }>
+    if (!clienteSelecionado) return [] as Array<{ key: string; eq: ChecklistBasicoEquipamentoResumo; index: number }>
     return (clienteSelecionado.equipamentos || []).map((eq, index) => ({
-      key: equipamentoClienteKey(eq, index),
+      key: checklistBasicoEquipamentoKey(eq, index),
       eq,
       index,
     }))
@@ -607,7 +584,7 @@ export function ChecklistBasicoContent(props: ChecklistBasicoContentProps) {
                 <option value="">—</option>
                 {equipamentosCliente.map(({ key, eq }) => (
                   <option key={key} value={key}>
-                    {equipamentoLabel(eq)}
+                    {checklistBasicoEquipamentoLabel(eq)}
                   </option>
                 ))}
               </select>
