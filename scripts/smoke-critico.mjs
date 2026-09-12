@@ -3247,6 +3247,37 @@ try {
   } else {
     fail('lib/conhecimentoTecnicoTypes não re-exporta o módulo conhecimento-tecnico')
   }
+  if (
+    idx.includes('ConhecimentoFileItem') &&
+    idx.includes('guessMime') &&
+    idx.includes('supportsTranslation') &&
+    exists('app/modules/conhecimento-tecnico/fileItem.ts')
+  ) {
+    ok('módulo conhecimento-tecnico exporta ConhecimentoFileItem')
+  } else {
+    fail('módulo conhecimento-tecnico sem ConhecimentoFileItem')
+  }
+  const fileViewer = fs.readFileSync(path.join(root, 'app/components/ConhecimentoFileViewer.tsx'), 'utf8')
+  if (
+    (fileViewer.includes("from '../modules/conhecimento-tecnico'") ||
+      fileViewer.includes('from "../modules/conhecimento-tecnico"')) &&
+    fileViewer.includes('guessMime') &&
+    !fileViewer.includes('export type ConhecimentoFileItem = {')
+  ) {
+    ok('ConhecimentoFileViewer usa ConhecimentoFileItem do módulo')
+  } else {
+    fail('ConhecimentoFileViewer ainda define ConhecimentoFileItem no sítio')
+  }
+  const manuaisFile = fs.readFileSync(path.join(root, 'app/components/ManuaisInformacoesContent.tsx'), 'utf8')
+  if (
+    (manuaisFile.includes("from '../modules/conhecimento-tecnico'") ||
+      manuaisFile.includes('from "../modules/conhecimento-tecnico"')) &&
+    manuaisFile.includes('ConhecimentoFileItem')
+  ) {
+    ok('ManuaisInformacoesContent usa ConhecimentoFileItem do módulo')
+  } else {
+    fail('ManuaisInformacoesContent ainda importa ConhecimentoFileItem do viewer')
+  }
 } catch (e) {
   fail(`módulo conhecimento-tecnico: ${e.message}`)
 }

@@ -28,3 +28,14 @@ export {
   isConhecimentoTecnicoFormValid,
   createConhecimentoTecnicoFromForm,
 } from './fromForm'
+
+export type { ConhecimentoFileItem } from './fileItem'
+export {
+  guessMime,
+  isPdf,
+  isImage,
+  isTextLike,
+  isWord,
+  isZip,
+  supportsTranslation,
+} from './fileItem'

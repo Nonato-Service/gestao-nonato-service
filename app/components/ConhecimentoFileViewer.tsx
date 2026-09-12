@@ -3,14 +3,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWritingAssistField } from '../context/WritingAssistFieldContext'
 import { ManuaisZipExplorer } from './ManuaisZipExplorer'
+import {
+  guessMime,
+  isImage,
+  isPdf,
+  isTextLike,
+  isWord,
+  isZip,
+  supportsTranslation,
+  type ConhecimentoFileItem,
+} from '../modules/conhecimento-tecnico'
 
-export type ConhecimentoFileItem = {
-  id: string
-  nome: string
-  dataUrl: string
-  mime?: string
-  tipo?: string
-}
+export type { ConhecimentoFileItem }
 
 type Props = {
   items: ConhecimentoFileItem[]
@@ -22,50 +26,6 @@ type Props = {
   accept?: string
   /** Permite escolher vários ficheiros de uma vez (predefinido: sim). */
   multiple?: boolean
-}
-
-function guessMime(nome: string, mime?: string, tipo?: string): string {
-  if (mime && mime !== 'application/octet-stream') return mime
-  if (tipo && tipo !== 'application/octet-stream') return tipo
-  const n = nome.toLowerCase()
-  if (n.endsWith('.pdf')) return 'application/pdf'
-  if (n.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  if (n.endsWith('.doc')) return 'application/msword'
-  if (n.endsWith('.txt')) return 'text/plain'
-  if (n.endsWith('.md')) return 'text/markdown'
-  if (n.endsWith('.json')) return 'application/json'
-  if (n.endsWith('.csv')) return 'text/csv'
-  if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(n)) return 'image/*'
-  return mime || tipo || 'application/octet-stream'
-}
-
-function isPdf(m: string, nome: string) {
-  return m === 'application/pdf' || nome.toLowerCase().endsWith('.pdf')
-}
-function isImage(m: string, nome: string) {
-  return m.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(nome)
-}
-function isTextLike(m: string, nome: string) {
-  return (
-    m.startsWith('text/') ||
-    m === 'application/json' ||
-    /\.(txt|md|csv|json|log|xml|html?)$/i.test(nome)
-  )
-}
-function isWord(m: string, nome: string) {
-  return (
-    m.includes('wordprocessingml') ||
-    m === 'application/msword' ||
-    /\.(docx?|rtf)$/i.test(nome)
-  )
-}
-
-function isZip(m: string, nome: string) {
-  return m === 'application/zip' || m === 'application/x-zip-compressed' || /\.zip$/i.test(nome)
-}
-
-function supportsTranslation(m: string, nome: string) {
-  return isPdf(m, nome) || isTextLike(m, nome) || isWord(m, nome)
 }
 
 async function loadTextContent(item: ConhecimentoFileItem): Promise<string> {

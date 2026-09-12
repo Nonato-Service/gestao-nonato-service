@@ -38,7 +38,8 @@ import {
 import { AssistTextarea } from './AssistTextFields'
 import { saveKv, saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
-import { ConhecimentoFileViewer, ConhecimentoFileItem } from './ConhecimentoFileViewer'
+import { ConhecimentoFileViewer } from './ConhecimentoFileViewer'
+import type { ConhecimentoFileItem } from '../modules/conhecimento-tecnico'
 
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
