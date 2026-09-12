@@ -13,25 +13,16 @@ import {
   type ServicoCadastroGrupo,
   type ServicoCadastroItem,
 } from '../lib/servicosCadastroUtils'
+import {
+  emptyServicoCadastroFormState,
+  type CadastroServicoSavePayload,
+  type ServicoCadastroFormState,
+} from '../modules/fechamento'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 
 type TabId = 'grupos' | 'matriz' | 'listar'
 
-type ServicoFormDraft = {
-  cod: string
-  nome: string
-  descricao: string
-  valor: number
-  grupoId: string
-  tipoCobranca: ServicoCadastroItem['tipoCobranca']
-  categoria: ServicoCadastroItem['categoria']
-}
-
-/** Mantido para compat com handleSaveServico (payload opcional). */
-export type CadastroServicoSavePayload = {
-  form: ServicoFormDraft
-  valorInput: string
-}
+export type { CadastroServicoSavePayload }
 
 type Props = {
   servicoGrupos: ServicoCadastroGrupo[]
@@ -53,8 +44,8 @@ type Props = {
   setShowServicoForm: (v: boolean) => void
   editingServico: ServicoCadastroItem | null
   setEditingServico: (v: ServicoCadastroItem | null) => void
-  servicoForm: ServicoFormDraft
-  setServicoForm: React.Dispatch<React.SetStateAction<ServicoFormDraft>>
+  servicoForm: ServicoCadastroFormState
+  setServicoForm: React.Dispatch<React.SetStateAction<ServicoCadastroFormState>>
   servicoValorInput: string
   setServicoValorInput: (v: string) => void
   servicoGrupoIdPadrao: () => string
@@ -98,15 +89,7 @@ function ServicoFormBlock(props: Pick<
     onResetServicoForm,
   } = props
 
-  const form = servicoForm || {
-    cod: '',
-    nome: '',
-    descricao: '',
-    valor: 0,
-    grupoId: '',
-    tipoCobranca: 'valor-fixo' as ServicoCadastroItem['tipoCobranca'],
-    categoria: 'servico' as ServicoCadastroItem['categoria'],
-  }
+  const form = servicoForm || emptyServicoCadastroFormState({ tipoCobranca: 'valor-fixo' })
   const gruposOpts = useMemo(() => ordenarServicoGrupos(servicoGrupos || []), [servicoGrupos])
 
   return (

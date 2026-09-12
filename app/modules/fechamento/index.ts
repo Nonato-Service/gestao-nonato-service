@@ -44,7 +44,7 @@ export type {
   ServicoCadastroCategoria,
 } from './servicoCadastroTipos'
 
-export type { ServicoCadastroFormState } from './servicoCadastroForm'
+export type { ServicoCadastroFormState, CadastroServicoSavePayload } from './servicoCadastroForm'
 export { emptyServicoCadastroFormState, servicoCadastroToFormState } from './servicoCadastroForm'
 
 export {

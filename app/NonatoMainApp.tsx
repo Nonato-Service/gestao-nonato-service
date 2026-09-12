@@ -874,6 +874,7 @@ import {
   mesclarComprovantesEmItensFechamento,
   emptyServicoCadastroFormState,
   servicoCadastroToFormState,
+  type CadastroServicoSavePayload,
   isServicoCadastroFormValid,
   resolverGrupoIdServicoCadastro,
   createServicoCadastroFromForm,
@@ -12667,10 +12668,7 @@ export default function Dashboard() {
     setShowServicoForm(true)
   }
 
-  const handleSaveServico = async (payload?: {
-    form?: typeof servicoForm
-    valorInput?: string
-  }) => {
+  const handleSaveServico = async (payload?: Partial<CadastroServicoSavePayload>) => {
     /** Ignorar SyntheticEvent de onClick={handleSaveServico} no modal legado. */
     const fromDraft =
       payload &&

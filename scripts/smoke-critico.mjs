@@ -290,6 +290,28 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ServicoCadastroGrupo no sítio')
   }
+  if (idx.includes('CadastroServicoSavePayload')) {
+    ok('módulo fechamento exporta CadastroServicoSavePayload')
+  } else {
+    fail('módulo fechamento sem CadastroServicoSavePayload')
+  }
+  const cadServ = fs.readFileSync(path.join(root, 'app/components/CadastroServicosContent.tsx'), 'utf8')
+  if (
+    (cadServ.includes("from '../modules/fechamento'") || cadServ.includes('from "../modules/fechamento"')) &&
+    cadServ.includes('ServicoCadastroFormState') &&
+    cadServ.includes('emptyServicoCadastroFormState') &&
+    !cadServ.includes('type ServicoFormDraft = {') &&
+    !cadServ.includes('export type CadastroServicoSavePayload = {')
+  ) {
+    ok('CadastroServicosContent usa ServicoCadastroFormState do módulo fechamento')
+  } else {
+    fail('CadastroServicosContent ainda define ServicoFormDraft/payload no sítio')
+  }
+  if (nma.includes('Partial<CadastroServicoSavePayload>')) {
+    ok('NonatoMainApp usa CadastroServicoSavePayload do módulo fechamento')
+  } else {
+    fail('NonatoMainApp ainda tipa handleSaveServico no sítio')
+  }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)
 }

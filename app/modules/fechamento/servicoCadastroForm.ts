@@ -31,6 +31,12 @@ export function emptyServicoCadastroFormState(
   }
 }
 
+/** Payload opcional do ecrã de cadastro → handleSaveServico. */
+export type CadastroServicoSavePayload = {
+  form: ServicoCadastroFormState
+  valorInput: string
+}
+
 export function servicoCadastroToFormState(servico: ServicoCadastroItem): ServicoCadastroFormState {
   return {
     cod: servico.cod || '',
