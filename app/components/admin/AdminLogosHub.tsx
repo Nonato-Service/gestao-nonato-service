@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../../lib/listaUiLote'
 import { NonatoBrandLogo } from '../NonatoBrandLogo'
-import { NONATO_BRAND_VARIANT_LABELS } from '../../modules/admin'
+import { NONATO_BRAND_VARIANT_LABELS, resolveLogoLabel } from '../../modules/admin'
 import {
   PDF_LOGO_SITUATIONS,
   pdfLogoSituationAccent,
@@ -63,11 +63,6 @@ export type AdminLogosHubProps = {
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
   return (safeT as Record<string, string | undefined>)[key] || fallback
-}
-
-function resolveLogoLabel(selectedId: string, logosRelatorios: LogoRelatorio[], safeT: SafeT): string {
-  if (!selectedId) return safeT.logoPrincipal || 'Logo principal (barra lateral)'
-  return logosRelatorios.find((l) => l.id === selectedId)?.name || selectedId
 }
 
 function InterfaceLogoPanel({

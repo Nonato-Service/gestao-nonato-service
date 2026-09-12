@@ -2957,7 +2957,8 @@ try {
   if (
     idx.includes('LogoRelatorio') &&
     idx.includes('parseLogosRelatoriosArr') &&
-    idx.includes('preferRicherLogosRelatorios')
+    idx.includes('preferRicherLogosRelatorios') &&
+    idx.includes('resolveLogoLabel')
   ) {
     ok('módulo admin exporta logosRelatorio')
   } else {
@@ -3066,6 +3067,20 @@ try {
     ok('adminTypes re-exporta LogoRelatorio do módulo admin')
   } else {
     fail('adminTypes não re-exporta LogoRelatorio do módulo admin')
+  }
+  const logosHubLabelUi = fs.readFileSync(path.join(root, 'app/components/admin/AdminLogosHub.tsx'), 'utf8')
+  const logosSitLabelUi = fs.readFileSync(path.join(root, 'app/components/admin/AdminPdfLogosBySituation.tsx'), 'utf8')
+  const logosRelSrc = fs.readFileSync(path.join(root, 'app/modules/admin/logosRelatorio.ts'), 'utf8')
+  if (
+    logosRelSrc.includes('export function resolveLogoLabel(') &&
+    logosHubLabelUi.includes('resolveLogoLabel') &&
+    logosSitLabelUi.includes('resolveLogoLabel') &&
+    !logosHubLabelUi.includes('function resolveLogoLabel(') &&
+    !logosSitLabelUi.includes('function resolveLogoLabel(')
+  ) {
+    ok('AdminLogosHub/AdminPdfLogosBySituation usam resolveLogoLabel do módulo')
+  } else {
+    fail('resolveLogoLabel ainda definido nos componentes de logos')
   }
   if (
     adminTypes.includes("from '../../modules/admin/userTipos'") ||

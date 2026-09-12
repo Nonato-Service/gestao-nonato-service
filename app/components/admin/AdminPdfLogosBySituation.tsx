@@ -6,6 +6,7 @@ import {
   PDF_LOGO_SITUATIONS,
   type PdfLogoSituationId,
 } from '../../lib/adminPdfLogoSituations'
+import { resolveLogoLabel } from '../../modules/admin'
 import type { LogoRelatorio, SafeT } from './adminTypes'
 
 export type AdminPdfLogosBySituationProps = {
@@ -38,16 +39,6 @@ export type AdminPdfLogosBySituationProps = {
   adminBibliotecaLogoSaving: boolean
   commitAdminBibliotecaLogoDraft: () => void | Promise<void>
   discardAdminBibliotecaLogoDraft: () => void
-}
-
-function resolveLogoLabel(
-  selectedId: string,
-  logosRelatorios: LogoRelatorio[],
-  tr: SafeT
-): string {
-  if (!selectedId) return tr.logoPrincipal || 'Logo principal (barra lateral)'
-  const item = logosRelatorios.find((l) => l.id === selectedId)
-  return item?.name || selectedId
 }
 
 function LogoPreviewBox({

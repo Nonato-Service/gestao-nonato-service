@@ -22,8 +22,8 @@ export {
   updatePasswordFromForm,
 } from './passwordFromForm'
 
-export type { LogoRelatorio } from './logosRelatorio'
-export { parseLogosRelatoriosArr, preferRicherLogosRelatorios } from './logosRelatorio'
+export type { LogoRelatorio, LogoRelatorioLabelSource } from './logosRelatorio'
+export { parseLogosRelatoriosArr, preferRicherLogosRelatorios, resolveLogoLabel } from './logosRelatorio'
 
 export type { AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from './logoDrafts'
 

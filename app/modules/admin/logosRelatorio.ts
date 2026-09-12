@@ -32,3 +32,16 @@ export function preferRicherLogosRelatorios(
   if (!current || candidate.length > current.length) return candidate
   return current
 }
+
+export type LogoRelatorioLabelSource = {
+  logoPrincipal?: string
+}
+
+export function resolveLogoLabel(
+  selectedId: string,
+  logosRelatorios: LogoRelatorio[],
+  labels: LogoRelatorioLabelSource
+): string {
+  if (!selectedId) return labels.logoPrincipal || 'Logo principal (barra lateral)'
+  return logosRelatorios.find((l) => l.id === selectedId)?.name || selectedId
+}
