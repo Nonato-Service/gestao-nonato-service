@@ -6,8 +6,10 @@ import { NonatoBrandLogo } from '../NonatoBrandLogo'
 import { NONATO_BRAND_VARIANT_LABELS } from '../../modules/admin'
 import {
   PDF_LOGO_SITUATIONS,
+  pdfLogoSituationAccent,
+  resolvePdfLogoSituation,
   type PdfLogoSituationId,
-} from '../../lib/adminPdfLogoSituations'
+} from '../../modules/pdf'
 import type {
   AdminBibliotecaLogoDraft,
   AdminInterfaceLogoDraft,
@@ -57,18 +59,6 @@ export type AdminLogosHubProps = {
   administradorAddBibliotecaLogo: (e: React.ChangeEvent<HTMLInputElement>) => void
   commitAdminBibliotecaLogoDraft: () => void | Promise<void>
   discardAdminBibliotecaLogoDraft: () => void
-}
-
-const PDF_ACCENT: Record<PdfLogoSituationId, string> = {
-  relatorios: 'green',
-  fechamentos: 'amber',
-  orcamentoPecas: 'blue',
-  orcamentoServico: 'cyan',
-  documentos: 'indigo',
-  protocolos: 'violet',
-  checklist: 'teal',
-  preChecklist: 'rose',
-  checklistBasico: 'lime',
 }
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
@@ -334,7 +324,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
     [getSelectedLogoIdForSituation]
   )
 
-  const activeSitDef = PDF_LOGO_SITUATIONS.find((s) => s.id === activePdfSituation) || PDF_LOGO_SITUATIONS[0]
+  const activeSitDef = resolvePdfLogoSituation(activePdfSituation)
   const activeSelectedId = pdfLogosModoUnificado
     ? getSelectedLogoIdForSituation('relatorios')
     : selectedBySituation[activePdfSituation]
@@ -523,7 +513,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
                       <li key={sit.id}>
                         <button
                           type="button"
-                          className={`admin-logos-hub-pdf-nav__item admin-logos-hub-pdf-nav__item--${PDF_ACCENT[sit.id]}${
+                          className={`admin-logos-hub-pdf-nav__item admin-logos-hub-pdf-nav__item--${pdfLogoSituationAccent(sit.id)}${
                             activePdfSituation === sit.id ? ' admin-logos-hub-pdf-nav__item--active' : ''
                           }`}
                           onClick={() => setActivePdfSituation(sit.id)}
@@ -553,7 +543,7 @@ export function AdminLogosHub(props: AdminLogosHubProps) {
                 icon={activeSitDef.icon}
                 title={tr(safeT, activeSitDef.titleKey, activeSitDef.titleFallback)}
                 description={tr(safeT, activeSitDef.descKey, activeSitDef.descFallback)}
-                accent={PDF_ACCENT[activeSitDef.id]}
+                accent={pdfLogoSituationAccent(activeSitDef.id)}
                 selectedId={selectedBySituation[activeSitDef.id]}
                 includeToggle={activeSitDef.includeToggle}
                 includeChecked={

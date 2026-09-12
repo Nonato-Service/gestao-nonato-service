@@ -1,7 +1,4 @@
-import {
-  PDF_LOGO_SITUATIONS,
-  type PdfLogoSituationId,
-} from '../../lib/adminPdfLogoSituations'
+import { PDF_LOGO_SITUATIONS, type PdfLogoSituationId } from './logoSituations'
 
 export type LogoRelatorioLike = {
   id: string

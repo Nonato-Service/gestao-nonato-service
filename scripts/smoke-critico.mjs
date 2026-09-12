@@ -2735,6 +2735,33 @@ try {
   } else {
     fail('NonatoMainApp ainda define resolução de logos PDF localmente')
   }
+  if (
+    idx.includes('PdfLogoSituationId') &&
+    idx.includes('PDF_LOGO_SITUATIONS') &&
+    idx.includes('pdfLogoSituationAccent') &&
+    idx.includes('resolvePdfLogoSituation') &&
+    exists('app/modules/pdf/logoSituations.ts')
+  ) {
+    ok('módulo pdf exporta PdfLogoSituationId')
+  } else {
+    fail('módulo pdf sem logoSituations')
+  }
+  const logosSrc = fs.readFileSync(path.join(root, 'app/modules/pdf/logos.ts'), 'utf8')
+  const libSit = fs.readFileSync(path.join(root, 'app/lib/adminPdfLogoSituations.ts'), 'utf8')
+  const logosHub = fs.readFileSync(path.join(root, 'app/components/admin/AdminLogosHub.tsx'), 'utf8')
+  if (
+    logosSrc.includes("from './logoSituations'") &&
+    !logosSrc.includes("from '../../lib/adminPdfLogoSituations'") &&
+    libSit.includes("from '../modules/pdf/logoSituations'") &&
+    !libSit.includes('export type PdfLogoSituationId =') &&
+    logosHub.includes('pdfLogoSituationAccent') &&
+    logosHub.includes('resolvePdfLogoSituation') &&
+    !logosHub.includes('const PDF_ACCENT')
+  ) {
+    ok('lib/AdminLogosHub usam logoSituations do módulo pdf')
+  } else {
+    fail('PdfLogoSituation ainda definido em lib ou AdminLogosHub')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }
