@@ -2,10 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from '../lib/mymemory-translate'
+import {
+  formatWritingAssistResultLabel,
+  resolveWritingAssistNativeLang,
+  type WritingAssistLangOption,
+} from '../modules/tradutor'
 
 const STORAGE_NATIVE = 'nonato-writing-native-lang'
 
-export type WritingAssistLangOption = { code: string; name: string; flag: string }
+export type { WritingAssistLangOption }
 
 type Labels = {
   title: string
@@ -65,11 +70,7 @@ export function WritingLanguageAssistModal({
     if (!open) return
     try {
       const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_NATIVE) : null
-      if (saved && languageOptions.some((o) => o.code === saved)) {
-        setWroteIn(saved)
-      } else {
-        setWroteIn('pt-BR')
-      }
+      setWroteIn(resolveWritingAssistNativeLang(saved, languageOptions))
     } catch {
       setWroteIn('pt-BR')
     }
@@ -120,15 +121,15 @@ export function WritingLanguageAssistModal({
     }
   }, [labels.copiedToClipboard, labels.copyToClipboard])
 
-  const baseLabel = useMemo(() => {
-    const o = languageOptions.find((x) => x.code === wroteIn)
-    return `${labels.resultBase}${o ? ` (${o.flag} ${o.name})` : ''}`
-  }, [languageOptions, wroteIn, labels.resultBase])
+  const baseLabel = useMemo(
+    () => formatWritingAssistResultLabel(languageOptions, wroteIn, labels.resultBase),
+    [languageOptions, wroteIn, labels.resultBase]
+  )
 
-  const targetLabel = useMemo(() => {
-    const o = languageOptions.find((x) => x.code === needIn)
-    return `${labels.resultTranslated}${o ? ` (${o.flag} ${o.name})` : ''}`
-  }, [languageOptions, needIn, labels.resultTranslated])
+  const targetLabel = useMemo(
+    () => formatWritingAssistResultLabel(languageOptions, needIn, labels.resultTranslated),
+    [languageOptions, needIn, labels.resultTranslated]
+  )
 
   if (!open) return null
 

@@ -18,3 +18,11 @@ export {
   isTranslatorLibraryFormValid,
   createTranslatorLibraryFromForm,
 } from './fromForm'
+
+export type { WritingAssistLangOption } from './writingAssist'
+export {
+  findWritingAssistLang,
+  writingAssistHasLang,
+  resolveWritingAssistNativeLang,
+  formatWritingAssistResultLabel,
+} from './writingAssist'

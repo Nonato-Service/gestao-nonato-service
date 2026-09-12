@@ -3341,6 +3341,27 @@ try {
   } else {
     fail('lib/translatorLibraryTypes não re-exporta o módulo tradutor')
   }
+  if (
+    idx.includes('WritingAssistLangOption') &&
+    idx.includes('formatWritingAssistResultLabel') &&
+    idx.includes('resolveWritingAssistNativeLang') &&
+    exists('app/modules/tradutor/writingAssist.ts')
+  ) {
+    ok('módulo tradutor exporta WritingAssistLangOption')
+  } else {
+    fail('módulo tradutor sem writingAssist')
+  }
+  const writingAssist = fs.readFileSync(path.join(root, 'app/components/WritingLanguageAssistModal.tsx'), 'utf8')
+  if (
+    (writingAssist.includes("from '../modules/tradutor'") || writingAssist.includes('from "../modules/tradutor"')) &&
+    writingAssist.includes('formatWritingAssistResultLabel') &&
+    writingAssist.includes('resolveWritingAssistNativeLang') &&
+    !writingAssist.includes('export type WritingAssistLangOption = {')
+  ) {
+    ok('WritingLanguageAssistModal usa WritingAssist do módulo tradutor')
+  } else {
+    fail('WritingLanguageAssistModal ainda define WritingAssistLangOption no sítio')
+  }
 } catch (e) {
   fail(`módulo tradutor: ${e.message}`)
 }
