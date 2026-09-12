@@ -3100,6 +3100,31 @@ try {
   } else {
     fail('GestoresTecnicosPanel ainda define GestoresTecnicosLabels no sítio')
   }
+  if (
+    idx.includes('GestorItem') &&
+    idx.includes('TecnicoItem') &&
+    idx.includes('formatGestorItemOption') &&
+    idx.includes('formatTecnicoItemOption') &&
+    exists('app/modules/pessoas/gestorTecnicoItem.ts')
+  ) {
+    ok('módulo pessoas exporta GestorItem/TecnicoItem')
+  } else {
+    fail('módulo pessoas sem GestorItem/TecnicoItem')
+  }
+  const adminTypesSrc = fs.readFileSync(path.join(root, 'app/components/admin/adminTypes.ts'), 'utf8')
+  const userFormPanel = fs.readFileSync(path.join(root, 'app/components/admin/AdminUserFormPanel.tsx'), 'utf8')
+  if (
+    adminTypesSrc.includes("from '../../modules/pessoas/gestorTecnicoItem'") &&
+    !adminTypesSrc.includes('export type GestorItem = {') &&
+    !adminTypesSrc.includes('export type TecnicoItem = {') &&
+    (userFormPanel.includes("from '../../modules/pessoas'") || userFormPanel.includes('from "../../modules/pessoas"')) &&
+    userFormPanel.includes('formatGestorItemOption') &&
+    userFormPanel.includes('formatTecnicoItemOption')
+  ) {
+    ok('AdminUserFormPanel usa GestorItem do módulo pessoas')
+  } else {
+    fail('GestorItem/TecnicoItem ainda definidos em adminTypes ou sem format no painel')
+  }
 } catch (e) {
   fail(`módulo pessoas: ${e.message}`)
 }

@@ -10,6 +10,7 @@ import {
   setModuleMenuItems,
   syncLegacyPermissionsFromMenuItems,
 } from '../../lib/sidebarMenuPermissions'
+import { formatGestorItemOption, formatTecnicoItemOption } from '../../modules/pessoas'
 import type { GestorItem, SafeT, TecnicoItem, User, UserFormState } from './adminTypes'
 
 function tr(safeT: SafeT, key: string, fallback: string): string {
@@ -142,18 +143,16 @@ export function AdminUserFormPanel({
               {userForm.linkedProfileType === 'gestor'
                 ? gestores.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {`${item.name} (${item.area || '-'})`}
+                      {formatGestorItemOption(item)}
                     </option>
                   ))
                 : tecnicos.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {`${item.name} (${
-                        item.type === 'internal'
-                          ? safeT?.tecnicoInterno || 'Interno'
-                          : item.type === 'external'
-                            ? safeT?.tecnicoExterno || 'Externo'
-                            : safeT?.armazem || 'Armazém'
-                      })`}
+                      {formatTecnicoItemOption(item, {
+                        interno: safeT?.tecnicoInterno || 'Interno',
+                        externo: safeT?.tecnicoExterno || 'Externo',
+                        armazem: safeT?.armazem || 'Armazém',
+                      })}
                     </option>
                   ))}
             </select>

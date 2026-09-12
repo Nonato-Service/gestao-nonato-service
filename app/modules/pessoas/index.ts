@@ -47,3 +47,10 @@ export { getGestorClasse, getTecnicoClasse, getTecnicoTipo } from './classes'
 
 export type { GestoresTecnicosLabels } from './gestoresTecnicosLabels'
 export { tipoTecnicoLabel, tipoTecnicoIcon } from './gestoresTecnicosLabels'
+
+export type { GestorItem, TecnicoItem, TecnicoItemTypeLabels } from './gestorTecnicoItem'
+export {
+  formatGestorItemOption,
+  formatTecnicoItemTypeLabel,
+  formatTecnicoItemOption,
+} from './gestorTecnicoItem'

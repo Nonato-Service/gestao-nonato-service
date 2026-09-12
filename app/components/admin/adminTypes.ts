@@ -10,8 +10,7 @@ export type { User, UserPermissions } from '../../modules/admin/userTipos'
 
 export type { UserFormState } from '../../modules/admin/userFormState'
 
-export type GestorItem = { id: string; name: string; area?: string }
-export type TecnicoItem = { id: string; name: string; type?: 'internal' | 'external' | string }
+export type { GestorItem, TecnicoItem } from '../../modules/pessoas/gestorTecnicoItem'
 
 /** Subconjunto usado na secção administrador (compatível com o tipo em NonatoMainApp). */
 export type {
