@@ -2521,6 +2521,29 @@ try {
   } else {
     fail('NonatoMainApp ainda monta criacaoChecklistItemForm no sítio')
   }
+  if (
+    idx.includes('ChecklistBasicoInstancia') &&
+    idx.includes('CHECKLIST_BASICO_STORAGE_KEY') &&
+    idx.includes('newChecklistBasicoId') &&
+    exists('app/modules/checklist/basicoTipos.ts')
+  ) {
+    ok('módulo checklist exporta ChecklistBasicoInstancia')
+  } else {
+    fail('módulo checklist sem basicoTipos')
+  }
+  const libBasico = fs.readFileSync(path.join(root, 'app/lib/checklistBasicoTypes.ts'), 'utf8')
+  const ckBasicoUi = fs.readFileSync(path.join(root, 'app/components/ChecklistBasicoContent.tsx'), 'utf8')
+  if (
+    libBasico.includes("from '../modules/checklist/basicoTipos'") &&
+    !libBasico.includes('export type ChecklistBasicoInstancia = {') &&
+    (ckBasicoUi.includes("from '../modules/checklist'") || ckBasicoUi.includes('from "../modules/checklist"')) &&
+    ckBasicoUi.includes('ChecklistBasicoInstancia') &&
+    ckBasicoUi.includes('newChecklistBasicoId')
+  ) {
+    ok('ChecklistBasicoContent usa tipos do módulo checklist')
+  } else {
+    fail('ChecklistBasico ainda definido em lib ou no componente')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

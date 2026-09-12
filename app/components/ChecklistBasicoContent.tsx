@@ -16,7 +16,7 @@ import {
   ChecklistBasicoItem,
   ChecklistBasicoItemStatus,
   newChecklistBasicoId,
-} from '../lib/checklistBasicoTypes'
+} from '../modules/checklist'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 

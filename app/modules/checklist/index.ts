@@ -85,3 +85,12 @@ export {
   isCriacaoChecklistItemFormValid,
   createItemTrabalhoCriacaoFromForm,
 } from './itemTrabalhoFromForm'
+
+export type {
+  ChecklistBasicoItemStatus,
+  ChecklistBasicoItem,
+  ChecklistBasicoGrupo,
+  ChecklistBasicoEquipamentoInfo,
+  ChecklistBasicoInstancia,
+} from './basicoTipos'
+export { CHECKLIST_BASICO_STORAGE_KEY, newChecklistBasicoId } from './basicoTipos'
