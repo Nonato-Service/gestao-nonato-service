@@ -551,6 +551,36 @@ try {
     fail('ClienteDetalheView ainda define ClienteDetalheData no sítio')
   }
   if (
+    idx.includes('DocumentoEnvioClienteConfig') &&
+    idx.includes('AbrirEnvioDocumentoClienteOpts') &&
+    idx.includes('buildDocumentoEnvioClienteConfig') &&
+    exists('app/modules/clientes/envioDocumento.ts')
+  ) {
+    ok('módulo clientes exporta envio de documento ao cliente')
+  } else {
+    fail('módulo clientes sem envioDocumento')
+  }
+  const envioModal = fs.readFileSync(path.join(root, 'app/components/DocumentoEnvioClienteModal.tsx'), 'utf8')
+  if (
+    (envioModal.includes("from '../modules/clientes'") || envioModal.includes('from "../modules/clientes"')) &&
+    envioModal.includes('DocumentoEnvioClienteConfig') &&
+    !envioModal.includes('export type DocumentoEnvioClienteConfig = {')
+  ) {
+    ok('DocumentoEnvioClienteModal usa DocumentoEnvioClienteConfig do módulo clientes')
+  } else {
+    fail('DocumentoEnvioClienteModal ainda define DocumentoEnvioClienteConfig no sítio')
+  }
+  const envioCtx = fs.readFileSync(path.join(root, 'app/context/DocumentoEnvioClienteContext.tsx'), 'utf8')
+  if (
+    (envioCtx.includes("from '../modules/clientes'") || envioCtx.includes('from "../modules/clientes"')) &&
+    envioCtx.includes('buildDocumentoEnvioClienteConfig') &&
+    !envioCtx.includes('export type AbrirEnvioDocumentoClienteOpts = {')
+  ) {
+    ok('DocumentoEnvioClienteContext usa buildDocumentoEnvioClienteConfig do módulo')
+  } else {
+    fail('DocumentoEnvioClienteContext ainda define AbrirEnvioDocumentoClienteOpts no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&

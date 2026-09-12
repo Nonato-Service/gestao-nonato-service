@@ -10,24 +10,16 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from 'react'
+import { DocumentoEnvioClienteModal } from '../components/DocumentoEnvioClienteModal'
 import {
-  DocumentoEnvioClienteModal,
+  buildDocumentoEnvioClienteConfig,
+  type AbrirEnvioDocumentoClienteOpts,
   type DocumentoEnvioClienteConfig,
-} from '../components/DocumentoEnvioClienteModal'
+} from '../modules/clientes'
 import { findClienteParaEnvio } from '../lib/clienteContactEnvio'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 
-export type AbrirEnvioDocumentoClienteOpts = {
-  title?: string
-  subject: string
-  body: string
-  clienteId?: string
-  clienteNome?: string
-  relatorio?: { clienteId?: string; cliente?: string }
-  defaultChannel?: 'email' | 'whatsapp'
-  pdfHint?: string
-  onOpenPdf?: () => void
-}
+export type { AbrirEnvioDocumentoClienteOpts, DocumentoEnvioClienteConfig }
 
 type AbrirEnvioFn = (opts: AbrirEnvioDocumentoClienteOpts) => void
 
@@ -60,15 +52,7 @@ export function DocumentoEnvioClienteProvider({
       clienteNome: opts.clienteNome,
       relatorio: opts.relatorio,
     })
-    setConfig({
-      title: opts.title,
-      subject: opts.subject,
-      body: opts.body,
-      initialClienteId: c?.id ?? opts.clienteId,
-      defaultChannel: opts.defaultChannel,
-      pdfHint: opts.pdfHint,
-      onOpenPdf: opts.onOpenPdf,
-    })
+    setConfig(buildDocumentoEnvioClienteConfig(opts, c?.id))
     setOpen(true)
   }, [])
 

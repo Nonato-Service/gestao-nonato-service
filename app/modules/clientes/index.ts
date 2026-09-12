@@ -37,6 +37,13 @@ export {
   ordenarNomesClientes,
 } from './ordenar'
 
+export type {
+  DocumentoEnvioCanal,
+  DocumentoEnvioClienteConfig,
+  AbrirEnvioDocumentoClienteOpts,
+} from './envioDocumento'
+export { buildDocumentoEnvioClienteConfig } from './envioDocumento'
+
 export type { ClienteListaLinhasData, ClienteIdentidadeTexto } from './listaLinhas'
 export { formatNifClienteExibicao, buildClienteInfAdicional, formatClienteIdentidadeTexto } from './listaLinhas'
 

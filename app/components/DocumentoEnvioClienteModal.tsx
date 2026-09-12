@@ -9,16 +9,9 @@ import {
   buildWhatsAppUrl,
   prefillContactFromCliente,
 } from '../lib/clienteContactEnvio'
+import type { DocumentoEnvioClienteConfig } from '../modules/clientes'
 
-export type DocumentoEnvioClienteConfig = {
-  title?: string
-  subject: string
-  body: string
-  initialClienteId?: string
-  defaultChannel?: 'email' | 'whatsapp'
-  pdfHint?: string
-  onOpenPdf?: () => void
-}
+export type { DocumentoEnvioClienteConfig }
 
 type Props = {
   open: boolean
