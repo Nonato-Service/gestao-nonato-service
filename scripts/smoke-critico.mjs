@@ -586,6 +586,27 @@ try {
     fail('DocumentoEnvioClienteContext ainda define AbrirEnvioDocumentoClienteOpts no sítio')
   }
   if (
+    idx.includes('ClienteAlfabetoPickerLabels') &&
+    idx.includes('ClienteAlfabetoPickerAction') &&
+    idx.includes('formatClienteAlfabetoPickerMeta') &&
+    exists('app/modules/clientes/alfabetoPicker.ts')
+  ) {
+    ok('módulo clientes exporta picker A–Z de clientes')
+  } else {
+    fail('módulo clientes sem alfabetoPicker')
+  }
+  const alfaPicker = fs.readFileSync(path.join(root, 'app/components/ClienteAlfabetoPicker.tsx'), 'utf8')
+  if (
+    (alfaPicker.includes("from '../modules/clientes'") || alfaPicker.includes('from "../modules/clientes"')) &&
+    alfaPicker.includes('formatClienteAlfabetoPickerMeta') &&
+    !alfaPicker.includes('export type ClienteAlfabetoPickerLabels = {') &&
+    !alfaPicker.includes('export type ClienteAlfabetoPickerAction = {')
+  ) {
+    ok('ClienteAlfabetoPicker usa tipos/meta do módulo clientes')
+  } else {
+    fail('ClienteAlfabetoPicker ainda define tipos/meta no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&

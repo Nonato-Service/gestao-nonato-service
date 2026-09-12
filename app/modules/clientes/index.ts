@@ -30,6 +30,13 @@ export {
   filtrarClientesPorLetraAlfabeto,
 } from './alfabeto'
 
+export type {
+  ClienteAlfabetoPickerLabels,
+  ClienteAlfabetoPickerAction,
+  ClienteAlfabetoPickerMetaOpts,
+} from './alfabetoPicker'
+export { formatClienteAlfabetoPickerMeta } from './alfabetoPicker'
+
 export {
   cmpNomeCliente,
   ordenarClientesPorNome,

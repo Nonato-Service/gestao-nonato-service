@@ -13,35 +13,13 @@ import { localeOrdenacaoClientes, ordenarClientesPorNome } from '../lib/ordenarC
 import { ClienteListaLinhas } from './ClienteListaLinhas'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { LISTA_UI_LOTE, limiteListaUi } from '../lib/listaUiLote'
+import {
+  formatClienteAlfabetoPickerMeta,
+  type ClienteAlfabetoPickerAction,
+  type ClienteAlfabetoPickerLabels,
+} from '../modules/clientes'
 
-export type ClienteAlfabetoPickerLabels = {
-  buscar?: string
-  nenhumEncontrado?: string
-  selecioneLetra?: string
-  prompt?: string
-  mostrando?: string
-  de?: string
-  clientes?: string
-  comInicial?: string
-  outros?: string
-  semClientesLetra?: string
-  indiceAz?: string
-  limpar?: string
-  cliente?: string
-  filtrados?: string
-  devedor?: string
-  toqueFiltrar?: string
-  expandirTodos?: string
-  retrairTodos?: string
-  carregarMais?: string
-}
-
-export type ClienteAlfabetoPickerAction = {
-  id: string
-  label: string
-  active?: boolean
-  onClick: () => void
-}
+export type { ClienteAlfabetoPickerAction, ClienteAlfabetoPickerLabels }
 
 type Props = {
   clientes: ClienteAlfabetoRow[]
@@ -174,15 +152,15 @@ export function ClienteAlfabetoPicker({
         </p>
       ) : (
         <div className="cliente-alfabeto-picker__meta">
-          {letraAtiva
-            ? `${countLetraAtiva} ${L.clientes || 'cliente(s)'} ${L.comInicial || 'com inicial'} «${
-                letraAtiva === '#' ? L.outros || 'Outros' : letraAtiva
-              }»${busca.trim() ? ` (${L.de || 'de'} ${clientesFiltrados.length} ${L.filtrados || 'filtrados'})` : ''}`
-            : buscaAtiva
-              ? `${clientesFiltrados.length} ${L.clientes || 'cliente(s)'} — «${busca.trim()}»`
-              : `${L.mostrando || 'Mostrando'} ${clientesFiltrados.length} ${L.de || 'de'} ${clientes.length} ${
-                  L.clientes || 'cliente(s)'
-                } — ${L.toqueFiltrar || 'toque numa letra para filtrar'}`}
+          {formatClienteAlfabetoPickerMeta({
+            labels: L,
+            letraAtiva,
+            countLetraAtiva,
+            busca,
+            buscaAtiva,
+            filtradosCount: clientesFiltrados.length,
+            totalCount: clientes.length,
+          })}
         </div>
       )}
 
