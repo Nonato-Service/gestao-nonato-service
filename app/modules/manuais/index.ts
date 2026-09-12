@@ -11,6 +11,8 @@ export type {
 export type {
   CreateManuaisGrupoFromFormOpts,
   CreateManuaisModeloFromFormOpts,
+  CreateManuaisDocumentoFromFormOpts,
+  CreateManuaisImagemFromFormOpts,
 } from './fromForm'
 export {
   newManuaisEntityId,
@@ -20,4 +22,9 @@ export {
   isManuaisModeloNomeValid,
   createManuaisModeloFromForm,
   updateManuaisModeloNomeFromForm,
+  resolveManuaisDocumentoTipo,
+  isManuaisDocumentoFormValid,
+  createManuaisDocumentoFromForm,
+  isManuaisImagemFormValid,
+  createManuaisImagemFromForm,
 } from './fromForm'

@@ -132,6 +132,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 112. `app/modules/comprovantes/` (formCompComClienteSugerido) — feito
 113. `app/modules/tradutor/` (isTranslatorLibraryFormValid / fromForm) — feito
 114. `app/modules/manuais/` (isManuaisGrupoNomeValid / isManuaisModeloNomeValid / fromForm) — feito
+115. `app/modules/manuais/` (createManuaisDocumentoFromForm / createManuaisImagemFromForm) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

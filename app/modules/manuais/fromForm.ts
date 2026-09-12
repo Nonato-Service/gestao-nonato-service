@@ -1,12 +1,12 @@
-/** Validação e mapeamento puro de grupo e modelo de manuais. */
+/** Validação e mapeamento puro de grupo, modelo, documento e imagem de manuais. */
 
-import type { ManuaisGrupo, ManuaisModelo } from './tipos'
+import type { ManuaisDocumento, ManuaisGrupo, ManuaisImagem, ManuaisModelo } from './tipos'
 
-export function newManuaisEntityId(prefix: string): string {
+export function newManuaisEntityId(prefix: string, suffix?: string | number): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
   }
-  return `${prefix}-${Date.now()}`
+  return suffix == null ? `${prefix}-${Date.now()}` : `${prefix}-${Date.now()}-${suffix}`
 }
 
 export function isManuaisGrupoNomeValid(nome: string): boolean {
@@ -57,4 +57,59 @@ export function createManuaisModeloFromForm(
 
 export function updateManuaisModeloNomeFromForm(existing: ManuaisModelo, nome: string): ManuaisModelo {
   return { ...existing, nome: nome.trim() }
+}
+
+export function resolveManuaisDocumentoTipo(fileName: string, mimeType?: string): string {
+  const mime = String(mimeType || '').trim()
+  if (mime) return mime
+  return /\.pdf$/i.test(fileName) ? 'application/pdf' : 'application/octet-stream'
+}
+
+export function isManuaisDocumentoFormValid(
+  form: Pick<ManuaisDocumento, 'nome' | 'dados'>
+): boolean {
+  return Boolean(form.nome && form.dados)
+}
+
+export type CreateManuaisDocumentoFromFormOpts = {
+  id?: string
+  idPrefix?: string
+  idSuffix?: string | number
+}
+
+export function createManuaisDocumentoFromForm(
+  form: Omit<ManuaisDocumento, 'id'>,
+  opts: CreateManuaisDocumentoFromFormOpts = {}
+): ManuaisDocumento {
+  const doc: ManuaisDocumento = {
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'doc', opts.idSuffix),
+    nome: form.nome,
+    tipo: form.tipo,
+    dados: form.dados,
+  }
+  if (form.caminhoRelativo) doc.caminhoRelativo = form.caminhoRelativo
+  if (form.secao) doc.secao = form.secao
+  return doc
+}
+
+export function isManuaisImagemFormValid(form: Pick<ManuaisImagem, 'nome' | 'dados'>): boolean {
+  return Boolean(form.nome && form.dados)
+}
+
+export type CreateManuaisImagemFromFormOpts = {
+  id?: string
+  idPrefix?: string
+}
+
+export function createManuaisImagemFromForm(
+  form: Omit<ManuaisImagem, 'id'>,
+  opts: CreateManuaisImagemFromFormOpts = {}
+): ManuaisImagem {
+  const img: ManuaisImagem = {
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'img'),
+    nome: form.nome,
+    dados: form.dados,
+  }
+  if (form.secao) img.secao = form.secao
+  return img
 }

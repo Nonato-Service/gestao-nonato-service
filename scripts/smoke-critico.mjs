@@ -2679,6 +2679,8 @@ try {
     idx.includes('createManuaisGrupoFromForm') &&
     idx.includes('isManuaisModeloNomeValid') &&
     idx.includes('createManuaisModeloFromForm') &&
+    idx.includes('createManuaisDocumentoFromForm') &&
+    idx.includes('createManuaisImagemFromForm') &&
     exists('app/modules/manuais/fromForm.ts')
   ) {
     ok('módulo manuais exporta grupo/modelo fromForm')
@@ -2690,7 +2692,9 @@ try {
     manuaisUi.includes('isManuaisGrupoNomeValid') &&
     manuaisUi.includes('createManuaisGrupoFromForm') &&
     manuaisUi.includes('isManuaisModeloNomeValid') &&
-    manuaisUi.includes('createManuaisModeloFromForm')
+    manuaisUi.includes('createManuaisModeloFromForm') &&
+    manuaisUi.includes('createManuaisDocumentoFromForm') &&
+    manuaisUi.includes('createManuaisImagemFromForm')
   ) {
     ok('ManuaisInformacoesContent usa Manuais fromForm do módulo')
   } else {

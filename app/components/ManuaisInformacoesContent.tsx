@@ -7,7 +7,6 @@ import {
   EquipamentoManuaisRef,
   ManuaisDocumento,
   ManuaisGrupo,
-  ManuaisImagem,
   ManuaisModelo,
 } from '../lib/manuaisTypes'
 import {
@@ -17,6 +16,9 @@ import {
   isManuaisModeloNomeValid,
   createManuaisModeloFromForm,
   updateManuaisModeloNomeFromForm,
+  resolveManuaisDocumentoTipo,
+  createManuaisDocumentoFromForm,
+  createManuaisImagemFromForm,
 } from '../modules/manuais'
 import type { BibliaAnexo, BibliaSecao } from './bibliaNonatoTypes'
 import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, BIBLIA_NONATO_STORAGE_KEY, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
@@ -439,14 +441,16 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       }
       const reader = new FileReader()
       reader.onload = () => {
-        const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
-        const novo: ManuaisDocumento = {
-          id,
-          nome: file.name,
-          tipo: file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream'),
-          dados: reader.result as string,
-          ...(uploadSecao() ? { secao: uploadSecao() } : {}),
-        }
+        const novo = createManuaisDocumentoFromForm(
+          {
+            nome: file.name,
+            tipo: resolveManuaisDocumentoTipo(file.name, file.type),
+            dados: reader.result as string,
+            ...(uploadSecao() ? { secao: uploadSecao() } : {}),
+          },
+          { idPrefix: 'doc' }
+        )
+        const id = novo.id
         let snapshot: ManuaisModelo[] = []
         setManuaisModelos((prev) => {
           snapshot = prev.map((mo) => {
@@ -539,20 +543,18 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
         const file = files[i]
         const dados = await readFileAsDataUrl(file)
         const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath?.trim()
-        const id =
-          typeof crypto !== 'undefined' && crypto.randomUUID
-            ? crypto.randomUUID()
-            : `doc-${Date.now()}-${i}`
-        novos.push({
-          id,
-          nome: manualFolderDisplayName(file),
-          tipo:
-            file.type ||
-            (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/octet-stream'),
-          dados,
-          caminhoRelativo: rel || undefined,
-          secao: uploadSecao() || inferBibliaSecaoFromName(rel || file.name) || undefined,
-        })
+        novos.push(
+          createManuaisDocumentoFromForm(
+            {
+              nome: manualFolderDisplayName(file),
+              tipo: resolveManuaisDocumentoTipo(file.name, file.type),
+              dados,
+              caminhoRelativo: rel || undefined,
+              secao: uploadSecao() || inferBibliaSecaoFromName(rel || file.name) || undefined,
+            },
+            { idPrefix: 'doc', idSuffix: i }
+          )
+        )
         setManuaisImportProgress({ current: i + 1, total: files.length })
       }
       await appendDocumentosToModelo(modeloId, novos)
@@ -597,14 +599,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     setManuaisImportProgress({ current: 0, total: 1 })
     try {
       const dados = await readFileAsDataUrl(file)
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `zip-${Date.now()}`
       await appendDocumentosToModelo(modeloId, [
-        {
-          id,
-          nome: /\.(zip|zipx)$/i.test(file.name.trim()) ? file.name : `${file.name.replace(/\.+$/, '')}.zip`,
-          tipo: 'application/zip',
-          dados,
-        },
+        createManuaisDocumentoFromForm(
+          {
+            nome: /\.(zip|zipx)$/i.test(file.name.trim()) ? file.name : `${file.name.replace(/\.+$/, '')}.zip`,
+            tipo: 'application/zip',
+            dados,
+          },
+          { idPrefix: 'zip' }
+        ),
       ])
       window.alert(tr('manuaisImportacaoZipOk', 'Pacote ZIP guardado. Use Descarregar para extrair no computador.'))
     } catch (err) {
@@ -626,13 +629,15 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
     }
     const reader = new FileReader()
     reader.onload = () => {
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `img-${Date.now()}`
-      const novo: ManuaisImagem = {
-        id,
-        nome: file.name,
-        dados: reader.result as string,
-        ...(uploadSecao() ? { secao: uploadSecao() } : {}),
-      }
+      const novo = createManuaisImagemFromForm(
+        {
+          nome: file.name,
+          dados: reader.result as string,
+          ...(uploadSecao() ? { secao: uploadSecao() } : {}),
+        },
+        { idPrefix: 'img' }
+      )
+      const id = novo.id
       let snapshot: ManuaisModelo[] = []
       setManuaisModelos((prev) => {
         snapshot = prev.map((mo) => {
