@@ -14,6 +14,26 @@ import {
   parseDataReciboIso,
   extrairDescricaoRecibo
 } from '../lib/reciboComprovanteParser'
+import type { CartaoEmpresaDespesas, DespesaDocumento, DespesaRegistro } from '../modules/registro-despesas'
+import {
+  createCartaoEmpresaDespesasFromForm,
+  createDespesaDocumentoFromForm,
+  createDespesaRegistroFromForm,
+  emptyDespesaRegistroForm,
+  isCartaoEmpresaApelidoValid,
+  isCartaoEmpresaUltimos4Valid,
+  isDespesaDocumentoClienteValid,
+  isDespesaRegistroTipoValid,
+  normalizeCartaoEmpresaUltimos4,
+  rotuloCartaoEmpresaDespesas,
+  rotuloLinhaCartaoEmpresa,
+} from '../modules/registro-despesas'
+
+export type {
+  CartaoEmpresaDespesas,
+  DespesaDocumento,
+  DespesaRegistro,
+} from '../modules/registro-despesas'
 
 type RegistroOcrModalState =
   | null
@@ -29,40 +49,6 @@ type RegistroOcrModalState =
       tipoNome: string
       cartaoId: string
     }
-
-/** Cartão corporativo: só apelido + últimos 4 dígitos (nunca o PAN completo). */
-export type CartaoEmpresaDespesas = {
-  id: string
-  apelido: string
-  ultimos4: string
-  criadoEm: string
-}
-
-export type DespesaRegistro = {
-  id: string
-  tipoId: string
-  tipoNome: string
-  valor: number
-  descricao: string
-  codigoBarras?: string
-  fotos: string[]
-  data: string
-  /** Id do cartão no cadastro; opcional */
-  cartaoId?: string
-  /** Rótulo fixo na linha (ex.: "Combustível •••• 1234") para PDF mesmo se o cartão for removido depois */
-  cartaoRotulo?: string
-}
-
-export type DespesaDocumento = {
-  id: string
-  clienteId: string
-  clienteNome: string
-  relatorioId?: string
-  relatorioNumero?: string
-  data: string
-  despesas: DespesaRegistro[]
-  dataCriacao: string
-}
 
 type Cliente = { id: string; nomeEmpresa: string }
 type RelatorioServico = { id: string; numero: string; cliente: string; clienteId?: string; data: string }
@@ -111,16 +97,7 @@ export function RegistroDespesasContent({
   const [relatoriosListaLimite, setRelatoriosListaLimite] = useState(LISTA_UI_LOTE)
   const [docAtual, setDocAtual] = useState<DespesaDocumento | null>(null)
   const [showDespesaForm, setShowDespesaForm] = useState(false)
-  const [despesaForm, setDespesaForm] = useState<Partial<DespesaRegistro>>({
-    tipoId: '',
-    tipoNome: '',
-    valor: 0,
-    descricao: '',
-    codigoBarras: '',
-    fotos: [],
-    data: new Date().toISOString().split('T')[0],
-    cartaoId: ''
-  })
+  const [despesaForm, setDespesaForm] = useState(emptyDespesaRegistroForm())
   const [cartoesEmpresa, setCartoesEmpresa] = useState<CartaoEmpresaDespesas[]>([])
   const [cartaoFormApelido, setCartaoFormApelido] = useState('')
   const [cartaoFormUltimos4, setCartaoFormUltimos4] = useState('')
@@ -167,34 +144,22 @@ export function RegistroDespesasContent({
     loadCartoes()
   }, [activeTabId])
 
-  const rotuloCartao = (c: CartaoEmpresaDespesas): string => {
-    const u = String(c.ultimos4 || '').replace(/\D/g, '').slice(-4).padStart(4, '0')
-    return `${String(c.apelido || '').trim()} •••• ${u}`
-  }
-
-  const rotuloLinhaParaCartaoId = (cartaoId: string | undefined): string | undefined => {
-    if (!cartaoId) return undefined
-    const c = cartoesEmpresa.find(x => x.id === cartaoId)
-    return c ? rotuloCartao(c) : undefined
-  }
+  const rotuloLinhaParaCartaoId = (cartaoId: string | undefined): string | undefined =>
+    rotuloLinhaCartaoEmpresa(cartaoId, cartoesEmpresa)
 
   const guardarCartaoEmpresa = async () => {
-    const apelido = cartaoFormApelido.trim()
-    const digitos = cartaoFormUltimos4.replace(/\D/g, '').slice(-4)
-    if (!apelido) {
+    if (!isCartaoEmpresaApelidoValid(cartaoFormApelido)) {
       alert(safeT?.registroDespesasCartaoErroApelido || 'Indique um nome para identificar o cartão.')
       return
     }
-    if (digitos.length !== 4) {
+    if (!isCartaoEmpresaUltimos4Valid(cartaoFormUltimos4)) {
       alert(safeT?.registroDespesasCartaoErroUltimos4 || 'Indique exatamente 4 dígitos (final do cartão).')
       return
     }
-    const novo: CartaoEmpresaDespesas = {
-      id: 'card-' + Date.now(),
-      apelido,
-      ultimos4: digitos,
-      criadoEm: new Date().toISOString()
-    }
+    const novo = createCartaoEmpresaDespesasFromForm({
+      apelido: cartaoFormApelido,
+      ultimos4: normalizeCartaoEmpresaUltimos4(cartaoFormUltimos4),
+    })
     const atualizados = [...cartoesEmpresa, novo]
     await saveData('nonato-cartoes-empresa-despesas', atualizados)
     setCartoesEmpresa(atualizados)
@@ -214,57 +179,42 @@ export function RegistroDespesasContent({
   }
 
   const iniciarNovoDocumento = () => {
-    if (!clienteSelecionado) {
+    if (
+      !clienteSelecionado ||
+      !isDespesaDocumentoClienteValid({
+        clienteId: clienteSelecionado.id,
+        clienteNome: clienteSelecionado.nomeEmpresa,
+      })
+    ) {
       alert(safeT?.selecioneClientePrimeiro || safeT?.selecioneCliente || 'Selecione um cliente primeiro.')
       return
     }
-    const doc: DespesaDocumento = {
-      id: 'doc-' + Date.now(),
+    const doc = createDespesaDocumentoFromForm({
       clienteId: clienteSelecionado.id,
       clienteNome: clienteSelecionado.nomeEmpresa,
       relatorioId: relatorioSelecionado?.id,
       relatorioNumero: relatorioSelecionado?.numero,
-      data: new Date().toISOString().split('T')[0],
-      despesas: [],
-      dataCriacao: new Date().toISOString()
-    }
+    })
     setDocAtual(doc)
   }
 
   const adicionarDespesa = () => {
     if (!docAtual) return
     const tipo = despesasCadastradas.find(s => s.id === despesaForm.tipoId)
-    if (!tipo && despesasCadastradas.length > 0) {
+    if (!isDespesaRegistroTipoValid(despesaForm, despesasCadastradas)) {
       alert(safeT?.selecioneTipoDespesa || 'Selecione o tipo de despesa.')
       return
     }
     const cid = despesaForm.cartaoId?.trim()
-    const rotuloCart = cid ? rotuloLinhaParaCartaoId(cid) : undefined
-    const nova: DespesaRegistro = {
-      id: 'd-' + Date.now(),
-      tipoId: despesaForm.tipoId || '',
-      tipoNome: despesaForm.tipoNome || tipo?.nome || 'Outros',
-      valor: despesaForm.valor ?? 0,
-      descricao: despesaForm.descricao || '',
-      codigoBarras: despesaForm.codigoBarras,
-      fotos: despesaForm.fotos || [],
-      data: despesaForm.data || new Date().toISOString().split('T')[0],
-      ...(cid ? { cartaoId: cid, cartaoRotulo: rotuloCart || cid } : {})
-    }
+    const nova = createDespesaRegistroFromForm(despesaForm, {
+      tipoNomeFallback: tipo?.nome || 'Outros',
+      cartaoRotulo: cid ? rotuloLinhaParaCartaoId(cid) : undefined,
+    })
     setDocAtual({
       ...docAtual,
       despesas: [...docAtual.despesas, nova]
     })
-    setDespesaForm({
-      tipoId: '',
-      tipoNome: '',
-      valor: 0,
-      descricao: '',
-      codigoBarras: '',
-      fotos: [],
-      data: new Date().toISOString().split('T')[0],
-      cartaoId: ''
-    })
+    setDespesaForm(emptyDespesaRegistroForm())
     setShowDespesaForm(false)
   }
 
@@ -361,17 +311,19 @@ export function RegistroDespesasContent({
     if (!docAtual || !registroOcrModal || registroOcrModal.step !== 'preview') return
     const p = registroOcrModal
     const cid = p.cartaoId?.trim()
-    const rotuloCart = cid ? rotuloLinhaParaCartaoId(cid) : undefined
-    const nova: DespesaRegistro = {
-      id: 'd-' + Date.now(),
-      tipoId: p.tipoId,
-      tipoNome: p.tipoNome,
-      valor: p.valor,
-      descricao: p.descricao,
-      fotos: [p.imagemBase64],
-      data: p.data,
-      ...(cid ? { cartaoId: cid, cartaoRotulo: rotuloCart || cid } : {})
-    }
+    const nova = createDespesaRegistroFromForm(
+      {
+        tipoId: p.tipoId,
+        tipoNome: p.tipoNome,
+        valor: p.valor,
+        descricao: p.descricao,
+        codigoBarras: '',
+        fotos: [p.imagemBase64],
+        data: p.data,
+        cartaoId: cid || '',
+      },
+      { cartaoRotulo: cid ? rotuloLinhaParaCartaoId(cid) : undefined }
+    )
     setDocAtual({
       ...docAtual,
       despesas: [...docAtual.despesas, nova]
@@ -474,7 +426,7 @@ export function RegistroDespesasContent({
           <ul style={{ margin: 0, paddingLeft: '18px', color: '#e5e5e5', fontSize: '13px' }}>
             {cartoesEmpresa.map(c => (
               <li key={c.id} style={{ marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace' }}>{rotuloCartao(c)}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace' }}>{rotuloCartaoEmpresaDespesas(c)}</span>
                 <button
                   type="button"
                   onClick={() => void removerCartaoEmpresa(c.id)}
@@ -737,7 +689,7 @@ export function RegistroDespesasContent({
                   <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
                   {cartoesEmpresa.map(c => (
                     <option key={c.id} value={c.id}>
-                      {rotuloCartao(c)}
+                      {rotuloCartaoEmpresaDespesas(c)}
                     </option>
                   ))}
                 </select>
@@ -1048,7 +1000,7 @@ export function RegistroDespesasContent({
                     <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
                     {cartoesEmpresa.map(c => (
                       <option key={c.id} value={c.id}>
-                        {rotuloCartao(c)}
+                        {rotuloCartaoEmpresaDespesas(c)}
                       </option>
                     ))}
                   </select>

@@ -67,6 +67,7 @@ const critical = [
   'app/modules/ordem-preparacao/index.ts',
   'app/modules/pre-check/index.ts',
   'app/modules/pagamentos-contador/index.ts',
+  'app/modules/registro-despesas/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -3041,6 +3042,49 @@ try {
   }
 } catch (e) {
   fail(`módulo pagamentos-contador: ${e.message}`)
+}
+
+// 3am) Módulo registro-despesas (121.º corte modularização)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/registro-despesas/index.ts'), 'utf8')
+  if (
+    idx.includes('CartaoEmpresaDespesas') &&
+    idx.includes('DespesaRegistro') &&
+    idx.includes('DespesaDocumento') &&
+    idx.includes('emptyDespesaRegistroForm') &&
+    idx.includes('createCartaoEmpresaDespesasFromForm') &&
+    idx.includes('createDespesaRegistroFromForm') &&
+    idx.includes('createDespesaDocumentoFromForm')
+  ) {
+    ok('módulo registro-despesas exporta tipos/formState/fromForm')
+  } else {
+    fail('módulo registro-despesas incompleto (index.ts)')
+  }
+  if (
+    exists('app/modules/registro-despesas/tipos.ts') &&
+    exists('app/modules/registro-despesas/formState.ts') &&
+    exists('app/modules/registro-despesas/fromForm.ts')
+  ) {
+    ok('existe app/modules/registro-despesas tipos/formState/fromForm')
+  } else {
+    fail('ficheiros do módulo registro-despesas em falta')
+  }
+  const rdcMod = fs.readFileSync(path.join(root, 'app/components/RegistroDespesasContent.tsx'), 'utf8')
+  if (
+    (rdcMod.includes("from '../modules/registro-despesas'") ||
+      rdcMod.includes('from "../modules/registro-despesas"')) &&
+    rdcMod.includes('emptyDespesaRegistroForm') &&
+    rdcMod.includes('createCartaoEmpresaDespesasFromForm') &&
+    rdcMod.includes('createDespesaRegistroFromForm') &&
+    rdcMod.includes('createDespesaDocumentoFromForm') &&
+    !rdcMod.includes('export type CartaoEmpresaDespesas = {')
+  ) {
+    ok('RegistroDespesasContent usa tipos/fromForm do módulo registro-despesas')
+  } else {
+    fail('RegistroDespesasContent ainda define cartão/despesa/documento no sítio')
+  }
+} catch (e) {
+  fail(`módulo registro-despesas: ${e.message}`)
 }
 
 try {
