@@ -2938,6 +2938,33 @@ try {
   } else {
     fail('PdfLogoSituation ainda definido em lib ou AdminLogosHub')
   }
+  if (
+    idx.includes('PDF_MODELO_PADRAO') &&
+    idx.includes('normalizePdfModelo') &&
+    idx.includes('pdfModeloBodyClass') &&
+    exists('app/modules/pdf/modelos.ts')
+  ) {
+    ok('módulo pdf exporta modelos')
+  } else {
+    fail('módulo pdf sem modelos')
+  }
+  const libModelos = fs.readFileSync(path.join(root, 'app/lib/pdfModelTypes.ts'), 'utf8')
+  const pickerModelos = fs.readFileSync(path.join(root, 'app/components/RelatorioPdfModeloPicker.tsx'), 'utf8')
+  const rsPdfModelo = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/pdfModelo.ts'), 'utf8')
+  if (
+    libModelos.includes("from '../modules/pdf/modelos'") &&
+    !libModelos.includes('export const PDF_MODELO_PADRAO =') &&
+    !libModelos.includes('export function normalizePdfModelo(') &&
+    pickerModelos.includes('normalizePdfModelo') &&
+    (pickerModelos.includes("from '../modules/pdf'") || pickerModelos.includes('from "../modules/pdf"')) &&
+    rsPdfModelo.includes("from '../pdf/modelos'") &&
+    nma.includes('pdfModeloBodyClass') &&
+    !nma.includes("from './lib/pdfModelTypes'")
+  ) {
+    ok('NMA/picker/relatorio-servico usam modelos do módulo pdf')
+  } else {
+    fail('pdfModelTypes ainda definido em lib ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }

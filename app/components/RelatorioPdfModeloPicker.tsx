@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
-import { PDF_MODELO_GROUPS, PDF_MODELO_LABEL_KEYS, normalizePdfModelo } from '../lib/pdfModelTypes'
+import { PDF_MODELO_GROUPS, PDF_MODELO_LABEL_KEYS, normalizePdfModelo } from '../modules/pdf'
 
 export const RELATORIO_PDF_MODELO_LABEL_KEYS = PDF_MODELO_LABEL_KEYS
 

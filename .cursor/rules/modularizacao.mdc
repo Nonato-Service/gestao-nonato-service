@@ -186,6 +186,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 166. `app/modules/admin/` (ZipDownloadHistoryEntry / bytes / normalize) — feito
 167. `app/modules/admin/` (resolveLogoLabel / rótulo biblioteca) — feito
 168. `app/modules/checklist/` (ChecklistBasicoEquipamentoResumo / key / label) — feito
+169. `app/modules/pdf/` (PDF_MODELO_* / normalize / bodyClass) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

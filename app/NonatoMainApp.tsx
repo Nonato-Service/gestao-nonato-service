@@ -1038,7 +1038,7 @@ import {
   buildHtmlFechamentoContabilidade,
   type ClienteContabEnvioModalOpts,
 } from './modules/contabilidade'
-import { pdfModeloBodyClass } from './lib/pdfModelTypes'
+import { pdfModeloBodyClass } from './modules/pdf'
 import { PdfModeloPickerField } from './components/PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from './lib/pdfModelStorage'
 import { protocoloNumToPdfModelo, pdfModeloToProtocoloNum } from './lib/pdfModelProtocoloMap'
