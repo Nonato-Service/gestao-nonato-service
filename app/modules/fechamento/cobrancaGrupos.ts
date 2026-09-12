@@ -31,3 +31,7 @@ export function buildRelatorioCobrancaGruposOpcoes(
     }
   })
 }
+
+export function rotuloRelatorioCobrancaGrupoOption(g: RelatorioCobrancaGrupoMin): string {
+  return g.httLabel ? `${g.nome} — ${g.httLabel}` : g.nome
+}

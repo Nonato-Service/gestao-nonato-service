@@ -315,6 +315,7 @@ try {
   if (
     idx.includes('RelatorioCobrancaGrupoMin') &&
     idx.includes('buildRelatorioCobrancaGruposOpcoes') &&
+    idx.includes('rotuloRelatorioCobrancaGrupoOption') &&
     exists('app/modules/fechamento/cobrancaGrupos.ts')
   ) {
     ok('módulo fechamento exporta RelatorioCobrancaGrupoMin')
@@ -324,7 +325,9 @@ try {
   const cobrAcoes = fs.readFileSync(path.join(root, 'app/components/RelatorioCobrancaAcoes.tsx'), 'utf8')
   if (
     (cobrAcoes.includes("from '../modules/fechamento'") || cobrAcoes.includes('from "../modules/fechamento"')) &&
-    !cobrAcoes.includes('export type RelatorioCobrancaGrupoMin = {')
+    cobrAcoes.includes('rotuloRelatorioCobrancaGrupoOption') &&
+    !cobrAcoes.includes('export type RelatorioCobrancaGrupoMin = {') &&
+    !cobrAcoes.includes('g.httLabel ? ` — ${g.httLabel}`')
   ) {
     ok('RelatorioCobrancaAcoes usa RelatorioCobrancaGrupoMin do módulo fechamento')
   } else {
@@ -332,7 +335,9 @@ try {
   }
   if (
     nma.includes('buildRelatorioCobrancaGruposOpcoes') &&
-    !nma.includes('httLabel: httVal != null ? `HTT ${httVal} €`')
+    nma.includes('rotuloRelatorioCobrancaGrupoOption') &&
+    !nma.includes('httLabel: httVal != null ? `HTT ${httVal} €`') &&
+    !nma.includes('httVal != null ? ` — HTT ${httVal} €`')
   ) {
     ok('NonatoMainApp usa buildRelatorioCobrancaGruposOpcoes do módulo')
   } else {

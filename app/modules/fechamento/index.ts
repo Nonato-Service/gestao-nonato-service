@@ -70,7 +70,7 @@ export {
 } from './grupoFromForm'
 
 export type { RelatorioCobrancaGrupoMin } from './cobrancaGrupos'
-export { buildRelatorioCobrancaGruposOpcoes } from './cobrancaGrupos'
+export { buildRelatorioCobrancaGruposOpcoes, rotuloRelatorioCobrancaGrupoOption } from './cobrancaGrupos'
 
 export type {
   LabelsFechamentoCobrancaRelatorio,

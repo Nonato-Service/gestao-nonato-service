@@ -6,7 +6,7 @@
  * Só renderiza quando o relatório está marcado como concluído.
  */
 import React, { useState } from 'react'
-import type { RelatorioCobrancaGrupoMin } from '../modules/fechamento'
+import { rotuloRelatorioCobrancaGrupoOption, type RelatorioCobrancaGrupoMin } from '../modules/fechamento'
 
 export type { RelatorioCobrancaGrupoMin }
 
@@ -168,8 +168,7 @@ export function RelatorioCobrancaAcoes({
               >
                 {grupos.map((g) => (
                   <option key={g.id} value={g.id}>
-                    {g.nome}
-                    {g.httLabel ? ` — ${g.httLabel}` : ''}
+                    {rotuloRelatorioCobrancaGrupoOption(g)}
                   </option>
                 ))}
               </select>

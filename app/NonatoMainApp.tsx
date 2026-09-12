@@ -837,6 +837,7 @@ import {
   normalizeServicoValorStored,
   formatServicoValorExibicao,
   buildRelatorioCobrancaGruposOpcoes,
+  rotuloRelatorioCobrancaGrupoOption,
   parseServicoValorInput,
   servicoValorToInputString,
   servicoCodParaExibicao,
@@ -46406,21 +46407,11 @@ A1;Peça exemplo;10`}
                         onChange={(e) => patchFechamentoGrupoLocal(e.target.value)}
                         style={{ width: '100%', maxWidth: '420px' }}
                       >
-                        {ordenarServicoGrupos(servicoGrupos).map((g) => {
-                          const htt = servicos.find(
-                            (s) =>
-                              s.grupoId === g.id &&
-                              (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
-                                /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
-                          )
-                          const httVal = htt ? formatServicoValorExibicao(htt.valor) : null
-                          return (
-                            <option key={g.id} value={g.id}>
-                              {g.nome}
-                              {httVal != null ? ` — HTT ${httVal} €` : ''}
-                            </option>
-                          )
-                        })}
+                        {buildRelatorioCobrancaGruposOpcoes(servicoGrupos, servicos).map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {rotuloRelatorioCobrancaGrupoOption(g)}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
