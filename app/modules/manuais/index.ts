@@ -75,3 +75,10 @@ export {
   resolveZipEntryPath,
 } from './zipPath'
 export { extractAnnotationTargets, targetLooksLikeSection } from './zipAnnotation'
+export type { ZipPdfLinkHint } from './zipViewer'
+export {
+  MAX_PDFJS_PAGES,
+  MAX_PDFJS_BYTES,
+  inferIndexSectionHints,
+  preferNativePdfViewer,
+} from './zipViewer'

@@ -3239,6 +3239,25 @@ try {
   } else {
     fail('ManuaisZipPdfPreview ainda define extractAnnotationTargets no sítio')
   }
+  if (
+    idx.includes('inferIndexSectionHints') &&
+    idx.includes('preferNativePdfViewer') &&
+    exists('app/modules/manuais/zipViewer.ts')
+  ) {
+    ok('módulo manuais exporta inferIndexSectionHints')
+  } else {
+    fail('módulo manuais sem zipViewer')
+  }
+  if (
+    zipPdf.includes('inferIndexSectionHints') &&
+    zipPdf.includes('preferNativePdfViewer') &&
+    !zipPdf.includes('function inferIndexSectionHints(') &&
+    !zipPdf.includes('function preferNativePdfViewer(')
+  ) {
+    ok('ManuaisZipPdfPreview usa zipViewer do módulo manuais')
+  } else {
+    fail('ManuaisZipPdfPreview ainda define inferIndexSectionHints no sítio')
+  }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)
 }
