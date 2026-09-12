@@ -65,3 +65,6 @@ export {
   isBibliaAnexoFormValid,
   createBibliaAnexoFromForm,
 } from './fromForm'
+
+export type { ManualSection } from './zipSection'
+export { findManualSectionPdf } from './zipSection'

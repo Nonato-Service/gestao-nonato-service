@@ -3121,6 +3121,26 @@ try {
   } else {
     fail('ManuaisInformacoesContent ainda importa bibliaNonatoTypes no sítio')
   }
+  if (
+    idx.includes('ManualSection') &&
+    idx.includes('findManualSectionPdf') &&
+    exists('app/modules/manuais/zipSection.ts')
+  ) {
+    ok('módulo manuais exporta ManualSection / findManualSectionPdf')
+  } else {
+    fail('módulo manuais sem zipSection')
+  }
+  const zipPdf = fs.readFileSync(path.join(root, 'app/components/ManuaisZipPdfPreview.tsx'), 'utf8')
+  if (
+    (zipPdf.includes("from '../modules/manuais'") || zipPdf.includes('from "../modules/manuais"')) &&
+    zipPdf.includes('findManualSectionPdf') &&
+    !zipPdf.includes("export type ManualSection = 'eletrica' | 'mecanica'") &&
+    !zipPdf.includes('export function findManualSectionPdf(')
+  ) {
+    ok('ManuaisZipPdfPreview usa ManualSection do módulo manuais')
+  } else {
+    fail('ManuaisZipPdfPreview ainda define ManualSection/findManualSectionPdf no sítio')
+  }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)
 }
