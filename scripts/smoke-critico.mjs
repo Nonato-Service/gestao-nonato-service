@@ -2912,6 +2912,31 @@ try {
   } else {
     fail('SyncPendingRemote ainda definido em adminTypes ou NonatoMainApp')
   }
+  if (
+    idx.includes('CodeBackup') &&
+    idx.includes('AutoBackup') &&
+    idx.includes('findBackupByTimestamp') &&
+    idx.includes('formatCodeBackupFilesLabel') &&
+    exists('app/modules/admin/backupTipos.ts')
+  ) {
+    ok('módulo admin exporta CodeBackup/AutoBackup')
+  } else {
+    fail('módulo admin sem backupTipos')
+  }
+  const adminBackupUi = fs.readFileSync(path.join(root, 'app/components/admin/AdminBackupSection.tsx'), 'utf8')
+  if (
+    adminTypes.includes("from '../../modules/admin/backupTipos'") &&
+    !adminTypes.includes('export type CodeBackup = {') &&
+    !adminTypes.includes('export type AutoBackup = {') &&
+    !nma.includes('useState<Array<{ path: string; timestamp: string; filesCount: number }>>') &&
+    nma.includes('CodeBackup') &&
+    adminBackupUi.includes('findBackupByTimestamp') &&
+    adminBackupUi.includes('formatCodeBackupFilesLabel')
+  ) {
+    ok('adminTypes/NMA/AdminBackupSection usam backupTipos do módulo')
+  } else {
+    fail('CodeBackup/AutoBackup ainda definidos em adminTypes ou NonatoMainApp')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

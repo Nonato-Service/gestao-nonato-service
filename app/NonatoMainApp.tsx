@@ -368,7 +368,7 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft, SyncPendingRemote } from './modules/admin'
+import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft, SyncPendingRemote, CodeBackup } from './modules/admin'
 import {
   createEmptyUserForm,
   userToFormState,
@@ -1481,7 +1481,7 @@ export default function Dashboard() {
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
   const [checklistAccessNomeInput, setChecklistAccessNomeInput] = useState('')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
-  const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
+  const [codeBackups, setCodeBackups] = useState<CodeBackup[]>([])
   const [codeBackupsFolder, setCodeBackupsFolder] = useState<string>('')
   const [loadingBackups, setLoadingBackups] = useState(false)
   const lastAutoCodeBackupAtRef = useRef(0)

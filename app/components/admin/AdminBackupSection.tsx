@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatBackupBytes, MAX_BACKUP_HISTORY } from '../../lib/adminBackupRegistry'
+import { findBackupByTimestamp, formatCodeBackupFilesLabel } from '../../modules/admin'
 import type { AutoBackup, CodeBackup, SafeT } from './adminTypes'
 
 export type AdminBackupSectionProps = {
@@ -167,7 +168,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
     </div>
   )
 
-  const findBackup = (list: AutoBackup[], id: number | string) => list.find((b) => b.timestamp === id)
+  const findBackup = findBackupByTimestamp
 
   const runConfirm = async () => {
     if (!confirm) return
@@ -544,7 +545,7 @@ export function AdminBackupSection(props: AdminBackupSectionProps) {
                     <div>
                       <strong>#{index + 1}</strong>
                       <span>{formatWhen(new Date(backup.timestamp).getTime(), locale)}</span>
-                      <small>{(safeT?.filesCount || '{count} ficheiros').replace('{count}', String(backup.filesCount || '—'))}</small>
+                      <small>{formatCodeBackupFilesLabel(safeT?.filesCount || '{count} ficheiros', backup.filesCount)}</small>
                     </div>
                     <div className="admin-backup-hub-list__actions">
                       {confirm?.kind === 'restore-code' && confirm.id === backup.path ? (

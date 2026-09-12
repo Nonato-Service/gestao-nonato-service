@@ -40,3 +40,6 @@ export {
   syncPendingRevisionValue,
   syncPendingRevisionDisplay,
 } from './syncPending'
+
+export type { CodeBackup, AutoBackup } from './backupTipos'
+export { findBackupByTimestamp, formatCodeBackupFilesLabel } from './backupTipos'
