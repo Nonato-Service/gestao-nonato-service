@@ -139,6 +139,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 119. `app/modules/pagamentos-contador/` (tipos / formState / fromForm entidade-pagamento-anexo) — feito
 120. `app/modules/manuais/` (isManuaisFamiliaNomeValid / add/rename fromForm) — feito
 121. `app/modules/registro-despesas/` (tipos / formState / fromForm cartão-linha-documento) — feito
+122. `app/modules/orcamentos/` (pecasEspeciais tipos / emptyLinha / fromForm) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

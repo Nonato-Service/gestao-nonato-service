@@ -11,8 +11,29 @@ import {
   type OrcamentoPecasEspeciaisLinhaPdf,
 } from '../lib/orcamentoPecasEspeciaisPdf'
 
-export type ModoCalculoTotalPecasEsp = 'linhas' | 'valor-final'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
+import type {
+  ClienteOrcamentoPecasEsp,
+  EmpresaOrcamentoPecasEsp,
+  LinhaOrcamentoPecasEsp,
+  ModoCalculoTotalPecasEsp,
+  OrcamentoPecasEspeciaisSalvo,
+  PecaBibliotecaPecasEsp,
+} from '../modules/orcamentos'
+import {
+  createOrcamentoPecasEspeciaisFromForm,
+  emptyLinhaOrcamentoPecasEsp,
+  isOrcamentoPecasEspeciaisLinhasValid,
+  normalizeLinhaOrcamentoPecasEsp,
+} from '../modules/orcamentos'
+
+export type {
+  ClienteOrcamentoPecasEsp,
+  LinhaOrcamentoPecasEsp,
+  ModoCalculoTotalPecasEsp,
+  OrcamentoPecasEspeciaisSalvo,
+  PecaBibliotecaPecasEsp,
+} from '../modules/orcamentos'
 import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
@@ -22,66 +43,6 @@ import {
   useDocumentoEnvioCliente,
   buildTextoEnvioOrcamento,
 } from '../context/DocumentoEnvioClienteContext'
-
-export type ClienteOrcamentoPecasEsp = {
-  id: string
-  nomeEmpresa: string
-  morada?: string
-  localidade?: string
-  codigoPostal?: string
-  pais?: string
-  telefones?: string
-  email?: string
-  contato?: string
-  codigoCliente?: string
-}
-
-export type PecaBibliotecaPecasEsp = {
-  id: string
-  codigo: string
-  nome: string
-  descricao?: string
-  imagem?: string
-  preco?: string
-}
-
-export type LinhaOrcamentoPecasEsp = {
-  rowId: string
-  numeroArtigo: string
-  quantidade: string
-  precoUnitario: string
-  titulo: string
-  descricao: string
-  descricaoOriginal: string
-  infoExtra: string
-  imagem: string
-  pecaId: string
-}
-
-export type OrcamentoPecasEspeciaisSalvo = {
-  id: string
-  numeroOferta: string
-  dataIso: string
-  clienteId: string
-  clienteNome: string
-  clienteCodigo: string
-  contactoNome: string
-  contactoTelefone: string
-  contactoEmail: string
-  linhas: LinhaOrcamentoPecasEsp[]
-  linhaEmbalagemTitulo: string
-  linhaEmbalagemDescricao: string
-  condicoesPagamento: string
-  notasRodape: string
-  totalLiquido: string
-  totalIva?: string
-  totalComIva?: string
-  incluirIva?: boolean
-  taxaIva?: number
-  modoCalculoTotal?: ModoCalculoTotalPecasEsp
-  valorFinalComIva?: string
-  dataCriacao: string
-}
 
 const STORAGE_KEY = 'nonato-orcamentos-pecas-especiais'
 const DRAFT_STORAGE_KEY = 'nonato-orcamentos-pecas-especiais-draft'
@@ -104,42 +65,6 @@ type FormDraft = {
   notasRodape: string
   modoCalculoTotal: ModoCalculoTotalPecasEsp
   valorFinalComIva: string
-}
-
-function newRowId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-function novaLinhaVazia(): LinhaOrcamentoPecasEsp {
-  return {
-    rowId: newRowId(),
-    numeroArtigo: '',
-    quantidade: '1',
-    precoUnitario: '',
-    titulo: '',
-    descricao: '',
-    descricaoOriginal: '',
-    infoExtra: '',
-    imagem: '',
-    pecaId: '',
-  }
-}
-
-function normalizarLinhaSalva(l: Partial<LinhaOrcamentoPecasEsp>): LinhaOrcamentoPecasEsp {
-  const descOriginal = String(l.descricaoOriginal ?? l.descricao ?? '').trim()
-  return {
-    rowId: l.rowId || newRowId(),
-    numeroArtigo: String(l.numeroArtigo ?? ''),
-    quantidade: String(l.quantidade ?? '1'),
-    precoUnitario: String(l.precoUnitario ?? ''),
-    titulo: String(l.titulo ?? ''),
-    descricao: String(l.descricao ?? descOriginal),
-    descricaoOriginal: descOriginal,
-    infoExtra: String(l.infoExtra ?? ''),
-    imagem: String(l.imagem ?? ''),
-    pecaId: String(l.pecaId ?? ''),
-  }
 }
 
 function parsePrecoEuro(s: string): number {
@@ -175,14 +100,6 @@ function condicoesPagamentoPadrao(
     t.orcamentoPecasEspCondicoesSemIva ||
     'Pagamento antecipado, sem desconto.\nPreços em Euros, sem IVA.'
   )
-}
-
-type EmpresaOrcamentoPecasEsp = {
-  nomeEmpresa?: string
-  morada?: string
-  nif?: string
-  telefone?: string
-  email?: string
 }
 
 type Props = {
@@ -233,7 +150,7 @@ export function OrcamentoPecasEspeciaisContent({
   const [contactoNome, setContactoNome] = useState('')
   const [contactoTelefone, setContactoTelefone] = useState('')
   const [contactoEmail, setContactoEmail] = useState('')
-  const [linhas, setLinhas] = useState<LinhaOrcamentoPecasEsp[]>([novaLinhaVazia()])
+  const [linhas, setLinhas] = useState<LinhaOrcamentoPecasEsp[]>([emptyLinhaOrcamentoPecasEsp()])
   const [pdfModelo, setPdfModelo] = useState(() => loadPdfModeloPadrao('pecasEspeciais'))
   const [linhaEmbalagemTitulo, setLinhaEmbalagemTitulo] = useState(
     () => t.orcamentoPecasEspEmbalagemTituloPadrao || 'Embalagem e envio'
@@ -269,7 +186,7 @@ export function OrcamentoPecasEspeciaisContent({
       contactoNome: '',
       contactoTelefone: '',
       contactoEmail: '',
-      linhas: [novaLinhaVazia()],
+      linhas: [emptyLinhaOrcamentoPecasEsp()],
       linhaEmbalagemTitulo: t.orcamentoPecasEspEmbalagemTituloPadrao || 'Embalagem e envio',
       linhaEmbalagemDescricao: '',
       condicoesPagamento: condicoesPagamentoPadrao(t, false, 23),
@@ -292,7 +209,7 @@ export function OrcamentoPecasEspeciaisContent({
     setContactoNome(draft.contactoNome)
     setContactoTelefone(draft.contactoTelefone)
     setContactoEmail(draft.contactoEmail)
-    setLinhas(draft.linhas.length ? draft.linhas.map(normalizarLinhaSalva) : [novaLinhaVazia()])
+    setLinhas(draft.linhas.length ? draft.linhas.map(normalizeLinhaOrcamentoPecasEsp) : [emptyLinhaOrcamentoPecasEsp()])
     setLinhaEmbalagemTitulo(draft.linhaEmbalagemTitulo)
     setLinhaEmbalagemDescricao(draft.linhaEmbalagemDescricao)
     setCondicoesPagamento(draft.condicoesPagamento)
@@ -375,8 +292,8 @@ export function OrcamentoPecasEspeciaisContent({
         ...estadoFormularioVazio(),
         ...parsed,
         linhas: Array.isArray(parsed.linhas)
-          ? parsed.linhas.map((l) => normalizarLinhaSalva(l as Partial<LinhaOrcamentoPecasEsp>))
-          : [novaLinhaVazia()],
+          ? parsed.linhas.map((l) => normalizeLinhaOrcamentoPecasEsp(l as Partial<LinhaOrcamentoPecasEsp>))
+          : [emptyLinhaOrcamentoPecasEsp()],
       })
       suppressDirtyRef.current = true
       setFormDirty(true)
@@ -665,8 +582,7 @@ export function OrcamentoPecasEspeciaisContent({
       alert(t.orcamentoPecasEspSelecioneCliente || 'Selecione um cliente.')
       return
     }
-    const linhasValidas = linhas.filter((l) => l.titulo.trim() || l.numeroArtigo.trim())
-    if (linhasValidas.length === 0) {
+    if (!isOrcamentoPecasEspeciaisLinhasValid(linhas)) {
       alert(t.orcamentoPecasEspLinhaObrigatoria || 'Adicione pelo menos uma linha com descrição ou código.')
       return
     }
@@ -675,8 +591,7 @@ export function OrcamentoPecasEspeciaisContent({
       return
     }
     const num = numeroOferta.trim() || gerarNumeroOfertaPecasEspeciais(salvos, dataIso)
-    const reg: OrcamentoPecasEspeciaisSalvo = {
-      id: newRowId(),
+    const reg = createOrcamentoPecasEspeciaisFromForm({
       numeroOferta: num,
       dataIso,
       clienteId: clienteSel.id,
@@ -695,10 +610,9 @@ export function OrcamentoPecasEspeciaisContent({
       totalComIva: totalComIvaFmt,
       incluirIva,
       taxaIva,
-      modoCalculoTotal: incluirIva ? modoCalculoTotal : 'linhas',
-      valorFinalComIva: incluirIva && modoCalculoTotal === 'valor-final' ? valorFinalComIva : '',
-      dataCriacao: new Date().toISOString(),
-    }
+      modoCalculoTotal,
+      valorFinalComIva,
+    })
     const next = [reg, ...salvos]
     setGravando(true)
     try {
@@ -752,7 +666,7 @@ export function OrcamentoPecasEspeciaisContent({
     setContactoNome(o.contactoNome)
     setContactoTelefone(o.contactoTelefone)
     setContactoEmail(o.contactoEmail)
-    setLinhas(o.linhas.length ? o.linhas.map(normalizarLinhaSalva) : [novaLinhaVazia()])
+    setLinhas(o.linhas.length ? o.linhas.map(normalizeLinhaOrcamentoPecasEsp) : [emptyLinhaOrcamentoPecasEsp()])
     setLinhaEmbalagemTitulo(o.linhaEmbalagemTitulo)
     setLinhaEmbalagemDescricao(o.linhaEmbalagemDescricao)
     setCondicoesPagamento(o.condicoesPagamento)
@@ -1071,7 +985,7 @@ export function OrcamentoPecasEspeciaisContent({
         <div className="orcamento-pecas-especiais-section">
           <div className="orcamento-pecas-especiais-section-head">
             <h3>{t.orcamentoPecasEspLinhasTitulo || 'Linhas do orçamento'}</h3>
-            <button type="button" className="btn-primary" onClick={() => setLinhas((p) => [...p, novaLinhaVazia()])}>
+            <button type="button" className="btn-primary" onClick={() => setLinhas((p) => [...p, emptyLinhaOrcamentoPecasEsp()])}>
               + {t.adicionar || 'Adicionar linha'}
             </button>
           </div>

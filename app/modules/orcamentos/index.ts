@@ -110,3 +110,29 @@ export {
   resolveImagemItemOrcamentoDisplay,
   itemOrcamentoDeveMostrarImagem,
 } from './imagemItem'
+
+export type {
+  ModoCalculoTotalPecasEsp,
+  ClienteOrcamentoPecasEsp,
+  PecaBibliotecaPecasEsp,
+  LinhaOrcamentoPecasEsp,
+  OrcamentoPecasEspeciaisSalvo,
+  EmpresaOrcamentoPecasEsp,
+} from './pecasEspeciaisTipos'
+
+export {
+  newPecasEspeciaisEntityId,
+  emptyLinhaOrcamentoPecasEsp,
+  normalizeLinhaOrcamentoPecasEsp,
+} from './pecasEspeciaisForm'
+
+export type {
+  OrcamentoPecasEspeciaisFormPayload,
+  CreateOrcamentoPecasEspeciaisFromFormOpts,
+} from './pecasEspeciaisFromForm'
+export {
+  isLinhaOrcamentoPecasEspPreenchida,
+  linhasOrcamentoPecasEspPreenchidas,
+  isOrcamentoPecasEspeciaisLinhasValid,
+  createOrcamentoPecasEspeciaisFromForm,
+} from './pecasEspeciaisFromForm'

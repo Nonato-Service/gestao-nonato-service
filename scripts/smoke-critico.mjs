@@ -697,6 +697,29 @@ try {
   } else {
     fail('Orçamentos gerados: ainda há orcamento.itens.length/map sem fallback []')
   }
+  if (
+    idx.includes('OrcamentoPecasEspeciaisSalvo') &&
+    idx.includes('emptyLinhaOrcamentoPecasEsp') &&
+    idx.includes('createOrcamentoPecasEspeciaisFromForm') &&
+    exists('app/modules/orcamentos/pecasEspeciaisTipos.ts') &&
+    exists('app/modules/orcamentos/pecasEspeciaisForm.ts') &&
+    exists('app/modules/orcamentos/pecasEspeciaisFromForm.ts')
+  ) {
+    ok('módulo orçamentos exporta peças especiais tipos/fromForm')
+  } else {
+    fail('módulo orçamentos sem peças especiais fromForm')
+  }
+  const ope = fs.readFileSync(path.join(root, 'app/components/OrcamentoPecasEspeciaisContent.tsx'), 'utf8')
+  if (
+    (ope.includes("from '../modules/orcamentos'") || ope.includes('from "../modules/orcamentos"')) &&
+    ope.includes('emptyLinhaOrcamentoPecasEsp') &&
+    ope.includes('createOrcamentoPecasEspeciaisFromForm') &&
+    !ope.includes('export type LinhaOrcamentoPecasEsp = {')
+  ) {
+    ok('OrcamentoPecasEspeciaisContent usa fromForm do módulo orçamentos')
+  } else {
+    fail('OrcamentoPecasEspeciaisContent ainda define linha/salvo no sítio')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
