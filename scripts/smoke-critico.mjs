@@ -2174,6 +2174,27 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia SidebarButton no sítio')
   }
+  if (
+    idx.includes('HubPainelModulo') &&
+    idx.includes('HubPainelStatus') &&
+    idx.includes('hubPainelLsKey') &&
+    exists('app/modules/sidebar/hubPainel.ts')
+  ) {
+    ok('módulo sidebar exporta HubPainelModulo')
+  } else {
+    fail('módulo sidebar sem hubPainel')
+  }
+  const hubPainelUi = fs.readFileSync(path.join(root, 'app/components/BibliotecaHubPainelRecolhivel.tsx'), 'utf8')
+  if (
+    (hubPainelUi.includes("from '../modules/sidebar'") || hubPainelUi.includes('from "../modules/sidebar"')) &&
+    hubPainelUi.includes('hubPainelLsKey') &&
+    !hubPainelUi.includes("export type HubPainelModulo = 'biblioteca'") &&
+    !hubPainelUi.includes("export type HubPainelStatus = 'ok'")
+  ) {
+    ok('BibliotecaHubPainelRecolhivel usa HubPainel do módulo sidebar')
+  } else {
+    fail('BibliotecaHubPainelRecolhivel ainda define HubPainel no sítio')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }

@@ -58,3 +58,10 @@ export {
   createSidebarButtonFromForm,
   updateSidebarButtonFromForm,
 } from './buttonFromForm'
+
+export type { HubPainelModulo, HubPainelStatus } from './hubPainel'
+export {
+  HUB_PAINEL_LS_PREFIX_BY_MODULO,
+  hubPainelLsPrefix,
+  hubPainelLsKey,
+} from './hubPainel'

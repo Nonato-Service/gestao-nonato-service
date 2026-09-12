@@ -1,18 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  hubPainelLsKey,
+  type HubPainelModulo,
+  type HubPainelStatus,
+} from '../modules/sidebar'
 
-export type HubPainelModulo = 'biblioteca' | 'relatorio-servico' | 'relatorio-especial'
-
-const LS_PREFIX_BY_MODULO: Record<HubPainelModulo, string> = {
-  biblioteca: 'nonato-biblioteca-painel-',
-  'relatorio-servico': 'nonato-relatorio-servico-painel-',
-  'relatorio-especial': 'nonato-relatorio-especial-painel-',
-}
-
-function lsPrefix(modulo: HubPainelModulo): string {
-  return LS_PREFIX_BY_MODULO[modulo]
-}
+export type { HubPainelModulo, HubPainelStatus }
 
 export function readBibliotecaPainelAberto(
   id: string,
@@ -21,7 +16,7 @@ export function readBibliotecaPainelAberto(
 ): boolean {
   if (typeof window === 'undefined') return defaultAberto
   try {
-    const v = localStorage.getItem(`${lsPrefix(modulo)}${id}`)
+    const v = localStorage.getItem(hubPainelLsKey(modulo, id))
     if (v === '1') return true
     if (v === '0') return false
   } catch {
@@ -37,7 +32,7 @@ export function setBibliotecaPainelAbertoPersist(
 ): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(`${lsPrefix(modulo)}${id}`, aberto ? '1' : '0')
+    localStorage.setItem(hubPainelLsKey(modulo, id), aberto ? '1' : '0')
   } catch {
     /* ignorar */
   }
@@ -49,8 +44,6 @@ export function fecharTodosBibliotecaPaineis(
 ): void {
   for (const id of ids) setBibliotecaPainelAbertoPersist(id, false, modulo)
 }
-
-export type HubPainelStatus = 'ok' | 'incomplete' | 'empty'
 
 type Props = {
   id: string
