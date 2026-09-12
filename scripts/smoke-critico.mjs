@@ -312,6 +312,32 @@ try {
   } else {
     fail('NonatoMainApp ainda tipa handleSaveServico no sítio')
   }
+  if (
+    idx.includes('RelatorioCobrancaGrupoMin') &&
+    idx.includes('buildRelatorioCobrancaGruposOpcoes') &&
+    exists('app/modules/fechamento/cobrancaGrupos.ts')
+  ) {
+    ok('módulo fechamento exporta RelatorioCobrancaGrupoMin')
+  } else {
+    fail('módulo fechamento sem RelatorioCobrancaGrupoMin')
+  }
+  const cobrAcoes = fs.readFileSync(path.join(root, 'app/components/RelatorioCobrancaAcoes.tsx'), 'utf8')
+  if (
+    (cobrAcoes.includes("from '../modules/fechamento'") || cobrAcoes.includes('from "../modules/fechamento"')) &&
+    !cobrAcoes.includes('export type RelatorioCobrancaGrupoMin = {')
+  ) {
+    ok('RelatorioCobrancaAcoes usa RelatorioCobrancaGrupoMin do módulo fechamento')
+  } else {
+    fail('RelatorioCobrancaAcoes ainda define RelatorioCobrancaGrupoMin no sítio')
+  }
+  if (
+    nma.includes('buildRelatorioCobrancaGruposOpcoes') &&
+    !nma.includes('httLabel: httVal != null ? `HTT ${httVal} €`')
+  ) {
+    ok('NonatoMainApp usa buildRelatorioCobrancaGruposOpcoes do módulo')
+  } else {
+    fail('NonatoMainApp ainda monta opções Tipo de cobrança no sítio')
+  }
 } catch (e) {
   fail(`módulo fechamento: ${e.message}`)
 }

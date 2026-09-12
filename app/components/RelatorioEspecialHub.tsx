@@ -22,7 +22,8 @@ import {
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
 import { BibliotecaHubPainelRecolhivel, type HubPainelStatus } from './BibliotecaHubPainelRecolhivel'
-import { RelatorioCobrancaAcoes, type RelatorioCobrancaGrupoMin } from './RelatorioCobrancaAcoes'
+import { RelatorioCobrancaAcoes } from './RelatorioCobrancaAcoes'
+import type { RelatorioCobrancaGrupoMin } from '../modules/fechamento'
 import {
   buildTextoEnvioRelatorioEspecial,
   buildAssuntoEnvioRelatorioServico,

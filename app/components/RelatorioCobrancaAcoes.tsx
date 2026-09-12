@@ -6,12 +6,9 @@
  * Só renderiza quando o relatório está marcado como concluído.
  */
 import React, { useState } from 'react'
+import type { RelatorioCobrancaGrupoMin } from '../modules/fechamento'
 
-export type RelatorioCobrancaGrupoMin = {
-  id: string
-  nome: string
-  httLabel?: string
-}
+export type { RelatorioCobrancaGrupoMin }
 
 export type RelatorioCobrancaAcoesProps = {
   concluido: boolean

@@ -836,6 +836,7 @@ import {
   type FechamentoIvaOpcoesRelatorio,
   normalizeServicoValorStored,
   formatServicoValorExibicao,
+  buildRelatorioCobrancaGruposOpcoes,
   parseServicoValorInput,
   servicoValorToInputString,
   servicoCodParaExibicao,
@@ -13692,21 +13693,7 @@ export default function Dashboard() {
   }
 
   /** Opções de grupos para o botão «Tipo de cobrança» (com HTT se existir). */
-  const gruposOpcoesTipoCobranca = () =>
-    ordenarServicoGrupos(servicoGrupos).map((g) => {
-      const htt = servicos.find(
-        (s) =>
-          s.grupoId === g.id &&
-          (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
-            /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
-      )
-      const httVal = htt ? formatServicoValorExibicao(htt.valor) : null
-      return {
-        id: g.id,
-        nome: g.nome,
-        httLabel: httVal != null ? `HTT ${httVal} €` : undefined,
-      }
-    })
+  const gruposOpcoesTipoCobranca = () => buildRelatorioCobrancaGruposOpcoes(servicoGrupos, servicos)
 
   /**
    * Abre Fechamento de relatórios com HT/KM/diárias pré-preenchidos e
