@@ -74,3 +74,4 @@ export {
   matchEntryByPathSuffix,
   resolveZipEntryPath,
 } from './zipPath'
+export { extractAnnotationTargets, targetLooksLikeSection } from './zipAnnotation'

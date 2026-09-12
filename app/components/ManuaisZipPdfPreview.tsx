@@ -3,8 +3,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   cleanLinkTarget,
+  extractAnnotationTargets,
   findManualSectionPdf,
   resolveZipEntryPath,
+  targetLooksLikeSection,
   type ManualSection,
 } from '../modules/manuais'
 
@@ -18,29 +20,6 @@ type Props = {
   onNavigate: (path: string) => void
   tr: (key: string, fallback: string) => string
   fallbackBlobUrl?: string | null
-}
-
-function extractAnnotationTargets(ann: Record<string, unknown>): string[] {
-  const out: string[] = []
-  const push = (v: unknown) => {
-    if (typeof v === 'string' && v.trim()) out.push(v.trim())
-  }
-  push(ann.unsafeUrl)
-  push(ann.url)
-  const titleObj = ann.titleObj as { str?: string } | undefined
-  push(titleObj?.str)
-  const contentsObj = ann.contentsObj as { str?: string } | undefined
-  push(contentsObj?.str)
-  push(ann.attachment)
-  return out
-}
-
-function targetLooksLikeSection(target: string, section: ManualSection): boolean {
-  const blob = cleanLinkTarget(target).toLowerCase()
-  if (section === 'eletrica') {
-    return /elektr|eletric|electric|elektro|(^|[\\/])el[\.\-_/\\]/.test(blob)
-  }
-  return /mechan|mecan|mechanik|(^|[\\/])mk[\.\-_/\\]/.test(blob)
 }
 
 async function handleAnnotationLink(
