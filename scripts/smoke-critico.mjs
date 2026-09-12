@@ -720,6 +720,30 @@ try {
   } else {
     fail('OrcamentoPecasEspeciaisContent ainda define linha/salvo no sítio')
   }
+  if (
+    idx.includes('PedidoAvulsoGuardado') &&
+    idx.includes('emptyEquipamentoBlocoPedido') &&
+    idx.includes('createPedidoAvulsoFromForm') &&
+    exists('app/modules/orcamentos/pedidoAvulsoTipos.ts') &&
+    exists('app/modules/orcamentos/pedidoAvulsoForm.ts') &&
+    exists('app/modules/orcamentos/pedidoAvulsoFromForm.ts')
+  ) {
+    ok('módulo orçamentos exporta pedido avulso tipos/fromForm')
+  } else {
+    fail('módulo orçamentos sem pedido avulso fromForm')
+  }
+  const poa = fs.readFileSync(path.join(root, 'app/components/PedidoOrcamentosAvulsoContent.tsx'), 'utf8')
+  if (
+    (poa.includes("from '../modules/orcamentos'") || poa.includes('from "../modules/orcamentos"')) &&
+    poa.includes('emptyEquipamentoBlocoPedido') &&
+    poa.includes('createPedidoAvulsoFromForm') &&
+    poa.includes('createPecaPedidoFromForm') &&
+    !poa.includes('export type PedidoAvulsoGuardado = {')
+  ) {
+    ok('PedidoOrcamentosAvulsoContent usa fromForm do módulo orçamentos')
+  } else {
+    fail('PedidoOrcamentosAvulsoContent ainda define pedido avulso no sítio')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }

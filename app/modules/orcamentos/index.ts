@@ -136,3 +136,33 @@ export {
   isOrcamentoPecasEspeciaisLinhasValid,
   createOrcamentoPecasEspeciaisFromForm,
 } from './pecasEspeciaisFromForm'
+
+export type {
+  EquipamentoClientePedido,
+  ClientePedido,
+  PecaPedido,
+  EquipamentoBlocoPedido,
+  StatusPedidoAvulso,
+  PedidoAvulsoGuardado,
+  PedidoAvulsoHubSeed,
+} from './pedidoAvulsoTipos'
+
+export {
+  newPedidoAvulsoEntityId,
+  emptyEquipamentoBlocoPedido,
+  todasPecasDosBlocosPedido,
+  normalizePedidoAvulsoCarregado,
+} from './pedidoAvulsoForm'
+
+export type {
+  CreatePecaPedidoFromFormOpts,
+  CreatePedidoAvulsoFromFormOpts,
+} from './pedidoAvulsoFromForm'
+export {
+  isPecaPedidoManualFormValid,
+  createPecaPedidoFromForm,
+  addPecaPedidoToList,
+  addPecaPedidoAoBloco,
+  isPedidoAvulsoPecasValid,
+  createPedidoAvulsoFromForm,
+} from './pedidoAvulsoFromForm'

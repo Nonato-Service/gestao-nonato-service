@@ -20,84 +20,39 @@ import {
 } from '../lib/orcamentoPdfPro'
 import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamentos'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
-import type { OrcamentoWorkflowStatus } from '../lib/orcamentoWorkflow'
 import { notifyEquipamentoOrcamentosChanged } from '../lib/orcamentoWorkflow'
 import {
   useDocumentoEnvioCliente,
   buildTextoEnvioGenerico,
 } from '../context/DocumentoEnvioClienteContext'
+import type {
+  ClientePedido,
+  EquipamentoBlocoPedido,
+  EquipamentoClientePedido,
+  PecaPedido,
+  PedidoAvulsoGuardado,
+  PedidoAvulsoHubSeed,
+} from '../modules/orcamentos'
+import {
+  addPecaPedidoAoBloco,
+  createPecaPedidoFromForm,
+  createPedidoAvulsoFromForm,
+  emptyEquipamentoBlocoPedido,
+  isPecaPedidoManualFormValid,
+  isPedidoAvulsoPecasValid,
+  normalizePedidoAvulsoCarregado,
+  todasPecasDosBlocosPedido,
+} from '../modules/orcamentos'
 
-export type ClientePedido = {
-  id: string
-  codigoCliente?: string
-  nomeEmpresa: string
-  morada?: string
-  conselho?: string
-  codigoPostal?: string
-  pais?: string
-  email?: string
-  telefones?: string
-  contato?: string
-  numeroContribuicaoFiscal?: string
-  equipamentos: EquipamentoClientePedido[]
-}
-
-export type EquipamentoClientePedido = {
-  id?: string
-  tipoEquipamento: string
-  modelo: string
-  marca: string
-  numeroSerie: string
-  familia?: string
-  grupo?: string
-}
-
-export type PecaPedido = {
-  id: string
-  codigo: string
-  nome: string
-  imagem?: string
-  quantidade: number
-  pecaId?: string
-  incluirObservacao?: boolean
-  observacao?: string
-}
-
-export type EquipamentoBlocoPedido = {
-  id: string
-  equipamentoIdx?: number
-  equipamento: EquipamentoClientePedido | null
-  equipamentoManual: string
-  pecas: PecaPedido[]
-}
-
-export type StatusPedidoAvulso = 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
-
-export type PedidoAvulsoGuardado = {
-  codigo: string
-  dataGeracao: string
-  clienteNomeReal: string
-  clienteId?: string
-  emitirComoCliente: 'cliente' | 'nonato-service'
-  equipamentoTexto: string
-  equipamentoChave?: string
-  equipamentoNumeroSerie?: string
-  pecas: PecaPedido[]
-  equipamentosBlocos?: EquipamentoBlocoPedido[]
-  status?: StatusPedidoAvulso
-  workflowStatus?: OrcamentoWorkflowStatus
-  numeroNotaFiscalEntrega?: string
-  entregaConfirmadaEm?: string
-  geradoEm?: string
-  cotacaoRecebidaEm?: string
-}
-
-export type PedidoAvulsoHubSeed = {
-  clienteId: string
-  equipamentoIndex: number
-  /** Token único por clique (Date.now) para reaplicar o seed mesmo no mesmo cliente/equipamento. */
-  token: number
-}
+export type {
+  ClientePedido,
+  EquipamentoClientePedido,
+  PecaPedido,
+  EquipamentoBlocoPedido,
+  StatusPedidoAvulso,
+  PedidoAvulsoGuardado,
+  PedidoAvulsoHubSeed,
+} from '../modules/orcamentos'
 
 type Props = {
   clientes: ClientePedido[]
@@ -125,14 +80,6 @@ type Props = {
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
 const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
 
-function criarBlocoEquipamentoVazio(): EquipamentoBlocoPedido {
-  return {
-    id: 'bloco-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
-    equipamento: null,
-    equipamentoManual: '',
-    pecas: [],
-  }
-}
 
 function textoEquipamentoBloco(
   bloco: EquipamentoBlocoPedido,
@@ -168,9 +115,6 @@ function detalhesEquipamentoBloco(
   })
 }
 
-function todasPecasDosBlocos(blocos: EquipamentoBlocoPedido[]): PecaPedido[] {
-  return blocos.flatMap((b) => b.pecas)
-}
 
 function textoEquipamentosAgregado(
   blocos: EquipamentoBlocoPedido[],
@@ -186,20 +130,6 @@ function textoEquipamentosAgregado(
     .join('\n')
 }
 
-function normalizarPedidoCarregado(p: PedidoAvulsoGuardado): PedidoAvulsoGuardado {
-  if (p.equipamentosBlocos && p.equipamentosBlocos.length > 0) return p
-  return {
-    ...p,
-    equipamentosBlocos: [
-      {
-        id: 'bloco-legado-' + p.codigo,
-        equipamento: null,
-        equipamentoManual: p.equipamentoTexto || '',
-        pecas: Array.isArray(p.pecas) ? [...p.pecas] : [],
-      },
-    ],
-  }
-}
 
 function lerPedidosLocalStorage(): PedidoAvulsoGuardado[] {
   if (typeof window === 'undefined') return []
@@ -207,7 +137,7 @@ function lerPedidosLocalStorage(): PedidoAvulsoGuardado[] {
     const raw = localStorage.getItem(PEDIDOS_AVULSO_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
-    return Array.isArray(parsed) ? parsed.map((p) => normalizarPedidoCarregado(p as PedidoAvulsoGuardado)) : []
+    return Array.isArray(parsed) ? parsed.map((p) => normalizePedidoAvulsoCarregado(p as PedidoAvulsoGuardado)) : []
   } catch {
     return []
   }
@@ -219,14 +149,14 @@ function mergePedidosArrays(
 ): PedidoAvulsoGuardado[] {
   const map = new Map<string, PedidoAvulsoGuardado>()
   for (const p of server) {
-    if (p?.codigo) map.set(p.codigo, normalizarPedidoCarregado(p))
+    if (p?.codigo) map.set(p.codigo, normalizePedidoAvulsoCarregado(p))
   }
   for (const p of local) {
     if (!p?.codigo) continue
     const prev = map.get(p.codigo)
     const tPrev = prev ? new Date(prev.geradoEm || prev.dataGeracao || 0).getTime() : 0
     const tNew = new Date(p.geradoEm || p.dataGeracao || 0).getTime()
-    if (!prev || tNew >= tPrev) map.set(p.codigo, normalizarPedidoCarregado(p))
+    if (!prev || tNew >= tPrev) map.set(p.codigo, normalizePedidoAvulsoCarregado(p))
   }
   return [...map.values()].sort(
     (a, b) =>
@@ -269,7 +199,7 @@ export function PedidoOrcamentosAvulsoContent({
   const abrirEnvio = useDocumentoEnvioCliente()
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
-  const [blocosEquipamento, setBlocosEquipamento] = useState<EquipamentoBlocoPedido[]>([criarBlocoEquipamentoVazio()])
+  const [blocosEquipamento, setBlocosEquipamento] = useState<EquipamentoBlocoPedido[]>([emptyEquipamentoBlocoPedido()])
   const [blocoAtivoId, setBlocoAtivoId] = useState<string>(() => blocosEquipamento[0]?.id || '')
   const [buscaCliente, setBuscaCliente] = useState('')
   const [buscaPeca, setBuscaPeca] = useState('')
@@ -309,7 +239,7 @@ export function PedidoOrcamentosAvulsoContent({
     const eqs = cl.equipamentos || []
     const idx = Math.max(0, Math.min(hubSeed.equipamentoIndex, eqs.length - 1))
     const eq = eqs[idx] || null
-    const bloco = criarBlocoEquipamentoVazio()
+    const bloco = emptyEquipamentoBlocoPedido()
     if (eq) {
       bloco.equipamento = eq
       bloco.equipamentoIdx = idx
@@ -329,7 +259,7 @@ export function PedidoOrcamentosAvulsoContent({
     setHistoricoCarregando(true)
     try {
       const raw = await loadData(PEDIDOS_AVULSO_KEY)
-      const server = Array.isArray(raw) ? (raw as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado) : []
+      const server = Array.isArray(raw) ? (raw as PedidoAvulsoGuardado[]).map(normalizePedidoAvulsoCarregado) : []
       const merged = mergePedidosArrays(server, local)
       setPedidosGerados(merged)
       if (merged.length === 0 && typeof fetch !== 'undefined') {
@@ -340,7 +270,7 @@ export function PedidoOrcamentosAvulsoContent({
             if (body.ok) {
               const raw2 = await loadData(PEDIDOS_AVULSO_KEY)
               const server2 = Array.isArray(raw2)
-                ? (raw2 as PedidoAvulsoGuardado[]).map(normalizarPedidoCarregado)
+                ? (raw2 as PedidoAvulsoGuardado[]).map(normalizePedidoAvulsoCarregado)
                 : []
               setPedidosGerados(mergePedidosArrays(server2, local))
             }
@@ -427,7 +357,7 @@ export function PedidoOrcamentosAvulsoContent({
   const nomeClienteExibido = clienteSelecionado ? clienteSelecionado.nomeEmpresa : clienteNomeManual || '—'
   const equipamentosDoCliente = clienteSelecionado?.equipamentos || []
   const blocoAtivo = blocosEquipamento.find((b) => b.id === blocoAtivoId) || blocosEquipamento[0]
-  const totalPecas = todasPecasDosBlocos(blocosEquipamento).length
+  const totalPecas = todasPecasDosBlocosPedido(blocosEquipamento).length
 
   const atualizarBloco = useCallback(
     (id: string, patch: Partial<EquipamentoBlocoPedido>) => {
@@ -437,7 +367,7 @@ export function PedidoOrcamentosAvulsoContent({
   )
 
   const adicionarBlocoEquipamento = () => {
-    const novo = criarBlocoEquipamentoVazio()
+    const novo = emptyEquipamentoBlocoPedido()
     setBlocosEquipamento((prev) => [...prev, novo])
     setBlocoAtivoId(novo.id)
   }
@@ -463,21 +393,9 @@ export function PedidoOrcamentosAvulsoContent({
 
   const adicionarPecaAoBlocoAtivo = (peca: Omit<PecaPedido, 'id'> & { id?: string }) => {
     if (!blocoAtivo) return
-    const nova: PecaPedido = { ...peca, id: peca.id || 'peca-' + Date.now() }
+    const nova = createPecaPedidoFromForm(peca)
     setBlocosEquipamento((prev) =>
-      prev.map((b) => {
-        if (b.id !== blocoAtivo.id) return b
-        const existente = b.pecas.find((p) => p.codigo && p.codigo === nova.codigo)
-        if (existente && nova.codigo) {
-          return {
-            ...b,
-            pecas: b.pecas.map((p) =>
-              p.codigo === nova.codigo ? { ...p, quantidade: p.quantidade + nova.quantidade } : p
-            ),
-          }
-        }
-        return { ...b, pecas: [...b.pecas, nova] }
-      })
+      prev.map((b) => (b.id === blocoAtivo.id ? addPecaPedidoAoBloco(b, nova) : b))
     )
   }
 
@@ -566,10 +484,10 @@ export function PedidoOrcamentosAvulsoContent({
   }
 
   const adicionarPecaManual = () => {
+    if (!isPecaPedidoManualFormValid(codigoManualPeca, nomeManualPeca)) return
     const codigo = (codigoManualPeca || '').trim()
     const nome = (nomeManualPeca || '').trim() || codigo || (safeT?.pecaManual || 'Peça manual')
     const imagem = resolverImagemManualPeca()
-    if (!codigo && !nome) return
     adicionarPecaAoBlocoAtivo({
       id: 'manual-' + Date.now(),
       codigo: codigo || nome.slice(0, 20),
@@ -685,8 +603,8 @@ export function PedidoOrcamentosAvulsoContent({
       alert(safeT?.selecioneOuDigiteCliente || 'Selecione ou digite o nome do cliente.')
       return null
     }
-    const pecasTotais = todasPecasDosBlocos(blocosEquipamento)
-    if (pecasTotais.length === 0) {
+    const pecasTotais = todasPecasDosBlocosPedido(blocosEquipamento)
+    if (!isPedidoAvulsoPecasValid(pecasTotais)) {
       alert(safeT?.adicionePeloMenosUmaPeca || 'Adicione pelo menos uma peça ao pedido.')
       return null
     }
@@ -755,7 +673,7 @@ export function PedidoOrcamentosAvulsoContent({
         })),
       }
     }),
-    pecas: todasPecasDosBlocos(blocos).map((p) => ({
+    pecas: todasPecasDosBlocosPedido(blocos).map((p) => ({
       codigo: p.codigo,
       nome: p.nome,
       quantidade: p.quantidade,
@@ -788,7 +706,7 @@ export function PedidoOrcamentosAvulsoContent({
   }
 
   const handleVisualizarPdfGuardado = (pedido: PedidoAvulsoGuardado) => {
-    const normalizado = normalizarPedidoCarregado(pedido)
+    const normalizado = normalizePedidoAvulsoCarregado(pedido)
     const clientePedido =
       (pedido.clienteId ? clientes.find((c) => c.id === pedido.clienteId) : null) ||
       (pedido.clienteNomeReal
@@ -868,7 +786,7 @@ export function PedidoOrcamentosAvulsoContent({
   }
 
   const handleEnvioPdfGuardado = (pedido: PedidoAvulsoGuardado, canal: 'email' | 'whatsapp') => {
-    const normalizado = normalizarPedidoCarregado(pedido)
+    const normalizado = normalizePedidoAvulsoCarregado(pedido)
     const clientePedido =
       (pedido.clienteId ? clientes.find((c) => c.id === pedido.clienteId) : null) ||
       (pedido.clienteNomeReal
@@ -893,7 +811,7 @@ export function PedidoOrcamentosAvulsoContent({
   }
 
   const handleReabrirPedido = (pedido: PedidoAvulsoGuardado) => {
-    const normalizado = normalizarPedidoCarregado(pedido)
+    const normalizado = normalizePedidoAvulsoCarregado(pedido)
     if (pedido.clienteId) {
       const cl = clientes.find((c) => c.id === pedido.clienteId)
       if (cl) {
@@ -915,7 +833,7 @@ export function PedidoOrcamentosAvulsoContent({
             pecas: [...(b.pecas || [])],
             id: b.id || 'bloco-' + Date.now() + '-' + Math.random().toString(36).slice(2, 5),
           }))
-        : [criarBlocoEquipamentoVazio()]
+        : [emptyEquipamentoBlocoPedido()]
     setBlocosEquipamento(blocos)
     setBlocoAtivoId(blocos[0].id)
     setCodigoUltimoGerado(null)
@@ -1035,9 +953,8 @@ export function PedidoOrcamentosAvulsoContent({
     const eqRef = primeiroComEquip?.equipamento
     const eqIdx = primeiroComEquip?.equipamentoIdx
 
-    const novo: PedidoAvulsoGuardado = {
+    const novo = createPedidoAvulsoFromForm({
       codigo,
-      dataGeracao: new Date().toISOString(),
       clienteNomeReal: nomeReal,
       clienteId: clienteSelecionado?.id,
       emitirComoCliente,
@@ -1051,16 +968,11 @@ export function PedidoOrcamentosAvulsoContent({
           .map((b) => (b.equipamento ? resolverNumeroEquipamentoPdf(b.equipamento) : ''))
           .filter(Boolean)
           .join(' · ') || undefined,
-      pecas: [...pecasTotais],
-      equipamentosBlocos: blocosValidos.map((b) => ({
-        ...b,
-        pecas: [...b.pecas],
-      })),
-      status: 'pendente',
+      pecas: pecasTotais,
+      equipamentosBlocos: blocosValidos,
       workflowStatus:
         emitirComoCliente === 'nonato-service' ? ('enviado_fornecedor' as const) : undefined,
-      geradoEm: new Date().toISOString(),
-    }
+    })
 
     const atualizados = [...pedidosGerados, novo]
     setPedidosGerados(atualizados)
@@ -1177,7 +1089,7 @@ export function PedidoOrcamentosAvulsoContent({
         msgExtra
     )
 
-    const blocoReset = criarBlocoEquipamentoVazio()
+    const blocoReset = emptyEquipamentoBlocoPedido()
     setBlocosEquipamento([blocoReset])
     setBlocoAtivoId(blocoReset.id)
     notifyEquipamentoOrcamentosChanged()
@@ -1211,7 +1123,7 @@ export function PedidoOrcamentosAvulsoContent({
   const limparNovoPedido = () => {
     setClienteSelecionado(null)
     setClienteNomeManual('')
-    const bloco = criarBlocoEquipamentoVazio()
+    const bloco = emptyEquipamentoBlocoPedido()
     setBlocosEquipamento([bloco])
     setBlocoAtivoId(bloco.id)
     setMostrarFormPeca(false)
@@ -1434,7 +1346,7 @@ export function PedidoOrcamentosAvulsoContent({
               onSelect={(cliente) => {
                 setClienteSelecionado(cliente as ClientePedido)
                 setClienteNomeManual('')
-                const bloco = criarBlocoEquipamentoVazio()
+                const bloco = emptyEquipamentoBlocoPedido()
                 setBlocosEquipamento([bloco])
                 setBlocoAtivoId(bloco.id)
               }}
