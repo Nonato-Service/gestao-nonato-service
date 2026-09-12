@@ -2825,6 +2825,53 @@ try {
   } else {
     fail('ManuaisInformacoesContent ainda mapeia família no sítio')
   }
+  if (
+    idx.includes('normalizeBibliaImport') &&
+    idx.includes('serializeBibliaForServer') &&
+    idx.includes('BibliaStore') &&
+    exists('app/modules/manuais/bibliaTipos.ts')
+  ) {
+    ok('módulo manuais exporta tipos/normalize da Bíblia')
+  } else {
+    fail('módulo manuais sem tipos/normalize da Bíblia')
+  }
+  const bibliaCompat = fs.readFileSync(path.join(root, 'app/components/bibliaNonatoTypes.ts'), 'utf8')
+  if (
+    bibliaCompat.includes("from '../modules/manuais'") ||
+    bibliaCompat.includes('from "../modules/manuais"')
+  ) {
+    ok('bibliaNonatoTypes re-exporta app/modules/manuais')
+  } else {
+    fail('bibliaNonatoTypes ainda define tipos da Bíblia no sítio')
+  }
+  const tiposManuais = fs.readFileSync(path.join(root, 'app/modules/manuais/tipos.ts'), 'utf8')
+  if (
+    tiposManuais.includes("from './bibliaTipos'") ||
+    tiposManuais.includes('from "./bibliaTipos"')
+  ) {
+    ok('manuais/tipos importa Bíblia do módulo')
+  } else {
+    fail('manuais/tipos ainda importa bibliaNonatoTypes do componente')
+  }
+  const mergeSrc = fs.readFileSync(path.join(root, 'app/lib/conhecimentoTecnicoMerge.ts'), 'utf8')
+  if (
+    (mergeSrc.includes("from '../modules/manuais'") || mergeSrc.includes('from "../modules/manuais"')) &&
+    mergeSrc.includes('normalizeBibliaImport')
+  ) {
+    ok('conhecimentoTecnicoMerge usa Bíblia do módulo manuais')
+  } else {
+    fail('conhecimentoTecnicoMerge ainda importa bibliaNonatoTypes do componente')
+  }
+  if (
+    (manuaisUi.includes("from '../modules/manuais'") || manuaisUi.includes('from "../modules/manuais"')) &&
+    manuaisUi.includes('resolveBibliaSecao') &&
+    !manuaisUi.includes("from './bibliaNonatoTypes'") &&
+    !manuaisUi.includes('from "./bibliaNonatoTypes"')
+  ) {
+    ok('ManuaisInformacoesContent usa tipos/helpers da Bíblia do módulo')
+  } else {
+    fail('ManuaisInformacoesContent ainda importa bibliaNonatoTypes no sítio')
+  }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)
 }

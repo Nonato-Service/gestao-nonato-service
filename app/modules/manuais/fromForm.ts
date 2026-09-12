@@ -1,6 +1,6 @@
 /** Validação e mapeamento puro de família, grupo, modelo, documento e imagem de manuais. */
 
-import type { BibliaAnexo } from '../../components/bibliaNonatoTypes'
+import type { BibliaAnexo } from './bibliaTipos'
 import type { ManuaisDocumento, ManuaisGrupo, ManuaisImagem, ManuaisModelo } from './tipos'
 
 export function newManuaisEntityId(prefix: string, suffix?: string | number): string {

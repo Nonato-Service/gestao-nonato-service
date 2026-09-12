@@ -22,9 +22,13 @@ import {
   createManuaisDocumentoFromForm,
   createManuaisImagemFromForm,
   createBibliaAnexoFromForm,
+  BIBLIA_ANEXO_MAX_BYTES,
+  BIBLIA_ANEXO_MAX_PER_MODEL,
+  BIBLIA_NONATO_STORAGE_KEY,
+  inferBibliaSecaoFromName,
+  resolveBibliaSecao,
 } from '../modules/manuais'
-import type { BibliaSecao } from './bibliaNonatoTypes'
-import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, BIBLIA_NONATO_STORAGE_KEY, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
+import type { BibliaSecao } from '../modules/manuais'
 import {
   manuaisToBibliaStore,
   syncConhecimentoTecnicoLegacyStores,

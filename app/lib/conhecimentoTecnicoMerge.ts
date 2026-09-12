@@ -6,7 +6,7 @@ import {
   bibliaUid,
   normalizeBibliaImport,
   serializeBibliaForServer,
-} from '../components/bibliaNonatoTypes'
+} from '../modules/manuais'
 import type { ManuaisGrupo, ManuaisModelo } from './manuaisTypes'
 
 export const CONHECIMENTO_TECNICO_STORAGE_KEY = 'nonato-conhecimento-tecnico-unificado'

@@ -1,6 +1,6 @@
 /** Tipos de Manuais e Informações Técnicas (e Bíblia alinhada). */
 
-import type { BibliaAnexo, BibliaSecao } from '../../components/bibliaNonatoTypes'
+import type { BibliaAnexo, BibliaSecao } from './bibliaTipos'
 
 export type ManuaisGrupo = { id: string; nome: string; familia: string }
 
