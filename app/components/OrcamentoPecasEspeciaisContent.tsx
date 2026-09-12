@@ -34,7 +34,7 @@ export type {
   OrcamentoPecasEspeciaisSalvo,
   PecaBibliotecaPecasEsp,
 } from '../modules/orcamentos'
-import { formatClienteIdentidadeTexto } from './ClienteIdentidadeChips'
+import { formatClienteIdentidadeTexto } from '../modules/clientes'
 import { PdfModeloPickerField } from './PdfModeloPickerField'
 import { loadPdfModeloPadrao, persistPdfModeloPadrao } from '../lib/pdfModelStorage'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'

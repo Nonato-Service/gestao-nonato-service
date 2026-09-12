@@ -1,4 +1,6 @@
-/** Dados e texto de INF. ADICIONAL na lista de clientes. */
+/** Dados e texto de INF. ADICIONAL / identidade na lista de clientes. */
+
+import { codigoClienteExibicao } from '../../lib/clienteCodigoUtils'
 
 export type ClienteListaLinhasData = {
   codigoCliente?: string
@@ -35,4 +37,20 @@ export function buildClienteInfAdicional(cliente: ClienteListaLinhasData): strin
   ]
     .filter(Boolean)
     .join(' · ')
+}
+
+export type ClienteIdentidadeTexto = Pick<ClienteListaLinhasData, 'codigoCliente' | 'id' | 'nomeEmpresa'>
+
+/** Texto plano: «Cód. = NS000042 · Cliente = ACME» (selects, alertas). */
+export function formatClienteIdentidadeTexto(
+  cliente: ClienteIdentidadeTexto | null | undefined,
+  labels?: { cod?: string; nome?: string }
+): string {
+  if (!cliente) return '—'
+  const cod = codigoClienteExibicao(cliente)
+  const nome = (cliente.nomeEmpresa || '').trim() || '—'
+  const lblCod = labels?.cod || 'Cód.'
+  const lblNome = labels?.nome || 'Cliente'
+  if (cod === '—') return `${lblNome} = ${nome}`
+  return `${lblCod} = ${cod}  ·  ${lblNome} = ${nome}`
 }

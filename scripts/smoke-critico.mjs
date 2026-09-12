@@ -482,6 +482,31 @@ try {
     fail('ClienteIdentidadeChips ainda define formatNifClienteExibicao no sítio')
   }
   if (
+    idx.includes('formatClienteIdentidadeTexto') &&
+    idx.includes('ClienteIdentidadeTexto')
+  ) {
+    ok('módulo clientes exporta formatClienteIdentidadeTexto')
+  } else {
+    fail('módulo clientes sem formatClienteIdentidadeTexto')
+  }
+  if (
+    identChips.includes('formatClienteIdentidadeTexto') &&
+    !identChips.includes('export function formatClienteIdentidadeTexto(')
+  ) {
+    ok('ClienteIdentidadeChips re-exporta formatClienteIdentidadeTexto do módulo')
+  } else {
+    fail('ClienteIdentidadeChips ainda define formatClienteIdentidadeTexto no sítio')
+  }
+  const opeIdent = fs.readFileSync(path.join(root, 'app/components/OrcamentoPecasEspeciaisContent.tsx'), 'utf8')
+  if (
+    (opeIdent.includes("from '../modules/clientes'") || opeIdent.includes('from "../modules/clientes"')) &&
+    opeIdent.includes('formatClienteIdentidadeTexto')
+  ) {
+    ok('OrcamentoPecasEspeciaisContent usa formatClienteIdentidadeTexto do módulo clientes')
+  } else {
+    fail('OrcamentoPecasEspeciaisContent ainda importa identidade dos chips')
+  }
+  if (
     idx.includes('ClienteDetalheData') &&
     exists('app/modules/clientes/detalhe.ts')
   ) {

@@ -4,14 +4,9 @@ import { useMemo } from 'react'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { translations, translationBundleKey } from '../translations'
 import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
+import type { ClienteIdentidadeTexto as ClienteIdentidade } from '../modules/clientes'
 
-export { formatNifClienteExibicao } from '../modules/clientes'
-
-type ClienteIdentidade = {
-  codigoCliente?: string
-  id?: string
-  nomeEmpresa?: string
-}
+export { formatNifClienteExibicao, formatClienteIdentidadeTexto } from '../modules/clientes'
 
 function useIdentTr(language: string) {
   return useMemo(() => {
@@ -23,20 +18,6 @@ function useIdentTr(language: string) {
     const pt = translations['pt-BR'] as Record<string, string | undefined>
     return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
   }, [language])
-}
-
-/** Texto plano: «Cód. = NS000042 · Cliente = ACME» (selects, alertas). */
-export function formatClienteIdentidadeTexto(
-  cliente: ClienteIdentidade | null | undefined,
-  labels?: { cod?: string; nome?: string }
-): string {
-  if (!cliente) return '—'
-  const cod = codigoClienteExibicao(cliente)
-  const nome = (cliente.nomeEmpresa || '').trim() || '—'
-  const lblCod = labels?.cod || 'Cód.'
-  const lblNome = labels?.nome || 'Cliente'
-  if (cod === '—') return `${lblNome} = ${nome}`
-  return `${lblCod} = ${cod}  ·  ${lblNome} = ${nome}`
 }
 
 type Props = {
