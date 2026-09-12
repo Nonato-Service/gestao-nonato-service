@@ -39,3 +39,5 @@ export {
 
 export type { ProtocoloTemplateId } from './intelTemplates'
 export { PROTOCOLO_TEMPLATE_IDS, blocosDeTemplate } from './intelTemplates'
+
+export { historicoProtocolosCliente, pecasMaisUsadasHistorico } from './intelHistorico'

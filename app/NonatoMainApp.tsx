@@ -353,6 +353,8 @@ import {
   aplicarFiltroInteligenteChip,
   PROTOCOLO_TEMPLATE_IDS,
   blocosDeTemplate,
+  historicoProtocolosCliente,
+  pecasMaisUsadasHistorico,
 } from './modules/protocolo'
 import type {
   SolicitacaoDocDevolvido,
@@ -1067,8 +1069,6 @@ import {
 import {
   formRascunhoDeProtocolo,
   protocoloFormVazio,
-  historicoProtocolosCliente,
-  pecasMaisUsadasHistorico,
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
   protocoloEstaEmExecucao,

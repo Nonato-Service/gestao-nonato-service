@@ -2441,6 +2441,26 @@ try {
   } else {
     fail('intelTemplates ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('historicoProtocolosCliente') &&
+    idx.includes('pecasMaisUsadasHistorico') &&
+    exists('app/modules/protocolo/intelHistorico.ts')
+  ) {
+    ok('módulo protocolo exporta intelHistorico')
+  } else {
+    fail('módulo protocolo sem intelHistorico')
+  }
+  if (
+    intelFiltroLib.includes("from '../modules/protocolo/intelHistorico'") &&
+    !intelFiltroLib.includes('export function historicoProtocolosCliente<') &&
+    !intelFiltroLib.includes('export function pecasMaisUsadasHistorico(') &&
+    nma.includes('historicoProtocolosCliente') &&
+    nma.includes('pecasMaisUsadasHistorico')
+  ) {
+    ok('NonatoMainApp usa intelHistorico do módulo protocolo')
+  } else {
+    fail('intelHistorico ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
