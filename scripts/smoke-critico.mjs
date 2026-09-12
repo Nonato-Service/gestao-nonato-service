@@ -482,6 +482,24 @@ try {
     fail('ClienteIdentidadeChips ainda define formatNifClienteExibicao no sítio')
   }
   if (
+    idx.includes('ClienteDetalheData') &&
+    exists('app/modules/clientes/detalhe.ts')
+  ) {
+    ok('módulo clientes exporta ClienteDetalheData')
+  } else {
+    fail('módulo clientes sem ClienteDetalheData')
+  }
+  const detView = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
+  if (
+    (detView.includes("from '../modules/clientes'") || detView.includes('from "../modules/clientes"')) &&
+    detView.includes('ClienteDetalheData') &&
+    !detView.includes('export type ClienteDetalheData = {')
+  ) {
+    ok('ClienteDetalheView usa ClienteDetalheData do módulo clientes')
+  } else {
+    fail('ClienteDetalheView ainda define ClienteDetalheData no sítio')
+  }
+  if (
     nma.includes('createEmptyEquipamentoClienteForm') &&
     nma.includes('createEmptyRelatorioEquipamentoForm') &&
     nma.includes('isRelatorioEquipamentoFormValid') &&

@@ -9,6 +9,7 @@ export type {
   EquipamentoClienteLike,
   RotuloIdEquipamentoCliente,
   FaturaPecasLike,
+  ClienteDetalheData,
   ClienteDetalheFinanceiroResumo,
   ClienteDetalheServicoFinanceiro,
   RelatorioServicoFinanceiroLike,

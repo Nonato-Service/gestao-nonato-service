@@ -19,11 +19,9 @@ import {
   relatorioServicoConsideradoConcluido,
   rotuloIdEquipamentoCliente,
   type EquipamentoArmazemIdLookup,
-  type EquipamentoClienteLike,
   type FaturaPecasLike,
   type FechamentoItemLike,
   type FechamentoIvaLike,
-  type RelatorioClienteLike,
 } from '../lib/clienteDetalheUtils'
 import { codigoClienteExibicao } from '../lib/clienteCodigoUtils'
 import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'
@@ -39,8 +37,11 @@ import {
   buildHubEqChips,
   hubEqChipToneStyle,
   filtrarFaturasDoEquipamento,
+  type ClienteDetalheData,
 } from '../modules/clientes'
 import { coletarRelatoriosServicoPorEquipamentoCliente } from '../modules/equipamentos'
+
+export type { ClienteDetalheData }
 
 function useDetalheTr(language: string) {
   return useMemo(() => {
@@ -52,25 +53,6 @@ function useDetalheTr(language: string) {
     const pt = translations['pt-BR'] as Record<string, string | undefined>
     return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
   }, [language])
-}
-
-export type ClienteDetalheData = {
-  id: string
-  codigoCliente?: string
-  nomeEmpresa: string
-  morada: string
-  localidade?: string
-  conselho?: string
-  pais?: string
-  codigoPostal: string
-  numeroContribuicaoFiscal: string
-  telefones: string
-  photo?: string
-  equipamentos: EquipamentoClienteLike[]
-  relatorios?: Record<string, RelatorioClienteLike[]>
-  saldoPendente?: number
-  isDevedor?: boolean
-  relatoriosNaoPagoCount?: number
 }
 
 type Props = {

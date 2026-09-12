@@ -84,6 +84,26 @@ export type FaturaPecasLike = {
   nomeArquivoOriginal?: string
 }
 
+/** Ficha do ecrã de detalhe do cliente (subset do cadastro + likes de equipamento/relatório). */
+export type ClienteDetalheData = {
+  id: string
+  codigoCliente?: string
+  nomeEmpresa: string
+  morada: string
+  localidade?: string
+  conselho?: string
+  pais?: string
+  codigoPostal: string
+  numeroContribuicaoFiscal: string
+  telefones: string
+  photo?: string
+  equipamentos: EquipamentoClienteLike[]
+  relatorios?: Record<string, RelatorioClienteLike[]>
+  saldoPendente?: number
+  isDevedor?: boolean
+  relatoriosNaoPagoCount?: number
+}
+
 export type ClienteDetalheFinanceiroResumo = {
   totalFaturado: number
   pagos: number
