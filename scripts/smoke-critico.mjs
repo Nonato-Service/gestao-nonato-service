@@ -736,6 +736,29 @@ try {
   } else {
     fail('lib/clienteCadastroDuplicadoUtils ainda não aponta para o módulo clientes')
   }
+  if (
+    idx.includes('ClienteExclusaoAlvo') &&
+    idx.includes('isClienteBibliotecaOrfaos') &&
+    idx.includes('coletarIdsRelatoriosClienteParaExclusao') &&
+    exists('app/modules/clientes/exclusao.ts')
+  ) {
+    ok('módulo clientes exporta ClienteExclusaoAlvo')
+  } else {
+    fail('módulo clientes sem exclusao')
+  }
+  const libExclusao = fs.readFileSync(path.join(root, 'app/lib/clienteExclusao.ts'), 'utf8')
+  if (
+    libExclusao.includes("from '../modules/clientes/exclusao'") &&
+    !libExclusao.includes('export type ClienteExclusaoAlvo = {') &&
+    nma.includes('ClienteExclusaoAlvo') &&
+    nma.includes('isClienteBibliotecaOrfaos') &&
+    nma.includes('coletarIdsRelatoriosClienteParaExclusao') &&
+    !nma.includes("from './lib/clienteExclusao'")
+  ) {
+    ok('NonatoMainApp usa ClienteExclusaoAlvo do módulo clientes')
+  } else {
+    fail('ClienteExclusao ainda definido em lib ou importado pelo NMA via lib')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }

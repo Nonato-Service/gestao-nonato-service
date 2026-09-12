@@ -473,6 +473,7 @@ import type {
   HubEqTimelineItem,
   RelatorioEquipamento,
   RelatorioEquipamentoFormFields,
+  ClienteExclusaoAlvo,
 } from './modules/clientes'
 import {
   cmpNomeCliente,
@@ -513,6 +514,8 @@ import {
   buildHubEqChips,
   hubEqChipToneStyle,
   filtrarFaturasDoEquipamento,
+  coletarIdsRelatoriosClienteParaExclusao,
+  isClienteBibliotecaOrfaos,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -640,11 +643,6 @@ import {
   createEquipamentoFromForm,
   updateEquipamentoFromForm,
 } from './modules/equipamentos'
-import {
-  coletarIdsRelatoriosClienteParaExclusao,
-  isClienteBibliotecaOrfaos,
-  type ClienteExclusaoAlvo,
-} from './lib/clienteExclusao'
 import {
   snapshotRelatoriosServicoBackup,
   restaurarRelatoriosDeBackupsLocais,

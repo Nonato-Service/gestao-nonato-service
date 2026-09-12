@@ -177,6 +177,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 157. `app/modules/tradutor/` (WritingAssistLabels / par + chave LS) — feito
 158. `app/modules/pdf/` (PdfLogoSituationId / catálogo / accent) — feito
 159. `app/modules/checklist/` (ChecklistBasicoInstancia / tipos / id) — feito
+160. `app/modules/clientes/` (ClienteExclusaoAlvo / pertença relatórios) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

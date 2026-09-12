@@ -158,3 +158,10 @@ export {
   hubEqTimelineTipoIcon,
   buildItensFaturaDeOrcamentoAprovado,
 } from './equipamentoHubPro'
+
+export type { ClienteExclusaoAlvo } from './exclusao'
+export {
+  isClienteBibliotecaOrfaos,
+  relatorioPertenceAoClienteParaExclusao,
+  coletarIdsRelatoriosClienteParaExclusao,
+} from './exclusao'
