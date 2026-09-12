@@ -341,13 +341,16 @@ import {
   createDiarioPedidoFromForm,
   updateDiarioPedidoFromForm,
 } from './modules/diario'
-import type { ProtocoloBloco, ProtocoloServico } from './modules/protocolo'
+import type { ProtocoloBloco, ProtocoloServico, ProtocoloIntelFiltroChip } from './modules/protocolo'
 import {
   newProtocoloBlocoId,
   ensureProtocoloBlocosIds,
   protocoloServicoFormMissing,
   createProtocoloServicoFromForm,
   updateProtocoloServicoFromForm,
+  PROTOCOLO_FILTRO_CHIPS,
+  avaliarCompletudeProtocolo,
+  aplicarFiltroInteligenteChip,
 } from './modules/protocolo'
 import type {
   SolicitacaoDocDevolvido,
@@ -1060,21 +1063,17 @@ import {
   clampProtocoloPdfModelo,
 } from './utils/protocoloServicoPdfThemes'
 import {
-  aplicarFiltroInteligenteChip,
-  avaliarCompletudeProtocolo,
   blocosDeTemplate,
   formRascunhoDeProtocolo,
   protocoloFormVazio,
   historicoProtocolosCliente,
   pecasMaisUsadasHistorico,
-  PROTOCOLO_FILTRO_CHIPS,
   PROTOCOLO_TEMPLATE_IDS,
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
   agruparProtocolosExecutadosPorClienteEData,
-  type ProtocoloIntelFiltroChip,
   type ProtocoloTemplateId,
 } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'

@@ -18,3 +18,21 @@ export {
   createProtocoloServicoFromForm,
   updateProtocoloServicoFromForm,
 } from './fromForm'
+
+export type {
+  ProtocoloIntelFiltroChip,
+  ProtocoloCondicaoSimNao,
+  ProtocoloFormMin,
+  ProtocoloServicoMin,
+  ProtocoloCompletudeItem,
+} from './intelFiltro'
+export {
+  PROTOCOLO_FILTRO_CHIPS,
+  protocoloTemImagens,
+  protocoloTemPecas,
+  protocoloIdentificacaoOk,
+  protocoloConteudoOk,
+  protocoloEstaIncompleto,
+  avaliarCompletudeProtocolo,
+  aplicarFiltroInteligenteChip,
+} from './intelFiltro'

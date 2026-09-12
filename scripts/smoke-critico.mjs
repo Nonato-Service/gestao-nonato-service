@@ -2395,6 +2395,30 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ProtocoloServico no sítio')
   }
+  if (
+    idx.includes('ProtocoloIntelFiltroChip') &&
+    idx.includes('avaliarCompletudeProtocolo') &&
+    idx.includes('aplicarFiltroInteligenteChip') &&
+    idx.includes('PROTOCOLO_FILTRO_CHIPS') &&
+    exists('app/modules/protocolo/intelFiltro.ts')
+  ) {
+    ok('módulo protocolo exporta intelFiltro')
+  } else {
+    fail('módulo protocolo sem intelFiltro')
+  }
+  const intelFiltroLib = fs.readFileSync(path.join(root, 'app/lib/protocoloInteligente.ts'), 'utf8')
+  if (
+    intelFiltroLib.includes("from '../modules/protocolo/intelFiltro'") &&
+    !intelFiltroLib.includes('export type ProtocoloFormMin = {') &&
+    !intelFiltroLib.includes('export function aplicarFiltroInteligenteChip<') &&
+    nma.includes('aplicarFiltroInteligenteChip') &&
+    nma.includes('avaliarCompletudeProtocolo') &&
+    nma.includes('PROTOCOLO_FILTRO_CHIPS')
+  ) {
+    ok('NonatoMainApp usa intelFiltro do módulo protocolo')
+  } else {
+    fail('intelFiltro ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
