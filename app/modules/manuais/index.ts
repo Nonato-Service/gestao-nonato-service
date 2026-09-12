@@ -68,3 +68,9 @@ export {
 
 export type { ManualSection } from './zipSection'
 export { findManualSectionPdf } from './zipSection'
+export {
+  normalizeZipRelativePath,
+  cleanLinkTarget,
+  matchEntryByPathSuffix,
+  resolveZipEntryPath,
+} from './zipPath'

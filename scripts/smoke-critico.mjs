@@ -3141,6 +3141,24 @@ try {
   } else {
     fail('ManuaisZipPdfPreview ainda define ManualSection/findManualSectionPdf no sítio')
   }
+  if (
+    idx.includes('resolveZipEntryPath') &&
+    idx.includes('cleanLinkTarget') &&
+    exists('app/modules/manuais/zipPath.ts')
+  ) {
+    ok('módulo manuais exporta resolveZipEntryPath')
+  } else {
+    fail('módulo manuais sem zipPath')
+  }
+  if (
+    zipPdf.includes('resolveZipEntryPath') &&
+    zipPdf.includes('cleanLinkTarget') &&
+    !zipPdf.includes('export function resolveZipEntryPath(')
+  ) {
+    ok('ManuaisZipPdfPreview usa resolveZipEntryPath do módulo manuais')
+  } else {
+    fail('ManuaisZipPdfPreview ainda define resolveZipEntryPath no sítio')
+  }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)
 }

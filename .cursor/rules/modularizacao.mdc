@@ -157,6 +157,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 137. `app/modules/fechamento/` (rotuloRelatorioCobrancaGrupoOption / select HTT) — feito
 138. `app/modules/clientes/` (ClienteAlfabetoPickerLabels / formatClienteAlfabetoPickerMeta) — feito
 139. `app/modules/manuais/` (ManualSection / findManualSectionPdf) — feito
+140. `app/modules/manuais/` (resolveZipEntryPath / cleanLinkTarget) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 
