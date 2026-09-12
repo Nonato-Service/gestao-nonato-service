@@ -355,6 +355,8 @@ import {
   blocosDeTemplate,
   historicoProtocolosCliente,
   pecasMaisUsadasHistorico,
+  relatoriosServicoParaProtocolo,
+  sugerirRelatorioServicoId,
 } from './modules/protocolo'
 import type {
   SolicitacaoDocDevolvido,
@@ -1069,8 +1071,6 @@ import {
 import {
   formRascunhoDeProtocolo,
   protocoloFormVazio,
-  relatoriosServicoParaProtocolo,
-  sugerirRelatorioServicoId,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
   agruparProtocolosExecutadosPorClienteEData,

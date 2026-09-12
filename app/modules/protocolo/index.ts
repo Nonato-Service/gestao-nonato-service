@@ -41,3 +41,6 @@ export type { ProtocoloTemplateId } from './intelTemplates'
 export { PROTOCOLO_TEMPLATE_IDS, blocosDeTemplate } from './intelTemplates'
 
 export { historicoProtocolosCliente, pecasMaisUsadasHistorico } from './intelHistorico'
+
+export type { RelatorioServicoMin as ProtocoloRelatorioServicoMin } from './intelRelatorio'
+export { relatoriosServicoParaProtocolo, sugerirRelatorioServicoId } from './intelRelatorio'

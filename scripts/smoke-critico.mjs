@@ -2461,6 +2461,27 @@ try {
   } else {
     fail('intelHistorico ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('ProtocoloRelatorioServicoMin') &&
+    idx.includes('relatoriosServicoParaProtocolo') &&
+    idx.includes('sugerirRelatorioServicoId') &&
+    exists('app/modules/protocolo/intelRelatorio.ts')
+  ) {
+    ok('módulo protocolo exporta intelRelatorio')
+  } else {
+    fail('módulo protocolo sem intelRelatorio')
+  }
+  if (
+    intelFiltroLib.includes("from '../modules/protocolo/intelRelatorio'") &&
+    !intelFiltroLib.includes('export type RelatorioServicoMin = {') &&
+    !intelFiltroLib.includes('export function relatoriosServicoParaProtocolo(') &&
+    nma.includes('relatoriosServicoParaProtocolo') &&
+    nma.includes('sugerirRelatorioServicoId')
+  ) {
+    ok('NonatoMainApp usa intelRelatorio do módulo protocolo')
+  } else {
+    fail('intelRelatorio ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
