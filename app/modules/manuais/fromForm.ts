@@ -1,4 +1,4 @@
-/** Validação e mapeamento puro de grupo, modelo, documento e imagem de manuais. */
+/** Validação e mapeamento puro de família, grupo, modelo, documento e imagem de manuais. */
 
 import type { BibliaAnexo } from '../../components/bibliaNonatoTypes'
 import type { ManuaisDocumento, ManuaisGrupo, ManuaisImagem, ManuaisModelo } from './tipos'
@@ -8,6 +8,52 @@ export function newManuaisEntityId(prefix: string, suffix?: string | number): st
     return crypto.randomUUID()
   }
   return suffix == null ? `${prefix}-${Date.now()}` : `${prefix}-${Date.now()}-${suffix}`
+}
+
+export function isManuaisFamiliaNomeValid(nome: string): boolean {
+  return Boolean(nome.trim())
+}
+
+export function normalizeManuaisFamiliaNome(nome: string): string {
+  return nome.trim()
+}
+
+export function sortManuaisFamiliaNomes(familias: readonly string[]): string[] {
+  return [...familias].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+}
+
+export function canAddManuaisFamilia(nome: string, familias: readonly string[]): boolean {
+  const n = nome.trim()
+  return Boolean(n) && !familias.includes(n)
+}
+
+export function addManuaisFamiliaFromForm(
+  familias: readonly string[],
+  nome: string
+): { familias: string[]; nome: string } | null {
+  const n = nome.trim()
+  if (!canAddManuaisFamilia(n, familias)) return null
+  return { nome: n, familias: sortManuaisFamiliaNomes([...familias, n]) }
+}
+
+export function canRenameManuaisFamilia(nome: string, oldNome: string): boolean {
+  const n = nome.trim()
+  return Boolean(n) && n !== oldNome
+}
+
+export function renameManuaisFamiliaFromForm(
+  familias: readonly string[],
+  grupos: readonly ManuaisGrupo[],
+  oldNome: string,
+  nome: string
+): { familias: string[]; grupos: ManuaisGrupo[]; nome: string } | null {
+  if (!canRenameManuaisFamilia(nome, oldNome)) return null
+  const n = nome.trim()
+  return {
+    nome: n,
+    familias: sortManuaisFamiliaNomes(familias.map((x) => (x === oldNome ? n : x))),
+    grupos: grupos.map((g) => (g.familia === oldNome ? { ...g, familia: n } : g)),
+  }
 }
 
 export function isManuaisGrupoNomeValid(nome: string): boolean {

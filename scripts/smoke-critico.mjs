@@ -2683,6 +2683,8 @@ try {
     idx.includes('createManuaisDocumentoFromForm') &&
     idx.includes('createManuaisImagemFromForm') &&
     idx.includes('createBibliaAnexoFromForm') &&
+    idx.includes('addManuaisFamiliaFromForm') &&
+    idx.includes('renameManuaisFamiliaFromForm') &&
     exists('app/modules/manuais/fromForm.ts')
   ) {
     ok('módulo manuais exporta grupo/modelo fromForm')
@@ -2702,6 +2704,24 @@ try {
     ok('ManuaisInformacoesContent usa Manuais fromForm do módulo')
   } else {
     fail('ManuaisInformacoesContent ainda mapeia grupo/modelo no sítio')
+  }
+  if (
+    idx.includes('isManuaisFamiliaNomeValid') &&
+    idx.includes('addManuaisFamiliaFromForm') &&
+    idx.includes('renameManuaisFamiliaFromForm')
+  ) {
+    ok('módulo manuais exporta família fromForm')
+  } else {
+    fail('módulo manuais sem família fromForm')
+  }
+  if (
+    manuaisUi.includes('addManuaisFamiliaFromForm') &&
+    manuaisUi.includes('renameManuaisFamiliaFromForm') &&
+    !manuaisUi.includes('if (nome && !familias.includes(nome))')
+  ) {
+    ok('ManuaisInformacoesContent usa família fromForm do módulo')
+  } else {
+    fail('ManuaisInformacoesContent ainda mapeia família no sítio')
   }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)

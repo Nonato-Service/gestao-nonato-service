@@ -17,6 +17,13 @@ export type {
 } from './fromForm'
 export {
   newManuaisEntityId,
+  isManuaisFamiliaNomeValid,
+  normalizeManuaisFamiliaNome,
+  sortManuaisFamiliaNomes,
+  canAddManuaisFamilia,
+  addManuaisFamiliaFromForm,
+  canRenameManuaisFamilia,
+  renameManuaisFamiliaFromForm,
   isManuaisGrupoNomeValid,
   createManuaisGrupoFromForm,
   updateManuaisGrupoNomeFromForm,

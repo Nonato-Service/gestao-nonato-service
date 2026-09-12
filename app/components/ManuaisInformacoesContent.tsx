@@ -10,6 +10,8 @@ import {
   ManuaisModelo,
 } from '../lib/manuaisTypes'
 import {
+  addManuaisFamiliaFromForm,
+  renameManuaisFamiliaFromForm,
   isManuaisGrupoNomeValid,
   createManuaisGrupoFromForm,
   updateManuaisGrupoNomeFromForm,
@@ -725,29 +727,24 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
   }
 
   const handleAddFamilia = () => {
-    const nome = novaFamiliaManuais.trim()
-    if (nome && !familias.includes(nome)) {
-      const next = [...familias, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-      setManuaisFamilias(next)
-      setNovaFamiliaManuais('')
-      setSelectedFamiliaManuais(nome)
-      setSelectedGrupoManuais(null)
-      setSelectedModeloManuaisId(null)
-      persistManuaisFG(next, grupos, manuaisModelosRef.current)
-    }
+    const added = addManuaisFamiliaFromForm(familias, novaFamiliaManuais)
+    if (!added) return
+    setManuaisFamilias(added.familias)
+    setNovaFamiliaManuais('')
+    setSelectedFamiliaManuais(added.nome)
+    setSelectedGrupoManuais(null)
+    setSelectedModeloManuaisId(null)
+    persistManuaisFG(added.familias, grupos, manuaisModelosRef.current)
   }
 
   const handleSaveFamiliaEdit = (oldNome: string) => {
-    const nome = editingFamiliaManuaisValue.trim()
-    if (nome && nome !== oldNome) {
-      const nextF = familias.map((x) => (x === oldNome ? nome : x)).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-      const nextG = grupos.map((g) => (g.familia === oldNome ? { ...g, familia: nome } : g))
-      setManuaisFamilias(nextF)
-      setManuaisGrupos(nextG)
-      setSelectedFamiliaManuais(nome)
-      setEditingFamiliaManuais(null)
-      persistManuaisFG(nextF, nextG, manuaisModelosRef.current)
-    }
+    const renamed = renameManuaisFamiliaFromForm(familias, grupos, oldNome, editingFamiliaManuaisValue)
+    if (!renamed) return
+    setManuaisFamilias(renamed.familias)
+    setManuaisGrupos(renamed.grupos)
+    setSelectedFamiliaManuais(renamed.nome)
+    setEditingFamiliaManuais(null)
+    persistManuaisFG(renamed.familias, renamed.grupos, manuaisModelosRef.current)
   }
 
   const handleDeleteFamilia = (familia: string) => {
