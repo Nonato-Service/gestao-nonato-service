@@ -33,3 +33,10 @@ export {
   NONATO_BRAND_VARIANT_LABELS,
   brandLogoClassName,
 } from './brandLogo'
+
+export type { SyncPendingRemote } from './syncPending'
+export {
+  isSyncPendingRemote,
+  syncPendingRevisionValue,
+  syncPendingRevisionDisplay,
+} from './syncPending'

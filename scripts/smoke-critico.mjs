@@ -2889,6 +2889,29 @@ try {
   } else {
     fail('NonatoBrandVariant ainda definido no componente de logo')
   }
+  if (
+    idx.includes('SyncPendingRemote') &&
+    idx.includes('syncPendingRevisionDisplay') &&
+    idx.includes('isSyncPendingRemote') &&
+    exists('app/modules/admin/syncPending.ts')
+  ) {
+    ok('módulo admin exporta SyncPendingRemote')
+  } else {
+    fail('módulo admin sem syncPending')
+  }
+  const adminSyncUi = fs.readFileSync(path.join(root, 'app/components/admin/AdminSyncSection.tsx'), 'utf8')
+  if (
+    adminTypes.includes("from '../../modules/admin/syncPending'") &&
+    !adminTypes.includes('export type SyncPendingRemote = {') &&
+    !nma.includes('useState<{\n    revision: number') &&
+    nma.includes('SyncPendingRemote') &&
+    adminSyncUi.includes('isSyncPendingRemote') &&
+    adminSyncUi.includes('syncPendingRevisionDisplay')
+  ) {
+    ok('adminTypes/NMA/AdminSyncSection usam SyncPendingRemote do módulo')
+  } else {
+    fail('SyncPendingRemote ainda definido em adminTypes ou NonatoMainApp')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

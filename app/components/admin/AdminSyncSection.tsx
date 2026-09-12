@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { AdminSyncBatteryProgress } from './AdminSyncBatteryProgress'
+import { isSyncPendingRemote, syncPendingRevisionDisplay } from '../../modules/admin'
 import type { SafeT, SyncPendingRemote } from './adminTypes'
 
 export type AdminSyncSectionProps = {
@@ -39,8 +40,7 @@ export function AdminSyncSection({
   const [pullLoading, setPullLoading] = useState(false)
   const [pullPercent, setPullPercent] = useState(0)
   const [pullDone, setPullDone] = useState(false)
-  const pending = Boolean(syncPendingRemote)
-  const revision = syncPendingRemote?.revision ?? 0
+  const pending = isSyncPendingRemote(syncPendingRemote)
 
   const pushPercent = syncPushLoading
     ? Math.max(1, Math.min(99, Math.round(syncOperationPercent || 1)))
@@ -140,7 +140,7 @@ export function AdminSyncSection({
         </div>
         <div className="admin-sync-hub__stat">
           <span>{tr(safeT, 'adminSyncHubKpiRevision', 'Revisão')}</span>
-          <strong>{revision > 0 ? revision : '—'}</strong>
+          <strong>{syncPendingRevisionDisplay(syncPendingRemote)}</strong>
         </div>
         <div className="admin-sync-hub__stat admin-sync-hub__stat--note">
           <span>{tr(safeT, 'adminSyncHubKpiDevice', 'Aparelho')}</span>

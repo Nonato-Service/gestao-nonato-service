@@ -21,11 +21,7 @@ export type {
 export type { PasswordEntry } from '../../modules/admin/passwords'
 export type { PasswordFormState } from '../../modules/admin/passwordForm'
 
-export type SyncPendingRemote = {
-  revision: number
-  updatedAt?: string
-  summaryLines: string[]
-}
+export type { SyncPendingRemote } from '../../modules/admin/syncPending'
 
 export type CodeBackup = { path: string; timestamp: string; filesCount: number }
 export type AutoBackup = { timestamp: number; data?: { date?: string } }

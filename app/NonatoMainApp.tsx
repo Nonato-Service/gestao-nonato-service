@@ -368,7 +368,7 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
-import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft } from './modules/admin'
+import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft, SyncPendingRemote } from './modules/admin'
 import {
   createEmptyUserForm,
   userToFormState,
@@ -1819,11 +1819,7 @@ export default function Dashboard() {
     [sidebarTipCanHoverFine, positionSidebarTipForButton]
   )
   /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
-  const [syncPendingRemote, setSyncPendingRemote] = useState<{
-    revision: number
-    updatedAt?: string
-    summaryLines: string[]
-  } | null>(null)
+  const [syncPendingRemote, setSyncPendingRemote] = useState<SyncPendingRemote | null>(null)
   const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
   const [syncPullChecking, setSyncPullChecking] = useState(false)
