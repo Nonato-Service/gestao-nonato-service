@@ -41,18 +41,4 @@ export type SyncPendingRemote = {
 export type CodeBackup = { path: string; timestamp: string; filesCount: number }
 export type AutoBackup = { timestamp: number; data?: { date?: string } }
 
-export type SidebarGroup =
-  | 'gestao-tecnica' | 'parceiros-comercial' | 'documentacao-relatorios' | 'pecas-biblioteca' | 'gestao-custos'
-  | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna'
-  | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem'
-  | 'empresa-institucional' | 'outros'
-
-export type SidebarButton = {
-  id: string
-  name: string
-  action: string
-  order: number
-  translationKey?: string
-  group?: SidebarGroup
-  customName?: boolean
-}
+export type { SidebarGroup, SidebarButton } from '../../modules/sidebar/tipos'

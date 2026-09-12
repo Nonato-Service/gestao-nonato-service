@@ -1,4 +1,5 @@
-import type { UserFormState, SidebarGroup } from '../components/admin/adminTypes'
+import type { UserFormState } from '../components/admin/adminTypes'
+import type { SidebarGroup } from '../modules/sidebar/tipos'
 import { USER_PERMISSION_KEYS, type UserPermissionKey } from './adminUserPermissions'
 
 export type SidebarMenuItemDef = {

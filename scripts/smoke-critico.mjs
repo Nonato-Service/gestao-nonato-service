@@ -2216,6 +2216,18 @@ try {
   } else {
     fail('BibliotecaHubPainelRecolhivel ainda define HubPainel no sítio')
   }
+  const adminTypesSrc = fs.readFileSync(path.join(root, 'app/components/admin/adminTypes.ts'), 'utf8')
+  const menuPermsSrc = fs.readFileSync(path.join(root, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  if (
+    adminTypesSrc.includes("from '../../modules/sidebar/tipos'") &&
+    !adminTypesSrc.includes('export type SidebarGroup =') &&
+    !adminTypesSrc.includes('export type SidebarButton = {') &&
+    menuPermsSrc.includes("from '../modules/sidebar/tipos'")
+  ) {
+    ok('adminTypes reexporta SidebarGroup/SidebarButton do módulo sidebar')
+  } else {
+    fail('SidebarGroup/SidebarButton ainda definidos em adminTypes')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }
