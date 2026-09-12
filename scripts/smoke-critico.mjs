@@ -2149,6 +2149,34 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ChecklistSalvo no sítio')
   }
+  if (
+    idx.includes('CriacaoChecklistItemForm') &&
+    idx.includes('emptyCriacaoChecklistItemForm') &&
+    idx.includes('createItemTrabalhoCriacaoFromForm') &&
+    exists('app/modules/checklist/itemTrabalhoForm.ts') &&
+    exists('app/modules/checklist/itemTrabalhoFromForm.ts')
+  ) {
+    ok('módulo checklist exporta ItemTrabalhoCriacao form/fromForm')
+  } else {
+    fail('módulo checklist sem ItemTrabalhoCriacao form/fromForm')
+  }
+  const fgCk = fs.readFileSync(path.join(root, 'app/components/FamiliasGruposChecklistContent.tsx'), 'utf8')
+  if (
+    (fgCk.includes("from '../modules/checklist'") || fgCk.includes('from "../modules/checklist"')) &&
+    fgCk.includes('emptyCriacaoChecklistItemForm') &&
+    fgCk.includes('createItemTrabalhoCriacaoFromForm') &&
+    fgCk.includes('itemTrabalhoCriacaoToForm') &&
+    !fgCk.includes('export type CriacaoChecklistItemForm = {')
+  ) {
+    ok('FamiliasGruposChecklistContent usa ItemTrabalho fromForm do módulo')
+  } else {
+    fail('FamiliasGruposChecklistContent ainda mapeia item de trabalho no sítio')
+  }
+  if (nma.includes('emptyCriacaoChecklistItemForm')) {
+    ok('NonatoMainApp usa emptyCriacaoChecklistItemForm do módulo')
+  } else {
+    fail('NonatoMainApp ainda monta criacaoChecklistItemForm no sítio')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }

@@ -76,3 +76,12 @@ export {
   mapChecklistSalvoGrupos,
   createChecklistSalvoFromForm,
 } from './salvoFromForm'
+
+export type { CriacaoChecklistItemForm } from './itemTrabalhoForm'
+export { emptyCriacaoChecklistItemForm, itemTrabalhoCriacaoToForm } from './itemTrabalhoForm'
+
+export type { CreateItemTrabalhoCriacaoFromFormOpts } from './itemTrabalhoFromForm'
+export {
+  isCriacaoChecklistItemFormValid,
+  createItemTrabalhoCriacaoFromForm,
+} from './itemTrabalhoFromForm'

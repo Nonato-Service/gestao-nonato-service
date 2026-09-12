@@ -4,6 +4,15 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { GrupoChecklist, ItemTrabalhoCriacao, ParenteChecklist } from '../lib/checklistTypes'
 import { ProImageHoverPreview } from './ProImageHoverPreview'
+import type { CriacaoChecklistItemForm } from '../modules/checklist'
+import {
+  createItemTrabalhoCriacaoFromForm,
+  emptyCriacaoChecklistItemForm,
+  isCriacaoChecklistItemFormValid,
+  itemTrabalhoCriacaoToForm,
+} from '../modules/checklist'
+
+export type { CriacaoChecklistItemForm } from '../modules/checklist'
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>
 
@@ -36,15 +45,6 @@ function FgRowActions(props: {
       </button>
     </div>
   )
-}
-
-export type CriacaoChecklistItemForm = {
-  tipo: string
-  descricaoTrabalho: string
-  necessitaPecas: boolean
-  origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'
-  codigoPeca: string
-  pecasManuais: Array<{ codigo: string; quantia: number }>
 }
 
 export type FamiliasGruposChecklistContentProps = {
@@ -444,14 +444,6 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
       ? `${selectedFamiliaForGrupos} › ${selectedParente.nome}`
       : selectedFamiliaForGrupos || tr('selecioneFamiliaEsquerda', 'Selecione uma familia e um parente')
 
-  const defaultItemForm = (): CriacaoChecklistItemForm => ({
-    tipo: 'Manutencao',
-    descricaoTrabalho: '',
-    necessitaPecas: false,
-    codigoPeca: '',
-    pecasManuais: [],
-  })
-
   const renderServicoGrupoBlock = (gr: GrupoChecklist) => {
     const itens = gr.itensTrabalho || []
     const isAdding = criacaoChecklistGrupoIdAddingItem === gr.id
@@ -460,28 +452,14 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
     const cancelForm = () => {
       setCriacaoChecklistGrupoIdAddingItem(null)
       setCriacaoChecklistEditingItemId(null)
-      setCriacaoChecklistItemForm(defaultItemForm())
+      setCriacaoChecklistItemForm(emptyCriacaoChecklistItemForm())
     }
     const saveItemTrabalho = () => {
-      const tipo = criacaoChecklistItemForm.tipo.trim() || tr('outro', 'Outro')
-      const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim()
-      if (!descricaoTrabalho) return
-      const novoItem: ItemTrabalhoCriacao = {
-        id: criacaoChecklistEditingItemId || Date.now().toString(),
-        tipo,
-        descricaoTrabalho,
-        necessitaPecas: criacaoChecklistItemForm.necessitaPecas,
-        origemPecas: criacaoChecklistItemForm.necessitaPecas ? criacaoChecklistItemForm.origemPecas : undefined,
-        codigoPeca:
-          criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.codigoPeca?.trim()
-            ? criacaoChecklistItemForm.codigoPeca.trim()
-            : undefined,
-        pecasManuais:
-          criacaoChecklistItemForm.necessitaPecas && criacaoChecklistItemForm.origemPecas === 'codigo-manual'
-            ? criacaoChecklistItemForm.pecasManuais.filter((p) => p.codigo.trim())
-            : undefined,
-        dataCriacao: new Date().toISOString(),
-      }
+      if (!isCriacaoChecklistItemFormValid(criacaoChecklistItemForm)) return
+      const novoItem = createItemTrabalhoCriacaoFromForm(criacaoChecklistItemForm, {
+        id: criacaoChecklistEditingItemId || undefined,
+        tipoFallback: tr('outro', 'Outro'),
+      })
       const nextGrupos = gruposChecklist.map((gItem) => {
         if (gItem.id !== gr.id) return gItem
         const lista = [...(gItem.itensTrabalho || [])]
@@ -514,7 +492,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
               else {
                 setCriacaoChecklistGrupoIdAddingItem(gr.id)
                 setCriacaoChecklistEditingItemId(null)
-                setCriacaoChecklistItemForm(defaultItemForm())
+                setCriacaoChecklistItemForm(emptyCriacaoChecklistItemForm())
               }
             }}
           >
@@ -536,14 +514,7 @@ export function FamiliasGruposChecklistContent(props: FamiliasGruposChecklistCon
                     onClick={() => {
                       setCriacaoChecklistEditingItemId(item.id)
                       setCriacaoChecklistGrupoIdAddingItem(null)
-                      setCriacaoChecklistItemForm({
-                        tipo: item.tipo,
-                        descricaoTrabalho: item.descricaoTrabalho,
-                        necessitaPecas: item.necessitaPecas,
-                        origemPecas: item.origemPecas,
-                        codigoPeca: item.codigoPeca || '',
-                        pecasManuais: item.pecasManuais?.length ? item.pecasManuais : [{ codigo: '', quantia: 1 }],
-                      })
+                      setCriacaoChecklistItemForm(itemTrabalhoCriacaoToForm(item))
                     }}
                   >
                     <span aria-hidden>✎</span>

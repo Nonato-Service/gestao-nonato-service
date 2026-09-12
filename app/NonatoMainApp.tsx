@@ -973,6 +973,7 @@ import type {
   ItemTrabalhoCriacao,
   ParenteChecklist,
   GrupoChecklist,
+  CriacaoChecklistItemForm,
 } from './modules/checklist'
 import {
   emptyChecklistTemplateForm,
@@ -998,6 +999,7 @@ import {
   buildPecasArmazemFromChecklist,
   isChecklistSalvoFormValid,
   createChecklistSalvoFromForm,
+  emptyCriacaoChecklistItemForm,
 } from './modules/checklist'
 import {
   emptyOrdemPreparacaoForm,
@@ -1995,7 +1997,9 @@ export default function Dashboard() {
   const [pecaSelecionadaParaRelatorio, setPecaSelecionadaParaRelatorio] = useState<PecaBiblioteca | null>(null)
   const [destinoAnexarPecaRelatorio, setDestinoAnexarPecaRelatorio] = useState<'substituicao' | 'instaladas'>('substituicao')
   const [showFecharRelatorioOpcoesModal, setShowFecharRelatorioOpcoesModal] = useState(false)
-  const [criacaoChecklistItemForm, setCriacaoChecklistItemForm] = useState<{ tipo: string; descricaoTrabalho: string; necessitaPecas: boolean; origemPecas?: 'biblioteca' | 'equipamentos-pdf' | 'codigo-manual'; codigoPeca: string; pecasManuais: Array<{ codigo: string; quantia: number }> }>({ tipo: 'Manutenção', descricaoTrabalho: '', necessitaPecas: false, codigoPeca: '', pecasManuais: [] })
+  const [criacaoChecklistItemForm, setCriacaoChecklistItemForm] = useState<CriacaoChecklistItemForm>(() =>
+    emptyCriacaoChecklistItemForm('Manutenção')
+  )
   const [showGrupoChecklistForm, setShowGrupoChecklistForm] = useState(false)
   const [editingGrupoChecklist, setEditingGrupoChecklist] = useState<GrupoChecklist | null>(null)
   const [grupoChecklistForm, setGrupoChecklistForm] = useState<GrupoChecklistFormState>(() =>
