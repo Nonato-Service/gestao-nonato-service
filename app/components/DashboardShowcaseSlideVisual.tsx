@@ -1,32 +1,10 @@
 'use client'
 
 import React from 'react'
+import { SHOWCASE_MENU, showcaseNavItemClass, type VisualId } from '../modules/sidebar'
 import { ShowcaseTypingText } from './ShowcaseTypingText'
 
-export type VisualId =
-  | 'reports'
-  | 'clients'
-  | 'parts'
-  | 'knowledge'
-  | 'warehouse'
-  | 'finance'
-  | 'import'
-  | 'schedule'
-  | 'equipment'
-  | 'sync'
-
-const MENU: { id: VisualId; icon: string; label: string }[] = [
-  { id: 'reports', icon: '📋', label: 'Relatórios' },
-  { id: 'clients', icon: '👥', label: 'Clientes' },
-  { id: 'parts', icon: '🔧', label: 'Peças' },
-  { id: 'knowledge', icon: '📚', label: 'Conhecimento' },
-  { id: 'warehouse', icon: '🏭', label: 'Armazém' },
-  { id: 'finance', icon: '💬', label: 'Finanças' },
-  { id: 'import', icon: '📥', label: 'Importação' },
-  { id: 'schedule', icon: '📅', label: 'Agenda' },
-  { id: 'equipment', icon: '⚙️', label: 'Equipamentos' },
-  { id: 'sync', icon: '🔄', label: 'Sincronização' },
-]
+export type { VisualId }
 
 function Shell(props: {
   active: VisualId
@@ -40,10 +18,10 @@ function Shell(props: {
       <aside className="ns-showcase-screen__sidebar" aria-hidden>
         <div className="ns-showcase-screen__brand">NONATO SERVICE</div>
         <nav className="ns-showcase-screen__nav">
-          {MENU.map((item) => (
+          {SHOWCASE_MENU.map((item) => (
             <div
               key={item.id}
-              className={`ns-showcase-screen__nav-item${item.id === active ? ' is-active' : ''}`}
+              className={showcaseNavItemClass(active, item.id)}
             >
               <span>{item.icon}</span>
               <span>{item.label}</span>

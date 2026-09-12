@@ -2228,6 +2228,27 @@ try {
   } else {
     fail('SidebarGroup/SidebarButton ainda definidos em adminTypes')
   }
+  if (
+    idx.includes('VisualId') &&
+    idx.includes('SHOWCASE_MENU') &&
+    idx.includes('showcaseNavItemClass') &&
+    exists('app/modules/sidebar/showcaseVisual.ts')
+  ) {
+    ok('módulo sidebar exporta VisualId/SHOWCASE_MENU')
+  } else {
+    fail('módulo sidebar sem showcaseVisual')
+  }
+  const showcaseUi = fs.readFileSync(path.join(root, 'app/components/DashboardShowcaseSlideVisual.tsx'), 'utf8')
+  if (
+    (showcaseUi.includes("from '../modules/sidebar'") || showcaseUi.includes('from "../modules/sidebar"')) &&
+    showcaseUi.includes('SHOWCASE_MENU') &&
+    showcaseUi.includes('showcaseNavItemClass') &&
+    !showcaseUi.includes('export type VisualId =')
+  ) {
+    ok('DashboardShowcaseSlideVisual usa VisualId do módulo sidebar')
+  } else {
+    fail('VisualId ainda definido em DashboardShowcaseSlideVisual')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }

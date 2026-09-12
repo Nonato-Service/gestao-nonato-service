@@ -65,3 +65,6 @@ export {
   hubPainelLsPrefix,
   hubPainelLsKey,
 } from './hubPainel'
+
+export type { VisualId, ShowcaseMenuItem } from './showcaseVisual'
+export { SHOWCASE_MENU, showcaseNavItemClass } from './showcaseVisual'
