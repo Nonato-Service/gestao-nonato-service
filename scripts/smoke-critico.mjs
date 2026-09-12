@@ -2744,6 +2744,25 @@ try {
   } else {
     ok('existe app/modules/admin/userFromForm.ts')
   }
+  if (!exists('app/modules/admin/userFormState.ts')) {
+    fail('falta app/modules/admin/userFormState.ts')
+  } else {
+    ok('existe app/modules/admin/userFormState.ts')
+  }
+  const adminTypesSrc = fs.readFileSync(path.join(root, 'app/components/admin/adminTypes.ts'), 'utf8')
+  const userFormSrc = fs.readFileSync(path.join(root, 'app/modules/admin/userForm.ts'), 'utf8')
+  const userFromFormSrc = fs.readFileSync(path.join(root, 'app/modules/admin/userFromForm.ts'), 'utf8')
+  if (
+    idx.includes('UserFormState') &&
+    adminTypesSrc.includes("from '../../modules/admin/userFormState'") &&
+    !adminTypesSrc.includes('export type UserFormState = {') &&
+    !userFormSrc.includes("from '../../components/admin/adminTypes'") &&
+    !userFromFormSrc.includes("from '../../components/admin/adminTypes'")
+  ) {
+    ok('módulo admin define UserFormState (adminTypes só reexporta)')
+  } else {
+    fail('UserFormState ainda vive no componente adminTypes')
+  }
   if (!exists('app/modules/admin/passwords.ts')) {
     fail('falta app/modules/admin/passwords.ts')
   } else {

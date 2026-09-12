@@ -1,6 +1,6 @@
 /** Criação / actualização pura de User a partir do formulário admin. */
 
-import type { UserFormState } from '../../components/admin/adminTypes'
+import type { UserFormState } from './userFormState'
 import type { User, UserPermissions } from './userTipos'
 
 export type UserFromFormMenuOpts = {

@@ -1,6 +1,6 @@
 /** Formulário de utilizadores (admin) — estado vazio e mapeamento User → form. */
 
-import type { UserFormState } from '../../components/admin/adminTypes'
+import type { UserFormState } from './userFormState'
 import {
   buildMenuItemsFromLegacyPermissions,
   normalizeMenuItemsWithLegacyFallback,

@@ -165,6 +165,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 145. `app/modules/tradutor/` (WritingAssistLangOption / formatWritingAssistResultLabel) — feito
 146. `app/modules/manuais/` (inferIndexSectionHints / preferNativePdfViewer) — feito
 147. `app/modules/fechamento/` (servicoEhHttCobranca / findServicoHttNoGrupo) — feito
+148. `app/modules/admin/` (UserFormState canónico / adminTypes reexport) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

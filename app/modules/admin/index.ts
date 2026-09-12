@@ -5,7 +5,8 @@ export type { User, UserPermissions } from './userTipos'
 export type { UserFromFormMenuOpts } from './userFromForm'
 export { createUserFromForm, updateUserFromForm } from './userFromForm'
 
-export type { UserFormState, UserForForm } from './userForm'
+export type { UserFormState } from './userFormState'
+export type { UserForForm } from './userForm'
 export { createEmptyUserForm, userToFormState } from './userForm'
 
 export type { PasswordEntry } from './passwords'

@@ -18,29 +18,7 @@ export type { LogoRelatorio } from '../../modules/admin/logosRelatorio'
 
 export type { User, UserPermissions } from '../../modules/admin/userTipos'
 
-export type UserFormState = {
-  name: string
-  email: string
-  role: string
-  linkedProfileType: 'gestor' | 'tecnico' | ''
-  linkedProfileId: string
-  password: string
-  isAdmin: boolean
-  permissions: {
-    gestores: boolean
-    equipamentos: boolean
-    clientes: boolean
-    fornecedores: boolean
-    relatorioServico: boolean
-    bibliotecaPecas: boolean
-    agenda: boolean
-    desmontados: boolean
-    cadastroServicos: boolean
-    extras: boolean
-  }
-  menuItems: Record<string, boolean>
-  menuItemsConfigured: boolean
-}
+export type { UserFormState } from '../../modules/admin/userFormState'
 
 export type GestorItem = { id: string; name: string; area?: string }
 export type TecnicoItem = { id: string; name: string; type?: 'internal' | 'external' | string }
