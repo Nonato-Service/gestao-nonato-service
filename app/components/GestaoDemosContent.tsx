@@ -33,6 +33,10 @@ import type {
   DemoRecipientStatus,
   DemoRecipientWithState,
 } from '../modules/demo'
+import {
+  isDemoRecipientFormValid,
+  createDemoRecipientFromForm,
+} from '../modules/demo'
 import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'
 
@@ -264,7 +268,7 @@ export function GestaoDemosContent({
   }, [form.nome, form.email, recipients])
 
   const handleAdd = async () => {
-    if (!form.nome.trim()) {
+    if (!isDemoRecipientFormValid(form)) {
       alert('Indique o nome da pessoa.')
       return
     }
@@ -277,18 +281,17 @@ export function GestaoDemosContent({
       id,
       recipients.map((r) => r.demoUsuario || '').filter(Boolean)
     )
-    const novo: DemoRecipientRecord = {
-      id,
-      nome: form.nome.trim(),
-      email: form.email.trim(),
-      dataEnvio: new Date().toISOString(),
-      observacoes: form.observacoes.trim() || undefined,
-      demoDays: resolveDemoDaysForRecipient({ demoDays: form.demoDays }),
-      demoModules: finalizeDemoModulesPolicy(form.demoModules),
-      demoPreset: form.demoPreset || 'custom',
-      demoUsuario,
-      demoSenha,
-    }
+    const novo = createDemoRecipientFromForm(
+      {
+        nome: form.nome,
+        email: form.email,
+        observacoes: form.observacoes,
+        demoDays: resolveDemoDaysForRecipient({ demoDays: form.demoDays }),
+        demoModules: finalizeDemoModulesPolicy(form.demoModules),
+        demoPreset: form.demoPreset || 'custom',
+      },
+      { id, demoUsuario, demoSenha }
+    )
     const updated = [...recipients, novo]
     const saved = await persist(updated, { awaitServer: true })
     setSaving(false)

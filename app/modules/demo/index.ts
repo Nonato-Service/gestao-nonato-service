@@ -13,3 +13,12 @@ export {
   pickValidDemoModuleModes,
   countActiveModules,
 } from './modulesMode'
+
+export type {
+  DemoRecipientFormPayload,
+  CreateDemoRecipientFromFormOpts,
+} from './fromForm'
+export {
+  isDemoRecipientFormValid,
+  createDemoRecipientFromForm,
+} from './fromForm'

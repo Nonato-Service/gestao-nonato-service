@@ -2939,6 +2939,23 @@ try {
   } else {
     fail('lib/demoManagement não re-exporta o módulo demo / ainda define DemoModuleMode')
   }
+  if (
+    idx.includes('isDemoRecipientFormValid') &&
+    idx.includes('createDemoRecipientFromForm') &&
+    exists('app/modules/demo/fromForm.ts')
+  ) {
+    ok('módulo demo exporta destinatário fromForm')
+  } else {
+    fail('módulo demo sem destinatário fromForm')
+  }
+  if (
+    gestao.includes('isDemoRecipientFormValid') &&
+    gestao.includes('createDemoRecipientFromForm')
+  ) {
+    ok('GestaoDemosContent usa DemoRecipient fromForm do módulo')
+  } else {
+    fail('GestaoDemosContent ainda mapeia DemoRecipient no sítio')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }
