@@ -10,6 +10,14 @@ import {
   ManuaisImagem,
   ManuaisModelo,
 } from '../lib/manuaisTypes'
+import {
+  isManuaisGrupoNomeValid,
+  createManuaisGrupoFromForm,
+  updateManuaisGrupoNomeFromForm,
+  isManuaisModeloNomeValid,
+  createManuaisModeloFromForm,
+  updateManuaisModeloNomeFromForm,
+} from '../modules/manuais'
 import type { BibliaAnexo, BibliaSecao } from './bibliaNonatoTypes'
 import { BIBLIA_ANEXO_MAX_BYTES, BIBLIA_ANEXO_MAX_PER_MODEL, BIBLIA_NONATO_STORAGE_KEY, inferBibliaSecaoFromName, resolveBibliaSecao } from './bibliaNonatoTypes'
 import {
@@ -131,9 +139,8 @@ function ensureDefaultGrupoForFamilia(
   const hidden = famGrups.find((g) => g.nome === DEFAULT_GRUPO_NAME)
   if (hidden) return { grupos: gruposList, grupoId: hidden.id }
   if (famGrups.length === 1) return { grupos: gruposList, grupoId: famGrups[0].id }
-  const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `mdg-${Date.now()}`
-  const novo: ManuaisGrupo = { id, nome: DEFAULT_GRUPO_NAME, familia }
-  return { grupos: [...gruposList, novo], grupoId: id }
+  const novo = createManuaisGrupoFromForm(DEFAULT_GRUPO_NAME, familia, { idPrefix: 'mdg' })
+  return { grupos: [...gruposList, novo], grupoId: novo.id }
 }
 
 function familiaForModelo(modelo: ManuaisModelo, gruposList: ManuaisGrupo[]): string | null {
@@ -753,12 +760,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const handleAddGrupo = () => {
     const nome = novoGrupoManuais.trim()
-    if (nome && selectedFamiliaManuais) {
-      const novo: ManuaisGrupo = {
-        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `g-${Date.now()}`,
-        nome,
-        familia: selectedFamiliaManuais,
-      }
+    if (isManuaisGrupoNomeValid(nome) && selectedFamiliaManuais) {
+      const novo = createManuaisGrupoFromForm(nome, selectedFamiliaManuais)
       const next = [...grupos, novo]
       setManuaisGrupos(next)
       setNovoGrupoManuais('')
@@ -769,8 +772,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const handleSaveGrupoEdit = (groupId: string) => {
     const nome = editingGrupoManuaisValue.trim()
-    if (nome) {
-      const next = manuaisGrupos.map((gr) => (gr.id === groupId ? { ...gr, nome } : gr))
+    if (isManuaisGrupoNomeValid(nome)) {
+      const next = manuaisGrupos.map((gr) => (gr.id === groupId ? updateManuaisGrupoNomeFromForm(gr, nome) : gr))
       setManuaisGrupos(next)
       setEditingGrupoManuaisId(null)
       persistManuaisFG(familias, next, manuaisModelosRef.current)
@@ -794,7 +797,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const handleAddModelo = () => {
     const nome = novoModeloManuais.trim()
-    if (!nome || !selectedFamiliaManuais) return
+    if (!isManuaisModeloNomeValid(nome) || !selectedFamiliaManuais) return
     let grupoId = selectedGrupoManuais
     let nextGrupos = grupos
     if (!grupoId) {
@@ -804,11 +807,7 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
       if (nextGrupos.length !== grupos.length) setManuaisGrupos(nextGrupos)
       setSelectedGrupoManuais(grupoId)
     }
-    const novo: ManuaisModelo = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `m-${Date.now()}`,
-      nome,
-      grupoId,
-    }
+    const novo = createManuaisModeloFromForm(nome, grupoId)
     const next = [...manuaisModelos, novo]
     setManuaisModelos(next)
     setNovoModeloManuais('')
@@ -818,8 +817,8 @@ export function ManuaisInformacoesContent(props: ManuaisInformacoesContentProps)
 
   const handleSaveModeloEdit = (modeloId: string) => {
     const nome = editingModeloManuaisValue.trim()
-    if (nome) {
-      const next = manuaisModelos.map((mo) => (mo.id === modeloId ? { ...mo, nome } : mo))
+    if (isManuaisModeloNomeValid(nome)) {
+      const next = manuaisModelos.map((mo) => (mo.id === modeloId ? updateManuaisModeloNomeFromForm(mo, nome) : mo))
       setManuaisModelos(next)
       setEditingModeloManuaisId(null)
       persistManuaisFG(familias, grupos, next)

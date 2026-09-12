@@ -2674,6 +2674,28 @@ try {
   } else {
     fail('lib/manuaisTypes não re-exporta o módulo manuais')
   }
+  if (
+    idx.includes('isManuaisGrupoNomeValid') &&
+    idx.includes('createManuaisGrupoFromForm') &&
+    idx.includes('isManuaisModeloNomeValid') &&
+    idx.includes('createManuaisModeloFromForm') &&
+    exists('app/modules/manuais/fromForm.ts')
+  ) {
+    ok('módulo manuais exporta grupo/modelo fromForm')
+  } else {
+    fail('módulo manuais sem grupo/modelo fromForm')
+  }
+  const manuaisUi = fs.readFileSync(path.join(root, 'app/components/ManuaisInformacoesContent.tsx'), 'utf8')
+  if (
+    manuaisUi.includes('isManuaisGrupoNomeValid') &&
+    manuaisUi.includes('createManuaisGrupoFromForm') &&
+    manuaisUi.includes('isManuaisModeloNomeValid') &&
+    manuaisUi.includes('createManuaisModeloFromForm')
+  ) {
+    ok('ManuaisInformacoesContent usa Manuais fromForm do módulo')
+  } else {
+    fail('ManuaisInformacoesContent ainda mapeia grupo/modelo no sítio')
+  }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)
 }
