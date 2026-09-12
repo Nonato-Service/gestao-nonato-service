@@ -1,31 +1,13 @@
-/** Propostas de orçamento de serviço técnico (guardadas com saveData / servidor). */
+/** Persistência I/O das propostas de orçamento de serviço técnico. */
+
+import type { OstPropostaLinha, OstPropostaPayload, OstPropostaSalva, OstRascunhoAtual } from '../modules/orcamentos'
+
+export type { OstPropostaLinha, OstPropostaPayload, OstPropostaSalva, OstRascunhoAtual } from '../modules/orcamentos'
 
 export const OST_PROPOSTAS_STORAGE_KEY = 'nonato-ost-propostas-tecnico-v1'
 
 /** Rascunho em curso (auto-guardado) — evita perder linhas ao mudar de separador ou recarregar. */
 export const OST_RASCUNHO_ATUAL_KEY = 'nonato-ost-rascunho-atual-v1'
-
-export type OstPropostaLinha = { rowId: string; servicoId: string; quantidadeStr: string }
-
-export type OstPropostaPayload = {
-  clienteId: string
-  clienteManual: string
-  refDoc: string
-  localServico: string
-  dataDoc: string
-  validade: string
-  intro: string
-  clausulas: string
-  linhas: OstPropostaLinha[]
-}
-
-export type OstPropostaSalva = {
-  id: string
-  nome: string
-  criadoEm: string
-  atualizadoEm: string
-  payload: OstPropostaPayload
-}
 
 function parseLista(raw: unknown): OstPropostaSalva[] {
   if (!raw) return []
@@ -68,13 +50,6 @@ export async function saveOstPropostas(
   } catch {
     /* ignore */
   }
-}
-
-export type OstRascunhoAtual = OstPropostaPayload & {
-  v: 1
-  propostaEditandoId: string | null
-  propostaNome: string
-  guardadoEm: string
 }
 
 function parseRascunho(raw: unknown): OstRascunhoAtual | null {

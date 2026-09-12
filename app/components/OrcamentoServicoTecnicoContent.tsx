@@ -22,6 +22,17 @@ import {
   type OstPropostaPayload,
   type OstRascunhoAtual,
 } from './orcamentoOstPropostas'
+import type { ClienteOrcamentoLite, OstPropostaLinha, ServicoOrcamentoLinha } from '../modules/orcamentos'
+import {
+  createOstPropostaFromForm,
+  createOstPropostaPayloadFromForm,
+  emptyOstPropostaLinha,
+  newOstEntityId,
+  normalizeOstPropostaLinhas,
+  resolveOstPropostaNome,
+} from '../modules/orcamentos'
+
+export type { ServicoOrcamentoLinha, ClienteOrcamentoLite } from '../modules/orcamentos'
 import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'
 import {
   useDocumentoEnvioCliente,
@@ -30,34 +41,6 @@ import {
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import { formatMoneyEUR } from '../lib/formatMoney'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
-
-export type ServicoOrcamentoLinha = {
-  id: string
-  cod?: string
-  nome: string
-  descricao?: string
-  valor: number
-  tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
-  categoria: 'servico' | 'despesa'
-}
-
-export type ClienteOrcamentoLite = {
-  id: string
-  nomeEmpresa: string
-  morada?: string
-  localidade?: string
-  codigoPostal?: string
-  conselho?: string
-  pais?: string
-  telefones?: string
-  email?: string
-}
-
-type LinhaOrcamento = {
-  rowId: string
-  servicoId: string
-  quantidadeStr: string
-}
 
 const TEXTO_CLAUSULAS_PADRAO_PT = `1. Natureza do documento
 O presente documento constitui proposta de orçamento para prestação de serviço técnico, sem valor fiscal, elaborada com base nas rubricas e preços constantes do cadastro de serviços / valores aplicáveis. Não substitui ordem de serviço, contrato ou documentos fiscais próprios.
@@ -108,11 +91,6 @@ function unidadeQuantidade(tipo: ServicoOrcamentoLinha['tipoCobranca'], t: Recor
   return t.orcamentoServicoTecnicoUnidadeExtra || 'qtd'
 }
 
-function newRowId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
 /** No PDF: parágrafos separados por linha em branco — mais legível que um único bloco. */
 function splitClausulasParagraphs(text: string): string[] {
   return String(text ?? '')
@@ -150,7 +128,7 @@ function bootOstFormFromRascunho(
   validade: string
   intro: string
   clausulas: string
-  linhas: LinhaOrcamento[]
+  linhas: OstPropostaLinha[]
   propostaEditandoId: string | null
   propostaNome: string
   hadRascunho: boolean
@@ -166,20 +144,13 @@ function bootOstFormFromRascunho(
       t.orcamentoServicoTecnicoIntroDefault ||
       'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.',
     clausulas: t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT,
-    linhas: [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }] as LinhaOrcamento[],
+    linhas: [emptyOstPropostaLinha()],
     propostaEditandoId: null as string | null,
     propostaNome: '',
     hadRascunho: false,
   }
   if (!r) return defaults
-  const linhas =
-    r.linhas && r.linhas.length > 0
-      ? r.linhas.map((L) => ({
-          rowId: L.rowId && String(L.rowId).trim() ? L.rowId : newRowId(),
-          servicoId: L.servicoId || '',
-          quantidadeStr: L.quantidadeStr != null && String(L.quantidadeStr).trim() !== '' ? String(L.quantidadeStr) : '1',
-        }))
-      : defaults.linhas
+  const linhas = normalizeOstPropostaLinhas(r.linhas)
   return {
     clienteId: r.clienteId || '',
     clienteManual: r.clienteManual || '',
@@ -225,7 +196,7 @@ export function OrcamentoServicoTecnicoContent({
   const [validade, setValidade] = useState(formBoot.validade)
   const [intro, setIntro] = useState(formBoot.intro)
   const [clausulas, setClausulas] = useState(formBoot.clausulas)
-  const [linhas, setLinhas] = useState<LinhaOrcamento[]>(formBoot.linhas)
+  const [linhas, setLinhas] = useState<OstPropostaLinha[]>(formBoot.linhas)
   const [section, setSection] = useState<OstSection>('orcamento')
   const [propostas, setPropostas] = useState<OstPropostaSalva[]>([])
   const [propostaEditandoId, setPropostaEditandoId] = useState<string | null>(formBoot.propostaEditandoId)
@@ -384,19 +355,19 @@ export function OrcamentoServicoTecnicoContent({
   }, [openTab, getTabTitle])
 
   const addLinha = useCallback(() => {
-    setLinhas((prev) => [...prev, { rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
+    setLinhas((prev) => [...prev, emptyOstPropostaLinha()])
   }, [])
 
   const removeLinha = useCallback((rowId: string) => {
     setLinhas((prev) => (prev.length <= 1 ? prev : prev.filter((x) => x.rowId !== rowId)))
   }, [])
 
-  const updateLinha = useCallback((rowId: string, patch: Partial<LinhaOrcamento>) => {
+  const updateLinha = useCallback((rowId: string, patch: Partial<OstPropostaLinha>) => {
     setLinhas((prev) => prev.map((x) => (x.rowId === rowId ? { ...x, ...patch } : x)))
   }, [])
 
   const collectPayload = useCallback((): OstPropostaPayload => {
-    return {
+    return createOstPropostaPayloadFromForm({
       clienteId,
       clienteManual,
       refDoc,
@@ -405,24 +376,20 @@ export function OrcamentoServicoTecnicoContent({
       validade,
       intro,
       clausulas,
-      linhas: linhas.map(({ rowId, servicoId, quantidadeStr }) => ({ rowId, servicoId, quantidadeStr })),
-    }
+      linhas,
+    })
   }, [clienteId, clienteManual, refDoc, localServico, dataDoc, validade, intro, clausulas, linhas])
 
   const guardarProposta = useCallback(async () => {
-    const nome = (propostaNome.trim() || refDoc.trim() || `OST ${dataDoc}`).trim().slice(0, 200)
+    const nome = resolveOstPropostaNome(propostaNome, refDoc, dataDoc)
     const payload = collectPayload()
-    const now = new Date().toISOString()
-    const id = propostaEditandoId || newRowId()
+    const id = propostaEditandoId || newOstEntityId()
     setPropostas((prev) => {
       const ix = prev.findIndex((p) => p.id === id)
-      const item: OstPropostaSalva = {
+      const item = createOstPropostaFromForm(payload, nome, {
         id,
-        nome,
-        criadoEm: ix >= 0 ? prev[ix]!.criadoEm : now,
-        atualizadoEm: now,
-        payload,
-      }
+        criadoEm: ix >= 0 ? prev[ix]!.criadoEm : undefined,
+      })
       const next = ix >= 0 ? prev.map((p, i) => (i === ix ? item : p)) : [...prev, item]
       void saveOstPropostas(next, saveData)
       return next
@@ -440,15 +407,7 @@ export function OrcamentoServicoTecnicoContent({
     setValidade(x.validade || '')
     setIntro(x.intro || t.orcamentoServicoTecnicoIntroDefault || '')
     setClausulas(x.clausulas || t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
-    setLinhas(
-      x.linhas && x.linhas.length > 0
-        ? x.linhas.map((L) => ({
-            rowId: L.rowId && String(L.rowId).trim() ? L.rowId : newRowId(),
-            servicoId: L.servicoId || '',
-            quantidadeStr: L.quantidadeStr != null && String(L.quantidadeStr).trim() !== '' ? String(L.quantidadeStr) : '1',
-          }))
-        : [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }]
-    )
+    setLinhas(normalizeOstPropostaLinhas(x.linhas))
     setPropostaEditandoId(p.id)
     setPropostaNome(p.nome)
   }, [t])
@@ -464,7 +423,7 @@ export function OrcamentoServicoTecnicoContent({
     setValidade('')
     setIntro(t.orcamentoServicoTecnicoIntroDefault || 'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.')
     setClausulas(t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
-    setLinhas([{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
+    setLinhas([emptyOstPropostaLinha()])
     setRascunhoRestaurado(false)
     void clearOstRascunhoAtual(saveData)
   }, [t, saveData])

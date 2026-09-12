@@ -744,6 +744,32 @@ try {
   } else {
     fail('PedidoOrcamentosAvulsoContent ainda define pedido avulso no sítio')
   }
+  if (
+    idx.includes('OstPropostaSalva') &&
+    idx.includes('emptyOstPropostaLinha') &&
+    idx.includes('createOstPropostaFromForm') &&
+    exists('app/modules/orcamentos/ostTipos.ts') &&
+    exists('app/modules/orcamentos/ostForm.ts') &&
+    exists('app/modules/orcamentos/ostFromForm.ts')
+  ) {
+    ok('módulo orçamentos exporta OST tipos/fromForm')
+  } else {
+    fail('módulo orçamentos sem OST fromForm')
+  }
+  const ostUi = fs.readFileSync(path.join(root, 'app/components/OrcamentoServicoTecnicoContent.tsx'), 'utf8')
+  const ostIo = fs.readFileSync(path.join(root, 'app/components/orcamentoOstPropostas.ts'), 'utf8')
+  if (
+    (ostUi.includes("from '../modules/orcamentos'") || ostUi.includes('from "../modules/orcamentos"')) &&
+    ostUi.includes('emptyOstPropostaLinha') &&
+    ostUi.includes('createOstPropostaFromForm') &&
+    !ostUi.includes('export type ServicoOrcamentoLinha = {') &&
+    (ostIo.includes("from '../modules/orcamentos'") || ostIo.includes('from "../modules/orcamentos"')) &&
+    !ostIo.includes('export type OstPropostaSalva = {')
+  ) {
+    ok('OST UI/I/O usa tipos/fromForm do módulo orçamentos')
+  } else {
+    fail('OST ainda define proposta/linha no sítio')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }

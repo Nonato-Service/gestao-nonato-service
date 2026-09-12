@@ -166,3 +166,28 @@ export {
   isPedidoAvulsoPecasValid,
   createPedidoAvulsoFromForm,
 } from './pedidoAvulsoFromForm'
+
+export type {
+  ServicoOrcamentoTipoCobranca,
+  ServicoOrcamentoLinha,
+  ClienteOrcamentoLite,
+  OstPropostaLinha,
+  OstPropostaPayload,
+  OstPropostaSalva,
+  OstRascunhoAtual,
+} from './ostTipos'
+
+export {
+  newOstEntityId,
+  emptyOstPropostaLinha,
+  normalizeOstPropostaLinha,
+  normalizeOstPropostaLinhas,
+} from './ostForm'
+
+export type { CreateOstPropostaFromFormOpts } from './ostFromForm'
+export {
+  resolveOstPropostaNome,
+  createOstPropostaPayloadFromForm,
+  createOstPropostaFromForm,
+  isOstPropostaLinhaServicoValid,
+} from './ostFromForm'
