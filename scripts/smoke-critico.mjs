@@ -2756,6 +2756,38 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia RelatorioServico no sítio')
   }
+  const pecaSubFromForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/pecaSubstituicaoFromForm.ts'), 'utf8')
+  const diaFromForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/diaTrabalhoFromForm.ts'), 'utf8')
+  const rsFromForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/relatorioServicoFromForm.ts'), 'utf8')
+  const libRsFromForm = exists('app/lib/relatorioServicoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioServicoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    pecaSubFromForm.includes('nowMs: number') &&
+    pecaSubFromForm.includes('random: () => number') &&
+    !pecaSubFromForm.includes('Date.now()') &&
+    !pecaSubFromForm.includes('Math.random') &&
+    diaFromForm.includes('nowMs: number') &&
+    !diaFromForm.includes('Date.now()') &&
+    !diaFromForm.includes('Math.random') &&
+    !diaFromForm.includes('new Date().toISOString()') &&
+    rsFromForm.includes('nowMs: number') &&
+    !rsFromForm.includes('Date.now()')
+  ) {
+    ok('módulo relatorio-servico fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo relatorio-servico fromForm ainda usa Date.now, Math.random ou new Date()')
+  }
+  if (
+    libRsFromForm.includes('createPecaSubstituicaoFromForm as createPecaSubstituicaoFromFormPure') &&
+    libRsFromForm.includes('createDiaTrabalhoFromForm as createDiaTrabalhoFromFormPure') &&
+    libRsFromForm.includes('createRelatorioServicoFromForm as createRelatorioServicoFromFormPure') &&
+    nma.includes("from './lib/relatorioServicoFromForm'")
+  ) {
+    ok('NonatoMainApp usa relatorio-servico fromForm via lib')
+  } else {
+    fail('lib/relatorioServicoFromForm ainda não envolve o fromForm')
+  }
   if (
     idx.includes('ItemRelatorioExcluidoArquivo') &&
     idx.includes('PastaRelatoriosExcluidosCliente') &&
@@ -3954,6 +3986,36 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia formulário de ordem no sítio')
   }
+  const opFromForm = fs.readFileSync(path.join(root, 'app/modules/ordem-preparacao/fromForm.ts'), 'utf8')
+  const formChkFromOrdem = fs.readFileSync(
+    path.join(root, 'app/modules/ordem-preparacao/formularioChecklistFromOrdem.ts'),
+    'utf8'
+  )
+  const libOpFromForm = exists('app/lib/ordemPreparacaoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/ordemPreparacaoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    opFromForm.includes('nowMs: number') &&
+    !opFromForm.includes('Date.now()') &&
+    !opFromForm.includes('new Date().toISOString()') &&
+    formChkFromOrdem.includes('nowMs: number') &&
+    !formChkFromOrdem.includes('Date.now()') &&
+    !formChkFromOrdem.includes('Math.random') &&
+    !formChkFromOrdem.includes('new Date().toISOString()')
+  ) {
+    ok('módulo ordem-preparacao fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo ordem-preparacao fromForm ainda usa Date.now, Math.random ou new Date()')
+  }
+  if (
+    libOpFromForm.includes('createOrdemPreparacaoFromForm as createOrdemPreparacaoFromFormPure') &&
+    libOpFromForm.includes('createFormularioChecklistFromOrdem as createFormularioChecklistFromOrdemPure') &&
+    nma.includes("from './lib/ordemPreparacaoFromForm'")
+  ) {
+    ok('NonatoMainApp usa ordem-preparacao fromForm via lib')
+  } else {
+    fail('lib/ordemPreparacaoFromForm ainda não envolve o fromForm')
+  }
 } catch (e) {
   fail(`módulo ordem-preparacao: ${e.message}`)
 }
@@ -3984,6 +4046,28 @@ try {
     ok('NonatoMainApp usa PreCheck fromForm do módulo')
   } else {
     fail('NonatoMainApp ainda mapeia PreCheck no sítio')
+  }
+  const pcFromForm = fs.readFileSync(path.join(root, 'app/modules/pre-check/fromForm.ts'), 'utf8')
+  const libPcFromForm = exists('app/lib/preCheckFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/preCheckFromForm.ts'), 'utf8')
+    : ''
+  if (
+    pcFromForm.includes('nowMs: number') &&
+    pcFromForm.includes('random: () => number') &&
+    !pcFromForm.includes('Date.now()') &&
+    !pcFromForm.includes('Math.random')
+  ) {
+    ok('módulo pre-check fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo pre-check/fromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libPcFromForm.includes('createPreCheckFromForm as createPreCheckFromFormPure') &&
+    nma.includes("from './lib/preCheckFromForm'")
+  ) {
+    ok('NonatoMainApp usa PreCheck fromForm via lib')
+  } else {
+    fail('lib/preCheckFromForm ainda não envolve o fromForm')
   }
 } catch (e) {
   fail(`módulo pre-check: ${e.message}`)

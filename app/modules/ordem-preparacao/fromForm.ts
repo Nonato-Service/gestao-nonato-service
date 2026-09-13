@@ -9,12 +9,19 @@ export function isOrdemPreparacaoFormValid(
   return Boolean(form.codiceSmeUp)
 }
 
-export function createOrdemPreparacaoFromForm(form: OrdemPreparacaoFormState): OrdemPreparacao {
+export type CreateOrdemPreparacaoFromFormOpts = {
+  nowMs: number
+}
+
+export function createOrdemPreparacaoFromForm(
+  form: OrdemPreparacaoFormState,
+  opts: CreateOrdemPreparacaoFromFormOpts
+): OrdemPreparacao {
   return {
     ...emptyOrdemPreparacaoForm(),
     ...form,
-    id: form.id || Date.now().toString(),
-    dataCriacao: form.dataCriacao || new Date().toISOString(),
+    id: form.id || opts.nowMs.toString(),
+    dataCriacao: form.dataCriacao || new Date(opts.nowMs).toISOString(),
   }
 }
 

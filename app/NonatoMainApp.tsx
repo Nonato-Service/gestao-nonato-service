@@ -165,19 +165,14 @@ import {
   type RelatoriosExcluidosClientesStorage,
   createEmptyDiaTrabalhoForm,
   isDiaTrabalhoFormValid,
-  createDiaTrabalhoFromForm,
-  updateDiaTrabalhoFromForm,
   emptyDiaTrabalhoFormWithKmPadrao,
   createEmptyPecaSubstituicaoForm,
   isPecaSubstituicaoFormValid,
-  createPecaSubstituicaoFromForm,
   pecaBibliotecaToPecaSubstituicaoForm,
-  createPecaSubstituicaoFromBiblioteca,
   pecaSubstituicaoCodigoDuplicado,
   createEmptyRelatorioServicoForm,
   relatorioServicoFormMissing,
   isRelatorioServicoFormValid,
-  createRelatorioServicoFromForm,
   updateRelatorioServicoFromForm,
   criarEquipamentoRelatorioVazio,
   diaTrabalhoDataChaveOrdenacao,
@@ -597,6 +592,18 @@ import {
   dadosDuplicadoComprovanteFromForm,
 } from './modules/comprovantes'
 import { createComprovanteDespesaFromForm } from './lib/comprovantesFromForm'
+import {
+  createDiaTrabalhoFromForm,
+  createPecaSubstituicaoFromBiblioteca,
+  createPecaSubstituicaoFromForm,
+  createRelatorioServicoFromForm,
+  updateDiaTrabalhoFromForm,
+} from './lib/relatorioServicoFromForm'
+import { createPreCheckFromForm } from './lib/preCheckFromForm'
+import {
+  createFormularioChecklistFromOrdem,
+  createOrdemPreparacaoFromForm,
+} from './lib/ordemPreparacaoFromForm'
 import {
   createPecaBibliotecaFromForm,
   createCategoriaPecaFromForm,
@@ -1038,15 +1045,12 @@ import {
   emptyOrdemPreparacaoForm,
   ordemPreparacaoToForm,
   isOrdemPreparacaoFormValid,
-  createOrdemPreparacaoFromForm,
   updateOrdemPreparacaoFromForm,
-  createFormularioChecklistFromOrdem,
   type OrdemPreparacao,
 } from './modules/ordem-preparacao'
 import {
   emptyPreCheckForm,
   isPreCheckFormValid,
-  createPreCheckFromForm,
   type PreCheck,
   type PreCheckStatus,
 } from './modules/pre-check'

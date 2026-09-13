@@ -11,15 +11,17 @@ export function isPreCheckFormValid(
 
 export type CreatePreCheckFromFormOpts = {
   id?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createPreCheckFromForm(
   form: PreCheckFormState,
   equipamento: Equipamento,
-  opts: CreatePreCheckFromFormOpts = {}
+  opts: CreatePreCheckFromFormOpts
 ): PreCheck {
   return {
-    id: opts.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
     equipamentoId: equipamento.id,
     equipamentoNumero: equipamento.numeroSerie,
     data: form.data,

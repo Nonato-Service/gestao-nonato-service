@@ -15,13 +15,19 @@ export function isPecaSubstituicaoFormValid(
   return Boolean(form.descricao && form.codigo && form.quantidade)
 }
 
+export type CreatePecaSubstituicaoFromFormOpts = {
+  id?: string
+  nowMs: number
+  random: () => number
+}
+
 export function createPecaSubstituicaoFromForm(
   form: PecaSubstituicao,
-  opts?: { id?: string }
+  opts: CreatePecaSubstituicaoFromFormOpts
 ): PecaSubstituicao {
   return {
     ...form,
-    id: opts?.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
   }
 }
 
@@ -40,12 +46,12 @@ export function pecaBibliotecaToPecaSubstituicaoForm(
 export function createPecaSubstituicaoFromBiblioteca(
   peca: PecaBibliotecaParaSubstituicao,
   quantidade = '1',
-  opts?: { id?: string }
+  opts: CreatePecaSubstituicaoFromFormOpts
 ): PecaSubstituicao | null {
   const codigo = String(peca.codigo ?? '').trim()
   if (!codigo) return null
   return {
-    id: opts?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: opts.id ?? `${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     descricao: peca.nome || peca.descricao || '',
     codigo,
     quantidade: String(quantidade),

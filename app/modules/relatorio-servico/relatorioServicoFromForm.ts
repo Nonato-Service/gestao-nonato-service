@@ -46,14 +46,19 @@ export function buildRelatorioServicoFromForm(
   )
 }
 
+export type CreateRelatorioServicoFromFormOpts = {
+  id?: string
+  nowMs: number
+}
+
 export function createRelatorioServicoFromForm(
   form: RelatorioServico,
   equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
-  opts?: { id?: string }
+  opts: CreateRelatorioServicoFromFormOpts
 ): RelatorioServico {
   return {
     ...buildRelatorioServicoFromForm(form, equipamentosArmazem),
-    id: opts?.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
   }
 }
 

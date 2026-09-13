@@ -16,17 +16,19 @@ export type DiaTrabalhoFromFormOpts = {
   kmPadrao?: DiaTrabalhoKmPadrao
   descricaoMaxChars?: number
   today?: string
+  nowMs: number
+  random: () => number
 }
 
 export function resolveDiaTrabalhoData(
   form: Pick<DiaTrabalho, 'data'>,
-  today = new Date().toISOString().split('T')[0]
+  today?: string
 ): string {
-  return form.data || today
+  return form.data || today || ''
 }
 
 export function isDiaTrabalhoFormValid(form: Pick<DiaTrabalho, 'data'>): boolean {
-  return Boolean(resolveDiaTrabalhoData(form))
+  return Boolean(resolveDiaTrabalhoData(form, '_'))
 }
 
 function applyKmPadrao(
@@ -42,15 +44,16 @@ function applyKmPadrao(
 
 export function createDiaTrabalhoFromForm(
   form: DiaTrabalho,
-  opts: DiaTrabalhoFromFormOpts = {}
+  opts: DiaTrabalhoFromFormOpts
 ): DiaTrabalho {
-  const dataParaUsar = resolveDiaTrabalhoData(form, opts.today)
+  const today = opts.today ?? new Date(opts.nowMs).toISOString().split('T')[0]
+  const dataParaUsar = resolveDiaTrabalhoData(form, today)
   const km = applyKmPadrao(form, opts.kmPadrao)
   const maxChars = opts.descricaoMaxChars ?? 5000
   return atualizarCalculosDia({
     ...form,
     data: diaTrabalhoDataChaveOrdenacao(dataParaUsar),
-    id: opts.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
     kmIda: km.kmIda,
     kmRetorno: km.kmRetorno,
     descricaoTrabalho: String(form.descricaoTrabalho ?? '').slice(0, maxChars),
@@ -60,7 +63,7 @@ export function createDiaTrabalhoFromForm(
 export function updateDiaTrabalhoFromForm(
   existing: DiaTrabalho,
   form: DiaTrabalho,
-  opts: Omit<DiaTrabalhoFromFormOpts, 'id'> = {}
+  opts: Omit<DiaTrabalhoFromFormOpts, 'id'>
 ): DiaTrabalho {
   return { ...createDiaTrabalhoFromForm(form, opts), id: existing.id }
 }

@@ -5,14 +5,16 @@ import type { FormularioChecklistFromOrdem, OrdemPreparacaoFormState } from './t
 export type CreateFormularioChecklistFromOrdemOpts = {
   id?: string
   dataCriacao?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createFormularioChecklistFromOrdem(
   form: OrdemPreparacaoFormState,
-  opts: CreateFormularioChecklistFromOrdemOpts = {}
+  opts: CreateFormularioChecklistFromOrdemOpts
 ): FormularioChecklistFromOrdem {
   return {
-    id: opts.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
     ordemPreparacaoId: form.id || null,
     codiceSmeUp: form.codiceSmeUp,
     descrizione: form.descrizione,
@@ -55,7 +57,7 @@ export function createFormularioChecklistFromOrdem(
     adesivi: form.adesivi,
     noteProduzione: form.noteProduzione,
     impressoes: form.impressoes,
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
     status: 'pendente',
     checklistItens: [],
     observacoesTecnico: '',
