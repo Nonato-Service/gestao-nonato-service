@@ -54,3 +54,18 @@ export function generateDemoPassword(random: () => number): string {
   }
   return pwd
 }
+
+/** Utilizador + senha. Relógio (`fallbackTail`) e aleatório (`random`) injectados. */
+export function generateDemoAccessCredentials(
+  nome: string,
+  email: string,
+  recipientId: string,
+  existingUsernames: string[],
+  fallbackTail: string,
+  random: () => number
+): { demoUsuario: string; demoSenha: string } {
+  return {
+    demoUsuario: buildDemoUsername(nome, email, recipientId, existingUsernames, fallbackTail),
+    demoSenha: generateDemoPassword(random),
+  }
+}

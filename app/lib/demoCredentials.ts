@@ -1,6 +1,7 @@
 import {
   buildDemoUsername as buildDemoUsernamePure,
   generateDemoPassword as generateDemoPasswordPure,
+  generateDemoAccessCredentials as generateDemoAccessCredentialsPure,
 } from '../modules/demo/credentials'
 
 /** Re-export fino — fonte canónica em `app/modules/demo/credentials`. */
@@ -21,14 +22,19 @@ export function generateDemoPassword(): string {
   return generateDemoPasswordPure(Math.random)
 }
 
+/** Injeta Date.now() e Math.random() no par utilizador/senha. */
 export function generateDemoAccessCredentials(
   nome: string,
   email: string,
   recipientId: string,
   existingUsernames: string[] = []
 ): { demoUsuario: string; demoSenha: string } {
-  return {
-    demoUsuario: buildDemoUsername(nome, email, recipientId, existingUsernames),
-    demoSenha: generateDemoPassword(),
-  }
+  return generateDemoAccessCredentialsPure(
+    nome,
+    email,
+    recipientId,
+    existingUsernames,
+    String(Date.now()).slice(-4),
+    Math.random
+  )
 }

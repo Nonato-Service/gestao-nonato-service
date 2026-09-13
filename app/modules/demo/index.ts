@@ -26,7 +26,12 @@ export {
   createDemoRecipientFromForm,
 } from './fromForm'
 
-export { buildDemoUsername, formatDemoCredentialsText, generateDemoPassword } from './credentials'
+export {
+  buildDemoUsername,
+  formatDemoCredentialsText,
+  generateDemoPassword,
+  generateDemoAccessCredentials,
+} from './credentials'
 
 export {
   DEMO_DAYS_DEFAULT,

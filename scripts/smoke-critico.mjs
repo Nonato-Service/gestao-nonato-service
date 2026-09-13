@@ -4941,6 +4941,7 @@ try {
     idx.includes('buildDemoUsername') &&
     idx.includes('formatDemoCredentialsText') &&
     idx.includes('generateDemoPassword') &&
+    idx.includes('generateDemoAccessCredentials') &&
     exists('app/modules/demo/credentials.ts')
   ) {
     ok('módulo demo exporta credentials')
@@ -4972,6 +4973,15 @@ try {
     ok('lib/demoCredentials só envolve o aleatório da senha demo')
   } else {
     fail('lib/demoCredentials ainda implementa generateDemoPassword')
+  }
+  if (
+    libCreds.includes('generateDemoAccessCredentials as generateDemoAccessCredentialsPure') &&
+    libCreds.includes('generateDemoAccessCredentialsPure(') &&
+    !libCreds.includes('demoUsuario: buildDemoUsername(')
+  ) {
+    ok('lib/demoCredentials só envolve relógio/aleatório das credenciais')
+  } else {
+    fail('lib/demoCredentials ainda monta generateDemoAccessCredentials')
   }
   if (
     idx.includes('clampDemoDays') &&
