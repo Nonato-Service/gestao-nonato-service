@@ -4839,6 +4839,23 @@ try {
   } else {
     fail('GestaoDemos ainda importa share do lib')
   }
+  if (
+    idx.includes('enrichDemoRecipients') &&
+    exists('app/modules/demo/enrich.ts')
+  ) {
+    ok('módulo demo exporta enrich')
+  } else {
+    fail('módulo demo sem enrich')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/enrich'") &&
+    libDemo.includes('Date.now()') &&
+    !libDemo.includes('recipient.firstAccessAt || recipient.dataEnvio')
+  ) {
+    ok('lib/demoManagement só envolve o relógio do enrich')
+  } else {
+    fail('lib/demoManagement ainda implementa o enrich')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }

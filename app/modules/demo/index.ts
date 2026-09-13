@@ -70,3 +70,5 @@ export {
   buildDemoMailto,
   buildDemoWhatsAppUrl,
 } from './share'
+
+export { enrichDemoRecipients } from './enrich'

@@ -214,6 +214,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 194. `app/modules/demo/` (groups / presets / rótulos de perfil) — feito
 195. `app/modules/demo/` (policy / preset / sessão / form inicial) — feito
 196. `app/modules/demo/` (share texto/mailto/WhatsApp; enrich no lib) — feito
+197. `app/modules/demo/` (enrich destinatários; Date.now() no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 
