@@ -1309,6 +1309,35 @@ try {
   } else {
     fail('Orçamentos: falta persistência sync do tipo (regressão do seletor TIPO DE ORÇAMENTO)')
   }
+  const rascunhoAvulso = fs.readFileSync(path.join(root, 'app/modules/orcamentos/rascunhoAvulso.ts'), 'utf8')
+  const libRascunhoAvulso = exists('app/lib/orcamentoAvulsoRascunho.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/orcamentoAvulsoRascunho.ts'), 'utf8')
+    : ''
+  if (
+    idx.includes('parseOrcamentoAvulsoRascunhoRaw') &&
+    rascunhoAvulso.includes('nowMs: number') &&
+    !rascunhoAvulso.includes('sessionStorage.getItem') &&
+    !rascunhoAvulso.includes('sessionStorage.setItem') &&
+    !rascunhoAvulso.includes('typeof window')
+  ) {
+    ok('módulo orçamentos rascunhoAvulso é puro (sessionStorage no lib)')
+  } else {
+    fail('módulo orçamentos/rascunhoAvulso ainda usa sessionStorage')
+  }
+  if (
+    libRascunhoAvulso.includes('parseOrcamentoAvulsoRascunhoRaw') &&
+    libRascunhoAvulso.includes('sessionStorage') &&
+    libRascunhoAvulso.includes('Date.now()')
+  ) {
+    ok('lib/orcamentoAvulsoRascunho envolve sessionStorage do rascunho avulso')
+  } else {
+    fail('lib/orcamentoAvulsoRascunho ainda não envolve o rascunho avulso')
+  }
+  if (nma.includes("from './lib/orcamentoAvulsoRascunho'")) {
+    ok('NonatoMainApp usa rascunho avulso via lib')
+  } else {
+    fail('NonatoMainApp não importa o rascunho avulso do lib')
+  }
   if (
     nma.includes('(orcamento.itens || []).length') &&
     nma.includes('(orcamento.itens || []).map') &&

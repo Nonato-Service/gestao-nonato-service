@@ -102,9 +102,8 @@ export type {
 export {
   ORCAMENTO_AVULSO_RASCUNHO_LS,
   criarOrcamentoAvulsoRascunhoVazio,
-  lerOrcamentoAvulsoRascunhoSession,
-  gravarOrcamentoAvulsoRascunhoSession,
-  limparOrcamentoAvulsoRascunhoSession,
+  parseOrcamentoAvulsoRascunhoRaw,
+  sanitizarRascunhoParaSession,
 } from './rascunhoAvulso'
 
 export {

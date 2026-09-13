@@ -949,10 +949,6 @@ import {
   gerarProximoNumeroOrcamentoAvulso,
   resolverNumeroOrcamentoAvulsoAoSalvar,
   snapshotDadosClienteOrcamentoAvulso,
-  criarOrcamentoAvulsoRascunhoVazio,
-  lerOrcamentoAvulsoRascunhoSession,
-  gravarOrcamentoAvulsoRascunhoSession,
-  limparOrcamentoAvulsoRascunhoSession,
   type OrcamentoAvulsoRascunhoPersist,
   resolveImagemItemOrcamentoParaGravar,
   resolveImagemItemOrcamentoDisplay,
@@ -964,6 +960,12 @@ import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { buildPedidoOrcamentoFromRelatorio } from './lib/pedidoOrcamentoRelatorio'
 import { criarPedidoSeparacaoFromOrcamento, notifyEquipamentoOrcamentosChanged } from './lib/orcamentoWorkflow'
+import {
+  criarOrcamentoAvulsoRascunhoVazio,
+  lerOrcamentoAvulsoRascunhoSession,
+  gravarOrcamentoAvulsoRascunhoSession,
+  limparOrcamentoAvulsoRascunhoSession,
+} from './lib/orcamentoAvulsoRascunho'
 import {
   filtrarPecasBibliotecaPorBusca,
   pecaBibliotecaMatchesBusca,
