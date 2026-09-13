@@ -3425,6 +3425,53 @@ try {
   } else {
     fail('NonatoMainApp ainda usa aliases protocoloFormVazio/formRascunhoDeProtocolo')
   }
+  const protoBlocos = fs.readFileSync(path.join(root, 'app/modules/protocolo/blocos.ts'), 'utf8')
+  const protoFromForm = fs.readFileSync(path.join(root, 'app/modules/protocolo/fromForm.ts'), 'utf8')
+  const libProtoBlocos = exists('app/lib/protocoloBlocos.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/protocoloBlocos.ts'), 'utf8')
+    : ''
+  const libProtoFromForm = exists('app/lib/protocoloFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/protocoloFromForm.ts'), 'utf8')
+    : ''
+  if (
+    protoBlocos.includes('nowMs: number') &&
+    protoBlocos.includes('random: () => number') &&
+    !protoBlocos.includes('Date.now()') &&
+    !protoBlocos.includes('Math.random') &&
+    !protoBlocos.includes('crypto')
+  ) {
+    ok('módulo protocolo/blocos é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo protocolo/blocos ainda usa Date.now, Math.random ou crypto')
+  }
+  if (
+    protoFromForm.includes('nowMs: number') &&
+    !protoFromForm.includes('Date.now()') &&
+    !protoFromForm.includes('Math.random') &&
+    !protoFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo protocolo/fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo protocolo/fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libProtoBlocos.includes('newProtocoloBlocoId as newProtocoloBlocoIdPure') &&
+    libProtoBlocos.includes('Date.now()') &&
+    libProtoFromForm.includes('createProtocoloServicoFromForm as createProtocoloServicoFromFormPure') &&
+    libProtoFromForm.includes('Date.now()')
+  ) {
+    ok('lib protocolo envolve ids/fromForm do protocolo')
+  } else {
+    fail('lib protocolo ainda não envolve ids/fromForm')
+  }
+  if (
+    nma.includes("from './lib/protocoloBlocos'") &&
+    nma.includes("from './lib/protocoloFromForm'")
+  ) {
+    ok('NonatoMainApp usa protocolo ids/fromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa protocolo ids/fromForm do lib')
+  }
   if (
     idx.includes('clampProtocoloPdfModelo') &&
     idx.includes('PROTOCOLO_PDF_MODELO_PADRAO') &&

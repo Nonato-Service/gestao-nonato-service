@@ -348,11 +348,7 @@ import {
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico, ProtocoloIntelFiltroChip, ProtocoloTemplateId } from './modules/protocolo'
 import {
-  newProtocoloBlocoId,
-  ensureProtocoloBlocosIds,
   protocoloServicoFormMissing,
-  createProtocoloServicoFromForm,
-  updateProtocoloServicoFromForm,
   PROTOCOLO_FILTRO_CHIPS,
   avaliarCompletudeProtocolo,
   aplicarFiltroInteligenteChip,
@@ -363,7 +359,6 @@ import {
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
   emptyProtocoloServicoForm,
-  protocoloServicoToForm,
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
   PROTOCOLO_PDF_MODELO_PADRAO,
   clampProtocoloPdfModelo,
@@ -371,6 +366,8 @@ import {
   protocoloEstaExecutadoEnviado,
   agruparProtocolosExecutadosPorClienteEData,
 } from './modules/protocolo'
+import { newProtocoloBlocoId, ensureProtocoloBlocosIds, protocoloServicoToForm } from './lib/protocoloBlocos'
+import { createProtocoloServicoFromForm, updateProtocoloServicoFromForm } from './lib/protocoloFromForm'
 import type {
   SolicitacaoDocDevolvido,
   SolicitacaoDocDevolvidoCliente,

@@ -26,23 +26,25 @@ export type CreateProtocoloServicoFromFormOpts = {
   id?: string
   dataCriacao?: string
   relatorioServicoIdFallback?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createProtocoloServicoFromForm(
   form: ProtocoloServicoFormState,
-  opts: CreateProtocoloServicoFromFormOpts = {}
+  opts: CreateProtocoloServicoFromFormOpts
 ): ProtocoloServico {
   const temEq = Boolean(form.equipamentoNumeroSerie?.trim())
   const sitTrim = (form.situacaoDescricao || '').trim()
   return {
-    id: opts.id ?? `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: opts.id ?? `proto-${opts.nowMs}-${opts.random().toString(36).slice(2, 8)}`,
     clienteId: form.clienteId,
     equipamentoNumeroSerie: temEq ? form.equipamentoNumeroSerie.trim() : '',
     situacaoDescricao: temEq ? undefined : sitTrim || undefined,
     textoInicial: form.textoInicial,
     blocos: form.blocos,
     pecasTrocadasCodigos: form.pecasTrocadasCodigos.filter((c) => c.trim()),
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
     pdfModelo: clampProtocoloPdfModelo(form.pdfModelo),
     relatorioServicoId: (form.relatorioServicoId || opts.relatorioServicoIdFallback || '').trim() || undefined,
     status: 'em_execucao',
@@ -60,7 +62,7 @@ export function createProtocoloServicoFromForm(
 export function updateProtocoloServicoFromForm(
   existing: ProtocoloServico,
   form: ProtocoloServicoFormState,
-  opts: Omit<CreateProtocoloServicoFromFormOpts, 'id' | 'dataCriacao'> = {}
+  opts: Omit<CreateProtocoloServicoFromFormOpts, 'id' | 'dataCriacao'>
 ): ProtocoloServico {
   const next = createProtocoloServicoFromForm(form, {
     ...opts,

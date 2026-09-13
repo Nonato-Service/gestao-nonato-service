@@ -1,6 +1,6 @@
 /** Formulário vazio e mapeamento do protocolo de serviço. */
 
-import { ensureProtocoloBlocosIds } from './blocos'
+import { ensureProtocoloBlocosIds, type ProtocoloIdDeps } from './blocos'
 import type { ProtocoloBloco, ProtocoloServico } from './tipos'
 
 export type ProtocoloServicoFormSimNao = 'sim' | 'nao' | ''
@@ -46,14 +46,15 @@ export function protocoloServicoToForm(
     pecasTrocadasCodigos?: string[]
     relatorioServicoId?: string
   },
-  pdfPadrao: number
+  pdfPadrao: number,
+  deps: ProtocoloIdDeps
 ): ProtocoloServicoFormState {
   return {
     clienteId: p.clienteId || '',
     equipamentoNumeroSerie: p.equipamentoNumeroSerie || '',
     situacaoDescricao: typeof p.situacaoDescricao === 'string' ? p.situacaoDescricao : '',
     textoInicial: p.textoInicial || '',
-    blocos: ensureProtocoloBlocosIds(p.blocos),
+    blocos: ensureProtocoloBlocosIds(p.blocos, deps),
     pecasTrocadasCodigos: [...(p.pecasTrocadasCodigos || [])].map((c) => String(c ?? '')),
     pdfModelo: p.pdfModelo ?? pdfPadrao,
     relatorioServicoId: typeof p.relatorioServicoId === 'string' ? p.relatorioServicoId : '',

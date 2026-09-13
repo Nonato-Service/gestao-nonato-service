@@ -7,7 +7,7 @@ export type {
   ProtocoloBlocoMin,
   ProtocoloServicoStatus,
 } from '../modules/protocolo'
-export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from '../modules/protocolo'
+export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './protocoloBlocos'
 
 export type {
   ProtocoloIntelFiltroChip,
@@ -32,7 +32,8 @@ export { PROTOCOLO_TEMPLATE_IDS, blocosDeTemplate } from '../modules/protocolo/i
 
 export { historicoProtocolosCliente, pecasMaisUsadasHistorico } from '../modules/protocolo/intelHistorico'
 
-export { emptyProtocoloServicoForm as protocoloFormVazio, protocoloServicoToForm as formRascunhoDeProtocolo } from '../modules/protocolo'
+export { emptyProtocoloServicoForm as protocoloFormVazio } from '../modules/protocolo'
+export { protocoloServicoToForm as formRascunhoDeProtocolo } from './protocoloBlocos'
 
 export type { RelatorioServicoMin } from '../modules/protocolo/intelRelatorio'
 export { relatoriosServicoParaProtocolo, sugerirRelatorioServicoId } from '../modules/protocolo/intelRelatorio'

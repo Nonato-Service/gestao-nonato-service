@@ -8,6 +8,7 @@ export type {
   ProtocoloServico,
 } from './tipos'
 
+export type { ProtocoloIdDeps } from './blocos'
 export { newProtocoloBlocoId, ensureProtocoloBlocosIds } from './blocos'
 export type { ProtocoloServicoFormState, ProtocoloServicoFormSimNao } from './formState'
 export { emptyProtocoloServicoForm, protocoloServicoToForm } from './formState'

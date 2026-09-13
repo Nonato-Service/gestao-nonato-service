@@ -1,12 +1,22 @@
 import type { ProtocoloBloco } from './tipos'
 
-export function newProtocoloBlocoId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
-  return `bloco-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+export type ProtocoloIdDeps = {
+  nowMs: number
+  random: () => number
+  randomUUID?: () => string
+}
+
+/** Relógio (`nowMs`), aleatório (`random`) e UUID opcional injectados. */
+export function newProtocoloBlocoId(deps: ProtocoloIdDeps): string {
+  if (deps.randomUUID) return deps.randomUUID()
+  return `bloco-${deps.nowMs}-${deps.random().toString(36).slice(2, 10)}`
 }
 
 /** Remove buracos/null e garante `id` + shape estável em cada bloco. */
-export function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[] | null | undefined): ProtocoloBloco[] {
+export function ensureProtocoloBlocosIds(
+  blocos: ProtocoloBloco[] | null | undefined,
+  deps: ProtocoloIdDeps
+): ProtocoloBloco[] {
   if (!Array.isArray(blocos)) return []
   return blocos
     .filter((raw): raw is ProtocoloBloco => raw != null && typeof raw === 'object')
@@ -32,6 +42,6 @@ export function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[] | null | undef
             ? b.estadoAcao
             : undefined,
       }
-      return base.id ? base : { ...base, id: newProtocoloBlocoId() }
+      return base.id ? base : { ...base, id: newProtocoloBlocoId(deps) }
     })
 }
