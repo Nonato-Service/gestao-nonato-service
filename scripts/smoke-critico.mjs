@@ -3182,6 +3182,34 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia DiarioPedido no sítio')
   }
+  const diarioFromForm = fs.readFileSync(path.join(root, 'app/modules/diario/fromForm.ts'), 'utf8')
+  const libDiarioFromForm = exists('app/lib/diarioFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/diarioFromForm.ts'), 'utf8')
+    : ''
+  if (
+    diarioFromForm.includes('nowMs: number') &&
+    !diarioFromForm.includes('Date.now()') &&
+    !diarioFromForm.includes('Math.random') &&
+    !diarioFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo diario fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo diario/fromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libDiarioFromForm.includes('createDiarioPedidoFromForm as createDiarioPedidoFromFormPure') &&
+    libDiarioFromForm.includes('Date.now()') &&
+    libDiarioFromForm.includes('Math.random')
+  ) {
+    ok('lib/diarioFromForm só envolve relógio/aleatório do diário')
+  } else {
+    fail('lib/diarioFromForm ainda não envolve o diário fromForm')
+  }
+  if (nma.includes("from './lib/diarioFromForm'")) {
+    ok('NonatoMainApp usa diário fromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa diário fromForm do lib')
+  }
   const lembreteLib = fs.readFileSync(path.join(root, 'app/lib/diarioLembrete.ts'), 'utf8')
   const picker = fs.readFileSync(path.join(root, 'app/components/DiarioLembreteIntervalPicker.tsx'), 'utf8')
   if (
@@ -3960,6 +3988,32 @@ try {
     ok('NonatoMainApp usa SolicitacaoServicoTecnico fromForm do módulo')
   } else {
     fail('NonatoMainApp ainda mapeia SolicitacaoServicoTecnico no sítio')
+  }
+  const sstFromForm = fs.readFileSync(path.join(root, 'app/modules/sst/fromForm.ts'), 'utf8')
+  const libSstFromForm = exists('app/lib/sstFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/sstFromForm.ts'), 'utf8')
+    : ''
+  if (
+    sstFromForm.includes('nowMs: number') &&
+    !sstFromForm.includes('Date.now()') &&
+    !sstFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo sst fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo sst/fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libSstFromForm.includes('createSolicitacaoServicoTecnicoFromForm as createSolicitacaoServicoTecnicoFromFormPure') &&
+    libSstFromForm.includes('Date.now()')
+  ) {
+    ok('lib/sstFromForm só envolve o relógio do SST')
+  } else {
+    fail('lib/sstFromForm ainda não envolve o SST fromForm')
+  }
+  if (nma.includes("from './lib/sstFromForm'")) {
+    ok('NonatoMainApp usa SST fromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa SST fromForm do lib')
   }
 } catch (e) {
   fail(`módulo sst: ${e.message}`)

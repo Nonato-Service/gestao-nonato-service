@@ -340,12 +340,11 @@ import {
   isDiarioPedidoConteudoValid,
   buildDiarioPedidoTexto,
   cloneDiarioPedidoAnexos,
-  createDiarioPedidoFromForm,
-  updateDiarioPedidoFromForm,
   clearDiarioLembreteOnConcluido,
   formatDiarioLembreteIntervalo,
   isDiarioLembreteDue,
 } from './modules/diario'
+import { createDiarioPedidoFromForm, updateDiarioPedidoFromForm } from './lib/diarioFromForm'
 import type { ProtocoloBloco, ProtocoloServico, ProtocoloIntelFiltroChip, ProtocoloTemplateId } from './modules/protocolo'
 import {
   protocoloServicoFormMissing,
@@ -378,7 +377,6 @@ import {
   emptySolicitacaoServicoTecnicoFormState,
   solicitacaoServicoTecnicoToForm,
   solicitacaoServicoTecnicoFormFromModelo,
-  createSolicitacaoServicoTecnicoFromForm,
   updateSolicitacaoServicoTecnicoFromForm,
   enriquecerSolicitacaoComClienteCadastrado,
   mergeClienteSelecionadoSst,
@@ -387,6 +385,7 @@ import {
   buildSolicitacaoPrintPayload,
   formatDataSstLista,
 } from './modules/sst'
+import { createSolicitacaoServicoTecnicoFromForm } from './lib/sstFromForm'
 import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelatorio, AdminInterfaceLogoDraft, AdminBibliotecaLogoDraft, SyncPendingRemote, CodeBackup } from './modules/admin'
 import {
   createEmptyUserForm,

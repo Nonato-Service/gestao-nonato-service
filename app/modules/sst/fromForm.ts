@@ -46,14 +46,20 @@ export function solicitacaoServicoTecnicoFormFromModelo(
   }
 }
 
+export type CreateSolicitacaoServicoTecnicoFromFormOpts = {
+  id?: string
+  dataCriacao?: string
+  nowMs: number
+}
+
 export function createSolicitacaoServicoTecnicoFromForm(
   form: SolicitacaoServicoTecnicoFormState,
-  opts?: { id?: string; dataCriacao?: string }
+  opts: CreateSolicitacaoServicoTecnicoFromFormOpts
 ): SolicitacaoServicoTecnico {
   return {
     ...form,
-    id: opts?.id ?? `sst-${Date.now()}`,
-    dataCriacao: opts?.dataCriacao ?? new Date().toISOString(),
+    id: opts.id ?? `sst-${opts.nowMs}`,
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }
 

@@ -25,17 +25,19 @@ export type CreateDiarioPedidoFromFormOpts = {
   criadoEm?: string
   clienteCadastroId?: string
   extra?: Partial<DiarioPedidoItem>
+  nowMs: number
+  random: () => number
 }
 
 export function createDiarioPedidoFromForm(
   form: { texto: string; anexos?: DiarioPedidoAnexo[] },
-  opts: CreateDiarioPedidoFromFormOpts = {}
+  opts: CreateDiarioPedidoFromFormOpts
 ): DiarioPedidoItem {
   return {
-    id: opts.id ?? `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: opts.id ?? `dp-${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     texto: form.texto,
     status: 'planeado',
-    criadoEm: opts.criadoEm ?? new Date().toISOString(),
+    criadoEm: opts.criadoEm ?? new Date(opts.nowMs).toISOString(),
     anexos: form.anexos,
     ...(opts.clienteCadastroId ? { clienteCadastroId: opts.clienteCadastroId } : {}),
     ...opts.extra,
@@ -44,18 +46,19 @@ export function createDiarioPedidoFromForm(
 
 export type UpdateDiarioPedidoFromFormOpts = {
   atualizadoEm?: string
+  nowMs: number
 }
 
 export function updateDiarioPedidoFromForm(
   existing: DiarioPedidoItem,
   form: { texto: string; anexos?: DiarioPedidoAnexo[]; clienteCadastroId?: string },
-  opts: UpdateDiarioPedidoFromFormOpts = {}
+  opts: UpdateDiarioPedidoFromFormOpts
 ): DiarioPedidoItem {
   return {
     ...existing,
     texto: form.texto,
     anexos: form.anexos,
-    atualizadoEm: opts.atualizadoEm ?? new Date().toISOString(),
+    atualizadoEm: opts.atualizadoEm ?? new Date(opts.nowMs).toISOString(),
     clienteCadastroId: form.clienteCadastroId,
   }
 }
