@@ -482,6 +482,7 @@ import { generatePassword, createPasswordFromForm } from './lib/adminPasswords'
 import { createUserFromForm } from './lib/adminUsers'
 import { createClienteFromForm } from './lib/clienteFromForm'
 import { createClientePrioritarioFromForm } from './lib/clientePrioritarioFromForm'
+import { createRelatorioEquipamentoFromForm } from './lib/relatorioEquipamentoFromForm'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
   Cliente,
@@ -521,7 +522,6 @@ import {
   createEmptyRelatorioEquipamentoForm,
   relatorioEquipamentoToForm,
   isRelatorioEquipamentoFormValid,
-  createRelatorioEquipamentoFromForm,
   updateRelatorioEquipamentoFromForm,
   isEquipamentoClienteFormValid,
   createEquipamentoClienteFromForm,

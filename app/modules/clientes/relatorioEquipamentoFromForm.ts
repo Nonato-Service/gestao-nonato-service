@@ -9,16 +9,23 @@ export function isRelatorioEquipamentoFormValid(
   return Boolean(form.titulo.trim() && form.conteudo.trim())
 }
 
+export type CreateRelatorioEquipamentoFromFormOpts = {
+  id?: string
+  dataGeracao?: string
+  equipamentoId?: string
+  nowMs: number
+}
+
 export function createRelatorioEquipamentoFromForm(
   form: RelatorioEquipamentoFormFields,
-  opts?: { id?: string; dataGeracao?: string; equipamentoId?: string }
+  opts: CreateRelatorioEquipamentoFromFormOpts
 ): RelatorioEquipamento {
   return {
-    id: opts?.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     titulo: form.titulo,
     conteudo: form.conteudo,
-    dataGeracao: opts?.dataGeracao ?? new Date().toLocaleString('pt-BR'),
-    equipamentoId: opts?.equipamentoId,
+    dataGeracao: opts.dataGeracao ?? new Date(opts.nowMs).toLocaleString('pt-BR'),
+    equipamentoId: opts.equipamentoId,
   }
 }
 

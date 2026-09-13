@@ -712,6 +712,33 @@ try {
   } else {
     fail('NonatoMainApp ainda define EquipamentoCliente/RelatorioEquipamento localmente ou não usa createEmpty*')
   }
+  const relEqFromForm = fs.readFileSync(path.join(root, 'app/modules/clientes/relatorioEquipamentoFromForm.ts'), 'utf8')
+  const libRelEqFromForm = exists('app/lib/relatorioEquipamentoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioEquipamentoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    relEqFromForm.includes('nowMs: number') &&
+    !relEqFromForm.includes('Date.now()') &&
+    !relEqFromForm.includes('new Date().toLocaleString')
+  ) {
+    ok('módulo clientes createRelatorioEquipamentoFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo clientes/relatorioEquipamentoFromForm ainda usa Date.now')
+  }
+  if (
+    libRelEqFromForm.includes("from '../modules/clientes/relatorioEquipamentoFromForm'") &&
+    libRelEqFromForm.includes('createRelatorioEquipamentoFromForm as createRelatorioEquipamentoFromFormPure') &&
+    libRelEqFromForm.includes('Date.now()')
+  ) {
+    ok('lib/relatorioEquipamentoFromForm só envolve o relógio do relatório do equipamento')
+  } else {
+    fail('lib/relatorioEquipamentoFromForm ainda não envolve createRelatorioEquipamentoFromForm')
+  }
+  if (nma.includes("from './lib/relatorioEquipamentoFromForm'")) {
+    ok('NonatoMainApp usa createRelatorioEquipamentoFromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa createRelatorioEquipamentoFromForm do lib')
+  }
   if (
     idx.includes('export type { Cliente }') &&
     nma.includes('Cliente') &&

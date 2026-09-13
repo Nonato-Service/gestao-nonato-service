@@ -126,6 +126,7 @@ export {
   relatorioEquipamentoToForm,
 } from './equipamentoClienteForm'
 
+export type { CreateRelatorioEquipamentoFromFormOpts } from './relatorioEquipamentoFromForm'
 export {
   isRelatorioEquipamentoFormValid,
   createRelatorioEquipamentoFromForm,
