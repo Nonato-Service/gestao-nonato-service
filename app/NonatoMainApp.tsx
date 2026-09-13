@@ -52,9 +52,6 @@ import { useUnsavedFormGuard } from './hooks/useUnsavedFormGuard'
 import {
   applyDiarioLembretePatch,
   advanceDiarioLembreteAfterFire,
-  clearDiarioLembreteOnConcluido,
-  formatDiarioLembreteIntervalo,
-  isDiarioLembreteDue,
   normalizeDiarioItemLembrete,
   requestDiarioNotificationPermission,
   showDiarioBrowserNotification,
@@ -349,6 +346,9 @@ import {
   cloneDiarioPedidoAnexos,
   createDiarioPedidoFromForm,
   updateDiarioPedidoFromForm,
+  clearDiarioLembreteOnConcluido,
+  formatDiarioLembreteIntervalo,
+  isDiarioLembreteDue,
 } from './modules/diario'
 import type { ProtocoloBloco, ProtocoloServico, ProtocoloIntelFiltroChip, ProtocoloTemplateId } from './modules/protocolo'
 import {

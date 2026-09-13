@@ -2512,6 +2512,44 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia DiarioPedido no sítio')
   }
+  const lembreteLib = fs.readFileSync(path.join(root, 'app/lib/diarioLembrete.ts'), 'utf8')
+  const picker = fs.readFileSync(path.join(root, 'app/components/DiarioLembreteIntervalPicker.tsx'), 'utf8')
+  if (
+    idx.includes('formatDiarioLembreteIntervalo') &&
+    idx.includes('isDiarioLembreteDue') &&
+    idx.includes('clearDiarioLembreteOnConcluido') &&
+    exists('app/modules/diario/lembrete.ts')
+  ) {
+    ok('módulo diario exporta lembrete')
+  } else {
+    fail('módulo diario sem lembrete')
+  }
+  if (
+    lembreteLib.includes("from '../modules/diario/lembrete'") &&
+    lembreteLib.includes('requestDiarioNotificationPermission') &&
+    lembreteLib.includes('showDiarioBrowserNotification') &&
+    !lembreteLib.includes('export const DIARIO_LEMBRETE_INTERVALOS_MIN')
+  ) {
+    ok('lib/diarioLembrete só envolve relógio/notificação do módulo')
+  } else {
+    fail('lib/diarioLembrete ainda implementa o lembrete')
+  }
+  if (
+    nma.includes('formatDiarioLembreteIntervalo') &&
+    nma.includes('isDiarioLembreteDue') &&
+    nma.includes('clearDiarioLembreteOnConcluido') &&
+    nma.includes('requestDiarioNotificationPermission') &&
+    nma.includes("from './lib/diarioLembrete'")
+  ) {
+    ok('NonatoMainApp usa lembrete do módulo diario')
+  } else {
+    fail('NonatoMainApp sem lembrete do módulo diario')
+  }
+  if (picker.includes("from '../modules/diario'") && !picker.includes("from '../lib/diarioLembrete'")) {
+    ok('DiarioLembreteIntervalPicker usa lembrete do módulo diario')
+  } else {
+    fail('DiarioLembreteIntervalPicker ainda importa diarioLembrete do lib')
+  }
 } catch (e) {
   fail(`módulo diario: ${e.message}`)
 }

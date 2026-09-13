@@ -7,7 +7,7 @@ import {
   clampDiarioLembreteMinutos,
   diarioLembreteSelectKey,
   formatDiarioLembreteIntervalo,
-} from '../lib/diarioLembrete'
+} from '../modules/diario'
 
 type Props = {
   minutes: number

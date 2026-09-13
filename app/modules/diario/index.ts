@@ -1,4 +1,4 @@
-/** Módulo Diário — tipos, constantes, helpers de texto/anexos e compressão de imagem. */
+/** Módulo Diário — tipos, constantes, helpers de texto/anexos, lembrete e compressão de imagem. */
 
 export type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './tipos'
 
@@ -19,3 +19,19 @@ export {
   createDiarioPedidoFromForm,
   updateDiarioPedidoFromForm,
 } from './fromForm'
+
+export type { DiarioLembreteFields, DiarioLembreteIntervaloMin, DiarioLembretePatch } from './lembrete'
+export {
+  DIARIO_LEMBRETE_INTERVALOS_MIN,
+  DIARIO_LEMBRETE_INTERVALO_KEYS,
+  DIARIO_LEMBRETE_CUSTOM_KEY,
+  scheduleProximoLembrete,
+  normalizeDiarioItemLembrete,
+  applyDiarioLembretePatch,
+  formatDiarioLembreteIntervalo,
+  isDiarioLembreteDue,
+  advanceDiarioLembreteAfterFire,
+  clearDiarioLembreteOnConcluido,
+  clampDiarioLembreteMinutos,
+  diarioLembreteSelectKey,
+} from './lembrete'
