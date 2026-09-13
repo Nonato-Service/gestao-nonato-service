@@ -5247,6 +5247,27 @@ try {
   } else {
     fail('NonatoMainApp ainda define TranslatorLibraryEntry localmente ou não usa helpers')
   }
+  const tradFromForm = fs.readFileSync(path.join(root, 'app/modules/tradutor/fromForm.ts'), 'utf8')
+  const libTradFromForm = exists('app/lib/tradutorFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/tradutorFromForm.ts'), 'utf8')
+    : ''
+  if (
+    tradFromForm.includes('nowMs: number') &&
+    !tradFromForm.includes('Date.now()') &&
+    !tradFromForm.includes('Math.random')
+  ) {
+    ok('módulo tradutor fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo tradutor/fromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libTradFromForm.includes('createTranslatorLibraryFromForm as createTranslatorLibraryFromFormPure') &&
+    nma.includes("from './lib/tradutorFromForm'")
+  ) {
+    ok('NonatoMainApp usa tradutor fromForm via lib')
+  } else {
+    fail('lib/tradutorFromForm ainda não envolve o tradutor fromForm')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/translatorLibraryTypes.ts'), 'utf8')
   if (libTypes.includes("from '../modules/tradutor'") || libTypes.includes('from "../modules/tradutor"')) {
     ok('lib/translatorLibraryTypes re-exporta app/modules/tradutor')
@@ -5403,6 +5424,27 @@ try {
   } else {
     fail('ConhecimentoTecnicosContent ainda define o tipo localmente ou não usa helpers')
   }
+  const ctFromForm = fs.readFileSync(path.join(root, 'app/modules/conhecimento-tecnico/fromForm.ts'), 'utf8')
+  const libCtFromForm = exists('app/lib/conhecimentoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/conhecimentoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    ctFromForm.includes('nowMs: number') &&
+    !ctFromForm.includes('Date.now()') &&
+    !ctFromForm.includes('Math.random')
+  ) {
+    ok('módulo conhecimento-tecnico fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo conhecimento-tecnico/fromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libCtFromForm.includes('createConhecimentoTecnicoFromForm as createConhecimentoTecnicoFromFormPure') &&
+    content.includes("from '../lib/conhecimentoFromForm'")
+  ) {
+    ok('ConhecimentoTecnicosContent usa fromForm via lib')
+  } else {
+    fail('lib/conhecimentoFromForm ainda não envolve o conhecimento fromForm')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/conhecimentoTecnicoTypes.ts'), 'utf8')
   if (
     libTypes.includes("from '../modules/conhecimento-tecnico'") ||
@@ -5514,6 +5556,27 @@ try {
     ok('GestaoDemosContent usa DemoRecipient fromForm do módulo')
   } else {
     fail('GestaoDemosContent ainda mapeia DemoRecipient no sítio')
+  }
+  const demoFromForm = fs.readFileSync(path.join(root, 'app/modules/demo/fromForm.ts'), 'utf8')
+  const libDemoFromForm = exists('app/lib/demoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/demoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    demoFromForm.includes('nowMs: number') &&
+    !demoFromForm.includes('Date.now()') &&
+    !demoFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo demo fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo demo/fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libDemoFromForm.includes('createDemoRecipientFromForm as createDemoRecipientFromFormPure') &&
+    gestao.includes("from '../lib/demoFromForm'")
+  ) {
+    ok('GestaoDemosContent usa destinatário fromForm via lib')
+  } else {
+    fail('lib/demoFromForm ainda não envolve o destinatário demo')
   }
   if (
     idx.includes('emptyDemoRecipientForm') &&

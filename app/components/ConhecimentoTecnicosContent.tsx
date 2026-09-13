@@ -15,12 +15,12 @@ import {
   clampConhecimentoNivel,
   conhecimentoEntryExists,
   computeTecnicoStats,
-  createConhecimentoTecnicoFromForm,
   descricaoKeyForSkill,
   filterConhecimentoByTecnico,
   getDescricaoValue,
   isConhecimentoTecnicoFormValid,
 } from '../modules/conhecimento-tecnico'
+import { createConhecimentoTecnicoFromForm } from '../lib/conhecimentoFromForm'
 
 export type { ConhecimentoTecnicoEntry }
 

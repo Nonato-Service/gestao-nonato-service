@@ -17,14 +17,16 @@ export function isTranslatorLibraryFormValid(
 
 export type CreateTranslatorLibraryFromFormOpts = {
   id?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createTranslatorLibraryFromForm(
   form: TranslatorLibraryFormPayload,
-  opts: CreateTranslatorLibraryFromFormOpts = {}
+  opts: CreateTranslatorLibraryFromFormOpts
 ): TranslatorLibraryEntry {
   return {
-    id: opts.id ?? `${Date.now()}${Math.random().toString(36).slice(2)}`,
+    id: opts.id ?? `${opts.nowMs}${opts.random().toString(36).slice(2)}`,
     sourceLang: form.sourceLang,
     sourceText: form.sourceText,
     targetLang: form.targetLang,

@@ -21,7 +21,6 @@ import type {
 } from '../modules/demo'
 import {
   isDemoRecipientFormValid,
-  createDemoRecipientFromForm,
   emptyDemoRecipientForm,
   buildDemoUsername,
   formatDemoCredentialsText,
@@ -41,6 +40,7 @@ import {
   buildDemoWhatsAppUrl,
 } from '../modules/demo'
 import { generateDemoAccessCredentials } from '../lib/demoCredentials'
+import { createDemoRecipientFromForm } from '../lib/demoFromForm'
 import type { SafeT } from './admin/adminTypes'
 
 type Variant = 'full' | 'embedded' | 'compact'

@@ -737,9 +737,9 @@ import {
   libraryEntryExists,
   createTranslatorLibraryEntry,
   isTranslatorLibraryFormValid,
-  createTranslatorLibraryFromForm,
   WRITING_ASSIST_FIELD_MAX_CHARS,
 } from './modules/tradutor'
+import { createTranslatorLibraryFromForm } from './lib/tradutorFromForm'
 import type { ConhecimentoTecnicoEntry } from './modules/conhecimento-tecnico'
 import { normalizeConhecimentoTecnicos } from './modules/conhecimento-tecnico'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'

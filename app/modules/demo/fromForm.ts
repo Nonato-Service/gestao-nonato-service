@@ -14,17 +14,18 @@ export type CreateDemoRecipientFromFormOpts = {
   dataEnvio?: string
   demoUsuario?: string
   demoSenha?: string
+  nowMs: number
 }
 
 export function createDemoRecipientFromForm(
   form: DemoRecipientFormPayload,
-  opts: CreateDemoRecipientFromFormOpts = {}
+  opts: CreateDemoRecipientFromFormOpts
 ): DemoRecipientRecord {
   return {
-    id: opts.id ?? `demo-${Date.now()}`,
+    id: opts.id ?? `demo-${opts.nowMs}`,
     nome: form.nome.trim(),
     email: form.email.trim(),
-    dataEnvio: opts.dataEnvio ?? new Date().toISOString(),
+    dataEnvio: opts.dataEnvio ?? new Date(opts.nowMs).toISOString(),
     observacoes: form.observacoes.trim() || undefined,
     demoDays: form.demoDays,
     demoModules: form.demoModules,

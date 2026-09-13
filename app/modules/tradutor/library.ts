@@ -80,7 +80,9 @@ export function createTranslatorLibraryEntry(input: {
   targetLang: string
   targetText: string
   id?: string
+  nowMs: number
+  random: () => number
 }): TranslatorLibraryEntry {
-  const { id, ...form } = input
-  return createTranslatorLibraryFromForm(form, { id })
+  const { id, nowMs, random, ...form } = input
+  return createTranslatorLibraryFromForm(form, { id, nowMs, random })
 }

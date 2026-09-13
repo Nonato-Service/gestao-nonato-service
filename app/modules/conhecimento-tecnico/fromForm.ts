@@ -16,14 +16,16 @@ export function isConhecimentoTecnicoFormValid(
 
 export type CreateConhecimentoTecnicoFromFormOpts = {
   id?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createConhecimentoTecnicoFromForm(
   form: ConhecimentoTecnicoFormPayload,
-  opts: CreateConhecimentoTecnicoFromFormOpts = {}
+  opts: CreateConhecimentoTecnicoFromFormOpts
 ): ConhecimentoTecnicoEntry {
   return {
-    id: opts.id ?? `ct-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: opts.id ?? `ct-${opts.nowMs}-${opts.random().toString(36).slice(2)}`,
     tecnicoId: form.tecnicoId,
     equipamentoTipoId: form.equipamentoTipoId,
     equipamentoTipoNome: form.equipamentoTipoNome,

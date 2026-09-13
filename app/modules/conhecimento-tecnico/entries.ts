@@ -109,9 +109,11 @@ export function createConhecimentoTecnicoEntry(input: {
   equipamentoTipoId: string
   equipamentoTipoNome: string
   id?: string
+  nowMs: number
+  random: () => number
 }): ConhecimentoTecnicoEntry {
-  const { id, ...form } = input
-  return createConhecimentoTecnicoFromForm(form, { id })
+  const { id, nowMs, random, ...form } = input
+  return createConhecimentoTecnicoFromForm(form, { id, nowMs, random })
 }
 
 /** Estatísticas agregadas (média, expert, contagem) sobre uma lista de entradas. */

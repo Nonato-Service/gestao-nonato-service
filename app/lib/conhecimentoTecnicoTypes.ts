@@ -13,7 +13,18 @@ export {
   normalizeConhecimentoTecnicos,
   filterConhecimentoByTecnico,
   conhecimentoEntryExists,
-  createConhecimentoTecnicoEntry,
   computeTecnicoStats,
   buildTiposEquipamentoOpcoes,
 } from '../modules/conhecimento-tecnico'
+import { createConhecimentoTecnicoEntry as createConhecimentoTecnicoEntryPure } from '../modules/conhecimento-tecnico/entries'
+import type { ConhecimentoTecnicoEntry } from '../modules/conhecimento-tecnico/tipos'
+
+/** Injeta Date.now() e Math.random() no id quando o call-site não envia. */
+export function createConhecimentoTecnicoEntry(input: {
+  tecnicoId: string
+  equipamentoTipoId: string
+  equipamentoTipoNome: string
+  id?: string
+}): ConhecimentoTecnicoEntry {
+  return createConhecimentoTecnicoEntryPure({ ...input, nowMs: Date.now(), random: Math.random })
+}
