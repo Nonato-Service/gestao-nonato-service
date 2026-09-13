@@ -194,3 +194,11 @@ export {
   createOstPropostaFromForm,
   isOstPropostaLinhaServicoValid,
 } from './ostFromForm'
+
+export type {
+  OrcamentoConfirmacaoKind,
+  OrcamentoConfirmacaoLabels,
+  OrcamentoConfirmacaoData,
+  BuildOrcamentoConfirmacaoPdfHtmlOpts,
+} from './confirmacaoPdf'
+export { buildOrcamentoConfirmacaoPdfHtml } from './confirmacaoPdf'

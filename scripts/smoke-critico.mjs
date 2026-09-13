@@ -1264,6 +1264,25 @@ try {
   } else {
     fail('OrcamentosGeradosBrowse ainda define OrcamentoGeradoItem no sítio')
   }
+  if (
+    idx.includes('buildOrcamentoConfirmacaoPdfHtml') &&
+    idx.includes('OrcamentoConfirmacaoKind') &&
+    exists('app/modules/orcamentos/confirmacaoPdf.ts')
+  ) {
+    ok('módulo orçamentos exporta confirmacaoPdf')
+  } else {
+    fail('módulo orçamentos sem confirmacaoPdf')
+  }
+  const libOrcConf = fs.readFileSync(path.join(root, 'app/lib/pdfOrcamentoConfirmacao.ts'), 'utf8')
+  if (
+    libOrcConf.includes("from '../modules/orcamentos/confirmacaoPdf'") &&
+    libOrcConf.includes('Date.now()') &&
+    !libOrcConf.includes('function metaTableRows(')
+  ) {
+    ok('lib/pdfOrcamentoConfirmacao só envolve o relógio da confirmação')
+  } else {
+    fail('lib/pdfOrcamentoConfirmacao ainda implementa o HTML da confirmação')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
