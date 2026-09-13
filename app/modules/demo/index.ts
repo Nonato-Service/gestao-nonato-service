@@ -25,3 +25,5 @@ export {
   isDemoRecipientFormValid,
   createDemoRecipientFromForm,
 } from './fromForm'
+
+export { buildDemoUsername, formatDemoCredentialsText } from './credentials'

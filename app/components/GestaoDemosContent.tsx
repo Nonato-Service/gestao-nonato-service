@@ -38,8 +38,10 @@ import {
   isDemoRecipientFormValid,
   createDemoRecipientFromForm,
   emptyDemoRecipientForm,
+  buildDemoUsername,
+  formatDemoCredentialsText,
 } from '../modules/demo'
-import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
+import { generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'
 
 type Variant = 'full' | 'embedded' | 'compact'

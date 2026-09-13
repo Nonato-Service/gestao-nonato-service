@@ -4314,6 +4314,31 @@ try {
   } else {
     fail('createDefaultDemoLinkForm ainda monta o form vazio no sítio')
   }
+  if (
+    idx.includes('buildDemoUsername') &&
+    idx.includes('formatDemoCredentialsText') &&
+    exists('app/modules/demo/credentials.ts')
+  ) {
+    ok('módulo demo exporta credentials')
+  } else {
+    fail('módulo demo sem credentials')
+  }
+  const libCreds = fs.readFileSync(path.join(root, 'app/lib/demoCredentials.ts'), 'utf8')
+  if (
+    libCreds.includes("from '../modules/demo/credentials'") &&
+    libCreds.includes('export function generateDemoPassword(') &&
+    libCreds.includes('export function generateDemoAccessCredentials(') &&
+    !libCreds.includes('export function formatDemoCredentialsText(') &&
+    !libCreds.includes('function slugifyName(') &&
+    gestao.includes('buildDemoUsername') &&
+    gestao.includes('formatDemoCredentialsText') &&
+    gestao.includes('generateDemoAccessCredentials') &&
+    gestao.includes("from '../lib/demoCredentials'")
+  ) {
+    ok('GestaoDemos usa credentials do módulo demo')
+  } else {
+    fail('demoCredentials ainda definido em lib ou GestaoDemos não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }
