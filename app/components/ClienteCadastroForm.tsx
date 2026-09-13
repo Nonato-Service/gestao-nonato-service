@@ -10,7 +10,7 @@ import {
 import { translations, translationBundleKey } from '../translations'
 import {
   buildEnderecoMapsQuery,
-} from '../lib/enderecoMapsUtils'
+} from '../modules/clientes/enderecoMaps'
 import { ClienteEnderecoMapsActions } from './ClienteEnderecoMapsActions'
 import { ClienteIdentidadeChips } from './ClienteIdentidadeChips'
 import { isClienteMarcadoDevedor } from '../lib/clienteDevedorUtils'

@@ -5,7 +5,7 @@ import {
   buildEnderecoMapsQuery,
   buildGoogleMapsNavigationUrl,
   type EnderecoMapsParts,
-} from '../lib/enderecoMapsUtils'
+} from '../modules/clientes/enderecoMaps'
 import { uiTr } from '../lib/uiTr'
 
 type Props = {

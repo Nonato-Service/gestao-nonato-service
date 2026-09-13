@@ -787,6 +787,35 @@ try {
   } else {
     fail('clienteCodigoUtils ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('EnderecoMapsParts') &&
+    idx.includes('buildEnderecoMapsQuery') &&
+    idx.includes('buildGoogleMapsSearchUrl') &&
+    exists('app/modules/clientes/enderecoMaps.ts')
+  ) {
+    ok('módulo clientes exporta enderecoMaps')
+  } else {
+    fail('módulo clientes sem enderecoMaps')
+  }
+  const libMaps = fs.readFileSync(path.join(root, 'app/lib/enderecoMapsUtils.ts'), 'utf8')
+  const cadastroForm = fs.readFileSync(path.join(root, 'app/components/ClienteCadastroForm.tsx'), 'utf8')
+  const gpsNav = fs.readFileSync(path.join(root, 'app/components/ClienteGpsNavButton.tsx'), 'utf8')
+  const mapsActions = fs.readFileSync(path.join(root, 'app/components/ClienteEnderecoMapsActions.tsx'), 'utf8')
+  if (
+    libMaps.includes("from '../modules/clientes/enderecoMaps'") &&
+    !libMaps.includes('export type EnderecoMapsParts = {') &&
+    !libMaps.includes('export function buildEnderecoMapsQuery(') &&
+    cadastroForm.includes("from '../modules/clientes/enderecoMaps'") &&
+    gpsNav.includes("from '../modules/clientes/enderecoMaps'") &&
+    mapsActions.includes("from '../modules/clientes/enderecoMaps'") &&
+    !cadastroForm.includes("from '../lib/enderecoMapsUtils'") &&
+    !gpsNav.includes("from '../lib/enderecoMapsUtils'") &&
+    !mapsActions.includes("from '../lib/enderecoMapsUtils'")
+  ) {
+    ok('formulário/GPS/Maps usam enderecoMaps do módulo clientes')
+  } else {
+    fail('enderecoMaps ainda definido em lib ou ecrãs não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }

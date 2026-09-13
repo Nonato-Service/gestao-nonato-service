@@ -175,3 +175,10 @@ export {
   garantirCodigosClientes,
   codigoClienteExibicao,
 } from './codigo'
+
+export type { EnderecoMapsParts } from './enderecoMaps'
+export {
+  buildEnderecoMapsQuery,
+  buildGoogleMapsSearchUrl,
+  buildGoogleMapsNavigationUrl,
+} from './enderecoMaps'
