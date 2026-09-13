@@ -227,6 +227,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 207. `app/modules/relatorio-servico/` (pdfResumo horas/km/diárias) — feito
 208. `app/modules/relatorio-servico/` (pdfMeta cabeçalho/meta HTML) — feito
 209. `app/modules/relatorio-servico/` (pdfPrintCss CSS de impressão A4) — feito
+210. `app/modules/orcamentos/` (fmtDataPdf; Date.now() no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

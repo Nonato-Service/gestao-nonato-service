@@ -217,3 +217,5 @@ export {
 } from './empresaPdf'
 
 export { ORCAMENTO_PDF_PRO_CSS, buildOrcamentoPdfShell } from './pdfProShell'
+
+export { fmtDataPdf } from './fmtDataPdf'

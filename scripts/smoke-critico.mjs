@@ -1314,13 +1314,26 @@ try {
   }
   if (
     libOrcPdf.includes("from '../modules/orcamentos/pdfProShell'") &&
-    libOrcPdf.includes('export function fmtDataPdf(') &&
     !libOrcPdf.includes('export function buildOrcamentoPdfShell(') &&
     !libOrcPdf.includes('export const ORCAMENTO_PDF_PRO_CSS')
   ) {
-    ok('lib/orcamentoPdfPro só envolve fmtDataPdf; shell no módulo')
+    ok('lib/orcamentoPdfPro só reexporta pdfProShell do módulo')
   } else {
     fail('lib/orcamentoPdfPro ainda implementa o CSS/wrap do PDF')
+  }
+  if (idx.includes('fmtDataPdf') && exists('app/modules/orcamentos/fmtDataPdf.ts')) {
+    ok('módulo orçamentos exporta fmtDataPdf')
+  } else {
+    fail('módulo orçamentos sem fmtDataPdf')
+  }
+  if (
+    libOrcPdf.includes("from '../modules/orcamentos/fmtDataPdf'") &&
+    libOrcPdf.includes('Date.now()') &&
+    !libOrcPdf.includes("new Date().toLocaleDateString('pt-PT')")
+  ) {
+    ok('lib/orcamentoPdfPro só envolve o relógio de fmtDataPdf')
+  } else {
+    fail('lib/orcamentoPdfPro ainda implementa a formatação de data do PDF')
   }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)

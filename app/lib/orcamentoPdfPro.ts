@@ -1,5 +1,7 @@
 /** Re-exports + relógio — fonte canónica em `app/modules/orcamentos` / `equipamentos`. */
 
+import { fmtDataPdf as fmtDataPdfPure } from '../modules/orcamentos/fmtDataPdf'
+
 export { escapePdfHtml, buildPdfDocumentFooterHtml } from './pdfDocumentLayout'
 export type { EquipamentoPdfNumeroLike } from '../modules/equipamentos/pdfNumero'
 export { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from '../modules/equipamentos/pdfNumero'
@@ -17,13 +19,7 @@ export {
 } from '../modules/orcamentos/empresaPdf'
 export { ORCAMENTO_PDF_PRO_CSS, buildOrcamentoPdfShell } from '../modules/orcamentos/pdfProShell'
 
-/** Data de documento no PDF — usa relógio só se a data vier vazia. */
+/** Data de documento no PDF — injeta Date.now() se a data vier vazia. */
 export function fmtDataPdf(iso?: string): string {
-  if (!iso) return new Date().toLocaleDateString('pt-PT')
-  try {
-    const d = new Date(iso.includes('T') ? iso : `${iso}T12:00:00`)
-    return d.toLocaleDateString('pt-PT')
-  } catch {
-    return iso
-  }
+  return fmtDataPdfPure(iso, Date.now())
 }
