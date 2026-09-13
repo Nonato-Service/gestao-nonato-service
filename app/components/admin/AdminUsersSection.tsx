@@ -6,7 +6,7 @@ import {
   USER_PERMISSION_KEYS,
   countActivePermissions,
   getActivePermissionKeys,
-} from '../../lib/adminUserPermissions'
+} from '../../modules/admin'
 import { AdminUserFormPanel } from './AdminUserFormPanel'
 import type { GestorItem, SafeT, TecnicoItem, User, UserFormState } from './adminTypes'
 

@@ -44,6 +44,23 @@ export {
 export type { CodeBackup, AutoBackup } from './backupTipos'
 export { findBackupByTimestamp, formatCodeBackupFilesLabel } from './backupTipos'
 
+export type {
+  UserPermissionKey,
+  UserPermissionGroupId,
+  UserPermissionMeta,
+  UserPermissionGroup,
+  UserPermissionPresetId,
+} from './userPermissions'
+export {
+  USER_PERMISSION_GROUPS,
+  USER_PERMISSION_KEYS,
+  USER_PERMISSION_PRESETS,
+  countActivePermissions,
+  getActivePermissionKeys,
+  applyPermissionPreset,
+  setGroupPermissions,
+} from './userPermissions'
+
 export type { ZipDownloadHistoryEntry } from './zipDownloadHistory'
 export {
   MAX_BACKUP_HISTORY,

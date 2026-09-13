@@ -3414,6 +3414,35 @@ try {
   } else {
     fail('zipDownloadHistory ainda definido em lib ou AdminBackupSection não usa o módulo')
   }
+  if (
+    idx.includes('USER_PERMISSION_KEYS') &&
+    idx.includes('applyPermissionPreset') &&
+    idx.includes('countActivePermissions') &&
+    exists('app/modules/admin/userPermissions.ts')
+  ) {
+    ok('módulo admin exporta userPermissions')
+  } else {
+    fail('módulo admin sem userPermissions')
+  }
+  const libPerms = fs.readFileSync(path.join(root, 'app/lib/adminUserPermissions.ts'), 'utf8')
+  const userFormPanel = fs.readFileSync(path.join(root, 'app/components/admin/AdminUserFormPanel.tsx'), 'utf8')
+  const usersSection = fs.readFileSync(path.join(root, 'app/components/admin/AdminUsersSection.tsx'), 'utf8')
+  const sidebarPerms = fs.readFileSync(path.join(root, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  if (
+    libPerms.includes("from '../modules/admin/userPermissions'") &&
+    !libPerms.includes('export const USER_PERMISSION_GROUPS') &&
+    !libPerms.includes('export function applyPermissionPreset(') &&
+    userFormPanel.includes('applyPermissionPreset') &&
+    (userFormPanel.includes("from '../../modules/admin'") || userFormPanel.includes('from "../../modules/admin"')) &&
+    usersSection.includes('countActivePermissions') &&
+    (usersSection.includes("from '../../modules/admin'") || usersSection.includes('from "../../modules/admin"')) &&
+    sidebarPerms.includes("from '../modules/admin/userPermissions'") &&
+    !sidebarPerms.includes("from './adminUserPermissions'")
+  ) {
+    ok('admin UI/sidebar usam userPermissions do módulo admin')
+  } else {
+    fail('userPermissions ainda definido em lib ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

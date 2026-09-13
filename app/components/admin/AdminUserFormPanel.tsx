@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import { applyPermissionPreset, type UserPermissionPresetId } from '../../lib/adminUserPermissions'
+import { applyPermissionPreset, type UserPermissionPresetId } from '../../modules/admin'
 import {
   SIDEBAR_MENU_MODULES,
   buildMenuItemsFromLegacyPermissions,

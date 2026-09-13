@@ -1,6 +1,6 @@
 import type { UserFormState } from '../components/admin/adminTypes'
 import type { SidebarGroup } from '../modules/sidebar/tipos'
-import { USER_PERMISSION_KEYS, type UserPermissionKey } from './adminUserPermissions'
+import { USER_PERMISSION_KEYS, type UserPermissionKey } from '../modules/admin/userPermissions'
 
 export type SidebarMenuItemDef = {
   buttonId: string
