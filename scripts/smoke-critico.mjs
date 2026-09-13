@@ -2988,6 +2988,26 @@ try {
   } else {
     fail('modeloProtocoloMap ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    idx.includes('PDF_STORAGE_KEYS') &&
+    idx.includes('PdfStorageDomain') &&
+    exists('app/modules/pdf/storageKeys.ts')
+  ) {
+    ok('módulo pdf exporta storageKeys')
+  } else {
+    fail('módulo pdf sem storageKeys')
+  }
+  const libStorage = fs.readFileSync(path.join(root, 'app/lib/pdfModelStorage.ts'), 'utf8')
+  if (
+    libStorage.includes("from '../modules/pdf/storageKeys'") &&
+    !libStorage.includes("relatorios: 'nonato-relatorios-pdf-modelo'") &&
+    rsPdfModelo.includes("from '../pdf/storageKeys'") &&
+    !rsPdfModelo.includes("from '../../lib/pdfModelStorage'")
+  ) {
+    ok('lib/relatorio-servico usam PDF_STORAGE_KEYS do módulo pdf')
+  } else {
+    fail('PDF_STORAGE_KEYS ainda definido em lib ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }

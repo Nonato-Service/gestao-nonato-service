@@ -1,17 +1,10 @@
 import { normalizePdfModelo, PDF_MODELO_PADRAO } from './pdfModelTypes'
+import { PDF_STORAGE_KEYS } from '../modules/pdf/storageKeys'
+import type { PdfStorageDomain } from '../modules/pdf/storageKeys'
 
-export const PDF_STORAGE_KEYS = {
-  relatorios: 'nonato-relatorios-pdf-modelo',
-  relatoriosPorId: 'nonato-relatorios-pdf-modelo-por-id',
-  orcamentos: 'nonato-orcamentos-pdf-modelo',
-  pedidoAvulso: 'nonato-pedido-avulso-pdf-modelo',
-  pecasEspeciais: 'nonato-pecas-especiais-pdf-modelo',
-  fechamentoDespesas: 'nonato-fechamento-despesas-pdf-modelo',
-  cadastroNonato: 'nonato-cadastro-nonato-pdf-modelo',
-  pagamentosContador: 'nonato-pagamentos-contador-pdf-modelo',
-} as const
-
-export type PdfStorageDomain = keyof typeof PDF_STORAGE_KEYS
+/** Re-export fino — fonte canónica em `app/modules/pdf/storageKeys`. */
+export { PDF_STORAGE_KEYS }
+export type { PdfStorageDomain }
 
 export function loadPdfModeloPadrao(
   domain: Exclude<PdfStorageDomain, 'relatoriosPorId'>,

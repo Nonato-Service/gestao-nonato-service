@@ -1,5 +1,5 @@
 import { PDF_MODELO_ALL, PDF_MODELO_PADRAO } from '../pdf/modelos'
-import { PDF_STORAGE_KEYS } from '../../lib/pdfModelStorage'
+import { PDF_STORAGE_KEYS } from '../pdf/storageKeys'
 
 /** Alias estável: mesmos ids que `PDF_MODELO_ALL` (SoT em modules/pdf/modelos). */
 export const RELATORIO_SERVICO_PDF_MODELOS: ReadonlySet<string> = PDF_MODELO_ALL

@@ -43,3 +43,6 @@ export {
 } from './modelos'
 
 export { PDF_MODELO_TO_PROTOCOLO_NUM, pdfModeloToProtocoloNum, protocoloNumToPdfModelo } from './modeloProtocoloMap'
+
+export type { PdfStorageDomain } from './storageKeys'
+export { PDF_STORAGE_KEYS } from './storageKeys'
