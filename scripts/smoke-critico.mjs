@@ -1415,6 +1415,34 @@ try {
   } else {
     fail('PedidoOrcamentosAvulsoContent ainda define pedido avulso no sítio')
   }
+  const pedidoAvulsoFromForm = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pedidoAvulsoFromForm.ts'), 'utf8')
+  const libPedidoAvulsoFromForm = exists('app/lib/pedidoAvulsoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pedidoAvulsoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    pedidoAvulsoFromForm.includes('nowMs: number') &&
+    !pedidoAvulsoFromForm.includes('Date.now()') &&
+    !pedidoAvulsoFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo orçamentos pedidoAvulsoFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/pedidoAvulsoFromForm ainda usa Date.now')
+  }
+  if (
+    libPedidoAvulsoFromForm.includes("from '../modules/orcamentos/pedidoAvulsoFromForm'") &&
+    libPedidoAvulsoFromForm.includes('createPecaPedidoFromForm as createPecaPedidoFromFormPure') &&
+    libPedidoAvulsoFromForm.includes('createPedidoAvulsoFromForm as createPedidoAvulsoFromFormPure') &&
+    libPedidoAvulsoFromForm.includes('Date.now()')
+  ) {
+    ok('lib/pedidoAvulsoFromForm só envolve o relógio do pedido avulso')
+  } else {
+    fail('lib/pedidoAvulsoFromForm ainda não envolve o pedido avulso fromForm')
+  }
+  if (poa.includes("from '../lib/pedidoAvulsoFromForm'")) {
+    ok('PedidoOrcamentosAvulsoContent usa pedido avulso fromForm via lib')
+  } else {
+    fail('PedidoOrcamentosAvulsoContent não importa pedido avulso fromForm do lib')
+  }
   if (
     idx.includes('OstPropostaSalva') &&
     idx.includes('emptyOstPropostaLinha') &&

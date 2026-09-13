@@ -8,15 +8,16 @@ export function isPecaPedidoManualFormValid(codigo: string, nome: string): boole
 
 export type CreatePecaPedidoFromFormOpts = {
   id?: string
+  nowMs: number
 }
 
 export function createPecaPedidoFromForm(
   form: Omit<PecaPedido, 'id'> & { id?: string },
-  opts: CreatePecaPedidoFromFormOpts = {}
+  opts: CreatePecaPedidoFromFormOpts
 ): PecaPedido {
   return {
     ...form,
-    id: form.id || opts.id || `peca-${Date.now()}`,
+    id: form.id || opts.id || `peca-${opts.nowMs}`,
   }
 }
 
@@ -45,6 +46,7 @@ export type CreatePedidoAvulsoFromFormOpts = {
   dataGeracao?: string
   geradoEm?: string
   status?: PedidoAvulsoGuardado['status']
+  nowMs: number
 }
 
 export function createPedidoAvulsoFromForm(
@@ -53,9 +55,9 @@ export function createPedidoAvulsoFromForm(
     geradoEm?: string
     status?: PedidoAvulsoGuardado['status']
   },
-  opts: CreatePedidoAvulsoFromFormOpts = {}
+  opts: CreatePedidoAvulsoFromFormOpts
 ): PedidoAvulsoGuardado {
-  const now = opts.dataGeracao ?? form.dataGeracao ?? new Date().toISOString()
+  const now = opts.dataGeracao ?? form.dataGeracao ?? new Date(opts.nowMs).toISOString()
   return {
     ...form,
     pecas: [...form.pecas],
