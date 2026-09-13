@@ -2395,6 +2395,22 @@ try {
   } else {
     fail('lib/relatorioServicoPdfPrintCss ainda implementa o cabeçalho/meta HTML')
   }
+  if (
+    idx.includes('RELATORIO_SERVICO_PDF_PRINT_CSS') &&
+    exists('app/modules/relatorio-servico/pdfPrintCss.ts')
+  ) {
+    ok('módulo relatorio-servico exporta pdfPrintCss')
+  } else {
+    fail('módulo relatorio-servico sem pdfPrintCss')
+  }
+  if (
+    libRsPrint.includes("from '../modules/relatorio-servico/pdfPrintCss'") &&
+    !libRsPrint.includes('export const RELATORIO_SERVICO_PDF_PRINT_CSS =')
+  ) {
+    ok('lib/relatorioServicoPdfPrintCss só reexporta pdfPrintCss do módulo')
+  } else {
+    fail('lib/relatorioServicoPdfPrintCss ainda implementa o CSS de impressão')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }
