@@ -846,6 +846,32 @@ try {
   } else {
     fail('contactoEnvio ainda definido em lib ou consumidores não usam o módulo')
   }
+  if (
+    idx.includes('NomeAlfabetoRow') &&
+    idx.includes('filtrarPorNomeBusca') &&
+    idx.includes('agruparPorLetraNome') &&
+    exists('app/modules/clientes/nomeAlfabeto.ts')
+  ) {
+    ok('módulo clientes exporta nomeAlfabeto')
+  } else {
+    fail('módulo clientes sem nomeAlfabeto')
+  }
+  const libNomeAz = fs.readFileSync(path.join(root, 'app/lib/nomeAlfabetoBusca.ts'), 'utf8')
+  if (
+    libNomeAz.includes("from '../modules/clientes/nomeAlfabeto'") &&
+    !libNomeAz.includes('export type NomeAlfabetoRow = {') &&
+    !libNomeAz.includes('export function filtrarPorNomeBusca<') &&
+    nma.includes('filtrarPorNomeBusca') &&
+    nma.includes('getLetraAlfabetoNome') &&
+    !nma.includes("from './lib/nomeAlfabetoBusca'") &&
+    indiceBusca.includes('filtrarPorNomeBusca') &&
+    indiceBusca.includes('NomeAlfabetoRow') &&
+    !indiceBusca.includes("from '../lib/nomeAlfabetoBusca'")
+  ) {
+    ok('NMA/AlfabetoIndiceBusca usam nomeAlfabeto do módulo clientes')
+  } else {
+    fail('nomeAlfabeto ainda definido em lib ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }

@@ -5,11 +5,9 @@ import {
   ALFABETO_INDICE,
   agruparPorLetraNome,
   filtrarPorNomeBusca,
-  type NomeAlfabetoRow,
-} from '../lib/nomeAlfabetoBusca'
-import {
   formatAlfabetoIndiceBuscaMeta,
   type AlfabetoIndiceBuscaLabels,
+  type NomeAlfabetoRow,
 } from '../modules/clientes'
 
 export type { AlfabetoIndiceBuscaLabels }

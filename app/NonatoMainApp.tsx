@@ -548,6 +548,8 @@ import {
   codigoClienteExibicao,
   prefillContactFromCliente,
   normalizarTelefoneWhatsApp,
+  filtrarPorNomeBusca,
+  getLetraAlfabetoNome,
 } from './modules/clientes'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
@@ -972,7 +974,6 @@ import {
   setIndiceSubstituicoesHomag,
 } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
-import { filtrarPorNomeBusca, getLetraAlfabetoNome } from './lib/nomeAlfabetoBusca'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
 import RelatorioEspecialHub from './components/RelatorioEspecialHub'
 import {

@@ -40,6 +40,14 @@ export { formatClienteAlfabetoPickerMeta } from './alfabetoPicker'
 export type { AlfabetoIndiceBuscaLabels, AlfabetoIndiceBuscaMetaOpts } from './indiceBusca'
 export { formatAlfabetoIndiceBuscaMeta } from './indiceBusca'
 
+export type { NomeAlfabetoRow } from './nomeAlfabeto'
+export {
+  ALFABETO_INDICE,
+  getLetraAlfabetoNome,
+  filtrarPorNomeBusca,
+  agruparPorLetraNome,
+} from './nomeAlfabeto'
+
 export {
   cmpNomeCliente,
   ordenarClientesPorNome,
