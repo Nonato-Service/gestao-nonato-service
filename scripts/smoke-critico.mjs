@@ -68,6 +68,7 @@ const critical = [
   'app/modules/pre-check/index.ts',
   'app/modules/pagamentos-contador/index.ts',
   'app/modules/registro-despesas/index.ts',
+  'app/modules/ui/index.ts',
   'pwa-version.json',
   'public/sw.js',
   'app/lib/pwaVersion.ts',
@@ -2515,6 +2516,43 @@ try {
   fail(`módulo diario: ${e.message}`)
 }
 
+// 3m2) Módulo ui (182.º corte: lote de listas)
+try {
+  const idx = fs.readFileSync(path.join(root, 'app/modules/ui/index.ts'), 'utf8')
+  const lote = fs.readFileSync(path.join(root, 'app/modules/ui/listaLote.ts'), 'utf8')
+  const loteLib = fs.readFileSync(path.join(root, 'app/lib/listaUiLote.ts'), 'utf8')
+  const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    idx.includes('LISTA_UI_LOTE') &&
+    idx.includes('limiteListaUi') &&
+    exists('app/modules/ui/listaLote.ts')
+  ) {
+    ok('módulo ui exporta listaLote')
+  } else {
+    fail('módulo ui sem listaLote')
+  }
+  if (lote.includes('export const LISTA_UI_LOTE = 40') && lote.includes('export function limiteListaUi')) {
+    ok('ui/listaLote define lote de ecrã')
+  } else {
+    fail('ui/listaLote incompleto')
+  }
+  if (
+    loteLib.includes("from '../modules/ui/listaLote'") &&
+    !loteLib.includes('export const LISTA_UI_LOTE = 40')
+  ) {
+    ok('lib/listaUiLote só reexporta ui/listaLote')
+  } else {
+    fail('lib/listaUiLote ainda implementa o lote')
+  }
+  if (nma.includes("from './modules/ui'") && nma.includes('LISTA_UI_LOTE') && !nma.includes("from './lib/listaUiLote'")) {
+    ok('NonatoMainApp usa listaLote do módulo ui')
+  } else {
+    fail('NonatoMainApp ainda importa listaUiLote do lib')
+  }
+} catch (e) {
+  fail(`módulo ui: ${e.message}`)
+}
+
 // 3n) Módulo protocolo (16.º corte modularização)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/protocolo/index.ts'), 'utf8')
@@ -4943,7 +4981,7 @@ try {
 }
 
 try {
-  const lote = fs.readFileSync(path.join(root, 'app/lib/listaUiLote.ts'), 'utf8')
+  const lote = fs.readFileSync(path.join(root, 'app/modules/ui/listaLote.ts'), 'utf8')
   if (lote.includes('export const LISTA_UI_LOTE')) ok('listaUiLote define lote de ecrã')
   else fail('listaUiLote sem LISTA_UI_LOTE')
   const nma3 = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')

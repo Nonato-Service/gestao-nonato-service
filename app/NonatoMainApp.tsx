@@ -14,7 +14,7 @@ import {
   documentPdfDateLocale,
   localeDatetimeGeneral,
 } from './translations'
-import { LISTA_UI_LOTE, limiteListaUi } from './lib/listaUiLote'
+import { LISTA_UI_LOTE, limiteListaUi } from './modules/ui'
 import {
   loadData,
   saveData,
