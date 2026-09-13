@@ -97,3 +97,11 @@ export { CHECKLIST_BASICO_STORAGE_KEY, newChecklistBasicoId } from './basicoTipo
 
 export type { ChecklistBasicoEquipamentoResumo } from './basicoEquipamento'
 export { checklistBasicoEquipamentoKey, checklistBasicoEquipamentoLabel } from './basicoEquipamento'
+
+export type { ChecklistBasicoPdfLabels } from './basicoPdf'
+export {
+  escapeChecklistBasicoHtml,
+  telefoneDigitsParaWa,
+  buildChecklistBasicoPrintHtml,
+  buildChecklistBasicoEnvioTexto,
+} from './basicoPdf'

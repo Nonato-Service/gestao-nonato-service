@@ -3134,6 +3134,33 @@ try {
   } else {
     fail('EquipamentoClienteResumo ainda definido no ChecklistBasicoContent')
   }
+  if (
+    idx.includes('buildChecklistBasicoPrintHtml') &&
+    idx.includes('buildChecklistBasicoEnvioTexto') &&
+    idx.includes('telefoneDigitsParaWa') &&
+    exists('app/modules/checklist/basicoPdf.ts')
+  ) {
+    ok('módulo checklist exporta basicoPdf')
+  } else {
+    fail('módulo checklist sem basicoPdf')
+  }
+  const libBasicoPdf = fs.readFileSync(path.join(root, 'app/lib/checklistBasicoPdf.ts'), 'utf8')
+  if (
+    libBasicoPdf.includes("from '../modules/checklist/basicoPdf'") &&
+    libBasicoPdf.includes('window.open') &&
+    !libBasicoPdf.includes('export function buildChecklistBasicoPrintHtml(') &&
+    !libBasicoPdf.includes('export function buildChecklistBasicoEnvioTexto(') &&
+    !libBasicoPdf.includes('function telefoneDigitsParaWa(')
+  ) {
+    ok('lib/checklistBasicoPdf só envolve window; builders no módulo')
+  } else {
+    fail('lib/checklistBasicoPdf ainda implementa o HTML/texto do PDF')
+  }
+  if (ckBasicoUi.includes("from '../lib/checklistBasicoPdf'") && ckBasicoUi.includes('openChecklistBasicoPrint')) {
+    ok('ChecklistBasicoContent abre PDF via lib (window)')
+  } else {
+    fail('ChecklistBasicoContent deixou de usar openChecklistBasicoPrint do lib')
+  }
 } catch (e) {
   fail(`módulo checklist: ${e.message}`)
 }
