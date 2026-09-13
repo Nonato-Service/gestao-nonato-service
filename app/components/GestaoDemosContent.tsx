@@ -4,17 +4,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import {
   buildDemoMailto,
-  buildDemoModulesComplete,
-  buildDemoModulesFromPreset,
   buildDemoShareMessage,
   buildDemoWhatsAppUrl,
   countActiveModules,
-  createDefaultDemoLinkForm,
   DEMO_DAYS_DEFAULT,
   DEMO_DAYS_MAX,
   DEMO_DAYS_MIN,
   DEMO_RECIPIENTS_KEY,
-  finalizeDemoModulesPolicy,
   enrichDemoRecipients,
   resolveDemoDaysForRecipient,
 } from '../lib/demoManagement'
@@ -39,6 +35,10 @@ import {
   DEMO_PRESET_CARDS,
   getDemoModuleGroupId,
   getDemoPresetLabel,
+  buildDemoModulesComplete,
+  buildDemoModulesFromPreset,
+  createDefaultDemoLinkForm,
+  finalizeDemoModulesPolicy,
 } from '../modules/demo'
 import { generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'

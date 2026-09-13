@@ -55,3 +55,11 @@ export {
   getDemoModuleGroupId,
   getDemoPresetLabel,
 } from './groups'
+
+export {
+  finalizeDemoModulesPolicy,
+  buildDemoModulesComplete,
+  normalizeDemoModulesForSession,
+  buildDemoModulesFromPreset,
+  createDefaultDemoLinkForm,
+} from './policy'

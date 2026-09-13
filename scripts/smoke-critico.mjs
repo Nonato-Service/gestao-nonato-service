@@ -4665,12 +4665,13 @@ try {
   } else {
     fail('módulo demo sem formState do destinatário')
   }
+  const policyDemo = fs.readFileSync(path.join(root, 'app/modules/demo/policy.ts'), 'utf8')
   if (
-    libDemo.includes('emptyDemoRecipientForm') &&
-    libDemo.includes('defaultDemoModulesForActions') &&
+    policyDemo.includes('emptyDemoRecipientForm') &&
+    policyDemo.includes('defaultDemoModulesForActions') &&
     gestao.includes('emptyDemoRecipientForm')
   ) {
-    ok('demoManagement/GestaoDemos usam formState do módulo demo')
+    ok('demo policy/GestaoDemos usam formState do módulo demo')
   } else {
     fail('createDefaultDemoLinkForm ainda monta o form vazio no sítio')
   }
@@ -4779,6 +4780,35 @@ try {
     ok('GestaoDemos usa groups do módulo demo')
   } else {
     fail('GestaoDemos ainda importa groups/presets do lib')
+  }
+  if (
+    idx.includes('finalizeDemoModulesPolicy') &&
+    idx.includes('buildDemoModulesFromPreset') &&
+    idx.includes('normalizeDemoModulesForSession') &&
+    exists('app/modules/demo/policy.ts')
+  ) {
+    ok('módulo demo exporta policy')
+  } else {
+    fail('módulo demo sem policy')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/policy'") &&
+    !libDemo.includes('export function finalizeDemoModulesPolicy(') &&
+    !libDemo.includes('export function buildDemoModulesFromPreset(')
+  ) {
+    ok('lib/demoManagement só reexporta policy do módulo demo')
+  } else {
+    fail('lib/demoManagement ainda implementa a política de módulos')
+  }
+  if (
+    gestao.includes('finalizeDemoModulesPolicy') &&
+    gestao.includes('buildDemoModulesFromPreset') &&
+    gestao.includes('createDefaultDemoLinkForm') &&
+    (gestao.includes("from '../modules/demo'") || gestao.includes('from "../modules/demo"'))
+  ) {
+    ok('GestaoDemos usa policy do módulo demo')
+  } else {
+    fail('GestaoDemos ainda importa policy do lib')
   }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
