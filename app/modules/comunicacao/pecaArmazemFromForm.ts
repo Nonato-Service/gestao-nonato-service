@@ -13,15 +13,16 @@ export function isPecaSolicitadaArmazemFormValid(
 export type CreatePecaSolicitadaArmazemFromFormOpts = {
   id?: string
   dataEnvio?: string
+  nowMs: number
 }
 
 export function createPecaSolicitadaArmazemFromForm(
   form: PecaSolicitadaArmazemFormPayload,
-  opts: CreatePecaSolicitadaArmazemFromFormOpts = {}
+  opts: CreatePecaSolicitadaArmazemFromFormOpts
 ): PecaSolicitadaArmazem {
   return {
     ...form,
-    id: opts.id ?? `armazem-${form.checklistId}-${Date.now()}`,
-    dataEnvio: opts.dataEnvio ?? new Date().toISOString(),
+    id: opts.id ?? `armazem-${form.checklistId}-${opts.nowMs}`,
+    dataEnvio: opts.dataEnvio ?? new Date(opts.nowMs).toISOString(),
   }
 }

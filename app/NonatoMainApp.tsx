@@ -429,10 +429,12 @@ import {
   filterMensagensVisiveis,
   filterMensagensNaoLidas,
   isMensagemComunicacaoFormValid,
-  createMensagemComunicacaoFromForm,
   isPecaSolicitadaArmazemFormValid,
-  createPecaSolicitadaArmazemFromForm,
 } from './modules/comunicacao'
+import {
+  createMensagemComunicacaoFromForm,
+  createPecaSolicitadaArmazemFromForm,
+} from './lib/comunicacaoFromForm'
 import type {
   GrupoDesmontado,
   PecaDesmontada,

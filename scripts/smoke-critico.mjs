@@ -5914,6 +5914,37 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia PecaSolicitadaArmazem no sítio')
   }
+  const comFromForm = fs.readFileSync(path.join(root, 'app/modules/comunicacao/fromForm.ts'), 'utf8')
+  const pecaArmFromForm = fs.readFileSync(path.join(root, 'app/modules/comunicacao/pecaArmazemFromForm.ts'), 'utf8')
+  const libComFromForm = exists('app/lib/comunicacaoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/comunicacaoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    comFromForm.includes('nowMs: number') &&
+    !comFromForm.includes('Date.now()') &&
+    !comFromForm.includes('new Date().toISOString()') &&
+    pecaArmFromForm.includes('nowMs: number') &&
+    !pecaArmFromForm.includes('Date.now()') &&
+    !pecaArmFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo comunicação fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo comunicação fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libComFromForm.includes('createMensagemComunicacaoFromForm as createMensagemComunicacaoFromFormPure') &&
+    libComFromForm.includes('createPecaSolicitadaArmazemFromForm as createPecaSolicitadaArmazemFromFormPure') &&
+    libComFromForm.includes('Date.now()')
+  ) {
+    ok('lib/comunicacaoFromForm só envolve o relógio da comunicação')
+  } else {
+    fail('lib/comunicacaoFromForm ainda não envolve a comunicação fromForm')
+  }
+  if (nma.includes("from './lib/comunicacaoFromForm'")) {
+    ok('NonatoMainApp usa comunicação fromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa comunicação fromForm do lib')
+  }
 } catch (e) {
   fail(`módulo comunicação: ${e.message}`)
 }

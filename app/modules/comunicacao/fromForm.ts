@@ -14,16 +14,17 @@ export type CreateMensagemComunicacaoFromFormOpts = {
   id?: string
   dataEnvio?: string
   lida?: boolean
+  nowMs: number
 }
 
 export function createMensagemComunicacaoFromForm(
   form: MensagemComunicacaoFormPayload,
-  opts: CreateMensagemComunicacaoFromFormOpts = {}
+  opts: CreateMensagemComunicacaoFromFormOpts
 ): MensagemComunicacao {
   return {
     ...form,
-    id: opts.id ?? Date.now().toString(),
-    dataEnvio: opts.dataEnvio ?? new Date().toISOString(),
+    id: opts.id ?? String(opts.nowMs),
+    dataEnvio: opts.dataEnvio ?? new Date(opts.nowMs).toISOString(),
     lida: opts.lida ?? false,
   }
 }
