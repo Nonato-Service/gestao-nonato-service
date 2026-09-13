@@ -125,6 +125,7 @@ export type {
   EmpresaOrcamentoPecasEsp,
 } from './pecasEspeciaisTipos'
 
+export type { PecasEspeciaisIdDeps } from './pecasEspeciaisForm'
 export {
   newPecasEspeciaisEntityId,
   emptyLinhaOrcamentoPecasEsp,

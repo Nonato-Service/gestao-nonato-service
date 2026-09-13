@@ -1391,6 +1391,37 @@ try {
   } else {
     fail('OrcamentoPecasEspeciaisContent ainda define linha/salvo no sítio')
   }
+  const pecasEspeciaisForm = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pecasEspeciaisForm.ts'), 'utf8')
+  const libPecasEspeciaisForm = exists('app/lib/pecasEspeciaisForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pecasEspeciaisForm.ts'), 'utf8')
+    : ''
+  if (
+    pecasEspeciaisForm.includes('nowMs: number') &&
+    pecasEspeciaisForm.includes('random: () => number') &&
+    !pecasEspeciaisForm.includes('Date.now()') &&
+    !pecasEspeciaisForm.includes('Math.random') &&
+    !pecasEspeciaisForm.includes('crypto')
+  ) {
+    ok('módulo orçamentos pecasEspeciaisForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo orçamentos/pecasEspeciaisForm ainda usa Date.now, Math.random ou crypto')
+  }
+  if (
+    libPecasEspeciaisForm.includes("from '../modules/orcamentos/pecasEspeciaisForm'") &&
+    libPecasEspeciaisForm.includes('newPecasEspeciaisEntityId as newPecasEspeciaisEntityIdPure') &&
+    libPecasEspeciaisForm.includes('emptyLinhaOrcamentoPecasEsp as emptyLinhaOrcamentoPecasEspPure') &&
+    libPecasEspeciaisForm.includes('Date.now()') &&
+    libPecasEspeciaisForm.includes('Math.random')
+  ) {
+    ok('lib/pecasEspeciaisForm só envolve relógio/aleatório das peças especiais')
+  } else {
+    fail('lib/pecasEspeciaisForm ainda não envolve os ids das peças especiais')
+  }
+  if (ope.includes("from '../lib/pecasEspeciaisForm'")) {
+    ok('OrcamentoPecasEspeciaisContent usa peças especiais form via lib')
+  } else {
+    fail('OrcamentoPecasEspeciaisContent não importa peças especiais form do lib')
+  }
   if (
     idx.includes('PedidoAvulsoGuardado') &&
     idx.includes('emptyEquipamentoBlocoPedido') &&

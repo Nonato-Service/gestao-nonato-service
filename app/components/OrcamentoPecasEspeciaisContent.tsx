@@ -20,12 +20,12 @@ import type {
   OrcamentoPecasEspeciaisSalvo,
   PecaBibliotecaPecasEsp,
 } from '../modules/orcamentos'
+import { isOrcamentoPecasEspeciaisLinhasValid } from '../modules/orcamentos'
 import {
   createOrcamentoPecasEspeciaisFromForm,
   emptyLinhaOrcamentoPecasEsp,
-  isOrcamentoPecasEspeciaisLinhasValid,
   normalizeLinhaOrcamentoPecasEsp,
-} from '../modules/orcamentos'
+} from '../lib/pecasEspeciaisForm'
 
 export type {
   ClienteOrcamentoPecasEsp,

@@ -47,14 +47,17 @@ export type OrcamentoPecasEspeciaisFormPayload = {
 export type CreateOrcamentoPecasEspeciaisFromFormOpts = {
   id?: string
   dataCriacao?: string
+  nowMs: number
+  random: () => number
+  randomUUID?: () => string
 }
 
 export function createOrcamentoPecasEspeciaisFromForm(
   form: OrcamentoPecasEspeciaisFormPayload,
-  opts: CreateOrcamentoPecasEspeciaisFromFormOpts = {}
+  opts: CreateOrcamentoPecasEspeciaisFromFormOpts
 ): OrcamentoPecasEspeciaisSalvo {
   return {
-    id: opts.id ?? newPecasEspeciaisEntityId(),
+    id: opts.id ?? newPecasEspeciaisEntityId(opts),
     numeroOferta: form.numeroOferta,
     dataIso: form.dataIso,
     clienteId: form.clienteId,
