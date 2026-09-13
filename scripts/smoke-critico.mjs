@@ -4339,6 +4339,41 @@ try {
   } else {
     fail('WritingLanguageAssistModal ainda define Labels/STORAGE_NATIVE no sítio')
   }
+  const libMyMemory = fs.readFileSync(path.join(root, 'app/lib/mymemory-translate.ts'), 'utf8')
+  if (
+    idx.includes('WRITING_ASSIST_FIELD_MAX_CHARS') &&
+    idx.includes('planMyMemoryTranslation') &&
+    idx.includes('splitTextForTranslation') &&
+    exists('app/modules/tradutor/myMemory.ts')
+  ) {
+    ok('módulo tradutor exporta myMemory')
+  } else {
+    fail('módulo tradutor sem myMemory')
+  }
+  if (
+    libMyMemory.includes("from '../modules/tradutor/myMemory'") &&
+    libMyMemory.includes('translateWithMyMemory') &&
+    libMyMemory.includes('fetch(') &&
+    !libMyMemory.includes('export const WRITING_ASSIST_FIELD_MAX_CHARS')
+  ) {
+    ok('lib/mymemory-translate só envolve a rede MyMemory')
+  } else {
+    fail('lib/mymemory-translate ainda implementa limites/plano')
+  }
+  if (
+    nma.includes('WRITING_ASSIST_FIELD_MAX_CHARS') &&
+    nma.includes('translateWithMyMemory') &&
+    nma.includes("from './lib/mymemory-translate'") &&
+    !nma.includes('import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS }') &&
+    writingAssist.includes('WRITING_ASSIST_FIELD_MAX_CHARS') &&
+    writingAssist.includes('translateWithMyMemory') &&
+    writingAssist.includes("from '../lib/mymemory-translate'") &&
+    !writingAssist.includes('import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS }')
+  ) {
+    ok('NMA/modal usam limite do módulo e fetch via lib')
+  } else {
+    fail('NMA/modal sem myMemory do módulo/lib')
+  }
 } catch (e) {
   fail(`módulo tradutor: ${e.message}`)
 }

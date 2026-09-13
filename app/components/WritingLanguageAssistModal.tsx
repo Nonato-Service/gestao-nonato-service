@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from '../lib/mymemory-translate'
+import { translateWithMyMemory } from '../lib/mymemory-translate'
 import {
   formatWritingAssistLangOption,
   formatWritingAssistResultLabel,
   resolveWritingAssistNativeLang,
   writingAssistIsSamePair,
   WRITING_ASSIST_NATIVE_LS_KEY,
+  WRITING_ASSIST_FIELD_MAX_CHARS,
   type WritingAssistLabels,
   type WritingAssistLangOption,
 } from '../modules/tradutor'

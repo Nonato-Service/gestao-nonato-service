@@ -705,7 +705,7 @@ import {
 import { WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
 import { useInstallPrompt } from './components/InstallPrompt'
 import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
-import { translateWithMyMemory, WRITING_ASSIST_FIELD_MAX_CHARS } from './lib/mymemory-translate'
+import { translateWithMyMemory } from './lib/mymemory-translate'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PagamentosContadorContent } from './components/PagamentosContadorContent'
@@ -741,6 +741,7 @@ import {
   createTranslatorLibraryEntry,
   isTranslatorLibraryFormValid,
   createTranslatorLibraryFromForm,
+  WRITING_ASSIST_FIELD_MAX_CHARS,
 } from './modules/tradutor'
 import type { ConhecimentoTecnicoEntry } from './modules/conhecimento-tecnico'
 import { normalizeConhecimentoTecnicos } from './modules/conhecimento-tecnico'

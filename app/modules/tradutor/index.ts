@@ -33,3 +33,14 @@ export {
   writingAssistIsSamePair,
   formatWritingAssistLangOption,
 } from './writingAssistLabels'
+
+export type { MyMemoryTranslationPlan } from './myMemory'
+export {
+  APP_TO_MYMEMORY_API,
+  MYMEMORY_MAX_QUERY_CHARS,
+  WRITING_ASSIST_FIELD_MAX_CHARS,
+  mapAppLangToMyMemoryApi,
+  isMyMemoryLimitError,
+  splitTextForTranslation,
+  planMyMemoryTranslation,
+} from './myMemory'
