@@ -2252,6 +2252,33 @@ try {
   } else {
     fail('NonatoMainApp ainda define ItemRelatorioExcluidoArquivo localmente ou não importa')
   }
+  if (
+    idx.includes('wrapRelatorioServicoPrintDocument') &&
+    idx.includes('RELATORIO_SERVICO_PDF_TOOLBAR_CSS') &&
+    exists('app/modules/relatorio-servico/pdfShell.ts')
+  ) {
+    ok('módulo relatorio-servico exporta pdfShell')
+  } else {
+    fail('módulo relatorio-servico sem pdfShell')
+  }
+  const libRsPdfShell = fs.readFileSync(path.join(root, 'app/lib/relatorioServicoPdfShell.ts'), 'utf8')
+  if (
+    libRsPdfShell.includes("from '../modules/relatorio-servico/pdfShell'") &&
+    !libRsPdfShell.includes('export function wrapRelatorioServicoPrintDocument(') &&
+    !libRsPdfShell.includes('export const RELATORIO_SERVICO_PDF_TOOLBAR_CSS')
+  ) {
+    ok('lib/relatorioServicoPdfShell só reexporta pdfShell do módulo')
+  } else {
+    fail('lib/relatorioServicoPdfShell ainda implementa o wrap HTML')
+  }
+  if (
+    nma.includes('wrapRelatorioServicoPrintDocument') &&
+    nma.includes("from './lib/relatorioServicoPdfShell'")
+  ) {
+    ok('NonatoMainApp usa wrap do relatório via lib')
+  } else {
+    fail('NonatoMainApp deixou de usar wrapRelatorioServicoPrintDocument')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

@@ -101,3 +101,9 @@ export {
   normalizePdfModeloPorRelatorioMap,
   resolvePdfModeloForRelatorio,
 } from './pdfModelo'
+
+export {
+  RELATORIO_SERVICO_PDF_TOOLBAR_CSS,
+  buildRelatorioServicoPdfToolbarHtml,
+  wrapRelatorioServicoPrintDocument,
+} from './pdfShell'
