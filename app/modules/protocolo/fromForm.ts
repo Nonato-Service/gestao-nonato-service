@@ -1,6 +1,6 @@
 /** Validação e mapeamento puro do protocolo de serviço. */
 
-import { clampProtocoloPdfModelo } from '../../utils/protocoloServicoPdfThemes'
+import { clampProtocoloPdfModelo } from './pdfModelo'
 import type { ProtocoloServicoFormState } from './formState'
 import type { ProtocoloServico } from './tipos'
 

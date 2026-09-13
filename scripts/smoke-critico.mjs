@@ -2514,6 +2514,32 @@ try {
   } else {
     fail('NonatoMainApp ainda usa aliases protocoloFormVazio/formRascunhoDeProtocolo')
   }
+  if (
+    idx.includes('clampProtocoloPdfModelo') &&
+    idx.includes('PROTOCOLO_PDF_MODELO_PADRAO') &&
+    idx.includes('PROTOCOLO_SERVICO_PDF_MODELOS_MAX') &&
+    exists('app/modules/protocolo/pdfModelo.ts')
+  ) {
+    ok('módulo protocolo exporta pdfModelo')
+  } else {
+    fail('módulo protocolo sem pdfModelo')
+  }
+  const themesSrc = fs.readFileSync(path.join(root, 'app/utils/protocoloServicoPdfThemes.ts'), 'utf8')
+  const fromFormSrc = fs.readFileSync(path.join(root, 'app/modules/protocolo/fromForm.ts'), 'utf8')
+  const protoMapSrc = fs.readFileSync(path.join(root, 'app/modules/pdf/modeloProtocoloMap.ts'), 'utf8')
+  if (
+    themesSrc.includes("from '../modules/protocolo/pdfModelo'") &&
+    !themesSrc.includes('export function clampProtocoloPdfModelo(') &&
+    fromFormSrc.includes("from './pdfModelo'") &&
+    protoMapSrc.includes("from '../protocolo/pdfModelo'") &&
+    nma.includes('clampProtocoloPdfModelo') &&
+    nma.includes('PROTOCOLO_PDF_MODELO_PADRAO') &&
+    !nma.includes("from './utils/protocoloServicoPdfThemes'")
+  ) {
+    ok('NMA/fromForm/mapa usam pdfModelo do módulo protocolo')
+  } else {
+    fail('clampProtocoloPdfModelo ainda definido em utils ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }

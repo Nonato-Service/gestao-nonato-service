@@ -1,6 +1,6 @@
 /** Mapa modelo PDF partilhado ↔ tema numérico do protocolo — funções puras, sem I/O. */
 
-import { clampProtocoloPdfModelo, PROTOCOLO_PDF_MODELO_PADRAO } from '../../utils/protocoloServicoPdfThemes'
+import { clampProtocoloPdfModelo, PROTOCOLO_PDF_MODELO_PADRAO } from '../protocolo/pdfModelo'
 import { normalizePdfModelo, PDF_MODELO_PADRAO } from './modelos'
 
 /** Modelo de PDF partilhado (string) → tema numérico do protocolo (1–15). */

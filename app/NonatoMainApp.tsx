@@ -359,6 +359,9 @@ import {
   sugerirRelatorioServicoId,
   emptyProtocoloServicoForm,
   protocoloServicoToForm,
+  PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
+  PROTOCOLO_PDF_MODELO_PADRAO,
+  clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
   agruparProtocolosExecutadosPorClienteEData,
@@ -1067,11 +1070,6 @@ import {
   ModuleTabIcon,
 } from './components/UiIcons'
 import { HelpModalBody } from './components/HelpModalBody'
-import {
-  PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
-  PROTOCOLO_PDF_MODELO_PADRAO,
-  clampProtocoloPdfModelo,
-} from './utils/protocoloServicoPdfThemes'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
 import { prepareProtocoloWatermarkSrc } from './utils/protocoloPdfWatermark'
 import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'

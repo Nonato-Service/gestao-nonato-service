@@ -1,7 +1,7 @@
+import { clampProtocoloPdfModelo } from '../modules/protocolo/pdfModelo'
 import {
   PROTOCOLO_PDF_BLOCO_STYLES,
   buildProtocoloServicoPrintHtml,
-  clampProtocoloPdfModelo,
   getProtocoloPdfDynamicStyles,
 } from '../utils/protocoloServicoPdfThemes'
 import type { ProtocoloBlocoMin, ProtocoloEstadoAcao } from './protocoloInteligente'

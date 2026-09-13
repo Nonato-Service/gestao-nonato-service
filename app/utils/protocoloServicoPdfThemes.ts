@@ -4,13 +4,17 @@
  */
 
 import { PROTOCOLO_WATERMARK_FALLBACK_DATA_URI } from './protocoloPdfWatermark'
+import {
+  PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
+  PROTOCOLO_PDF_MODELO_PADRAO,
+  clampProtocoloPdfModelo,
+} from '../modules/protocolo/pdfModelo'
 
-export const PROTOCOLO_SERVICO_PDF_MODELOS_MAX = 15
-/** Modelo recomendado para novos protocolos — visual forte (navy + verde). */
-export const PROTOCOLO_PDF_MODELO_PADRAO = 15
-
-export function clampProtocoloPdfModelo(n: number | undefined): number {
-  return Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX, Math.max(1, Number(n) || 1))
+/** Re-export fino — fonte canónica em `app/modules/protocolo/pdfModelo`. */
+export {
+  PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
+  PROTOCOLO_PDF_MODELO_PADRAO,
+  clampProtocoloPdfModelo,
 }
 
 type HeaderOpts = {
