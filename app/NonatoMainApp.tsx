@@ -357,6 +357,8 @@ import {
   pecasMaisUsadasHistorico,
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
+  emptyProtocoloServicoForm,
+  protocoloServicoToForm,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
   agruparProtocolosExecutadosPorClienteEData,
@@ -1070,7 +1072,6 @@ import {
   PROTOCOLO_PDF_MODELO_PADRAO,
   clampProtocoloPdfModelo,
 } from './utils/protocoloServicoPdfThemes'
-import { formRascunhoDeProtocolo, protocoloFormVazio } from './lib/protocoloInteligente'
 import { buildProtocoloServicoPdfHtmlFromProtocolo } from './lib/protocoloPdfBuild'
 import { prepareProtocoloWatermarkSrc } from './utils/protocoloPdfWatermark'
 import { PDF_LOGO_SITUATIONS, PDF_LOGO_LEGACY_STORAGE_KEYS, buildEmptyPdfLogoSelection, type PdfLogoSituationId } from './lib/adminPdfLogoSituations'
@@ -5509,8 +5510,8 @@ export default function Dashboard() {
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
   const [protocoloServicoForm, setProtocoloServicoForm] = useState<
-    ReturnType<typeof protocoloFormVazio>
-  >(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
+    ReturnType<typeof emptyProtocoloServicoForm>
+  >(emptyProtocoloServicoForm(PROTOCOLO_PDF_MODELO_PADRAO))
   /** Filtro da lista na área Protocolos de Serviço (sem alterar dados guardados) */
   const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const [protocoloServicoClienteFiltroLista, setProtocoloServicoClienteFiltroLista] = useState('')
@@ -28931,7 +28932,7 @@ export default function Dashboard() {
             protoT?.protocolosServicoDuplicarConfirm ||
             'Substituir o rascunho atual pelo último protocolo deste cliente/equipamento?'
           if (!window.confirm(msg)) return
-          setProtocoloServicoForm(formRascunhoDeProtocolo(ultimo, PROTOCOLO_PDF_MODELO_PADRAO))
+          setProtocoloServicoForm(protocoloServicoToForm(ultimo, PROTOCOLO_PDF_MODELO_PADRAO))
           setProtocoloFormPassoAtivo(2)
         }
         const adicionarPecaSugerida = (cod: string) => {
@@ -28967,7 +28968,7 @@ export default function Dashboard() {
           }))
         }
         const abrirEdicaoProtocolo = (pr: ProtocoloServico) => {
-          setProtocoloServicoForm(formRascunhoDeProtocolo(pr, PROTOCOLO_PDF_MODELO_PADRAO))
+          setProtocoloServicoForm(protocoloServicoToForm(pr, PROTOCOLO_PDF_MODELO_PADRAO))
           setProtocoloFormPassoAtivo(1)
           setEditingProtocoloServicoId(pr.id)
           setProtocoloCardAcoesId(null)
@@ -28975,7 +28976,7 @@ export default function Dashboard() {
         const iniciarNovoProtocolo = () => {
           setEditingProtocoloServicoId('new')
           setProtocoloFormPassoAtivo(1)
-          setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
+          setProtocoloServicoForm(emptyProtocoloServicoForm(PROTOCOLO_PDF_MODELO_PADRAO))
         }
         const renderProtocoloCard = (p: ProtocoloServico, lane: 'exec' | 'arquivo') => {
           if (!p?.id) return null
@@ -29348,7 +29349,7 @@ export default function Dashboard() {
                       if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                       setEditingProtocoloServicoId(null)
                       setProtocoloFormPassoAtivo(1)
-                      setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
+                      setProtocoloServicoForm(emptyProtocoloServicoForm(PROTOCOLO_PDF_MODELO_PADRAO))
                     }}
                   >
                     ← {protoT?.protocolosServicoVoltarLista || 'Lista'}
@@ -29686,7 +29687,7 @@ export default function Dashboard() {
                               style={{ padding: '6px 12px', fontSize: 11 }}
                               onClick={() => {
                                 if (!window.confirm(protoT?.protocolosServicoDuplicarConfirm || 'Substituir o rascunho atual?')) return
-                                setProtocoloServicoForm(formRascunhoDeProtocolo(h, PROTOCOLO_PDF_MODELO_PADRAO))
+                                setProtocoloServicoForm(protocoloServicoToForm(h, PROTOCOLO_PDF_MODELO_PADRAO))
                                 setProtocoloFormPassoAtivo(2)
                               }}
                             >
@@ -30622,7 +30623,7 @@ export default function Dashboard() {
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
                         setProtocoloFormPassoAtivo(1)
-                        setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO))
+                        setProtocoloServicoForm(emptyProtocoloServicoForm(PROTOCOLO_PDF_MODELO_PADRAO))
                       }}
                       style={{ padding: '12px 28px', fontWeight: 700, borderRadius: '10px' }}
                     >
@@ -30632,7 +30633,7 @@ export default function Dashboard() {
                       type="button"
                       className="btn-primary"
                       style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#bbb', padding: '12px 22px', borderRadius: '10px' }}
-                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloFormPassoAtivo(1); setProtocoloServicoForm(protocoloFormVazio(PROTOCOLO_PDF_MODELO_PADRAO)) }}
+                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloFormPassoAtivo(1); setProtocoloServicoForm(emptyProtocoloServicoForm(PROTOCOLO_PDF_MODELO_PADRAO)) }}
                     >
                       {protoT?.protocolosServicoCancelar || 'Cancelar'}
                     </button>

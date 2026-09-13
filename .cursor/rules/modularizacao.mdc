@@ -189,6 +189,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 169. `app/modules/pdf/` (PDF_MODELO_* / normalize / bodyClass) — feito
 170. `app/modules/pdf/` (mapa modelo ↔ protocolo numérico) — feito
 171. `app/modules/pdf/` (PDF_STORAGE_KEYS / PdfStorageDomain) — feito
+172. `app/modules/protocolo/` (NMA empty/toForm canónicos) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -2503,6 +2503,17 @@ try {
   } else {
     fail('intelArquivo ainda definido em lib ou NMA não usa o módulo')
   }
+  if (
+    nma.includes('emptyProtocoloServicoForm') &&
+    nma.includes('protocoloServicoToForm') &&
+    !nma.includes('protocoloFormVazio') &&
+    !nma.includes('formRascunhoDeProtocolo') &&
+    !nma.includes("from './lib/protocoloInteligente'")
+  ) {
+    ok('NonatoMainApp usa empty/toForm canónicos do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda usa aliases protocoloFormVazio/formRascunhoDeProtocolo')
+  }
 } catch (e) {
   fail(`módulo protocolo: ${e.message}`)
 }
