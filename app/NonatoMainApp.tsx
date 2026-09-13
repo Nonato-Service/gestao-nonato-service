@@ -325,6 +325,16 @@ import {
   isSidebarButtonCustomName,
   createSidebarButtonFromForm,
   updateSidebarButtonFromForm,
+  buildMenuItemsFromLegacyPermissions,
+  canAccessSidebarMenuItem,
+  canAccessSidebarModule,
+  ensureUserMenuPolicy,
+  getButtonIdForAction,
+  hasLinkedMenuAccess,
+  hasStrictMenuPolicy,
+  normalizeMenuItems,
+  normalizeMenuItemsWithLegacyFallback,
+  syncLegacyPermissionsFromMenuItems,
 } from './modules/sidebar'
 import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
 import {
@@ -539,7 +549,6 @@ import {
   prefillContactFromCliente,
   normalizarTelefoneWhatsApp,
 } from './modules/clientes'
-import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,
   localStorageKeyHasMeaningfulCadastro,

@@ -9,7 +9,7 @@ import {
   normalizeMenuItems,
   setModuleMenuItems,
   syncLegacyPermissionsFromMenuItems,
-} from '../../lib/sidebarMenuPermissions'
+} from '../../modules/sidebar'
 import { formatGestorItemOption, formatTecnicoItemOption } from '../../modules/pessoas'
 import type { GestorItem, SafeT, TecnicoItem, User, UserFormState } from './adminTypes'
 

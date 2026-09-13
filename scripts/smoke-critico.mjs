@@ -2327,12 +2327,12 @@ try {
     fail('BibliotecaHubPainelRecolhivel ainda define HubPainel no sítio')
   }
   const adminTypesSrc = fs.readFileSync(path.join(root, 'app/components/admin/adminTypes.ts'), 'utf8')
-  const menuPermsSrc = fs.readFileSync(path.join(root, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  const menuPermsMod = fs.readFileSync(path.join(root, 'app/modules/sidebar/menuPermissions.ts'), 'utf8')
   if (
     adminTypesSrc.includes("from '../../modules/sidebar/tipos'") &&
     !adminTypesSrc.includes('export type SidebarGroup =') &&
     !adminTypesSrc.includes('export type SidebarButton = {') &&
-    menuPermsSrc.includes("from '../modules/sidebar/tipos'")
+    menuPermsMod.includes("from './tipos'")
   ) {
     ok('adminTypes reexporta SidebarGroup/SidebarButton do módulo sidebar')
   } else {
@@ -2378,6 +2378,36 @@ try {
     ok('DashboardEntryShowcase usa buildShowcaseSlides do módulo sidebar')
   } else {
     fail('DashboardEntryShowcase ainda define slides no sítio')
+  }
+  if (
+    idx.includes('SIDEBAR_MENU_MODULES') &&
+    idx.includes('canAccessSidebarMenuItem') &&
+    idx.includes('ensureUserMenuPolicy') &&
+    exists('app/modules/sidebar/menuPermissions.ts')
+  ) {
+    ok('módulo sidebar exporta menuPermissions')
+  } else {
+    fail('módulo sidebar sem menuPermissions')
+  }
+  const libMenuPerms = fs.readFileSync(path.join(root, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  const nmaSidebar = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const userFormPanelSb = fs.readFileSync(path.join(root, 'app/components/admin/AdminUserFormPanel.tsx'), 'utf8')
+  const userFormSrc = fs.readFileSync(path.join(root, 'app/modules/admin/userForm.ts'), 'utf8')
+  if (
+    libMenuPerms.includes("from '../modules/sidebar/menuPermissions'") &&
+    !libMenuPerms.includes('export const SIDEBAR_MENU_MODULES') &&
+    !libMenuPerms.includes('export function canAccessSidebarMenuItem(') &&
+    menuPermsMod.includes("from '../admin/userPermissions'") &&
+    nmaSidebar.includes('canAccessSidebarMenuItem') &&
+    nmaSidebar.includes('ensureUserMenuPolicy') &&
+    !nmaSidebar.includes("from './lib/sidebarMenuPermissions'") &&
+    userFormPanelSb.includes('SIDEBAR_MENU_MODULES') &&
+    (userFormPanelSb.includes("from '../../modules/sidebar'") || userFormPanelSb.includes('from "../../modules/sidebar"')) &&
+    userFormSrc.includes("from '../sidebar/menuPermissions'")
+  ) {
+    ok('NMA/admin usam menuPermissions do módulo sidebar')
+  } else {
+    fail('sidebarMenuPermissions ainda definido em lib ou consumidores não usam o módulo')
   }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
@@ -3427,7 +3457,7 @@ try {
   const libPerms = fs.readFileSync(path.join(root, 'app/lib/adminUserPermissions.ts'), 'utf8')
   const userFormPanel = fs.readFileSync(path.join(root, 'app/components/admin/AdminUserFormPanel.tsx'), 'utf8')
   const usersSection = fs.readFileSync(path.join(root, 'app/components/admin/AdminUsersSection.tsx'), 'utf8')
-  const sidebarPerms = fs.readFileSync(path.join(root, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  const sidebarMenuPermsMod = fs.readFileSync(path.join(root, 'app/modules/sidebar/menuPermissions.ts'), 'utf8')
   if (
     libPerms.includes("from '../modules/admin/userPermissions'") &&
     !libPerms.includes('export const USER_PERMISSION_GROUPS') &&
@@ -3436,8 +3466,8 @@ try {
     (userFormPanel.includes("from '../../modules/admin'") || userFormPanel.includes('from "../../modules/admin"')) &&
     usersSection.includes('countActivePermissions') &&
     (usersSection.includes("from '../../modules/admin'") || usersSection.includes('from "../../modules/admin"')) &&
-    sidebarPerms.includes("from '../modules/admin/userPermissions'") &&
-    !sidebarPerms.includes("from './adminUserPermissions'")
+    sidebarMenuPermsMod.includes("from '../admin/userPermissions'") &&
+    !sidebarMenuPermsMod.includes("from './adminUserPermissions'")
   ) {
     ok('admin UI/sidebar usam userPermissions do módulo admin')
   } else {

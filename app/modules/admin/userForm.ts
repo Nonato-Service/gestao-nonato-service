@@ -4,7 +4,7 @@ import type { UserFormState } from './userFormState'
 import {
   buildMenuItemsFromLegacyPermissions,
   normalizeMenuItemsWithLegacyFallback,
-} from '../../lib/sidebarMenuPermissions'
+} from '../sidebar/menuPermissions'
 
 export type { UserFormState }
 

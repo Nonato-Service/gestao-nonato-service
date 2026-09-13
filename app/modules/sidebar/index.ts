@@ -71,3 +71,25 @@ export { SHOWCASE_MENU, showcaseNavItemClass } from './showcaseVisual'
 
 export type { ShowcaseSlide } from './showcaseSlides'
 export { SHOWCASE_SLIDE_DEFS, buildShowcaseSlides } from './showcaseSlides'
+
+export type { SidebarMenuItemDef, SidebarMenuModuleDef, LegacyAccessCheck } from './menuPermissions'
+export {
+  SIDEBAR_MENU_MODULES,
+  ALL_MENU_ITEM_IDS,
+  LINKED_MENU_PARENTS,
+  getMenuItemDef,
+  getButtonIdForAction,
+  hasLinkedMenuAccess,
+  applyLinkedMenuItemAccess,
+  inferMenuItemsConfigured,
+  hasStrictMenuPolicy,
+  ensureUserMenuPolicy,
+  normalizeMenuItems,
+  normalizeMenuItemsWithLegacyFallback,
+  buildMenuItemsFromLegacyPermissions,
+  syncLegacyPermissionsFromMenuItems,
+  setModuleMenuItems,
+  countModuleActiveItems,
+  canAccessSidebarMenuItem,
+  canAccessSidebarModule,
+} from './menuPermissions'
