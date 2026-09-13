@@ -92,15 +92,16 @@ type HubEqPedidoAvulsoPecasLike = {
   codigo?: string
 }
 
-/** Monta linhas de fatura a partir de orçamento aprovado / pedido ligado. */
+/** Monta linhas de fatura a partir de orçamento aprovado / pedido ligado. Relógio injectado (`nowMs`). */
 export function buildItensFaturaDeOrcamentoAprovado(input: {
   orc?: HubEqOrcamentoLike | null
   pedidoRelatorio?: HubEqPedidoRelatorioPecasLike | null
   pedidoAvulso?: HubEqPedidoAvulsoPecasLike | null
+  nowMs: number
 }): { itens: HubEqFaturaItemDraft[]; valorTotalHint?: number } {
   const orc = input.orc
   const hint = typeof orc?.total === 'number' ? orc.total : undefined
-  const stamp = Date.now()
+  const stamp = input.nowMs
 
   if (orc && Array.isArray(orc.itens) && orc.itens.length > 0) {
     return {

@@ -27,9 +27,9 @@ import {
   dedupePedidosRelatorioCliente,
 } from '../lib/clienteEquipamentoOrcamentos'
 import type { OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
+import { buildItensFaturaDeOrcamentoAprovado } from '../lib/equipamentoHubPro'
 import {
   buildHubEqChips,
-  buildItensFaturaDeOrcamentoAprovado,
   filtrarFaturasDoEquipamento,
   hubEqChipToneStyle,
   hubEqTimelineTipoIcon,

@@ -5619,6 +5619,28 @@ try {
   } else {
     fail('equipamentoHubPro incompleto (fatura/timeline action)')
   }
+  const libHubPro = exists('app/lib/equipamentoHubPro.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/equipamentoHubPro.ts'), 'utf8')
+    : ''
+  if (hubPro.includes('nowMs: number') && !hubPro.includes('Date.now()')) {
+    ok('módulo clientes buildItensFaturaDeOrcamentoAprovado é puro (relógio injectado)')
+  } else {
+    fail('módulo clientes/equipamentoHubPro ainda usa Date.now')
+  }
+  if (
+    libHubPro.includes("from '../modules/clientes/equipamentoHubPro'") &&
+    libHubPro.includes('buildItensFaturaDeOrcamentoAprovado as buildItensFaturaDeOrcamentoAprovadoPure') &&
+    libHubPro.includes('Date.now()')
+  ) {
+    ok('lib/equipamentoHubPro só envolve o relógio da fatura do hub')
+  } else {
+    fail('lib/equipamentoHubPro ainda não envolve buildItensFaturaDeOrcamentoAprovado')
+  }
+  if (hist.includes("from '../lib/equipamentoHubPro'")) {
+    ok('HistoricoPanel usa buildItensFaturaDeOrcamentoAprovado via lib')
+  } else {
+    fail('HistoricoPanel não importa buildItensFaturaDeOrcamentoAprovado do lib')
+  }
   const det = fs.readFileSync(path.join(root, 'app/components/ClienteDetalheView.tsx'), 'utf8')
   if (det.includes('ClienteFaturasSection') && det.includes('faturasPecas')) {
     ok('ClienteDetalheView liga ClienteFaturasSection')
