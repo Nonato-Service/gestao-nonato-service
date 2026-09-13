@@ -1283,6 +1283,26 @@ try {
   } else {
     fail('lib/pdfOrcamentoConfirmacao ainda implementa o HTML da confirmação')
   }
+  if (
+    idx.includes('resolverEmpresaPedidoOrcamentoPdf') &&
+    idx.includes('EMPRESA_NONATO_DEFAULT') &&
+    exists('app/modules/orcamentos/empresaPdf.ts')
+  ) {
+    ok('módulo orçamentos exporta empresaPdf')
+  } else {
+    fail('módulo orçamentos sem empresaPdf')
+  }
+  const libOrcPdf = fs.readFileSync(path.join(root, 'app/lib/orcamentoPdfPro.ts'), 'utf8')
+  if (
+    libOrcPdf.includes("from '../modules/orcamentos/empresaPdf'") &&
+    !libOrcPdf.includes('export function clienteParaEmpresaPdf(') &&
+    !libOrcPdf.includes('export function resolverEmpresaPedidoOrcamentoPdf(') &&
+    !libOrcPdf.includes('export const EMPRESA_NONATO_DEFAULT')
+  ) {
+    ok('lib/orcamentoPdfPro só reexporta empresaPdf do módulo')
+  } else {
+    fail('lib/orcamentoPdfPro ainda implementa o bloco de empresa')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }

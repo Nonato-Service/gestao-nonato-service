@@ -202,3 +202,16 @@ export type {
   BuildOrcamentoConfirmacaoPdfHtmlOpts,
 } from './confirmacaoPdf'
 export { buildOrcamentoConfirmacaoPdfHtml } from './confirmacaoPdf'
+
+export type {
+  OrcamentoPdfEmpresa,
+  ClienteEmpresaPdfOrigem,
+  FichaCadastralEmpresaPdfOrigem,
+} from './empresaPdf'
+export {
+  EMPRESA_NONATO_DEFAULT,
+  buildEmpresaBlockHtml,
+  clienteParaEmpresaPdf,
+  fichaCadastralParaEmpresaPdf,
+  resolverEmpresaPedidoOrcamentoPdf,
+} from './empresaPdf'
