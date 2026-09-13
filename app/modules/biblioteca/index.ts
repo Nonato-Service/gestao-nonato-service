@@ -159,6 +159,22 @@ export {
   mergeHomagClipboardItems,
 } from './homagClipboard'
 
+export type {
+  HomagExportIdentity,
+  MergeHomagExportOptions,
+  MergeHomagExportResult,
+  PecaHomagMerge,
+} from './homagExport'
+export {
+  normCodigoHomag,
+  formatHomagPreco,
+  extrairPrecoHomagItem,
+  extrairImagemHomagItem,
+  homagItemToPecaMerge,
+  parseHomagExportJson,
+  mergeHomagExportIntoBiblioteca,
+} from './homagExport'
+
 export type { RegraClassificacaoPeca, DestinoClassificacaoResolvido } from './classificacao'
 export {
   parsePalavrasClassificacao,

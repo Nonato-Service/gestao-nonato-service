@@ -57,7 +57,7 @@ import {
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
-import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
+import { mergeHomagExportIntoBiblioteca } from './lib/mergeHomagExport'
 import {
   calcularPecasBibliotecaImagemStats,
   pecaBibliotecaTemFotoVisivel,
@@ -156,6 +156,7 @@ import {
   matchHomagCodeLine,
   mergeHomagClipboardItems,
   parseHomagPlainTextCatalog,
+  parseHomagExportJson,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,

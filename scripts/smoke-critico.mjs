@@ -1361,6 +1361,36 @@ try {
   } else {
     fail('consumidores ainda importam parseHomagClipboard do lib')
   }
+  const libHomagExport = fs.readFileSync(path.join(root, 'app/lib/mergeHomagExport.ts'), 'utf8')
+  if (
+    idx.includes('parseHomagExportJson') &&
+    idx.includes('mergeHomagExportIntoBiblioteca') &&
+    exists('app/modules/biblioteca/homagExport.ts')
+  ) {
+    ok('módulo biblioteca exporta homagExport')
+  } else {
+    fail('módulo biblioteca sem homagExport')
+  }
+  if (
+    libHomagExport.includes("from '../modules/biblioteca/homagExport'") &&
+    libHomagExport.includes('Date.now()') &&
+    libHomagExport.includes('Math.random()') &&
+    !libHomagExport.includes('export function parseHomagExportJson(')
+  ) {
+    ok('lib/mergeHomagExport só envolve relógio/aleatório do módulo')
+  } else {
+    fail('lib/mergeHomagExport ainda implementa o merge HOMAG')
+  }
+  if (
+    nma.includes('parseHomagExportJson') &&
+    nma.includes('mergeHomagExportIntoBiblioteca') &&
+    nma.includes("from './lib/mergeHomagExport'") &&
+    !nma.includes('import { mergeHomagExportIntoBiblioteca, parseHomagExportJson }')
+  ) {
+    ok('NonatoMainApp usa parseHomagExportJson do módulo e merge via lib')
+  } else {
+    fail('NonatoMainApp sem homagExport do módulo/lib')
+  }
   if (
     idx.includes('aplicarRegrasClassificacaoEmLista') ||
     idx.includes('criarRegraClassificacaoPeca')
