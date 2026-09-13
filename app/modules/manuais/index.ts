@@ -82,3 +82,16 @@ export {
   inferIndexSectionHints,
   preferNativePdfViewer,
 } from './zipViewer'
+
+export type { ManuaisFamiliasGruposPayload, ConhecimentoMergeIdFactory } from './conhecimentoMerge'
+export {
+  CONHECIMENTO_TECNICO_STORAGE_KEY,
+  MANUAIS_STORAGE_KEY,
+  DEFAULT_MARCA_NAME,
+  mergeManuaisPayloads,
+  mergeBibliaIntoManuais,
+  manuaisToBibliaStore,
+  buildManuaisFromSources,
+  buildBibliaConhecimentoFromSources,
+  buildConhecimentoTecnicoFromSources,
+} from './conhecimentoMerge'

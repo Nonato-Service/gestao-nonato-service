@@ -4131,12 +4131,14 @@ try {
   }
   const mergeSrc = fs.readFileSync(path.join(root, 'app/lib/conhecimentoTecnicoMerge.ts'), 'utf8')
   if (
-    (mergeSrc.includes("from '../modules/manuais'") || mergeSrc.includes('from "../modules/manuais"')) &&
-    mergeSrc.includes('normalizeBibliaImport')
+    mergeSrc.includes("from '../modules/manuais/conhecimentoMerge'") &&
+    mergeSrc.includes('makeConhecimentoMergeId') &&
+    !mergeSrc.includes('export function mergeManuaisPayloads(') &&
+    !mergeSrc.includes('function mergeModeloUnificado(')
   ) {
-    ok('conhecimentoTecnicoMerge usa Bíblia do módulo manuais')
+    ok('lib/conhecimentoTecnicoMerge só envolve IDs/I/O do módulo manuais')
   } else {
-    fail('conhecimentoTecnicoMerge ainda importa bibliaNonatoTypes do componente')
+    fail('lib/conhecimentoTecnicoMerge ainda implementa o merge')
   }
   if (
     (manuaisUi.includes("from '../modules/manuais'") || manuaisUi.includes('from "../modules/manuais"')) &&
@@ -4223,6 +4225,37 @@ try {
     ok('ManuaisZipPdfPreview usa zipViewer do módulo manuais')
   } else {
     fail('ManuaisZipPdfPreview ainda define inferIndexSectionHints no sítio')
+  }
+  if (
+    idx.includes('mergeManuaisPayloads') &&
+    idx.includes('buildManuaisFromSources') &&
+    idx.includes('CONHECIMENTO_TECNICO_STORAGE_KEY') &&
+    exists('app/modules/manuais/conhecimentoMerge.ts')
+  ) {
+    ok('módulo manuais exporta conhecimentoMerge')
+  } else {
+    fail('módulo manuais sem conhecimentoMerge')
+  }
+  if (
+    nma.includes('buildManuaisFromSources') &&
+    nma.includes("from './modules/manuais'") &&
+    nma.includes('CONHECIMENTO_TECNICO_STORAGE_KEY') &&
+    nma.includes('syncManuaisConhecimentoStores') &&
+    nma.includes("from './lib/conhecimentoTecnicoMerge'") &&
+    !nma.includes('function mergeModeloUnificado(')
+  ) {
+    ok('NMA usa merge de manuais do módulo; IDs/I/O via lib')
+  } else {
+    fail('NMA ainda importa buildManuaisFromSources do lib')
+  }
+  if (
+    manuaisUi.includes('mergeManuaisPayloads') &&
+    (manuaisUi.includes("from '../modules/manuais'") || manuaisUi.includes('from "../modules/manuais"')) &&
+    manuaisUi.includes("from '../lib/conhecimentoTecnicoMerge'")
+  ) {
+    ok('ManuaisInformacoesContent usa mergeManuaisPayloads do módulo')
+  } else {
+    fail('ManuaisInformacoesContent ainda importa mergeManuaisPayloads do lib')
   }
 } catch (e) {
   fail(`módulo manuais: ${e.message}`)

@@ -208,6 +208,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 188. `app/modules/tradutor/` (myMemory limites/plano; fetch no lib) — feito
 189. `app/modules/demo/` (limits / dias / DEMO_VISITOR_USER) — feito
 190. `app/modules/sidebar/` (merge local/servidor + catálogo de botões) — feito
+191. `app/modules/manuais/` (conhecimentoMerge; IDs/I/O no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

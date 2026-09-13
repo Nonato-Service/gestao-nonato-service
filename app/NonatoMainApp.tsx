@@ -685,11 +685,7 @@ import {
 } from './lib/relatorioServicoRascunho'
 import { mergeManuaisFamiliasGrupos, manuaisPayloadHasRichContent } from './utils/manuaisMerge'
 import {
-  buildManuaisFromSources,
   buildBibliaConhecimentoFromSources,
-  BIBLIA_NONATO_STORAGE_KEY,
-  BIBLIA_LEGACY_CATEGORIES_KEY,
-  CONHECIMENTO_TECNICO_STORAGE_KEY,
   syncManuaisConhecimentoStores,
   syncBibliaConhecimentoStore,
 } from './lib/conhecimentoTecnicoMerge'
@@ -728,6 +724,12 @@ import type {
 } from './modules/pessoas'
 import { getGestorClasse, getTecnicoClasse, getTecnicoTipo, emptyGestorForm, gestorToForm, isGestorFormValid, createGestorFromForm, updateGestorFromForm, emptyTecnicoForm, tecnicoToForm, isTecnicoFormValid, createTecnicoFromForm, updateTecnicoFromForm, emptyTipoGestorForm, tipoGestorToForm, isTipoGestorFormValid, isTipoGestorEdicaoExistente, tipoGestorIdDuplicado, proximaOrdemTipoGestor, createTipoGestorFromForm, updateTipoGestorFromForm, remapGestoresAreaTipoGestor } from './modules/pessoas'
 import type { ManuaisGrupo, ManuaisModelo } from './modules/manuais'
+import {
+  BIBLIA_NONATO_STORAGE_KEY,
+  BIBLIA_LEGACY_CATEGORIES_KEY,
+  CONHECIMENTO_TECNICO_STORAGE_KEY,
+  buildManuaisFromSources,
+} from './modules/manuais'
 import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
 import type { TranslatorLibraryEntry } from './modules/tradutor'

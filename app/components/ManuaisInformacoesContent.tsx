@@ -27,13 +27,13 @@ import {
   BIBLIA_NONATO_STORAGE_KEY,
   inferBibliaSecaoFromName,
   resolveBibliaSecao,
+  mergeManuaisPayloads,
 } from '../modules/manuais'
 import type { BibliaSecao } from '../modules/manuais'
 import {
   manuaisToBibliaStore,
   syncConhecimentoTecnicoLegacyStores,
   syncManuaisConhecimentoStores,
-  mergeManuaisPayloads,
 } from '../lib/conhecimentoTecnicoMerge'
 import { AssistTextarea } from './AssistTextFields'
 import { saveKv, saveManuaisFamiliasGruposToIdb } from '../utils/manuaisIndexedDb'
