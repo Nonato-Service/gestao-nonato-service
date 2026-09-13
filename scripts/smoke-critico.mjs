@@ -1302,7 +1302,7 @@ try {
     fail('NonatoMainApp não importa buildPedidoOrcamentoFromRelatorio do lib')
   }
   if (
-    nma.includes('lerOrcamentoAvulsoRascunhoSession() || rascunho') &&
+    nma.includes('persistTipoOrcamentoAvulsoSession') &&
     nma.includes('gravarTipoOrcamentoSessionSync')
   ) {
     ok('Orçamentos: tipo sobrevive a remount via sessionStorage')
@@ -1337,6 +1337,26 @@ try {
     ok('NonatoMainApp usa rascunho avulso via lib')
   } else {
     fail('NonatoMainApp não importa o rascunho avulso do lib')
+  }
+  if (
+    idx.includes('montarRascunhoTipoOrcamento') &&
+    rascunhoAvulso.includes('export function montarRascunhoTipoOrcamento') &&
+    !rascunhoAvulso.includes('sessionStorage.getItem') &&
+    !rascunhoAvulso.includes('sessionStorage.setItem')
+  ) {
+    ok('módulo orçamentos montarRascunhoTipoOrcamento é puro')
+  } else {
+    fail('módulo orçamentos/rascunhoAvulso ainda não exporta montarRascunhoTipoOrcamento puro')
+  }
+  if (
+    libRascunhoAvulso.includes('montarRascunhoTipoOrcamento') &&
+    libRascunhoAvulso.includes('lerOrcamentoAvulsoRascunhoSession() || fallback') &&
+    libRascunhoAvulso.includes('gravarTipoOrcamentoSessionSync') &&
+    libRascunhoAvulso.includes('{ sync: true }')
+  ) {
+    ok('lib/orcamentoAvulsoRascunho envolve gravarTipoOrcamentoSessionSync')
+  } else {
+    fail('lib/orcamentoAvulsoRascunho ainda não envolve gravarTipoOrcamentoSessionSync')
   }
   if (
     nma.includes('(orcamento.itens || []).length') &&

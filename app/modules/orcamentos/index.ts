@@ -98,11 +98,14 @@ export type {
   OrcamentoAvulsoTipoRascunho,
   OrcamentoAvulsoItemRascunho,
   OrcamentoAvulsoRascunhoPersist,
+  OrcamentoAvulsoTipoRascunhoIdPatch,
+  MontarRascunhoTipoOrcamentoInput,
 } from './rascunhoAvulso'
 export {
   ORCAMENTO_AVULSO_RASCUNHO_LS,
   criarOrcamentoAvulsoRascunhoVazio,
   parseOrcamentoAvulsoRascunhoRaw,
+  montarRascunhoTipoOrcamento,
   sanitizarRascunhoParaSession,
 } from './rascunhoAvulso'
 

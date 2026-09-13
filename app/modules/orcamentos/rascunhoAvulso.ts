@@ -88,6 +88,76 @@ export function parseOrcamentoAvulsoRascunhoRaw(
   }
 }
 
+export type OrcamentoAvulsoTipoRascunhoIdPatch = Partial<
+  Pick<
+    OrcamentoAvulsoRascunhoPersist,
+    'clienteSelecionadoId' | 'relatorioSelecionadoId' | 'clienteCadastroPrioritarioFixoId'
+  >
+>
+
+export type MontarRascunhoTipoOrcamentoInput = {
+  tipo: OrcamentoAvulsoTipoRascunho
+  patch?: OrcamentoAvulsoTipoRascunhoIdPatch
+  base: OrcamentoAvulsoRascunhoPersist
+  dadosOrcamento: OrcamentoAvulsoRascunhoPersist['dadosOrcamento']
+  numeroOrcamentoManual: boolean
+  buscaCliente: string
+  buscaRelatorio: string
+  buscaClientePrioritarioFixo: string
+  clienteSelecionadoId?: string | null
+  relatorioSelecionadoId?: string | null
+  clienteCadastroPrioritarioFixoId?: string | null
+}
+
+/** Junta tipo + formulário actual no payload persistido (sem I/O). */
+export function montarRascunhoTipoOrcamento(
+  input: MontarRascunhoTipoOrcamentoInput
+): OrcamentoAvulsoRascunhoPersist {
+  const {
+    tipo,
+    patch,
+    base,
+    dadosOrcamento,
+    numeroOrcamentoManual,
+    buscaCliente,
+    buscaRelatorio,
+    buscaClientePrioritarioFixo,
+    clienteSelecionadoId,
+    relatorioSelecionadoId,
+    clienteCadastroPrioritarioFixoId,
+  } = input
+  return {
+    ...base,
+    v: 1,
+    tipoOrcamento: tipo,
+    dadosOrcamento: {
+      ...base.dadosOrcamento,
+      ...dadosOrcamento,
+      itens: Array.isArray(dadosOrcamento.itens)
+        ? dadosOrcamento.itens
+        : Array.isArray(base.dadosOrcamento?.itens)
+          ? base.dadosOrcamento.itens
+          : [],
+    },
+    numeroOrcamentoManual,
+    buscaCliente,
+    buscaRelatorio,
+    buscaClientePrioritarioFixo,
+    clienteSelecionadoId:
+      patch && 'clienteSelecionadoId' in patch
+        ? patch.clienteSelecionadoId ?? null
+        : clienteSelecionadoId ?? base.clienteSelecionadoId,
+    relatorioSelecionadoId:
+      patch && 'relatorioSelecionadoId' in patch
+        ? patch.relatorioSelecionadoId ?? null
+        : relatorioSelecionadoId ?? base.relatorioSelecionadoId,
+    clienteCadastroPrioritarioFixoId:
+      patch && 'clienteCadastroPrioritarioFixoId' in patch
+        ? patch.clienteCadastroPrioritarioFixoId ?? null
+        : clienteCadastroPrioritarioFixoId ?? base.clienteCadastroPrioritarioFixoId,
+  }
+}
+
 /** data: URLs em itens incham o sessionStorage e congelam a UI em cada remount/write. */
 export function sanitizarRascunhoParaSession(
   rascunho: OrcamentoAvulsoRascunhoPersist

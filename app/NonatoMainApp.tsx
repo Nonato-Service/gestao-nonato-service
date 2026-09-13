@@ -950,6 +950,7 @@ import {
   resolverNumeroOrcamentoAvulsoAoSalvar,
   snapshotDadosClienteOrcamentoAvulso,
   type OrcamentoAvulsoRascunhoPersist,
+  type OrcamentoAvulsoTipoRascunho,
   resolveImagemItemOrcamentoParaGravar,
   resolveImagemItemOrcamentoDisplay,
   itemOrcamentoDeveMostrarImagem,
@@ -965,6 +966,7 @@ import {
   lerOrcamentoAvulsoRascunhoSession,
   gravarOrcamentoAvulsoRascunhoSession,
   limparOrcamentoAvulsoRascunhoSession,
+  gravarTipoOrcamentoSessionSync as persistTipoOrcamentoAvulsoSession,
 } from './lib/orcamentoAvulsoRascunho'
 import {
   filtrarPecasBibliotecaPorBusca,
@@ -64027,37 +64029,19 @@ A1;Peça exemplo;10`}
         >
       >
     ) => {
-      const base = lerOrcamentoAvulsoRascunhoSession() || rascunho
-      gravarOrcamentoAvulsoRascunhoSession({
-        ...base,
-        v: 1,
-        tipoOrcamento: tipo,
-        dadosOrcamento: {
-          ...base.dadosOrcamento,
-          ...dadosOrcamento,
-          itens: Array.isArray(dadosOrcamento.itens)
-            ? dadosOrcamento.itens
-            : Array.isArray(base.dadosOrcamento?.itens)
-              ? base.dadosOrcamento.itens
-              : [],
-        },
+      persistTipoOrcamentoAvulsoSession({
+        tipo,
+        patch,
+        fallback: rascunho,
+        dadosOrcamento,
         numeroOrcamentoManual,
         buscaCliente,
         buscaRelatorio,
         buscaClientePrioritarioFixo,
-        clienteSelecionadoId:
-          patch && 'clienteSelecionadoId' in patch
-            ? patch.clienteSelecionadoId ?? null
-            : clienteSelecionado?.id ?? base.clienteSelecionadoId,
-        relatorioSelecionadoId:
-          patch && 'relatorioSelecionadoId' in patch
-            ? patch.relatorioSelecionadoId ?? null
-            : relatorioSelecionado?.id ?? base.relatorioSelecionadoId,
-        clienteCadastroPrioritarioFixoId:
-          patch && 'clienteCadastroPrioritarioFixoId' in patch
-            ? patch.clienteCadastroPrioritarioFixoId ?? null
-            : clienteCadastroPrioritarioFixo?.id ?? base.clienteCadastroPrioritarioFixoId,
-      }, { sync: true })
+        clienteSelecionadoId: clienteSelecionado?.id,
+        relatorioSelecionadoId: relatorioSelecionado?.id,
+        clienteCadastroPrioritarioFixoId: clienteCadastroPrioritarioFixo?.id,
+      })
     }
 
     const mudarTipoOrcamento = (key: OrcamentoAvulsoTipoRascunho | 'orcamentos-gerados') => {

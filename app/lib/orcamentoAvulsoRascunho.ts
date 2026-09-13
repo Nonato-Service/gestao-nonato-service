@@ -5,8 +5,11 @@ import {
   ORCAMENTO_AVULSO_RASCUNHO_LS,
   criarOrcamentoAvulsoRascunhoVazio as criarOrcamentoAvulsoRascunhoVazioPure,
   parseOrcamentoAvulsoRascunhoRaw,
+  montarRascunhoTipoOrcamento,
   sanitizarRascunhoParaSession,
+  type MontarRascunhoTipoOrcamentoInput,
   type OrcamentoAvulsoRascunhoPersist,
+  type OrcamentoAvulsoTipoRascunhoIdPatch,
 } from '../modules/orcamentos/rascunhoAvulso'
 
 /** Injeta Date.now() na data inicial do rascunho vazio. */
@@ -75,4 +78,17 @@ export function limparOrcamentoAvulsoRascunhoSession() {
   } catch {
     /* ignore */
   }
+}
+
+export type { OrcamentoAvulsoTipoRascunhoIdPatch }
+
+/** Grava o tipo já no clique — se o pai re-renderizar e remotar o painel, o modo não volta a «dados-fixos». */
+export function gravarTipoOrcamentoSessionSync(
+  input: Omit<MontarRascunhoTipoOrcamentoInput, 'base'> & {
+    fallback: OrcamentoAvulsoRascunhoPersist
+  }
+) {
+  const { fallback, ...rest } = input
+  const base = lerOrcamentoAvulsoRascunhoSession() || fallback
+  gravarOrcamentoAvulsoRascunhoSession(montarRascunhoTipoOrcamento({ ...rest, base }), { sync: true })
 }
