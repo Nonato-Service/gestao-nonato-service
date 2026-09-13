@@ -107,3 +107,12 @@ export {
   buildRelatorioServicoPdfToolbarHtml,
   wrapRelatorioServicoPrintDocument,
 } from './pdfShell'
+
+export type { RelatorioServicoTotaisResumo } from './pdfResumo'
+export {
+  formatHorasResumoPdf,
+  formatKmResumoPdf,
+  formatDiariasResumoPdf,
+  buildRelatorioServicoSummaryCardsHtml,
+  wrapRelatorioServicoPdfDocHtml,
+} from './pdfResumo'

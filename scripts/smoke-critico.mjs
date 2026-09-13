@@ -2358,6 +2358,25 @@ try {
   } else {
     fail('NonatoMainApp deixou de usar wrapRelatorioServicoPrintDocument')
   }
+  if (
+    idx.includes('buildRelatorioServicoSummaryCardsHtml') &&
+    idx.includes('formatHorasResumoPdf') &&
+    exists('app/modules/relatorio-servico/pdfResumo.ts')
+  ) {
+    ok('módulo relatorio-servico exporta pdfResumo')
+  } else {
+    fail('módulo relatorio-servico sem pdfResumo')
+  }
+  const libRsPrint = fs.readFileSync(path.join(root, 'app/lib/relatorioServicoPdfPrintCss.ts'), 'utf8')
+  if (
+    libRsPrint.includes("from '../modules/relatorio-servico/pdfResumo'") &&
+    !libRsPrint.includes('export function formatHorasResumoPdf(') &&
+    !libRsPrint.includes('export function buildRelatorioServicoSummaryCardsHtml(')
+  ) {
+    ok('lib/relatorioServicoPdfPrintCss só reexporta pdfResumo do módulo')
+  } else {
+    fail('lib/relatorioServicoPdfPrintCss ainda implementa o resumo tipográfico')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }
