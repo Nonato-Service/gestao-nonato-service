@@ -2377,6 +2377,24 @@ try {
   } else {
     fail('lib/relatorioServicoPdfPrintCss ainda implementa o resumo tipográfico')
   }
+  if (
+    idx.includes('buildRelatorioServicoPdfHeaderHtml') &&
+    idx.includes('buildRelatorioServicoPdfMetaSectionHtml') &&
+    exists('app/modules/relatorio-servico/pdfMeta.ts')
+  ) {
+    ok('módulo relatorio-servico exporta pdfMeta')
+  } else {
+    fail('módulo relatorio-servico sem pdfMeta')
+  }
+  if (
+    libRsPrint.includes("from '../modules/relatorio-servico/pdfMeta'") &&
+    !libRsPrint.includes('export function buildRelatorioServicoPdfHeaderHtml(') &&
+    !libRsPrint.includes('export function buildRelatorioServicoPdfMetaSectionHtml(')
+  ) {
+    ok('lib/relatorioServicoPdfPrintCss só reexporta pdfMeta do módulo')
+  } else {
+    fail('lib/relatorioServicoPdfPrintCss ainda implementa o cabeçalho/meta HTML')
+  }
 } catch (e) {
   fail(`módulo relatorio-servico: ${e.message}`)
 }

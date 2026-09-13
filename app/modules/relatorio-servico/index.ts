@@ -116,3 +116,17 @@ export {
   buildRelatorioServicoSummaryCardsHtml,
   wrapRelatorioServicoPdfDocHtml,
 } from './pdfResumo'
+
+export type {
+  RelatorioServicoPdfHeaderVariant,
+  RelatorioServicoPdfMetaLabels,
+  FechamentoClienteCadastroRef,
+} from './pdfMeta'
+export {
+  buildRelatorioServicoPdfHeaderHtml,
+  buildFechamentoDespesasClienteMetaFields,
+  buildFechamentoDespesasRelatorioInfoHtml,
+  buildRelatorioServicoPdfMetaSectionHtml,
+  RELATORIO_SERVICO_PDF_HEADER_CSS,
+  RELATORIO_SERVICO_PDF_HEADER_CSS_LEGACY,
+} from './pdfMeta'
