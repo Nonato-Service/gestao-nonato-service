@@ -13,13 +13,17 @@ export type BuildPedidoOrcamentoFromRelatorioOpts = {
   dataGeracao?: string
 }
 
-/** Monta o objecto do pedido (sem I/O / alertas / persistência). */
+export type BuildPedidoOrcamentoFromRelatorioPureOpts = BuildPedidoOrcamentoFromRelatorioOpts & {
+  nowMs: number
+}
+
+/** Monta o objecto do pedido (sem I/O / alertas / persistência). Relógio injectado (`nowMs`). */
 export function buildPedidoOrcamentoFromRelatorio(
   rel: RelatorioParaPedidoOrcamento,
-  opts: BuildPedidoOrcamentoFromRelatorioOpts
+  opts: BuildPedidoOrcamentoFromRelatorioPureOpts
 ): PedidoOrcamento {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     codigo: opts.codigo,
     numeroRelatorio: rel.numero,
     cliente: rel.cliente,
@@ -29,7 +33,7 @@ export function buildPedidoOrcamentoFromRelatorio(
     maquinaModelo: rel.maquinaModelo,
     numeroMaquina: rel.numeroMaquina,
     data: rel.data,
-    dataGeracao: opts.dataGeracao ?? new Date().toISOString(),
+    dataGeracao: opts.dataGeracao ?? new Date(opts.nowMs).toISOString(),
     pecas: rel.pecasSubstituicao ?? [],
     status: 'pendente',
     emitirComoCliente: opts.emitirComoCliente ?? 'cliente',

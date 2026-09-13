@@ -1227,6 +1227,33 @@ try {
   } else {
     fail('NonatoMainApp ainda define PedidoOrcamento localmente ou não usa helpers do módulo')
   }
+  const pedidoRel = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pedidoRelatorio.ts'), 'utf8')
+  const libPedidoRel = exists('app/lib/pedidoOrcamentoRelatorio.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pedidoOrcamentoRelatorio.ts'), 'utf8')
+    : ''
+  if (
+    pedidoRel.includes('nowMs: number') &&
+    !pedidoRel.includes('Date.now()') &&
+    !pedidoRel.includes('new Date().toISOString()')
+  ) {
+    ok('módulo orçamentos buildPedidoOrcamentoFromRelatorio é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/pedidoRelatorio ainda usa Date.now')
+  }
+  if (
+    libPedidoRel.includes("from '../modules/orcamentos/pedidoRelatorio'") &&
+    libPedidoRel.includes('buildPedidoOrcamentoFromRelatorio as buildPedidoOrcamentoFromRelatorioPure') &&
+    libPedidoRel.includes('Date.now()')
+  ) {
+    ok('lib/pedidoOrcamentoRelatorio só envolve o relógio do pedido')
+  } else {
+    fail('lib/pedidoOrcamentoRelatorio ainda não envolve buildPedidoOrcamentoFromRelatorio')
+  }
+  if (nma.includes("from './lib/pedidoOrcamentoRelatorio'")) {
+    ok('NonatoMainApp usa buildPedidoOrcamentoFromRelatorio via lib')
+  } else {
+    fail('NonatoMainApp não importa buildPedidoOrcamentoFromRelatorio do lib')
+  }
   if (
     nma.includes('lerOrcamentoAvulsoRascunhoSession() || rascunho') &&
     nma.includes('gravarTipoOrcamentoSessionSync')

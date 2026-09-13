@@ -10,7 +10,10 @@ export type {
   RelatorioParaPedidoOrcamento,
 } from './pedidoRelatorioTipos'
 
-export type { BuildPedidoOrcamentoFromRelatorioOpts } from './pedidoRelatorio'
+export type {
+  BuildPedidoOrcamentoFromRelatorioOpts,
+  BuildPedidoOrcamentoFromRelatorioPureOpts,
+} from './pedidoRelatorio'
 export {
   buildPedidoOrcamentoFromRelatorio,
   relatorioTemPecasParaPedidoOrcamento,

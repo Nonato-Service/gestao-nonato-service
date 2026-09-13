@@ -947,7 +947,6 @@ import {
   type PedidoOrcamentoRef,
   type PedidoAvulsoRef,
   type PedidoOrcamento,
-  buildPedidoOrcamentoFromRelatorio,
   relatorioTemPecasParaPedidoOrcamento,
   gerarProximoNumeroOrcamentoAvulso,
   resolverNumeroOrcamentoAvulsoAoSalvar,
@@ -965,6 +964,7 @@ import {
 } from './modules/orcamentos'
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
+import { buildPedidoOrcamentoFromRelatorio } from './lib/pedidoOrcamentoRelatorio'
 import {
   filtrarPecasBibliotecaPorBusca,
   pecaBibliotecaMatchesBusca,
