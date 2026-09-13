@@ -16,7 +16,7 @@ export type RelatorioClienteLike = {
   numeroMaquina?: string
 }
 
-import { formatMoneyEUR } from '../../lib/formatMoney'
+import { formatMoneyEUR } from '../financeiro/money'
 import {
   equipamentoIdETecnicoGerado,
   resolverIdEquipamentoCliente,

@@ -1,4 +1,4 @@
-import { formatMoneyNumber, parseMoneyInput, toMoneyNumber } from '../../lib/formatMoney'
+import { formatMoneyNumber, parseMoneyInput, toMoneyNumber } from '../financeiro/money'
 
 /** Cadastro de serviços: valores vindos do JSON/localStorage podem ser string. */
 export function normalizeServicoValorStored(v: unknown): number {

@@ -123,9 +123,10 @@ try {
   fail(`parse NonatoMainApp: ${e.message}`)
 }
 
-// 2b) Formato monetário único (14.087,50 €)
+// 2b) Formato monetário único (14.087,50 €) — SoT em financeiro/money
 try {
-  const money = fs.readFileSync(path.join(root, 'app/lib/formatMoney.ts'), 'utf8')
+  const money = fs.readFileSync(path.join(root, 'app/modules/financeiro/money.ts'), 'utf8')
+  const moneyLib = fs.readFileSync(path.join(root, 'app/lib/formatMoney.ts'), 'utf8')
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   const servicoValor = fs.readFileSync(path.join(root, 'app/modules/fechamento/servicoValor.ts'), 'utf8')
   if (
@@ -138,12 +139,24 @@ try {
   } else {
     fail('formatMoney.ts incompleto (esperado 14.087,50)')
   }
-  if (nma.includes("from './lib/formatMoney'") && nma.includes('formatMoneyEUR(fechTotIva')) {
+  if (
+    moneyLib.includes("from '../modules/financeiro/money'") &&
+    !moneyLib.includes('export function formatMoneyEUR')
+  ) {
+    ok('lib/formatMoney só reexporta financeiro/money')
+  } else {
+    fail('lib/formatMoney ainda implementa formatMoney')
+  }
+  if (nma.includes("from './modules/financeiro'") && nma.includes('formatMoneyEUR(fechTotIva')) {
     ok('NonatoMainApp usa formatMoneyEUR nos totais de fechamento')
   } else {
     fail('NonatoMainApp sem formatMoneyEUR no fechamento')
   }
-  if (servicoValor.includes('formatMoneyNumber') && servicoValor.includes('parseMoneyInput')) {
+  if (
+    servicoValor.includes("from '../financeiro/money'") &&
+    servicoValor.includes('formatMoneyNumber') &&
+    servicoValor.includes('parseMoneyInput')
+  ) {
     ok('fechamento/servicoValor usa formatMoney (display ≠ parse)')
   } else {
     fail('servicoValor sem formatMoney')
@@ -927,6 +940,15 @@ try {
     fail('falta app/modules/financeiro/fluxoNormalize.ts')
   } else {
     ok('existe app/modules/financeiro/fluxoNormalize.ts')
+  }
+  if (
+    idx.includes('formatMoneyEUR') &&
+    idx.includes('parseMoneyInput') &&
+    exists('app/modules/financeiro/money.ts')
+  ) {
+    ok('módulo financeiro exporta money')
+  } else {
+    fail('módulo financeiro sem money')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/financeiro'") || nma.includes('from "./modules/financeiro"')) {

@@ -10,7 +10,7 @@ import {
   buildPdfMetaSectionHtml,
   escapePdfHtml,
 } from '../../lib/pdfDocumentLayout'
-import { formatMoneyEUR, formatMoneyNumber } from '../../lib/formatMoney'
+import { formatMoneyEUR, formatMoneyNumber } from '../financeiro/money'
 
 export type ComprovanteFolhaItem = {
   id: string

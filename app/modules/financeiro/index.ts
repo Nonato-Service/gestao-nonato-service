@@ -154,6 +154,13 @@ export {
 export type { OrdemServicoFormState, OrdemServicoStatus } from './ordemServicoForm'
 export { emptyOrdemServicoFormState, ordemServicoToFormState } from './ordemServicoForm'
 
+export {
+  parseMoneyInput,
+  toMoneyNumber,
+  formatMoneyNumber,
+  formatMoneyEUR,
+} from './money'
+
 export type { OrdemServicoFromFormTotais } from './ordemServicoFromForm'
 export {
   isOrdemServicoFormValid,

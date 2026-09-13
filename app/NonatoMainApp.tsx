@@ -14,7 +14,6 @@ import {
   documentPdfDateLocale,
   localeDatetimeGeneral,
 } from './translations'
-import { formatMoneyEUR, formatMoneyNumber } from './lib/formatMoney'
 import { LISTA_UI_LOTE, limiteListaUi } from './lib/listaUiLote'
 import {
   loadData,
@@ -775,6 +774,8 @@ import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { OrcamentoPecasEspeciaisContent } from './components/OrcamentoPecasEspeciaisContent'
 import {
+  formatMoneyEUR,
+  formatMoneyNumber,
   isClienteMarcadoDevedor,
   relatorioFluxoFinanceiroNaoPago,
   calcularClientesDevedores,

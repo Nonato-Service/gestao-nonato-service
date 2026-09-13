@@ -1,6 +1,6 @@
 /** Textos e telefones para envio de IBAN / cobrança (e-mail, WhatsApp, SMS). */
 
-import { formatMoneyEUR } from '../../lib/formatMoney'
+import { formatMoneyEUR } from './money'
 
 export type FichaCadastralBancariaMin = {
   nomeEmpresa?: string

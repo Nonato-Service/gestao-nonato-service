@@ -1,5 +1,5 @@
 import type { FechamentoItem } from '../fechamento'
-import { formatMoneyEUR } from '../../lib/formatMoney'
+import { formatMoneyEUR } from '../financeiro/money'
 import { CONTAB_PRINT_WINDOW_STYLES } from './estilosPrint'
 import { escAttr, preEsc, valDash } from './escape'
 import type {

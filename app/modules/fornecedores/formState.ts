@@ -1,6 +1,6 @@
 /** Estado vazio e mapeamento Fornecedor / FaturaFornecedor → formulário. */
 
-import { formatMoneyNumber } from '../../lib/formatMoney'
+import { formatMoneyNumber } from '../financeiro/money'
 import type {
   FaturaFornecedor,
   FaturaFornecedorFormState,

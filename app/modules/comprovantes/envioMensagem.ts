@@ -1,7 +1,7 @@
 /** Textos de envio (WhatsApp / e-mail / copiar) para comprovantes de despesas. */
 
 import type { ComprovanteDespesa } from './tipos'
-import { formatMoneyEUR } from '../../lib/formatMoney'
+import { formatMoneyEUR } from '../financeiro/money'
 
 export type MensagemEnvioComprovanteTemplateId = 1 | 2 | 3 | 4 | 5
 
