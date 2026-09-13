@@ -260,11 +260,45 @@ try {
   } else {
     fail('servicosCadastroUtils sem reexport do tipo ServicoCadastroItem')
   }
+  const cadastroServicos = fs.readFileSync(path.join(root, 'app/components/CadastroServicosContent.tsx'), 'utf8')
+  if (
+    idx.includes('TEMPLATE_SERVICOS_PADRAO') &&
+    idx.includes('coletarCodigosMatriz') &&
+    idx.includes('servicoPorCodNoGrupo') &&
+    exists('app/modules/fechamento/servicosPadrao.ts')
+  ) {
+    ok('módulo fechamento exporta servicosPadrao')
+  } else {
+    fail('módulo fechamento sem servicosPadrao')
+  }
+  if (
+    libServicos.includes('TEMPLATE_SERVICOS_PADRAO') &&
+    !libServicos.includes("cod: 'HTT'") &&
+    !libServicos.includes('export function coletarCodigosMatriz')
+  ) {
+    ok('lib/servicosCadastroUtils só reexporta servicosPadrao')
+  } else {
+    fail('lib/servicosCadastroUtils ainda implementa o template de serviços')
+  }
+  if (
+    cadastroServicos.includes("from '../modules/fechamento'") &&
+    cadastroServicos.includes('coletarCodigosMatriz') &&
+    !cadastroServicos.includes("from '../lib/servicosCadastroUtils'")
+  ) {
+    ok('CadastroServicosContent usa servicosPadrao do módulo fechamento')
+  } else {
+    fail('CadastroServicosContent ainda importa servicosCadastroUtils do lib')
+  }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/fechamento'") || nma.includes('from "./modules/fechamento"')) {
     ok('NonatoMainApp importa app/modules/fechamento')
   } else {
     fail('NonatoMainApp não importa o módulo fechamento')
+  }
+  if (nma.includes('TEMPLATE_SERVICOS_PADRAO') && !nma.includes("from './lib/servicosCadastroUtils'")) {
+    ok('NonatoMainApp usa TEMPLATE_SERVICOS_PADRAO do módulo fechamento')
+  } else {
+    fail('NonatoMainApp ainda importa servicosCadastroUtils do lib')
   }
   if (
     !nma.includes("const RESUMO_COBRANCA_DECISAO_KEY =") &&

@@ -4,19 +4,17 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { AssistTextarea } from './AssistTextFields'
 import {
   coletarCodigosMatriz,
+  emptyServicoCadastroFormState,
   formatServicoValorExibicao,
   labelCategoria,
   labelTipoCobranca,
   ordenarServicoGrupos,
   servicoCodParaExibicao,
   servicoPorCodNoGrupo,
-  type ServicoCadastroGrupo,
-  type ServicoCadastroItem,
-} from '../lib/servicosCadastroUtils'
-import {
-  emptyServicoCadastroFormState,
   type CadastroServicoSavePayload,
   type ServicoCadastroFormState,
+  type ServicoCadastroGrupo,
+  type ServicoCadastroItem,
 } from '../modules/fechamento'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 

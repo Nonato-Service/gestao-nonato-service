@@ -863,6 +863,7 @@ import {
   type FechamentoIvaOpcoesRelatorio,
   normalizeServicoValorStored,
   formatServicoValorExibicao,
+  TEMPLATE_SERVICOS_PADRAO,
   buildRelatorioCobrancaGruposOpcoes,
   rotuloRelatorioCobrancaGrupoOption,
   findServicoHttNoGrupo,
@@ -1065,7 +1066,6 @@ import {
 } from './lib/orcamentoPdfPro'
 import type { PedidoAvulsoGuardado } from './components/PedidoOrcamentosAvulsoContent'
 import { ClienteGpsNavButton } from './components/ClienteGpsNavButton'
-import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import {
   IconCalendar,

@@ -122,3 +122,12 @@ export {
   normalizeFechamentoIvaPorRelatorioMap,
   normalizeFechamentoGrupoPorRelatorioMap,
 } from './persistMaps'
+
+export {
+  TEMPLATE_SERVICOS_PADRAO,
+  SERVICO_COD_ORDEM_PADRAO,
+  labelTipoCobranca,
+  labelCategoria,
+  coletarCodigosMatriz,
+  servicoPorCodNoGrupo,
+} from './servicosPadrao'
