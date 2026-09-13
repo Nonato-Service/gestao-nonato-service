@@ -78,6 +78,6 @@ export function createOrcamentoPecasEspeciaisFromForm(
     taxaIva: form.taxaIva,
     modoCalculoTotal: form.incluirIva ? form.modoCalculoTotal : 'linhas',
     valorFinalComIva: form.incluirIva && form.modoCalculoTotal === 'valor-final' ? form.valorFinalComIva : '',
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }

@@ -23,14 +23,13 @@ import {
   type OstRascunhoAtual,
 } from './orcamentoOstPropostas'
 import type { ClienteOrcamentoLite, OstPropostaLinha, ServicoOrcamentoLinha } from '../modules/orcamentos'
+import { createOstPropostaPayloadFromForm, resolveOstPropostaNome } from '../modules/orcamentos'
 import {
   createOstPropostaFromForm,
-  createOstPropostaPayloadFromForm,
   emptyOstPropostaLinha,
   newOstEntityId,
   normalizeOstPropostaLinhas,
-  resolveOstPropostaNome,
-} from '../modules/orcamentos'
+} from '../lib/ostForm'
 
 export type { ServicoOrcamentoLinha, ClienteOrcamentoLite } from '../modules/orcamentos'
 import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'

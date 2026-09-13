@@ -29,16 +29,19 @@ export type CreateOstPropostaFromFormOpts = {
   id?: string
   criadoEm?: string
   atualizadoEm?: string
+  nowMs: number
+  random: () => number
+  randomUUID?: () => string
 }
 
 export function createOstPropostaFromForm(
   form: OstPropostaPayload,
   nome: string,
-  opts: CreateOstPropostaFromFormOpts = {}
+  opts: CreateOstPropostaFromFormOpts
 ): OstPropostaSalva {
-  const now = opts.atualizadoEm ?? new Date().toISOString()
+  const now = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
   return {
-    id: opts.id ?? newOstEntityId(),
+    id: opts.id ?? newOstEntityId(opts),
     nome,
     criadoEm: opts.criadoEm ?? now,
     atualizadoEm: now,

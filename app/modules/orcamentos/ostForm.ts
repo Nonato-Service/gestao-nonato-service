@@ -2,25 +2,35 @@
 
 import type { OstPropostaLinha } from './ostTipos'
 
-export function newOstEntityId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
-  return `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+export type OstIdDeps = {
+  nowMs: number
+  random: () => number
+  randomUUID?: () => string
 }
 
-export function emptyOstPropostaLinha(): OstPropostaLinha {
-  return { rowId: newOstEntityId(), servicoId: '', quantidadeStr: '1' }
+/** Relógio (`nowMs`), aleatório (`random`) e UUID opcional injectados. */
+export function newOstEntityId(deps: OstIdDeps): string {
+  if (deps.randomUUID) return deps.randomUUID()
+  return `r-${deps.nowMs}-${deps.random().toString(36).slice(2, 9)}`
 }
 
-export function normalizeOstPropostaLinha(l: Partial<OstPropostaLinha>): OstPropostaLinha {
+export function emptyOstPropostaLinha(deps: OstIdDeps): OstPropostaLinha {
+  return { rowId: newOstEntityId(deps), servicoId: '', quantidadeStr: '1' }
+}
+
+export function normalizeOstPropostaLinha(l: Partial<OstPropostaLinha>, deps: OstIdDeps): OstPropostaLinha {
   return {
-    rowId: l.rowId && String(l.rowId).trim() ? String(l.rowId) : newOstEntityId(),
+    rowId: l.rowId && String(l.rowId).trim() ? String(l.rowId) : newOstEntityId(deps),
     servicoId: l.servicoId || '',
     quantidadeStr:
       l.quantidadeStr != null && String(l.quantidadeStr).trim() !== '' ? String(l.quantidadeStr) : '1',
   }
 }
 
-export function normalizeOstPropostaLinhas(linhas: readonly Partial<OstPropostaLinha>[] | undefined): OstPropostaLinha[] {
-  if (!linhas || linhas.length === 0) return [emptyOstPropostaLinha()]
-  return linhas.map(normalizeOstPropostaLinha)
+export function normalizeOstPropostaLinhas(
+  linhas: readonly Partial<OstPropostaLinha>[] | undefined,
+  deps: OstIdDeps
+): OstPropostaLinha[] {
+  if (!linhas || linhas.length === 0) return [emptyOstPropostaLinha(deps)]
+  return linhas.map((linha) => normalizeOstPropostaLinha(linha, deps))
 }

@@ -184,6 +184,7 @@ export type {
   OstRascunhoAtual,
 } from './ostTipos'
 
+export type { OstIdDeps } from './ostForm'
 export {
   newOstEntityId,
   emptyOstPropostaLinha,

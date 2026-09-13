@@ -1422,6 +1422,19 @@ try {
   } else {
     fail('OrcamentoPecasEspeciaisContent não importa peças especiais form do lib')
   }
+  const pecasEspeciaisFromForm = fs.readFileSync(
+    path.join(root, 'app/modules/orcamentos/pecasEspeciaisFromForm.ts'),
+    'utf8'
+  )
+  if (
+    pecasEspeciaisFromForm.includes('nowMs: number') &&
+    !pecasEspeciaisFromForm.includes('new Date().toISOString()') &&
+    !pecasEspeciaisFromForm.includes('Date.now()')
+  ) {
+    ok('módulo orçamentos pecasEspeciaisFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/pecasEspeciaisFromForm ainda usa new Date()')
+  }
   if (
     idx.includes('PedidoAvulsoGuardado') &&
     idx.includes('emptyEquipamentoBlocoPedido') &&
@@ -1529,6 +1542,47 @@ try {
     ok('OST UI/I/O usa tipos/fromForm do módulo orçamentos')
   } else {
     fail('OST ainda define proposta/linha no sítio')
+  }
+  const ostForm = fs.readFileSync(path.join(root, 'app/modules/orcamentos/ostForm.ts'), 'utf8')
+  const ostFromForm = fs.readFileSync(path.join(root, 'app/modules/orcamentos/ostFromForm.ts'), 'utf8')
+  const libOstForm = exists('app/lib/ostForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/ostForm.ts'), 'utf8')
+    : ''
+  if (
+    ostForm.includes('nowMs: number') &&
+    ostForm.includes('random: () => number') &&
+    !ostForm.includes('Date.now()') &&
+    !ostForm.includes('Math.random') &&
+    !ostForm.includes('crypto')
+  ) {
+    ok('módulo orçamentos ostForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo orçamentos/ostForm ainda usa Date.now, Math.random ou crypto')
+  }
+  if (
+    ostFromForm.includes('nowMs: number') &&
+    !ostFromForm.includes('new Date().toISOString()') &&
+    !ostFromForm.includes('Date.now()')
+  ) {
+    ok('módulo orçamentos ostFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/ostFromForm ainda usa new Date()')
+  }
+  if (
+    libOstForm.includes("from '../modules/orcamentos/ostForm'") &&
+    libOstForm.includes('newOstEntityId as newOstEntityIdPure') &&
+    libOstForm.includes('createOstPropostaFromForm as createOstPropostaFromFormPure') &&
+    libOstForm.includes('Date.now()') &&
+    libOstForm.includes('Math.random')
+  ) {
+    ok('lib/ostForm só envolve relógio/aleatório do OST')
+  } else {
+    fail('lib/ostForm ainda não envolve os ids/datas do OST')
+  }
+  if (ostUi.includes("from '../lib/ostForm'")) {
+    ok('OrcamentoServicoTecnicoContent usa OST form via lib')
+  } else {
+    fail('OrcamentoServicoTecnicoContent não importa OST form do lib')
   }
   if (
     idx.includes('OrcamentoGeradoItem') &&
