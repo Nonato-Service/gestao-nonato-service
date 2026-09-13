@@ -920,6 +920,37 @@ try {
   } else {
     fail('nomeAlfabeto ainda definido em lib ou consumidores não usam o módulo')
   }
+  const libMerge = fs.readFileSync(path.join(root, 'app/lib/clienteMergeUtils.ts'), 'utf8')
+  const dataStorage = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    idx.includes('mergeNonatoClientesDeferServerLocal') &&
+    idx.includes('dedupeEquipamentosClientePorSerie') &&
+    idx.includes('mergeEquipamentosClienteLists') &&
+    exists('app/modules/clientes/merge.ts')
+  ) {
+    ok('módulo clientes exporta merge')
+  } else {
+    fail('módulo clientes sem merge')
+  }
+  if (
+    libMerge.includes("from '../modules/clientes/merge'") &&
+    !libMerge.includes('export function mergeNonatoClientesDeferServerLocal(') &&
+    !libMerge.includes('function pickBetterField(')
+  ) {
+    ok('lib/clienteMergeUtils só reexporta clientes/merge')
+  } else {
+    fail('lib/clienteMergeUtils ainda implementa o merge')
+  }
+  if (
+    nma.includes('mergeNonatoClientesDeferServerLocal') &&
+    nma.includes('dedupeEquipamentosClientePorSerie') &&
+    !nma.includes("from './lib/clienteMergeUtils'") &&
+    dataStorage.includes("from '../lib/clienteMergeUtils'")
+  ) {
+    ok('NMA usa merge do módulo clientes; dataStorage via lib')
+  } else {
+    fail('NMA/dataStorage sem merge canónico de clientes')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }
@@ -1676,7 +1707,7 @@ try {
     fail('módulo equipamentos incompleto (index.ts)')
   }
   {
-    const mergeUtils = fs.readFileSync(path.join(root, 'app/lib/clienteMergeUtils.ts'), 'utf8')
+    const mergeUtils = fs.readFileSync(path.join(root, 'app/modules/clientes/merge.ts'), 'utf8')
     if (
       mergeUtils.includes('mergeEquipamentoClienteSameId') &&
       mergeUtils.includes('pickBetterField') &&

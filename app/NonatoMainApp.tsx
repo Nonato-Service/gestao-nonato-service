@@ -56,11 +56,6 @@ import {
   requestDiarioNotificationPermission,
   showDiarioBrowserNotification,
 } from './lib/diarioLembrete'
-import {
-  dedupeEquipamentosClientePorSerie,
-  mergeEquipamentosClienteLists,
-  mergeNonatoClientesDeferServerLocal,
-} from './lib/clienteMergeUtils'
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
@@ -549,6 +544,9 @@ import {
   normalizarTelefoneWhatsApp,
   filtrarPorNomeBusca,
   getLetraAlfabetoNome,
+  dedupeEquipamentosClientePorSerie,
+  mergeEquipamentosClienteLists,
+  mergeNonatoClientesDeferServerLocal,
 } from './modules/clientes'
 import {
   NONATO_CRITICAL_CADASTRO_KEYS,

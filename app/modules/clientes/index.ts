@@ -199,3 +199,13 @@ export {
   buildWhatsAppUrl,
   findClienteParaEnvio,
 } from './contactoEnvio'
+
+export type { EquipamentoClienteMerge, ClienteMerge } from './merge'
+export {
+  equipamentoClienteDedupeKey,
+  mergeEquipamentoClienteSameId,
+  preferEquipamentoClienteMerge,
+  dedupeEquipamentosClientePorSerie,
+  mergeEquipamentosClienteLists,
+  mergeNonatoClientesDeferServerLocal,
+} from './merge'
