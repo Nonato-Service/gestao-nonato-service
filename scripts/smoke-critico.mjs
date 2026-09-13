@@ -3638,6 +3638,24 @@ try {
   } else {
     fail('NonatoMainApp não importa checklist fromForm do lib')
   }
+  const salvoFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/salvoFromForm.ts'), 'utf8')
+  const itemTrabFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/itemTrabalhoFromForm.ts'), 'utf8')
+  const basicoTipos = fs.readFileSync(path.join(root, 'app/modules/checklist/basicoTipos.ts'), 'utf8')
+  if (
+    salvoFromForm.includes('nowMs: number') &&
+    !salvoFromForm.includes('Date.now()') &&
+    !salvoFromForm.includes('new Date().toISOString()') &&
+    itemTrabFromForm.includes('nowMs: number') &&
+    !itemTrabFromForm.includes('Date.now()') &&
+    !itemTrabFromForm.includes('new Date().toISOString()') &&
+    basicoTipos.includes('nowMs: number') &&
+    !basicoTipos.includes('Date.now()') &&
+    !basicoTipos.includes('Math.random')
+  ) {
+    ok('módulo checklist salvo/item/basico é puro (relógio injectado)')
+  } else {
+    fail('módulo checklist salvo/item/basico ainda usa Date.now ou Math.random')
+  }
   if (
     idx.includes('isChecklistSalvoFormValid') &&
     idx.includes('createChecklistSalvoFromForm') &&
@@ -3705,6 +3723,16 @@ try {
     ok('ChecklistBasicoContent usa tipos do módulo checklist')
   } else {
     fail('ChecklistBasico ainda definido em lib ou no componente')
+  }
+  if (ckBasicoUi.includes("from '../lib/checklistBasicoTypes'")) {
+    ok('ChecklistBasicoContent usa newChecklistBasicoId via lib')
+  } else {
+    fail('ChecklistBasicoContent não importa newChecklistBasicoId do lib')
+  }
+  if (fgCk.includes("from '../lib/checklistFromForm'")) {
+    ok('FamiliasGruposChecklistContent usa itemTrabalho fromForm via lib')
+  } else {
+    fail('FamiliasGruposChecklistContent não importa itemTrabalho fromForm do lib')
   }
   if (
     idx.includes('ChecklistBasicoEquipamentoResumo') &&

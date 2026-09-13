@@ -56,13 +56,14 @@ export type CreateChecklistSalvoFromFormInput<E extends { id: string }> = {
   id?: string
   dataCriacao?: string
   status?: ChecklistSalvoStatus
+  nowMs: number
 }
 
 export function createChecklistSalvoFromForm<E extends { id: string }>(
   input: CreateChecklistSalvoFromFormInput<E>
 ): ChecklistSalvo<E> {
   return {
-    id: input.id ?? `checklist-${Date.now()}`,
+    id: input.id ?? `checklist-${input.nowMs}`,
     tipo: 'checklist-gerado',
     equipamentoId: input.equipamento.id,
     equipamento: input.equipamento,
@@ -71,7 +72,7 @@ export function createChecklistSalvoFromForm<E extends { id: string }>(
     tecnicoNome: input.tecnicoNome,
     grupos: mapChecklistSalvoGrupos(input.gruposSelecionados, input.manutencoesSelecionadas),
     manutencoesSelecionadas: Array.from(input.manutencoesSelecionadas),
-    dataCriacao: input.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: input.dataCriacao ?? new Date(input.nowMs).toISOString(),
     status: input.status ?? 'salvo',
   }
 }

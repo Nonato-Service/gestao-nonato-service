@@ -45,6 +45,7 @@ export type ChecklistBasicoInstancia = {
   atualizadoEm: string
 }
 
-export function newChecklistBasicoId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+/** Relógio (`nowMs`) e aleatório (`random`) injectados. */
+export function newChecklistBasicoId(prefix: string, nowMs: number, random: () => number): string {
+  return `${prefix}-${nowMs}-${random().toString(36).slice(2, 9)}`
 }

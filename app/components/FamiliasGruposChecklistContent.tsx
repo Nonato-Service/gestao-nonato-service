@@ -6,11 +6,11 @@ import { GrupoChecklist, ItemTrabalhoCriacao, ParenteChecklist } from '../lib/ch
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 import type { CriacaoChecklistItemForm } from '../modules/checklist'
 import {
-  createItemTrabalhoCriacaoFromForm,
   emptyCriacaoChecklistItemForm,
   isCriacaoChecklistItemFormValid,
   itemTrabalhoCriacaoToForm,
 } from '../modules/checklist'
+import { createItemTrabalhoCriacaoFromForm } from '../lib/checklistFromForm'
 
 export type { CriacaoChecklistItemForm } from '../modules/checklist'
 

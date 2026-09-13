@@ -19,7 +19,17 @@ import {
 import type { ChecklistTemplateFormState } from '../modules/checklist/templateForm'
 import type { GrupoChecklistFormState } from '../modules/checklist/grupoForm'
 import type { ManutencaoChecklistFormState } from '../modules/checklist/manutencaoForm'
-import type { ChecklistTemplate, GrupoChecklist, ManutencaoChecklist } from '../modules/checklist/tipos'
+import type { ChecklistTemplate, GrupoChecklist, ItemTrabalhoCriacao, ManutencaoChecklist } from '../modules/checklist/tipos'
+import {
+  createChecklistSalvoFromForm as createChecklistSalvoFromFormPure,
+  type ChecklistSalvo,
+  type CreateChecklistSalvoFromFormInput,
+} from '../modules/checklist/salvoFromForm'
+import {
+  createItemTrabalhoCriacaoFromForm as createItemTrabalhoCriacaoFromFormPure,
+  type CreateItemTrabalhoCriacaoFromFormOpts,
+} from '../modules/checklist/itemTrabalhoFromForm'
+import type { CriacaoChecklistItemForm } from '../modules/checklist/itemTrabalhoForm'
 
 export { updateChecklistTemplateFromForm, updateGrupoChecklistFromForm, updateManutencaoChecklistFromForm }
 
@@ -44,4 +54,17 @@ export function createManutencaoChecklistFromForm(
   opts: Omit<CreateManutencaoChecklistFromFormOpts, 'nowMs'> = {}
 ): ManutencaoChecklist {
   return createManutencaoChecklistFromFormPure(form, { ...opts, nowMs: Date.now() })
+}
+
+export function createChecklistSalvoFromForm<E extends { id: string }>(
+  input: Omit<CreateChecklistSalvoFromFormInput<E>, 'nowMs'>
+): ChecklistSalvo<E> {
+  return createChecklistSalvoFromFormPure({ ...input, nowMs: Date.now() })
+}
+
+export function createItemTrabalhoCriacaoFromForm(
+  form: CriacaoChecklistItemForm,
+  opts: Omit<CreateItemTrabalhoCriacaoFromFormOpts, 'nowMs'> = {}
+): ItemTrabalhoCriacao {
+  return createItemTrabalhoCriacaoFromFormPure(form, { ...opts, nowMs: Date.now() })
 }

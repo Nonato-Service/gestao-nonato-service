@@ -18,8 +18,8 @@ import {
   ChecklistBasicoItemStatus,
   checklistBasicoEquipamentoKey,
   checklistBasicoEquipamentoLabel,
-  newChecklistBasicoId,
 } from '../modules/checklist'
+import { newChecklistBasicoId } from '../lib/checklistBasicoTypes'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 

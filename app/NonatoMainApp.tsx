@@ -1021,13 +1021,13 @@ import {
   buildChecklistGeradoRecord,
   buildPecasArmazemFromChecklist,
   isChecklistSalvoFormValid,
-  createChecklistSalvoFromForm,
   emptyCriacaoChecklistItemForm,
 } from './modules/checklist'
 import {
   createChecklistTemplateFromForm,
   createGrupoChecklistFromForm,
   createManutencaoChecklistFromForm,
+  createChecklistSalvoFromForm,
 } from './lib/checklistFromForm'
 import {
   emptyOrdemPreparacaoForm,

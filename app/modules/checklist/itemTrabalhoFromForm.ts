@@ -13,14 +13,15 @@ export type CreateItemTrabalhoCriacaoFromFormOpts = {
   id?: string
   dataCriacao?: string
   tipoFallback?: string
+  nowMs: number
 }
 
 export function createItemTrabalhoCriacaoFromForm(
   form: CriacaoChecklistItemForm,
-  opts: CreateItemTrabalhoCriacaoFromFormOpts = {}
+  opts: CreateItemTrabalhoCriacaoFromFormOpts
 ): ItemTrabalhoCriacao {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? String(opts.nowMs),
     tipo: form.tipo.trim() || opts.tipoFallback || 'Outro',
     descricaoTrabalho: form.descricaoTrabalho.trim(),
     necessitaPecas: form.necessitaPecas,
@@ -31,6 +32,6 @@ export function createItemTrabalhoCriacaoFromForm(
       form.necessitaPecas && form.origemPecas === 'codigo-manual'
         ? form.pecasManuais.filter((p) => p.codigo.trim())
         : undefined,
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }
