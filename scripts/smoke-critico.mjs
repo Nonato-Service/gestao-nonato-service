@@ -2965,6 +2965,29 @@ try {
   } else {
     fail('pdfModelTypes ainda definido em lib ou consumidores não usam o módulo')
   }
+  if (
+    idx.includes('pdfModeloToProtocoloNum') &&
+    idx.includes('protocoloNumToPdfModelo') &&
+    idx.includes('PDF_MODELO_TO_PROTOCOLO_NUM') &&
+    exists('app/modules/pdf/modeloProtocoloMap.ts')
+  ) {
+    ok('módulo pdf exporta modeloProtocoloMap')
+  } else {
+    fail('módulo pdf sem modeloProtocoloMap')
+  }
+  const libProtoMap = fs.readFileSync(path.join(root, 'app/lib/pdfModelProtocoloMap.ts'), 'utf8')
+  if (
+    libProtoMap.includes("from '../modules/pdf/modeloProtocoloMap'") &&
+    !libProtoMap.includes('export const PDF_MODELO_TO_PROTOCOLO_NUM') &&
+    !libProtoMap.includes('export function pdfModeloToProtocoloNum(') &&
+    nma.includes('pdfModeloToProtocoloNum') &&
+    nma.includes('protocoloNumToPdfModelo') &&
+    !nma.includes("from './lib/pdfModelProtocoloMap'")
+  ) {
+    ok('NonatoMainApp usa modeloProtocoloMap do módulo pdf')
+  } else {
+    fail('modeloProtocoloMap ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }

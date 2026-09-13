@@ -41,3 +41,5 @@ export {
   normalizePdfModelo,
   pdfModeloBodyClass,
 } from './modelos'
+
+export { PDF_MODELO_TO_PROTOCOLO_NUM, pdfModeloToProtocoloNum, protocoloNumToPdfModelo } from './modeloProtocoloMap'
