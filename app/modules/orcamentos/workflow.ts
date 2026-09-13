@@ -72,7 +72,8 @@ export function orcamentoMercadoriaRecebida(orc: OrcamentoWorkflowOrc): boolean 
 
 export function criarPedidoSeparacaoFromOrcamento(
   orc: OrcamentoWorkflowOrc,
-  pecasBiblioteca?: Array<{ id: string; codigo?: string; imagem?: string }>
+  pecasBiblioteca: Array<{ id: string; codigo?: string; imagem?: string }> | undefined,
+  nowMs: number
 ): PedidoSeparacaoRef {
   const resolverImagem = (item: { pecaId?: string; imagem?: string; codigo?: string }) => {
     if (item.imagem) return item.imagem
@@ -88,7 +89,7 @@ export function criarPedidoSeparacaoFromOrcamento(
   }
 
   const itens = (orc.itens ?? []).map((item, index) => ({
-    id: `item-${Date.now()}-${index}`,
+    id: `item-${nowMs}-${index}`,
     descricao: item.descricao,
     quantidade: Number(item.quantidade) || 1,
     codigo: item.codigo,
@@ -98,7 +99,7 @@ export function criarPedidoSeparacaoFromOrcamento(
   }))
 
   return {
-    id: 'pedido-sep-' + Date.now(),
+    id: 'pedido-sep-' + nowMs,
     numeroOrcamento: orc.numeroOrcamento,
     clienteNome: orc.clienteNome || orc.dadosCliente?.nomeEmpresa || 'N/A',
     clienteId: orc.clienteId,
@@ -106,7 +107,7 @@ export function criarPedidoSeparacaoFromOrcamento(
     dataPedido: orc.data,
     status: 'aguardando-fornecedor',
     itens,
-    dataCriacao: new Date().toISOString(),
+    dataCriacao: new Date(nowMs).toISOString(),
     origemOrcamentoId: orc.id,
   }
 }

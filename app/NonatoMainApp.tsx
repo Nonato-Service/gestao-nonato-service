@@ -935,7 +935,6 @@ import { FornecedorCadastroForm } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import {
-  criarPedidoSeparacaoFromOrcamento,
   pedidoSeparacaoJaExiste,
   notifyEquipamentoOrcamentosChanged,
   type OrcamentoWorkflowOrc,
@@ -965,6 +964,7 @@ import {
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { buildPedidoOrcamentoFromRelatorio } from './lib/pedidoOrcamentoRelatorio'
+import { criarPedidoSeparacaoFromOrcamento } from './lib/orcamentoWorkflow'
 import {
   filtrarPecasBibliotecaPorBusca,
   pecaBibliotecaMatchesBusca,

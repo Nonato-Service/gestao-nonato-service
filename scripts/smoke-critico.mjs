@@ -1227,6 +1227,30 @@ try {
   } else {
     fail('NonatoMainApp ainda define PedidoOrcamento localmente ou não usa helpers do módulo')
   }
+  const workflowSrc = fs.readFileSync(path.join(root, 'app/modules/orcamentos/workflow.ts'), 'utf8')
+  const libWorkflow = fs.readFileSync(path.join(root, 'app/lib/orcamentoWorkflow.ts'), 'utf8')
+  if (
+    workflowSrc.includes('nowMs: number') &&
+    !workflowSrc.includes('Date.now()') &&
+    !workflowSrc.includes('new Date().toISOString()')
+  ) {
+    ok('módulo orçamentos criarPedidoSeparacaoFromOrcamento é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/workflow ainda usa Date.now')
+  }
+  if (
+    libWorkflow.includes('criarPedidoSeparacaoFromOrcamento as criarPedidoSeparacaoFromOrcamentoPure') &&
+    libWorkflow.includes('criarPedidoSeparacaoFromOrcamentoPure(orc, pecasBiblioteca, Date.now())')
+  ) {
+    ok('lib/orcamentoWorkflow só envolve o relógio da separação')
+  } else {
+    fail('lib/orcamentoWorkflow ainda reexporta criarPedidoSeparacaoFromOrcamento sem wrapper')
+  }
+  if (nma.includes("from './lib/orcamentoWorkflow'")) {
+    ok('NonatoMainApp usa criarPedidoSeparacaoFromOrcamento via lib')
+  } else {
+    fail('NonatoMainApp não importa criarPedidoSeparacaoFromOrcamento do lib')
+  }
   const pedidoRel = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pedidoRelatorio.ts'), 'utf8')
   const libPedidoRel = exists('app/lib/pedidoOrcamentoRelatorio.ts')
     ? fs.readFileSync(path.join(root, 'app/lib/pedidoOrcamentoRelatorio.ts'), 'utf8')
