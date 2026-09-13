@@ -3487,6 +3487,27 @@ try {
   } else {
     fail('lib/pdfDocumentLayout ainda implementa o layout HTML')
   }
+  if (
+    idx.includes('buildPdfHtmlDocument') &&
+    idx.includes('buildPdfHeaderForDoc') &&
+    idx.includes('PDF_SHELL_EXTRA_CSS') &&
+    exists('app/modules/pdf/documentShell.ts')
+  ) {
+    ok('módulo pdf exporta documentShell')
+  } else {
+    fail('módulo pdf sem documentShell')
+  }
+  const libShell = fs.readFileSync(path.join(root, 'app/lib/pdfDocumentShell.ts'), 'utf8')
+  if (
+    libShell.includes("from '../modules/pdf/documentShell'") &&
+    !libShell.includes('export function buildPdfHtmlDocument(') &&
+    !libShell.includes('export function resolvePdfHeaderVariant(') &&
+    !libShell.includes('export const PDF_SHELL_EXTRA_CSS')
+  ) {
+    ok('lib/pdfDocumentShell só reexporta documentShell do módulo pdf')
+  } else {
+    fail('lib/pdfDocumentShell ainda implementa o shell HTML')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }

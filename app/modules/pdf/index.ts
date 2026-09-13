@@ -60,3 +60,20 @@ export {
   buildPdfDocumentFooterHtml,
   PDF_DOCUMENT_LAYOUT_CSS,
 } from './documentLayout'
+
+export type { PdfDataCardRow } from './documentShell'
+export {
+  resolvePdfHeaderVariant,
+  buildPdfLogoContent,
+  buildPdfPrintToolbarHtml,
+  buildPdfDataCardSectionHtml,
+  buildPdfNoticeHtml,
+  buildPdfSummaryCardsHtml,
+  buildPdfSectionTitleHtml,
+  buildPdfInstructionsBoxHtml,
+  wrapPdfTableHtml,
+  PDF_SHELL_EXTRA_CSS,
+  buildPdfHtmlDocument,
+  buildPdfHeaderForDoc,
+  buildPdfMetaFieldsHtml,
+} from './documentShell'
