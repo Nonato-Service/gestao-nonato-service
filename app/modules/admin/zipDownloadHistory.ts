@@ -31,3 +31,15 @@ export function prependZipDownloadHistory(
 ): ZipDownloadHistoryEntry[] {
   return [item, ...list.filter((e) => e.timestamp !== item.timestamp)].slice(0, MAX_BACKUP_HISTORY)
 }
+
+/** Monta o item do histórico. Relógio injectado (`nowMs`) se não vier timestamp. */
+export function buildZipDownloadHistoryEntry(
+  entry: Omit<ZipDownloadHistoryEntry, 'timestamp'> & { timestamp?: number },
+  nowMs: number
+): ZipDownloadHistoryEntry {
+  return {
+    timestamp: entry.timestamp ?? nowMs,
+    fileName: entry.fileName,
+    sizeBytes: entry.sizeBytes,
+  }
+}

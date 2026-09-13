@@ -79,4 +79,5 @@ export {
   formatBackupBytes,
   normalizeZipDownloadHistory,
   prependZipDownloadHistory,
+  buildZipDownloadHistoryEntry,
 } from './zipDownloadHistory'

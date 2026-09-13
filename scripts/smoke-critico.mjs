@@ -4044,6 +4044,7 @@ try {
     idx.includes('formatBackupBytes') &&
     idx.includes('MAX_BACKUP_HISTORY') &&
     idx.includes('normalizeZipDownloadHistory') &&
+    idx.includes('buildZipDownloadHistoryEntry') &&
     exists('app/modules/admin/zipDownloadHistory.ts')
   ) {
     ok('módulo admin exporta zipDownloadHistory')
@@ -4062,6 +4063,24 @@ try {
     ok('AdminBackupSection usa zipDownloadHistory do módulo admin')
   } else {
     fail('zipDownloadHistory ainda definido em lib ou AdminBackupSection não usa o módulo')
+  }
+  const zipMod = fs.readFileSync(path.join(root, 'app/modules/admin/zipDownloadHistory.ts'), 'utf8')
+  if (
+    zipMod.includes('export function buildZipDownloadHistoryEntry(') &&
+    !zipMod.includes('Date.now()')
+  ) {
+    ok('módulo admin buildZipDownloadHistoryEntry é puro (relógio injectado)')
+  } else {
+    fail('módulo admin/zipDownloadHistory ainda usa Date.now')
+  }
+  if (
+    zipLib.includes('buildZipDownloadHistoryEntry') &&
+    zipLib.includes('Date.now()') &&
+    !zipLib.includes('timestamp: entry.timestamp ?? Date.now()')
+  ) {
+    ok('lib/adminBackupRegistry só envolve o relógio do histórico ZIP')
+  } else {
+    fail('lib/adminBackupRegistry ainda monta o timestamp à mão')
   }
   if (
     idx.includes('USER_PERMISSION_KEYS') &&

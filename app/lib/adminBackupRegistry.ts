@@ -4,6 +4,7 @@ import {
   ZIP_DOWNLOAD_HISTORY_KEY,
   normalizeZipDownloadHistory,
   prependZipDownloadHistory,
+  buildZipDownloadHistoryEntry,
   type ZipDownloadHistoryEntry,
 } from '../modules/admin/zipDownloadHistory'
 
@@ -29,11 +30,7 @@ export function pushZipDownloadHistory(
   entry: Omit<ZipDownloadHistoryEntry, 'timestamp'> & { timestamp?: number }
 ): void {
   if (typeof window === 'undefined') return
-  const item: ZipDownloadHistoryEntry = {
-    timestamp: entry.timestamp ?? Date.now(),
-    fileName: entry.fileName,
-    sizeBytes: entry.sizeBytes,
-  }
+  const item = buildZipDownloadHistoryEntry(entry, Date.now())
   const next = prependZipDownloadHistory(getZipDownloadHistory(), item)
   try {
     localStorage.setItem(ZIP_DOWNLOAD_HISTORY_KEY, JSON.stringify(next))
