@@ -480,6 +480,7 @@ import {
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { generatePassword, createPasswordFromForm } from './lib/adminPasswords'
 import { createUserFromForm } from './lib/adminUsers'
+import { createClienteFromForm } from './lib/clienteFromForm'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
   Cliente,
@@ -507,7 +508,6 @@ import {
   emptyClienteFormState,
   clienteToForm,
   isClienteFormValid,
-  createClienteFromForm,
   updateClienteFromForm,
   encontrarClienteDuplicadoCadastro,
   encontrarClienteDuplicadoCadastroAntecipado,

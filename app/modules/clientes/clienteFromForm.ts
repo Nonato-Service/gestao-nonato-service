@@ -9,6 +9,10 @@ export type ClienteFromFormCreateOpts = {
   codigoCliente: string
 }
 
+export type CreateClienteFromFormOpts = ClienteFromFormCreateOpts & {
+  nowMs: number
+}
+
 function fieldsFromClienteForm(form: ClienteFormState) {
   return {
     nomeEmpresa: form.nomeEmpresa,
@@ -33,10 +37,10 @@ function fieldsFromClienteForm(form: ClienteFormState) {
 /** Monta um Cliente novo a partir do form (sem I/O / alertas / persistência). */
 export function createClienteFromForm(
   form: ClienteFormState,
-  opts: ClienteFromFormCreateOpts
+  opts: CreateClienteFromFormOpts
 ): Cliente {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     codigoCliente: opts.codigoCliente,
     ...fieldsFromClienteForm(form),
     equipamentos: [],

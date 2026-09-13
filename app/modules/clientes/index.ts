@@ -16,7 +16,7 @@ export {
   listarClientesNomeSimilarCadastro,
 } from './cadastroDuplicado'
 
-export type { ClienteFromFormCreateOpts } from './clienteFromForm'
+export type { ClienteFromFormCreateOpts, CreateClienteFromFormOpts } from './clienteFromForm'
 export { createClienteFromForm, updateClienteFromForm } from './clienteFromForm'
 
 export {

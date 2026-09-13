@@ -721,6 +721,29 @@ try {
   } else {
     fail('NonatoMainApp ainda valida/duplica Cliente no sítio ou módulo incompleto')
   }
+  const clienteFromForm = fs.readFileSync(path.join(root, 'app/modules/clientes/clienteFromForm.ts'), 'utf8')
+  const libClienteFromForm = exists('app/lib/clienteFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/clienteFromForm.ts'), 'utf8')
+    : ''
+  if (clienteFromForm.includes('nowMs: number') && !clienteFromForm.includes('Date.now()')) {
+    ok('módulo clientes createClienteFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo clientes/clienteFromForm ainda usa Date.now')
+  }
+  if (
+    libClienteFromForm.includes("from '../modules/clientes/clienteFromForm'") &&
+    libClienteFromForm.includes('createClienteFromForm as createClienteFromFormPure') &&
+    libClienteFromForm.includes('Date.now()')
+  ) {
+    ok('lib/clienteFromForm só envolve o relógio de createClienteFromForm')
+  } else {
+    fail('lib/clienteFromForm ainda não envolve createClienteFromForm')
+  }
+  if (nma.includes("from './lib/clienteFromForm'")) {
+    ok('NonatoMainApp usa createClienteFromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa createClienteFromForm do lib')
+  }
   const dupSrc = fs.readFileSync(path.join(root, 'app/modules/clientes/cadastroDuplicado.ts'), 'utf8')
   if (
     dupSrc.includes('saoNomesClienteIguais') &&
