@@ -399,7 +399,6 @@ import {
   emptyPasswordForm,
   isPasswordFormValid,
   passwordFormMissingField,
-  createPasswordFromForm,
   parseLogosRelatoriosArr,
   preferRicherLogosRelatorios,
   getNonatoBrandLogoDisplaySrc,
@@ -480,7 +479,7 @@ import {
   summarizeBackupEnvelope,
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
-import { generatePassword } from './lib/adminPasswords'
+import { generatePassword, createPasswordFromForm } from './lib/adminPasswords'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
   Cliente,

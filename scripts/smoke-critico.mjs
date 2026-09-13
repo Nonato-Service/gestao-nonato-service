@@ -3863,6 +3863,31 @@ try {
   } else {
     fail('NonatoMainApp não importa generatePassword do lib')
   }
+  const pwdFromForm = fs.readFileSync(path.join(root, 'app/modules/admin/passwordFromForm.ts'), 'utf8')
+  if (
+    pwdFromForm.includes('nowMs: number') &&
+    pwdFromForm.includes('random: () => number') &&
+    !pwdFromForm.includes('Date.now()') &&
+    !pwdFromForm.includes('Math.random')
+  ) {
+    ok('módulo admin createPasswordFromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo admin/passwordFromForm ainda usa Date.now/Math.random')
+  }
+  if (
+    libAdminPwd.includes("from '../modules/admin/passwordFromForm'") &&
+    libAdminPwd.includes('createPasswordFromForm as createPasswordFromFormPure') &&
+    libAdminPwd.includes('Date.now()')
+  ) {
+    ok('lib/adminPasswords só envolve relógio/aleatório do fromForm')
+  } else {
+    fail('lib/adminPasswords ainda não envolve createPasswordFromForm')
+  }
+  if (nma.includes('createPasswordFromForm') && nma.includes("from './lib/adminPasswords'")) {
+    ok('NonatoMainApp usa createPasswordFromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa createPasswordFromForm do lib')
+  }
   if (
     !nma.includes('type LogoRelatorio = {') &&
     !nma.includes('const parseLogosRelatoriosArr = (raw') &&

@@ -15,6 +15,7 @@ export { generatePassword } from './passwords'
 export type { PasswordFormState } from './passwordForm'
 export { emptyPasswordForm, passwordEntryToForm } from './passwordForm'
 
+export type { CreatePasswordFromFormOpts, UpdatePasswordFromFormOpts } from './passwordFromForm'
 export {
   isPasswordFormValid,
   passwordFormMissingField,

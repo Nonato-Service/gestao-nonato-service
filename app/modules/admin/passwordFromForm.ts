@@ -17,27 +17,39 @@ export function isPasswordFormValid(
   return passwordFormMissingField(form) === null
 }
 
+export type CreatePasswordFromFormOpts = {
+  id?: string
+  createdAt?: string
+  nowMs: number
+  random: () => number
+}
+
 export function createPasswordFromForm(
   form: PasswordFormState,
-  opts?: { id?: string; createdAt?: string }
+  opts: CreatePasswordFromFormOpts
 ): PasswordEntry {
   return {
-    id: opts?.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
     tecnicoName: form.tecnicoName,
     password: form.password,
-    createdAt: opts?.createdAt ?? new Date().toISOString(),
+    createdAt: opts.createdAt ?? new Date(opts.nowMs).toISOString(),
   }
+}
+
+export type UpdatePasswordFromFormOpts = {
+  updatedAt?: string
+  nowMs: number
 }
 
 export function updatePasswordFromForm(
   existing: PasswordEntry,
   form: PasswordFormState,
-  opts?: { updatedAt?: string }
+  opts: UpdatePasswordFromFormOpts
 ): PasswordEntry {
   return {
     ...existing,
     tecnicoName: form.tecnicoName,
     password: form.password,
-    updatedAt: opts?.updatedAt ?? new Date().toISOString(),
+    updatedAt: opts.updatedAt ?? new Date(opts.nowMs).toISOString(),
   }
 }
