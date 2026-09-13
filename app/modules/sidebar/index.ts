@@ -93,3 +93,11 @@ export {
   canAccessSidebarMenuItem,
   canAccessSidebarModule,
 } from './menuPermissions'
+
+export type { SidebarButtonMerge } from './merge'
+export {
+  mergeSidebarButtonsDeferLocal,
+  REQUIRED_SIDEBAR_BUTTON_IDS,
+  SIDEBAR_BUTTON_CATALOG,
+  repairSidebarButtonsFromCatalog,
+} from './merge'

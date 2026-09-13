@@ -325,6 +325,8 @@ import {
   normalizeMenuItems,
   normalizeMenuItemsWithLegacyFallback,
   syncLegacyPermissionsFromMenuItems,
+  mergeSidebarButtonsDeferLocal,
+  repairSidebarButtonsFromCatalog,
 } from './modules/sidebar'
 import type { DiarioPedidoStatus, DiarioPedidoAnexo, DiarioPedidoItem } from './modules/diario'
 import {
@@ -460,10 +462,6 @@ import {
   precisaRegravarPecasDesmontadas,
 } from './modules/desmontados'
 import { getLanguages } from './modules/idiomas'
-import {
-  mergeSidebarButtonsDeferLocal,
-  repairSidebarButtonsFromCatalog,
-} from './lib/sidebarMergeUtils'
 import {
   collectFullBackupData,
   buildBackupEnvelope,

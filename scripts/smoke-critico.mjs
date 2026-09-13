@@ -2586,6 +2586,37 @@ try {
   } else {
     fail('sidebarMenuPermissions ainda definido em lib ou consumidores não usam o módulo')
   }
+  const libSidebarMerge = fs.readFileSync(path.join(root, 'app/lib/sidebarMergeUtils.ts'), 'utf8')
+  const dataStorageSb = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    idx.includes('mergeSidebarButtonsDeferLocal') &&
+    idx.includes('repairSidebarButtonsFromCatalog') &&
+    idx.includes('SIDEBAR_BUTTON_CATALOG') &&
+    exists('app/modules/sidebar/merge.ts')
+  ) {
+    ok('módulo sidebar exporta merge')
+  } else {
+    fail('módulo sidebar sem merge')
+  }
+  if (
+    libSidebarMerge.includes("from '../modules/sidebar/merge'") &&
+    !libSidebarMerge.includes('export function mergeSidebarButtonsDeferLocal(') &&
+    !libSidebarMerge.includes('export const SIDEBAR_BUTTON_CATALOG')
+  ) {
+    ok('lib/sidebarMergeUtils só reexporta sidebar/merge')
+  } else {
+    fail('lib/sidebarMergeUtils ainda implementa o merge')
+  }
+  if (
+    nmaSidebar.includes('mergeSidebarButtonsDeferLocal') &&
+    nmaSidebar.includes('repairSidebarButtonsFromCatalog') &&
+    !nmaSidebar.includes("from './lib/sidebarMergeUtils'") &&
+    dataStorageSb.includes("from '../lib/sidebarMergeUtils'")
+  ) {
+    ok('NMA usa merge do módulo sidebar; dataStorage via lib')
+  } else {
+    fail('NMA ainda importa sidebarMergeUtils do lib')
+  }
 } catch (e) {
   fail(`módulo sidebar: ${e.message}`)
 }
