@@ -3466,6 +3466,27 @@ try {
   } else {
     fail('lib/pdfDocumentThemes ainda implementa os temas CSS')
   }
+  if (
+    idx.includes('escapePdfHtml') &&
+    idx.includes('buildPdfDocumentHeaderHtml') &&
+    idx.includes('PDF_DOCUMENT_LAYOUT_CSS') &&
+    exists('app/modules/pdf/documentLayout.ts')
+  ) {
+    ok('módulo pdf exporta documentLayout')
+  } else {
+    fail('módulo pdf sem documentLayout')
+  }
+  const libLayout = fs.readFileSync(path.join(root, 'app/lib/pdfDocumentLayout.ts'), 'utf8')
+  if (
+    libLayout.includes("from '../modules/pdf/documentLayout'") &&
+    !libLayout.includes('export function escapePdfHtml(') &&
+    !libLayout.includes('export function buildPdfDocumentHeaderHtml(') &&
+    !libLayout.includes('export const PDF_DOCUMENT_LAYOUT_CSS')
+  ) {
+    ok('lib/pdfDocumentLayout só reexporta documentLayout do módulo pdf')
+  } else {
+    fail('lib/pdfDocumentLayout ainda implementa o layout HTML')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }

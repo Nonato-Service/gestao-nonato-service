@@ -49,3 +49,14 @@ export { PDF_STORAGE_KEYS } from './storageKeys'
 
 export type { PdfDocTheme } from './themes'
 export { orcamentoPdfThemeCss, relatorioPdfThemeCss, documentPdfThemeCss } from './themes'
+
+export type { PdfDocumentHeaderVariant, PdfMetaField } from './documentLayout'
+export {
+  escapePdfHtml,
+  PDF_TABLE_CELL_BORDER,
+  PDF_TABLE_GRID_BORDER,
+  buildPdfDocumentHeaderHtml,
+  buildPdfMetaSectionHtml,
+  buildPdfDocumentFooterHtml,
+  PDF_DOCUMENT_LAYOUT_CSS,
+} from './documentLayout'
