@@ -3828,6 +3828,32 @@ try {
   } else {
     fail('NonatoMainApp ainda define User localmente ou não usa create/updateUserFromForm')
   }
+  const userFromForm = fs.readFileSync(path.join(root, 'app/modules/admin/userFromForm.ts'), 'utf8')
+  const libAdminUsers = exists('app/lib/adminUsers.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/adminUsers.ts'), 'utf8')
+    : ''
+  if (
+    userFromForm.includes('nowMs: number') &&
+    !userFromForm.includes('Date.now()')
+  ) {
+    ok('módulo admin createUserFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo admin/userFromForm ainda usa Date.now')
+  }
+  if (
+    libAdminUsers.includes("from '../modules/admin/userFromForm'") &&
+    libAdminUsers.includes('createUserFromForm as createUserFromFormPure') &&
+    libAdminUsers.includes('Date.now()')
+  ) {
+    ok('lib/adminUsers só envolve o relógio de createUserFromForm')
+  } else {
+    fail('lib/adminUsers ainda não envolve createUserFromForm')
+  }
+  if (nma.includes("from './lib/adminUsers'")) {
+    ok('NonatoMainApp usa createUserFromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa createUserFromForm do lib')
+  }
   if (
     !nma.includes('type PasswordEntry = {') &&
     !nma.includes('const generatePassword = (length') &&

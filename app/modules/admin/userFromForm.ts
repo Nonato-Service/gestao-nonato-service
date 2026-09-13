@@ -11,13 +11,17 @@ export type UserFromFormMenuOpts = {
   id?: string
 }
 
+export type CreateUserFromFormOpts = UserFromFormMenuOpts & {
+  nowMs: number
+}
+
 /** Monta um User novo a partir do form (sem I/O / alertas / ensureUserMenuPolicy). */
 export function createUserFromForm(
   form: UserFormState,
-  opts: UserFromFormMenuOpts
+  opts: CreateUserFromFormOpts
 ): User {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     name: form.name,
     email: form.email,
     role: form.role,

@@ -232,6 +232,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 212. `app/modules/demo/` (generateDemoAccessCredentials; relógio/aleatório no lib) — feito
 213. `app/modules/admin/` (generatePassword; Math.random no lib) — feito
 214. `app/modules/admin/` (createPasswordFromForm IDs; relógio/aleatório no lib) — feito
+215. `app/modules/admin/` (createUserFromForm IDs; Date.now() no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

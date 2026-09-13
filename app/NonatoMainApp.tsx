@@ -394,7 +394,6 @@ import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelator
 import {
   createEmptyUserForm,
   userToFormState,
-  createUserFromForm,
   updateUserFromForm,
   emptyPasswordForm,
   isPasswordFormValid,
@@ -480,6 +479,7 @@ import {
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { generatePassword, createPasswordFromForm } from './lib/adminPasswords'
+import { createUserFromForm } from './lib/adminUsers'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData, isWarmSessionResume, markWarmSessionComplete, touchWarmSessionMarker, loadUiSessionSnapshot, saveUiSessionSnapshot, saveLastAuthUser, loadLastAuthUser, clearLastAuthUser, clearWarmSessionMarkers } from './utils/syncRevision'
 import type {
   Cliente,

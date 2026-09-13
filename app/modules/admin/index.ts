@@ -2,7 +2,7 @@
 
 export type { User, UserPermissions } from './userTipos'
 
-export type { UserFromFormMenuOpts } from './userFromForm'
+export type { UserFromFormMenuOpts, CreateUserFromFormOpts } from './userFromForm'
 export { createUserFromForm, updateUserFromForm } from './userFromForm'
 
 export type { UserFormState } from './userFormState'
