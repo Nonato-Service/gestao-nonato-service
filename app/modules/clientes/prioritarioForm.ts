@@ -47,12 +47,17 @@ export function isClientePrioritarioFormValid(form: ClientePrioritarioForm): boo
   return Boolean(form.nomeEmpresa && form.morada && form.email)
 }
 
+export type CreateClientePrioritarioFromFormOpts = {
+  id?: string
+  nowMs: number
+}
+
 export function createClientePrioritarioFromForm(
   form: ClientePrioritarioForm,
-  id?: string
+  opts: CreateClientePrioritarioFromFormOpts
 ): ClientePrioritario {
   return {
-    id: id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     ...form,
     equipamentos: [],
     relatorios: {},

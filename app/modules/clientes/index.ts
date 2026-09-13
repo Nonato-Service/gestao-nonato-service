@@ -105,6 +105,7 @@ export {
 
 export type { ClientePrioritario, ClientePrioritarioForm } from './prioritarioTipos'
 export { CLIENTE_PRIORITARIO_FORM_TRACKED_FIELDS } from './prioritarioTipos'
+export type { CreateClientePrioritarioFromFormOpts } from './prioritarioForm'
 
 export {
   emptyClientePrioritarioForm,

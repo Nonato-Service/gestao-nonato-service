@@ -465,6 +465,29 @@ try {
   } else {
     fail('NonatoMainApp ainda define ClientePrioritario localmente ou não usa helpers do módulo')
   }
+  const prioForm = fs.readFileSync(path.join(root, 'app/modules/clientes/prioritarioForm.ts'), 'utf8')
+  const libPrioFromForm = exists('app/lib/clientePrioritarioFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/clientePrioritarioFromForm.ts'), 'utf8')
+    : ''
+  if (prioForm.includes('nowMs: number') && !prioForm.includes('Date.now()')) {
+    ok('módulo clientes createClientePrioritarioFromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo clientes/prioritarioForm ainda usa Date.now')
+  }
+  if (
+    libPrioFromForm.includes("from '../modules/clientes/prioritarioForm'") &&
+    libPrioFromForm.includes('createClientePrioritarioFromForm as createClientePrioritarioFromFormPure') &&
+    libPrioFromForm.includes('Date.now()')
+  ) {
+    ok('lib/clientePrioritarioFromForm só envolve o relógio do prioritário')
+  } else {
+    fail('lib/clientePrioritarioFromForm ainda não envolve createClientePrioritarioFromForm')
+  }
+  if (nma.includes("from './lib/clientePrioritarioFromForm'")) {
+    ok('NonatoMainApp usa createClientePrioritarioFromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa createClientePrioritarioFromForm do lib')
+  }
   if (
     idx.includes('createEmptyEquipamentoClienteForm') &&
     idx.includes('createEmptyRelatorioEquipamentoForm') &&
