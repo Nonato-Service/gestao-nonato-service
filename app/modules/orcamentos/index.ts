@@ -215,3 +215,5 @@ export {
   fichaCadastralParaEmpresaPdf,
   resolverEmpresaPedidoOrcamentoPdf,
 } from './empresaPdf'
+
+export { ORCAMENTO_PDF_PRO_CSS, buildOrcamentoPdfShell } from './pdfProShell'

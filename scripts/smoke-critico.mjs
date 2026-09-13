@@ -1303,6 +1303,25 @@ try {
   } else {
     fail('lib/orcamentoPdfPro ainda implementa o bloco de empresa')
   }
+  if (
+    idx.includes('buildOrcamentoPdfShell') &&
+    idx.includes('ORCAMENTO_PDF_PRO_CSS') &&
+    exists('app/modules/orcamentos/pdfProShell.ts')
+  ) {
+    ok('módulo orçamentos exporta pdfProShell')
+  } else {
+    fail('módulo orçamentos sem pdfProShell')
+  }
+  if (
+    libOrcPdf.includes("from '../modules/orcamentos/pdfProShell'") &&
+    libOrcPdf.includes('export function fmtDataPdf(') &&
+    !libOrcPdf.includes('export function buildOrcamentoPdfShell(') &&
+    !libOrcPdf.includes('export const ORCAMENTO_PDF_PRO_CSS')
+  ) {
+    ok('lib/orcamentoPdfPro só envolve fmtDataPdf; shell no módulo')
+  } else {
+    fail('lib/orcamentoPdfPro ainda implementa o CSS/wrap do PDF')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
