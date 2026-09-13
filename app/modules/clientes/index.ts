@@ -165,3 +165,13 @@ export {
   relatorioPertenceAoClienteParaExclusao,
   coletarIdsRelatoriosClienteParaExclusao,
 } from './exclusao'
+
+export {
+  CLIENTE_CODIGO_PREFIX,
+  normalizarCodigoCliente,
+  parseSequenciaCodigoCliente,
+  formatarCodigoClienteSequencia,
+  gerarProximoCodigoCliente,
+  garantirCodigosClientes,
+  codigoClienteExibicao,
+} from './codigo'

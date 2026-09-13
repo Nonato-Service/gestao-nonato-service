@@ -1,6 +1,6 @@
 /** Dados e texto de INF. ADICIONAL / identidade na lista de clientes. */
 
-import { codigoClienteExibicao } from '../../lib/clienteCodigoUtils'
+import { codigoClienteExibicao } from './codigo'
 
 export type ClienteListaLinhasData = {
   codigoCliente?: string

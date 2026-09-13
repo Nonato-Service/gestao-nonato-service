@@ -759,6 +759,34 @@ try {
   } else {
     fail('ClienteExclusao ainda definido em lib ou importado pelo NMA via lib')
   }
+  if (
+    idx.includes('garantirCodigosClientes') &&
+    idx.includes('gerarProximoCodigoCliente') &&
+    idx.includes('codigoClienteExibicao') &&
+    exists('app/modules/clientes/codigo.ts')
+  ) {
+    ok('módulo clientes exporta codigo')
+  } else {
+    fail('módulo clientes sem codigo')
+  }
+  const libCodigo = fs.readFileSync(path.join(root, 'app/lib/clienteCodigoUtils.ts'), 'utf8')
+  const listaLinhasSrc = fs.readFileSync(path.join(root, 'app/modules/clientes/listaLinhas.ts'), 'utf8')
+  const buscaSrc = fs.readFileSync(path.join(root, 'app/modules/clientes/busca.ts'), 'utf8')
+  if (
+    libCodigo.includes("from '../modules/clientes/codigo'") &&
+    !libCodigo.includes("export const CLIENTE_CODIGO_PREFIX = 'NS'") &&
+    !libCodigo.includes('export function garantirCodigosClientes<') &&
+    listaLinhasSrc.includes("from './codigo'") &&
+    buscaSrc.includes("from './codigo'") &&
+    nma.includes('garantirCodigosClientes') &&
+    nma.includes('gerarProximoCodigoCliente') &&
+    nma.includes('codigoClienteExibicao') &&
+    !nma.includes("from './lib/clienteCodigoUtils'")
+  ) {
+    ok('NMA/lista/busca usam codigo do módulo clientes')
+  } else {
+    fail('clienteCodigoUtils ainda definido em lib ou NMA não usa o módulo')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }

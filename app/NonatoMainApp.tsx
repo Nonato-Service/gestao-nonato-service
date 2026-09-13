@@ -533,6 +533,9 @@ import {
   filtrarFaturasDoEquipamento,
   coletarIdsRelatoriosClienteParaExclusao,
   isClienteBibliotecaOrfaos,
+  garantirCodigosClientes,
+  gerarProximoCodigoCliente,
+  codigoClienteExibicao,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -758,11 +761,6 @@ import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { OrcamentoPecasEspeciaisContent } from './components/OrcamentoPecasEspeciaisContent'
-import {
-  garantirCodigosClientes,
-  gerarProximoCodigoCliente,
-  codigoClienteExibicao,
-} from './lib/clienteCodigoUtils'
 import {
   isClienteMarcadoDevedor,
   relatorioFluxoFinanceiroNaoPago,

@@ -1,4 +1,4 @@
-import { codigoClienteExibicao } from '../../lib/clienteCodigoUtils'
+import { codigoClienteExibicao } from './codigo'
 import {
   getClienteLetraAlfabeto,
   CLIENTES_ALFABETO_INDICE,
