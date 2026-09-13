@@ -13,17 +13,9 @@ import {
   DEMO_DAYS_DEFAULT,
   DEMO_DAYS_MAX,
   DEMO_DAYS_MIN,
-  DEMO_MODULE_GROUP_LABELS,
-  DEMO_MODULE_GROUP_ORDER,
-  DEMO_PRESET_CARDS,
   DEMO_RECIPIENTS_KEY,
-  DemoModuleGroupId,
-  DemoPackagePreset,
-  DemoPresetCard,
   finalizeDemoModulesPolicy,
   enrichDemoRecipients,
-  getDemoModuleGroupId,
-  getDemoPresetLabel,
   resolveDemoDaysForRecipient,
 } from '../lib/demoManagement'
 import type {
@@ -31,6 +23,8 @@ import type {
   DemoRecipientRecord,
   DemoRecipientStatus,
   DemoRecipientWithState,
+  DemoModuleGroupId,
+  DemoPresetCard,
 } from '../modules/demo'
 import {
   isDemoRecipientFormValid,
@@ -40,6 +34,11 @@ import {
   formatDemoCredentialsText,
   DEMO_EDITABLE_ACTION_KEYS,
   getDemoModuleLabelForGrid,
+  DEMO_MODULE_GROUP_LABELS,
+  DEMO_MODULE_GROUP_ORDER,
+  DEMO_PRESET_CARDS,
+  getDemoModuleGroupId,
+  getDemoPresetLabel,
 } from '../modules/demo'
 import { generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'

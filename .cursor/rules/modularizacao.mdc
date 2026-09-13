@@ -211,6 +211,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 191. `app/modules/manuais/` (conhecimentoMerge; IDs/I/O no lib) — feito
 192. `app/modules/admin/` (brandAssets caminhos/resolução; fetch/DOM no lib) — feito
 193. `app/modules/demo/` (actions / catálogo / rótulos da grelha) — feito
+194. `app/modules/demo/` (groups / presets / rótulos de perfil) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -46,3 +46,12 @@ export {
   DEMO_EDITABLE_ACTION_KEYS,
   getDemoModuleLabelForGrid,
 } from './actions'
+
+export type { DemoModuleGroupId, DemoPresetCard } from './groups'
+export {
+  DEMO_MODULE_GROUP_ORDER,
+  DEMO_MODULE_GROUP_LABELS,
+  DEMO_PRESET_CARDS,
+  getDemoModuleGroupId,
+  getDemoPresetLabel,
+} from './groups'

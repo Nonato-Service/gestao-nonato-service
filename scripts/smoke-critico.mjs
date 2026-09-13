@@ -4751,6 +4751,35 @@ try {
   } else {
     fail('GestaoDemos ainda importa labels/actions do lib')
   }
+  if (
+    idx.includes('getDemoModuleGroupId') &&
+    idx.includes('DEMO_PRESET_CARDS') &&
+    idx.includes('getDemoPresetLabel') &&
+    exists('app/modules/demo/groups.ts')
+  ) {
+    ok('módulo demo exporta groups')
+  } else {
+    fail('módulo demo sem groups')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/groups'") &&
+    !libDemo.includes('export function getDemoModuleGroupId(') &&
+    !libDemo.includes('export const DEMO_PRESET_CARDS')
+  ) {
+    ok('lib/demoManagement só reexporta groups do módulo demo')
+  } else {
+    fail('lib/demoManagement ainda implementa groups/presets')
+  }
+  if (
+    gestao.includes('getDemoModuleGroupId') &&
+    gestao.includes('DEMO_PRESET_CARDS') &&
+    gestao.includes('getDemoPresetLabel') &&
+    (gestao.includes("from '../modules/demo'") || gestao.includes('from "../modules/demo"'))
+  ) {
+    ok('GestaoDemos usa groups do módulo demo')
+  } else {
+    fail('GestaoDemos ainda importa groups/presets do lib')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }
