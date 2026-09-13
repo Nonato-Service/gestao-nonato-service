@@ -936,7 +936,6 @@ import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { OrcamentosGeradosBrowse } from './components/OrcamentosGeradosBrowse'
 import {
   pedidoSeparacaoJaExiste,
-  notifyEquipamentoOrcamentosChanged,
   type OrcamentoWorkflowOrc,
   enrichOrcamentosGeradosComPedidosAvulsos,
   gerarProximoCodigoPedidoRelatorio,
@@ -964,7 +963,7 @@ import {
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { buildPedidoOrcamentoFromRelatorio } from './lib/pedidoOrcamentoRelatorio'
-import { criarPedidoSeparacaoFromOrcamento } from './lib/orcamentoWorkflow'
+import { criarPedidoSeparacaoFromOrcamento, notifyEquipamentoOrcamentosChanged } from './lib/orcamentoWorkflow'
 import {
   filtrarPecasBibliotecaPorBusca,
   pecaBibliotecaMatchesBusca,

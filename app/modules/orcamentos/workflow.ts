@@ -121,9 +121,5 @@ export function pedidoSeparacaoJaExiste(
   return pedidos.some((p) => String(p.numeroOrcamento ?? '').trim() === num)
 }
 
-/** Dispara actualização nos painéis de equipamento do cliente (mesmo separador). */
-export function notifyEquipamentoOrcamentosChanged(): void {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('nonato-equip-orcamentos-changed'))
-  }
-}
+/** Nome do evento de refresh dos painéis de orçamento do equipamento. */
+export const EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT = 'nonato-equip-orcamentos-changed'

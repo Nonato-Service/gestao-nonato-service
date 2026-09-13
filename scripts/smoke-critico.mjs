@@ -1251,6 +1251,29 @@ try {
   } else {
     fail('NonatoMainApp não importa criarPedidoSeparacaoFromOrcamento do lib')
   }
+  if (
+    workflowSrc.includes('EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT') &&
+    !workflowSrc.includes('window.dispatchEvent') &&
+    !workflowSrc.includes('typeof window')
+  ) {
+    ok('módulo orçamentos notify de orçamentos é só o nome do evento')
+  } else {
+    fail('módulo orçamentos/workflow ainda usa window no notify')
+  }
+  if (
+    libWorkflow.includes('export function notifyEquipamentoOrcamentosChanged(') &&
+    libWorkflow.includes('window.dispatchEvent') &&
+    libWorkflow.includes('EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT')
+  ) {
+    ok('lib/orcamentoWorkflow envolve o window do notify de orçamentos')
+  } else {
+    fail('lib/orcamentoWorkflow ainda não implementa notifyEquipamentoOrcamentosChanged')
+  }
+  if (nma.includes('criarPedidoSeparacaoFromOrcamento, notifyEquipamentoOrcamentosChanged')) {
+    ok('NonatoMainApp usa notifyEquipamentoOrcamentosChanged via lib')
+  } else {
+    fail('NonatoMainApp ainda importa notifyEquipamentoOrcamentosChanged do módulo')
+  }
   const pedidoRel = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pedidoRelatorio.ts'), 'utf8')
   const libPedidoRel = exists('app/lib/pedidoOrcamentoRelatorio.ts')
     ? fs.readFileSync(path.join(root, 'app/lib/pedidoOrcamentoRelatorio.ts'), 'utf8')

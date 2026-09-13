@@ -240,6 +240,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 220. `app/modules/clientes/` (equipamentoHubPro fatura; Date.now() no lib) — feito
 221. `app/modules/orcamentos/` (buildPedidoOrcamentoFromRelatorio IDs; Date.now() no lib) — feito
 222. `app/modules/orcamentos/` (criarPedidoSeparacaoFromOrcamento IDs; Date.now() no lib) — feito
+223. `app/modules/orcamentos/` (notifyEquipamentoOrcamentosChanged; window no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

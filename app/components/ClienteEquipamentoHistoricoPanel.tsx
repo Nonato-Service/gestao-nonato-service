@@ -28,6 +28,7 @@ import {
 } from '../lib/clienteEquipamentoOrcamentos'
 import type { OrcamentoGeradoRef } from '../lib/clienteEquipamentoOrcamentos'
 import { buildItensFaturaDeOrcamentoAprovado } from '../lib/equipamentoHubPro'
+import { EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT } from '../lib/orcamentoWorkflow'
 import {
   buildHubEqChips,
   filtrarFaturasDoEquipamento,
@@ -166,8 +167,8 @@ export function ClienteEquipamentoHistoricoPanel({
 
   useEffect(() => {
     const onChanged = () => setReloadTick((n) => n + 1)
-    window.addEventListener('nonato-equip-orcamentos-changed', onChanged)
-    return () => window.removeEventListener('nonato-equip-orcamentos-changed', onChanged)
+    window.addEventListener(EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT, onChanged)
+    return () => window.removeEventListener(EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT, onChanged)
   }, [])
 
   const pedidosFiltrados = useMemo(

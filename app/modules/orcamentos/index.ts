@@ -32,7 +32,7 @@ export {
   orcamentoMercadoriaRecebida,
   criarPedidoSeparacaoFromOrcamento,
   pedidoSeparacaoJaExiste,
-  notifyEquipamentoOrcamentosChanged,
+  EQUIPAMENTO_ORCAMENTOS_CHANGED_EVENT,
 } from './workflow'
 
 export type {
