@@ -4,6 +4,9 @@ export type { GrupoEquipamento } from './tiposGrupo'
 
 export * from './relatorio'
 
+export type { EquipamentoPdfNumeroLike } from './pdfNumero'
+export { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from './pdfNumero'
+
 export type {
   EquipamentoPedidoPdfOrigem,
   BlocoEquipamentoPedidoPdf,

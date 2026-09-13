@@ -1,4 +1,4 @@
-import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from '../../lib/orcamentoPdfPro'
+import { resolverNumeroEquipamentoPdf, resolverSerieEquipamentoPdf } from './pdfNumero'
 import { resolverIdEquipamentoCliente } from './relatorio'
 
 export type EquipamentoPedidoPdfOrigem = {

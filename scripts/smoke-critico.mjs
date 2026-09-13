@@ -2034,6 +2034,27 @@ try {
   } else {
     fail('NonatoMainApp ainda define Equipamento/formState/aliases/fromForm localmente')
   }
+  if (
+    idx.includes('resolverNumeroEquipamentoPdf') &&
+    idx.includes('resolverSerieEquipamentoPdf') &&
+    exists('app/modules/equipamentos/pdfNumero.ts')
+  ) {
+    ok('módulo equipamentos exporta pdfNumero')
+  } else {
+    fail('módulo equipamentos sem pdfNumero')
+  }
+  const libOrcPdf = fs.readFileSync(path.join(root, 'app/lib/orcamentoPdfPro.ts'), 'utf8')
+  const pedAvulso = fs.readFileSync(path.join(root, 'app/modules/equipamentos/pedidoAvulso.ts'), 'utf8')
+  if (
+    libOrcPdf.includes("from '../modules/equipamentos/pdfNumero'") &&
+    !libOrcPdf.includes('export function resolverNumeroEquipamentoPdf(') &&
+    pedAvulso.includes("from './pdfNumero'") &&
+    !pedAvulso.includes("from '../../lib/orcamentoPdfPro'")
+  ) {
+    ok('lib/pedidoAvulso usam pdfNumero do módulo equipamentos')
+  } else {
+    fail('resolverNumeroEquipamentoPdf ainda implementado em orcamentoPdfPro ou pedidoAvulso via lib')
+  }
 } catch (e) {
   fail(`módulo equipamentos: ${e.message}`)
 }
