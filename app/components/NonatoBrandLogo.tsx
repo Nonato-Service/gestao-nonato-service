@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useCallback, useState } from 'react'
+import { applyNonatoBrandLogoImgFallback } from '../lib/nonatoBrandAssets'
 import {
-  applyNonatoBrandLogoImgFallback,
+  brandLogoClassName,
   getNonatoBrandLogoFallbackSrc,
   isNonatoBrandLogoPngSrc,
   NONATO_BRAND_LOGO_PNG_SRC,
-} from '../lib/nonatoBrandAssets'
-import { brandLogoClassName, type NonatoBrandVariant } from '../modules/admin'
+  type NonatoBrandVariant,
+} from '../modules/admin'
 
 export type { NonatoBrandVariant }
 

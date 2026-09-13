@@ -3756,6 +3756,41 @@ try {
   } else {
     fail('userPermissions ainda definido em lib ou consumidores não usam o módulo')
   }
+  const libBrandAssets = fs.readFileSync(path.join(root, 'app/lib/nonatoBrandAssets.ts'), 'utf8')
+  if (
+    idx.includes('getNonatoBrandLogoDisplaySrc') &&
+    idx.includes('NONATO_BRAND_LOGO_PNG_SRC') &&
+    idx.includes('isNonatoBrandLogoPngSrc') &&
+    exists('app/modules/admin/brandAssets.ts')
+  ) {
+    ok('módulo admin exporta brandAssets')
+  } else {
+    fail('módulo admin sem brandAssets')
+  }
+  if (
+    libBrandAssets.includes("from '../modules/admin/brandAssets'") &&
+    libBrandAssets.includes('export function applyNonatoBrandLogoImgFallback(') &&
+    libBrandAssets.includes('export function validateNonatoLogoMediaSrc(') &&
+    !libBrandAssets.includes('export function getNonatoBrandLogoDisplaySrc(') &&
+    !libBrandAssets.includes('export const NONATO_BRAND_LOGO_PNG_SRC')
+  ) {
+    ok('lib/nonatoBrandAssets só envolve fetch/DOM do módulo admin')
+  } else {
+    fail('lib/nonatoBrandAssets ainda implementa resolução pura do logo')
+  }
+  if (
+    nma.includes('getNonatoBrandLogoDisplaySrc') &&
+    nma.includes('applyNonatoBrandLogoImgFallback') &&
+    nma.includes("from './lib/nonatoBrandAssets'") &&
+    !nma.includes('applyNonatoBrandLogoImgFallback,\n  getNonatoBrandLogoDisplaySrc') &&
+    brandLogoUi.includes('NONATO_BRAND_LOGO_PNG_SRC') &&
+    brandLogoUi.includes("from '../modules/admin'") &&
+    brandLogoUi.includes("from '../lib/nonatoBrandAssets'")
+  ) {
+    ok('NMA/NonatoBrandLogo usam brandAssets do módulo; DOM via lib')
+  } else {
+    fail('NMA ou NonatoBrandLogo ainda importam resolução pura do lib')
+  }
 } catch (e) {
   fail(`módulo admin: ${e.message}`)
 }

@@ -34,6 +34,16 @@ export {
   brandLogoClassName,
 } from './brandLogo'
 
+export {
+  NONATO_BRAND_LOGO_PNG_SRC,
+  NONATO_BRAND_LOGO_FALLBACK_SVG_SRC,
+  NONATO_BRAND_LOGO_FALLBACK_DATA_URI,
+  isNonatoBrandLogoPngSrc,
+  getNonatoBrandLogoFallbackSrc,
+  getNonatoBrandLogoDisplaySrc,
+  isNonatoBrandLogoFallbackSrc,
+} from './brandAssets'
+
 export type { SyncPendingRemote } from './syncPending'
 export {
   isSyncPendingRemote,

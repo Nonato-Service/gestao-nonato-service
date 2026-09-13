@@ -403,6 +403,7 @@ import {
   createPasswordFromForm,
   parseLogosRelatoriosArr,
   preferRicherLogosRelatorios,
+  getNonatoBrandLogoDisplaySrc,
 } from './modules/admin'
 import type {
   Fornecedor,
@@ -604,7 +605,6 @@ import {
 } from './modules/comprovantes'
 import {
   applyNonatoBrandLogoImgFallback,
-  getNonatoBrandLogoDisplaySrc,
   validateNonatoLogoMediaSrc,
 } from './lib/nonatoBrandAssets'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, buildRelatorioServicoPdfMetaSectionHtml, buildFechamentoDespesasRelatorioInfoHtml, buildFechamentoDespesasClienteMetaFields, buildRelatorioServicoSummaryCardsHtml, wrapRelatorioServicoPdfDocHtml, type RelatorioServicoPdfHeaderVariant, type RelatorioServicoPdfMetaLabels } from './lib/relatorioServicoPdfPrintCss'
