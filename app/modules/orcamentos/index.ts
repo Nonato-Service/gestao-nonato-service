@@ -152,6 +152,7 @@ export type {
   PedidoAvulsoHubSeed,
 } from './pedidoAvulsoTipos'
 
+export type { EmptyEquipamentoBlocoPedidoOpts } from './pedidoAvulsoForm'
 export {
   newPedidoAvulsoEntityId,
   emptyEquipamentoBlocoPedido,

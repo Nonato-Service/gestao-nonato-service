@@ -22,6 +22,7 @@ import { resolverIdEquipamentoCliente } from '../lib/relatorioServicoEquipamento
 import { ProImageHoverPreview } from './ProImageHoverPreview'
 import { notifyEquipamentoOrcamentosChanged } from '../lib/orcamentoWorkflow'
 import { createPecaPedidoFromForm, createPedidoAvulsoFromForm } from '../lib/pedidoAvulsoFromForm'
+import { emptyEquipamentoBlocoPedido } from '../lib/pedidoAvulsoForm'
 import {
   useDocumentoEnvioCliente,
   buildTextoEnvioGenerico,
@@ -36,7 +37,6 @@ import type {
 } from '../modules/orcamentos'
 import {
   addPecaPedidoAoBloco,
-  emptyEquipamentoBlocoPedido,
   isPecaPedidoManualFormValid,
   isPedidoAvulsoPecasValid,
   normalizePedidoAvulsoCarregado,

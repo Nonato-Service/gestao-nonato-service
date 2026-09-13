@@ -2,13 +2,20 @@
 
 import type { EquipamentoBlocoPedido, PecaPedido, PedidoAvulsoGuardado } from './pedidoAvulsoTipos'
 
-export function newPedidoAvulsoEntityId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+/** Relógio (`nowMs`) e aleatório (`random`) injectados. */
+export function newPedidoAvulsoEntityId(prefix: string, nowMs: number, random: () => number): string {
+  return `${prefix}-${nowMs}-${random().toString(36).slice(2, 7)}`
 }
 
-export function emptyEquipamentoBlocoPedido(opts: { id?: string } = {}): EquipamentoBlocoPedido {
+export type EmptyEquipamentoBlocoPedidoOpts = {
+  id?: string
+  nowMs: number
+  random: () => number
+}
+
+export function emptyEquipamentoBlocoPedido(opts: EmptyEquipamentoBlocoPedidoOpts): EquipamentoBlocoPedido {
   return {
-    id: opts.id ?? newPedidoAvulsoEntityId('bloco'),
+    id: opts.id ?? newPedidoAvulsoEntityId('bloco', opts.nowMs, opts.random),
     equipamento: null,
     equipamentoManual: '',
     pecas: [],

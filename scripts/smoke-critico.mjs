@@ -1443,6 +1443,36 @@ try {
   } else {
     fail('PedidoOrcamentosAvulsoContent não importa pedido avulso fromForm do lib')
   }
+  const pedidoAvulsoForm = fs.readFileSync(path.join(root, 'app/modules/orcamentos/pedidoAvulsoForm.ts'), 'utf8')
+  const libPedidoAvulsoForm = exists('app/lib/pedidoAvulsoForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pedidoAvulsoForm.ts'), 'utf8')
+    : ''
+  if (
+    pedidoAvulsoForm.includes('nowMs: number') &&
+    pedidoAvulsoForm.includes('random: () => number') &&
+    !pedidoAvulsoForm.includes('Date.now()') &&
+    !pedidoAvulsoForm.includes('Math.random')
+  ) {
+    ok('módulo orçamentos pedidoAvulsoForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo orçamentos/pedidoAvulsoForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libPedidoAvulsoForm.includes("from '../modules/orcamentos/pedidoAvulsoForm'") &&
+    libPedidoAvulsoForm.includes('newPedidoAvulsoEntityId as newPedidoAvulsoEntityIdPure') &&
+    libPedidoAvulsoForm.includes('emptyEquipamentoBlocoPedido as emptyEquipamentoBlocoPedidoPure') &&
+    libPedidoAvulsoForm.includes('Date.now()') &&
+    libPedidoAvulsoForm.includes('Math.random')
+  ) {
+    ok('lib/pedidoAvulsoForm só envolve relógio/aleatório do pedido avulso')
+  } else {
+    fail('lib/pedidoAvulsoForm ainda não envolve os ids do pedido avulso')
+  }
+  if (poa.includes("from '../lib/pedidoAvulsoForm'")) {
+    ok('PedidoOrcamentosAvulsoContent usa emptyEquipamentoBlocoPedido via lib')
+  } else {
+    fail('PedidoOrcamentosAvulsoContent não importa emptyEquipamentoBlocoPedido do lib')
+  }
   if (
     idx.includes('OstPropostaSalva') &&
     idx.includes('emptyOstPropostaLinha') &&
