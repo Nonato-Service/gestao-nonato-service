@@ -4600,6 +4600,30 @@ try {
   } else {
     fail('demoCredentials ainda definido em lib ou GestaoDemos não usa o módulo')
   }
+  if (
+    idx.includes('clampDemoDays') &&
+    idx.includes('DEMO_VISITOR_USER') &&
+    idx.includes('DEMO_DAYS_DEFAULT') &&
+    exists('app/modules/demo/limits.ts')
+  ) {
+    ok('módulo demo exporta limits')
+  } else {
+    fail('módulo demo sem limits')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/limits'") &&
+    !libDemo.includes('export function clampDemoDays(') &&
+    !libDemo.includes("id: 'demo-visitor'")
+  ) {
+    ok('lib/demoManagement só reexporta limits do módulo demo')
+  } else {
+    fail('lib/demoManagement ainda implementa clampDemoDays / DEMO_VISITOR_USER')
+  }
+  if (nma.includes('DEMO_VISITOR_USER') && !nma.includes("from './lib/demoManagement'")) {
+    ok('NonatoMainApp usa DEMO_VISITOR_USER do módulo demo')
+  } else {
+    fail('NonatoMainApp ainda importa DEMO_VISITOR_USER do lib')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }

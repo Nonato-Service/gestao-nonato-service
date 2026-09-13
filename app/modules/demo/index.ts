@@ -27,3 +27,14 @@ export {
 } from './fromForm'
 
 export { buildDemoUsername, formatDemoCredentialsText } from './credentials'
+
+export {
+  DEMO_DAYS_DEFAULT,
+  DEMO_DAYS_MIN,
+  DEMO_DAYS_MAX,
+  DEMO_DAYS,
+  DEMO_RECIPIENTS_KEY,
+  clampDemoDays,
+  resolveDemoDaysForRecipient,
+  DEMO_VISITOR_USER,
+} from './limits'

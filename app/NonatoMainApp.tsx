@@ -765,8 +765,7 @@ import {
   gravarMostrarPrecosBiblioteca,
   lerMostrarPrecosBiblioteca,
 } from './components/BibliotecaPrecoOlhoToggle'
-import { DEMO_VISITOR_USER } from './lib/demoManagement'
-import type { DemoModuleMode } from './modules/demo'
+import { DEMO_VISITOR_USER, type DemoModuleMode } from './modules/demo'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { AdminUserFormPanel } from './components/admin/AdminUserFormPanel'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
