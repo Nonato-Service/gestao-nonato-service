@@ -9,14 +9,15 @@ export function isItemInclusoFormValid(nome: string): boolean {
 
 export type CreateItemInclusoFromFormOpts = {
   id?: string
+  nowMs: number
 }
 
 export function createItemInclusoFromForm(
   form: Pick<ItemInclusoFormState, 'nome'> & { imagem?: string },
-  opts: CreateItemInclusoFromFormOpts = {}
+  opts: CreateItemInclusoFromFormOpts
 ): ItemIncluso {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     nome: form.nome.trim(),
     imagem: form.imagem,
   }

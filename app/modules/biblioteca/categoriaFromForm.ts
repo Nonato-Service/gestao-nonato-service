@@ -8,14 +8,15 @@ export function isCategoriaPecaFormValid(nome: string): boolean {
 
 export type CreateCategoriaPecaFromFormOpts = {
   id?: string
+  nowMs: number
 }
 
 export function createCategoriaPecaFromForm(
   nome: string,
-  opts: CreateCategoriaPecaFromFormOpts = {}
+  opts: CreateCategoriaPecaFromFormOpts
 ): CategoriaPeca {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     nome: nome.trim(),
   }
 }
@@ -38,15 +39,16 @@ export function isSubcategoriaPecaFormValid(nome: string, categoriaId?: string):
 
 export type CreateSubcategoriaPecaFromFormOpts = {
   id?: string
+  nowMs: number
 }
 
 export function createSubcategoriaPecaFromForm(
   nome: string,
   categoriaId: string,
-  opts: CreateSubcategoriaPecaFromFormOpts = {}
+  opts: CreateSubcategoriaPecaFromFormOpts
 ): SubcategoriaPeca {
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? opts.nowMs.toString(),
     nome: nome.trim(),
     categoriaId,
   }

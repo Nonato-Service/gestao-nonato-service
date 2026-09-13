@@ -12,15 +12,16 @@ export function isHistoricoEquipamentoFormValid(
 export type CreateHistoricoEquipamentoFromFormOpts = {
   id?: string
   data?: string
+  nowMs: number
 }
 
 export function createHistoricoEquipamentoFromForm(
   form: HistoricoEquipamentoFormState,
-  opts: CreateHistoricoEquipamentoFromFormOpts = {}
+  opts: CreateHistoricoEquipamentoFromFormOpts
 ): HistoricoEquipamento {
   return {
-    id: opts.id ?? Date.now().toString(),
-    data: opts.data ?? new Date().toISOString(),
+    id: opts.id ?? opts.nowMs.toString(),
+    data: opts.data ?? new Date(opts.nowMs).toISOString(),
     tipo: form.tipo,
     descricao: form.descricao,
     responsavel: form.responsavel || undefined,

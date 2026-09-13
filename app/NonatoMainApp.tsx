@@ -143,13 +143,10 @@ import {
   type PecaBiblioteca,
   createEmptyPecaBibliotecaForm,
   isPecaBibliotecaFormValid,
-  createPecaBibliotecaFromForm,
   updatePecaBibliotecaFromForm,
   isCategoriaPecaFormValid,
-  createCategoriaPecaFromForm,
   inserirCategoriaPecaAposRef,
   isSubcategoriaPecaFormValid,
-  createSubcategoriaPecaFromForm,
   inserirSubcategoriaPecaAposRef,
   countHomagCodesInText,
   looksLikeHomagClipboard,
@@ -601,6 +598,15 @@ import {
 } from './modules/comprovantes'
 import { createComprovanteDespesaFromForm } from './lib/comprovantesFromForm'
 import {
+  createPecaBibliotecaFromForm,
+  createCategoriaPecaFromForm,
+  createSubcategoriaPecaFromForm,
+} from './lib/bibliotecaFromForm'
+import {
+  createHistoricoEquipamentoFromForm,
+  createItemInclusoFromForm,
+} from './lib/equipamentosFromForm'
+import {
   applyNonatoBrandLogoImgFallback,
   validateNonatoLogoMediaSrc,
 } from './lib/nonatoBrandAssets'
@@ -649,12 +655,10 @@ import {
   type HistoricoEquipamentoFormState,
   emptyHistoricoEquipamentoForm,
   isHistoricoEquipamentoFormValid,
-  createHistoricoEquipamentoFromForm,
   type ItemIncluso,
   type ItemInclusoFormState,
   emptyItemInclusoForm,
   isItemInclusoFormValid,
-  createItemInclusoFromForm,
   updateItemInclusoFromForm,
   type PartEquipamento,
   type Equipamento,

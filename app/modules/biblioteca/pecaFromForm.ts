@@ -10,19 +10,21 @@ export type CreatePecaBibliotecaFromFormOpts = {
   id?: string
   numeroSequenciaGrupo?: string
   dataCriacao?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createPecaBibliotecaFromForm(
   form: PecaBiblioteca,
-  opts: CreatePecaBibliotecaFromFormOpts = {}
+  opts: CreatePecaBibliotecaFromFormOpts
 ): PecaBiblioteca {
   return {
     ...form,
     nome: (form.nome || '').trim(),
     codigo: (form.codigo || '').trim(),
-    id: opts.id ?? Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    id: opts.id ?? opts.nowMs.toString() + opts.random().toString(36).substr(2, 9),
     numeroSequenciaGrupo: opts.numeroSequenciaGrupo,
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
     importacaoPendente: false,
   }
 }

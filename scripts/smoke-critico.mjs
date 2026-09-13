@@ -1935,6 +1935,34 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia CategoriaPeca/SubcategoriaPeca no sítio')
   }
+  const pecaFromForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/pecaFromForm.ts'), 'utf8')
+  const catFromForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/categoriaFromForm.ts'), 'utf8')
+  const libBibFromForm = exists('app/lib/bibliotecaFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/bibliotecaFromForm.ts'), 'utf8')
+    : ''
+  if (
+    pecaFromForm.includes('nowMs: number') &&
+    pecaFromForm.includes('random: () => number') &&
+    !pecaFromForm.includes('Date.now()') &&
+    !pecaFromForm.includes('Math.random') &&
+    !pecaFromForm.includes('new Date().toISOString()') &&
+    catFromForm.includes('nowMs: number') &&
+    !catFromForm.includes('Date.now()')
+  ) {
+    ok('módulo biblioteca peca/categoria fromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo biblioteca pecaFromForm/categoriaFromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libBibFromForm.includes('createPecaBibliotecaFromForm as createPecaBibliotecaFromFormPure') &&
+    libBibFromForm.includes('createCategoriaPecaFromForm as createCategoriaPecaFromFormPure') &&
+    libBibFromForm.includes('createSubcategoriaPecaFromForm as createSubcategoriaPecaFromFormPure') &&
+    nma.includes("from './lib/bibliotecaFromForm'")
+  ) {
+    ok('NonatoMainApp usa biblioteca fromForm via lib')
+  } else {
+    fail('lib/bibliotecaFromForm ainda não envolve o fromForm')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
@@ -2466,6 +2494,31 @@ try {
     ok('NonatoMainApp usa formState/aliases/fromForm do módulo equipamentos')
   } else {
     fail('NonatoMainApp ainda define Equipamento/formState/aliases/fromForm localmente')
+  }
+  const histFromForm = fs.readFileSync(path.join(root, 'app/modules/equipamentos/historicoFromForm.ts'), 'utf8')
+  const itemFromForm = fs.readFileSync(path.join(root, 'app/modules/equipamentos/itemInclusoFromForm.ts'), 'utf8')
+  const libEqFromForm = exists('app/lib/equipamentosFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/equipamentosFromForm.ts'), 'utf8')
+    : ''
+  if (
+    histFromForm.includes('nowMs: number') &&
+    !histFromForm.includes('Date.now()') &&
+    !histFromForm.includes('new Date().toISOString()') &&
+    itemFromForm.includes('nowMs: number') &&
+    !itemFromForm.includes('Date.now()')
+  ) {
+    ok('módulo equipamentos historico/itemIncluso fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo equipamentos historicoFromForm/itemInclusoFromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libEqFromForm.includes('createHistoricoEquipamentoFromForm as createHistoricoEquipamentoFromFormPure') &&
+    libEqFromForm.includes('createItemInclusoFromForm as createItemInclusoFromFormPure') &&
+    nma.includes("from './lib/equipamentosFromForm'")
+  ) {
+    ok('NonatoMainApp usa equipamentos fromForm via lib')
+  } else {
+    fail('lib/equipamentosFromForm ainda não envolve o fromForm')
   }
   if (
     idx.includes('resolverNumeroEquipamentoPdf') &&
