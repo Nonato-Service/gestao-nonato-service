@@ -13,15 +13,17 @@ import { DocumentoEnvioAcoes } from './DocumentoEnvioAcoes'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import type { AnexoContador, CategoriaEntidadeContador, EntidadeContador, PagamentoContador } from '../modules/pagamentos-contador'
 import {
-  createAnexoContadorFromForm,
-  createEntidadeContadorFromForm,
-  createPagamentoContadorFromForm,
   emptyEntidadeContadorForm,
   emptyPagamentoContadorForm,
   isEntidadeContadorFormValid,
   pagamentoContadorToForm,
-  updatePagamentoContadorFromForm,
 } from '../modules/pagamentos-contador'
+import {
+  createAnexoContadorFromForm,
+  createEntidadeContadorFromForm,
+  createPagamentoContadorFromForm,
+  updatePagamentoContadorFromForm,
+} from '../lib/pagamentosContadorFromForm'
 
 export type {
   AnexoContador,

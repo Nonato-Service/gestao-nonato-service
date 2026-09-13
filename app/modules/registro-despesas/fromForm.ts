@@ -24,17 +24,18 @@ export function isCartaoEmpresaDespesasFormValid(
 export type CreateCartaoEmpresaDespesasFromFormOpts = {
   id?: string
   criadoEm?: string
+  nowMs: number
 }
 
 export function createCartaoEmpresaDespesasFromForm(
   form: CartaoEmpresaDespesasFormState,
-  opts: CreateCartaoEmpresaDespesasFromFormOpts = {}
+  opts: CreateCartaoEmpresaDespesasFromFormOpts
 ): CartaoEmpresaDespesas {
   return {
-    id: opts.id ?? `card-${Date.now()}`,
+    id: opts.id ?? `card-${opts.nowMs}`,
     apelido: form.apelido.trim(),
     ultimos4: normalizeCartaoEmpresaUltimos4(form.ultimos4),
-    criadoEm: opts.criadoEm ?? new Date().toISOString(),
+    criadoEm: opts.criadoEm ?? new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -50,6 +51,7 @@ export type CreateDespesaRegistroFromFormOpts = {
   id?: string
   tipoNomeFallback?: string
   cartaoRotulo?: string
+  nowMs: number
 }
 
 export function createDespesaRegistroFromForm(
@@ -57,18 +59,18 @@ export function createDespesaRegistroFromForm(
     DespesaRegistroFormState,
     'tipoId' | 'tipoNome' | 'valor' | 'descricao' | 'codigoBarras' | 'fotos' | 'data' | 'cartaoId'
   >,
-  opts: CreateDespesaRegistroFromFormOpts = {}
+  opts: CreateDespesaRegistroFromFormOpts
 ): DespesaRegistro {
   const cid = form.cartaoId?.trim()
   const nova: DespesaRegistro = {
-    id: opts.id ?? `d-${Date.now()}`,
+    id: opts.id ?? `d-${opts.nowMs}`,
     tipoId: form.tipoId || '',
     tipoNome: form.tipoNome || opts.tipoNomeFallback || 'Outros',
     valor: form.valor ?? 0,
     descricao: form.descricao || '',
     codigoBarras: form.codigoBarras,
     fotos: form.fotos || [],
-    data: form.data || new Date().toISOString().split('T')[0],
+    data: form.data || new Date(opts.nowMs).toISOString().split('T')[0],
   }
   if (cid) {
     nova.cartaoId = cid
@@ -86,6 +88,7 @@ export type CreateDespesaDocumentoFromFormOpts = {
   data?: string
   dataCriacao?: string
   despesas?: DespesaRegistro[]
+  nowMs: number
 }
 
 export function createDespesaDocumentoFromForm(
@@ -93,16 +96,16 @@ export function createDespesaDocumentoFromForm(
     relatorioId?: string
     relatorioNumero?: string
   },
-  opts: CreateDespesaDocumentoFromFormOpts = {}
+  opts: CreateDespesaDocumentoFromFormOpts
 ): DespesaDocumento {
   return {
-    id: opts.id ?? `doc-${Date.now()}`,
+    id: opts.id ?? `doc-${opts.nowMs}`,
     clienteId: form.clienteId,
     clienteNome: form.clienteNome,
     relatorioId: form.relatorioId,
     relatorioNumero: form.relatorioNumero,
-    data: opts.data ?? new Date().toISOString().split('T')[0],
+    data: opts.data ?? new Date(opts.nowMs).toISOString().split('T')[0],
     despesas: opts.despesas ?? [],
-    dataCriacao: opts.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }

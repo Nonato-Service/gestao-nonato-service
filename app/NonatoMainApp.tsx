@@ -598,8 +598,8 @@ import {
   isComprovanteDespesaClienteNomeValid,
   comprovanteDespesaClienteCadastrado,
   dadosDuplicadoComprovanteFromForm,
-  createComprovanteDespesaFromForm,
 } from './modules/comprovantes'
+import { createComprovanteDespesaFromForm } from './lib/comprovantesFromForm'
 import {
   applyNonatoBrandLogoImgFallback,
   validateNonatoLogoMediaSrc,
@@ -905,9 +905,9 @@ import {
   createServicoCadastroFromForm,
   updateServicoCadastroFromForm,
   isServicoCadastroGrupoNomeValid,
-  createServicoCadastroGrupoFromForm,
   updateServicoCadastroGrupoNomeFromForm,
 } from './modules/fechamento'
+import { createServicoCadastroGrupoFromForm } from './lib/fechamentoGrupoFromForm'
 import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'

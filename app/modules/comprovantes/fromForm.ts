@@ -37,28 +37,29 @@ export function dadosDuplicadoComprovanteFromForm(
 export type CreateComprovanteDespesaFromFormOpts = {
   id?: string
   clientes?: { id: string; nomeEmpresa: string }[]
+  nowMs: number
 }
 
 export function createComprovanteDespesaFromForm(
   form: ComprovanteDespesaFormState,
-  opts: CreateComprovanteDespesaFromFormOpts = {}
+  opts: CreateComprovanteDespesaFromFormOpts
 ): ComprovanteDespesa {
   const dataNorm = String(form.data || '').slice(0, 10)
-  const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date().toISOString().slice(0, 7)
+  const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date(opts.nowMs).toISOString().slice(0, 7)
   const mesPick =
     typeof form.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(form.mesCompetencia)
       ? form.mesCompetencia
       : mesFromData
   const nomeCliente = form.tipo === 'cliente' ? form.cliente.trim() : ''
   return {
-    id: opts.id ?? Date.now().toString(),
+    id: opts.id ?? String(opts.nowMs),
     tipo: form.tipo,
     cliente: nomeCliente,
     clienteId:
       form.tipo === 'cliente'
         ? opts.clientes?.find((c) => c.nomeEmpresa === nomeCliente)?.id || undefined
         : undefined,
-    data: dataNorm || new Date().toISOString().slice(0, 10),
+    data: dataNorm || new Date(opts.nowMs).toISOString().slice(0, 10),
     mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
     valorUnitario: form.valorUnitario,
     quantidade: form.quantidade,

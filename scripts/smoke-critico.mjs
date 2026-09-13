@@ -338,6 +338,27 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ServicoCadastroGrupo no sítio')
   }
+  const grpFromForm = fs.readFileSync(path.join(root, 'app/modules/fechamento/grupoFromForm.ts'), 'utf8')
+  const libFechGrp = exists('app/lib/fechamentoGrupoFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/fechamentoGrupoFromForm.ts'), 'utf8')
+    : ''
+  if (
+    grpFromForm.includes('nowMs: number') &&
+    !grpFromForm.includes('Date.now()') &&
+    !grpFromForm.includes('Math.random')
+  ) {
+    ok('módulo fechamento grupoFromForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo fechamento/grupoFromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libFechGrp.includes('createServicoCadastroGrupoFromForm as createServicoCadastroGrupoFromFormPure') &&
+    nma.includes("from './lib/fechamentoGrupoFromForm'")
+  ) {
+    ok('NonatoMainApp usa grupo de fechamento fromForm via lib')
+  } else {
+    fail('lib/fechamentoGrupoFromForm ainda não envolve o grupo fromForm')
+  }
   if (idx.includes('CadastroServicoSavePayload')) {
     ok('módulo fechamento exporta CadastroServicoSavePayload')
   } else {
@@ -2126,6 +2147,27 @@ try {
     ok('NonatoMainApp usa ComprovanteDespesa fromForm do módulo')
   } else {
     fail('NonatoMainApp ainda mapeia ComprovanteDespesa no sítio')
+  }
+  const compFromForm = fs.readFileSync(path.join(root, 'app/modules/comprovantes/fromForm.ts'), 'utf8')
+  const libCompFromForm = exists('app/lib/comprovantesFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/comprovantesFromForm.ts'), 'utf8')
+    : ''
+  if (
+    compFromForm.includes('nowMs: number') &&
+    !compFromForm.includes('Date.now()') &&
+    !compFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo comprovantes fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo comprovantes/fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libCompFromForm.includes('createComprovanteDespesaFromForm as createComprovanteDespesaFromFormPure') &&
+    nma.includes("from './lib/comprovantesFromForm'")
+  ) {
+    ok('NonatoMainApp usa comprovante fromForm via lib')
+  } else {
+    fail('lib/comprovantesFromForm ainda não envolve o comprovante fromForm')
   }
   if (
     idx.includes('formCompComClienteSugerido') &&
@@ -5843,6 +5885,28 @@ try {
   } else {
     fail('PagamentosContadorContent ainda define AnexoContador/entidade/pagamento no sítio')
   }
+  const pagFromForm = fs.readFileSync(path.join(root, 'app/modules/pagamentos-contador/fromForm.ts'), 'utf8')
+  const libPagFromForm = exists('app/lib/pagamentosContadorFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pagamentosContadorFromForm.ts'), 'utf8')
+    : ''
+  if (
+    pagFromForm.includes('nowMs: number') &&
+    !pagFromForm.includes('Date.now()') &&
+    !pagFromForm.includes('Math.random') &&
+    !pagFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo pagamentos-contador fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo pagamentos-contador/fromForm ainda usa Date.now ou Math.random')
+  }
+  if (
+    libPagFromForm.includes('createEntidadeContadorFromForm as createEntidadeContadorFromFormPure') &&
+    pccMod.includes("from '../lib/pagamentosContadorFromForm'")
+  ) {
+    ok('PagamentosContadorContent usa fromForm via lib')
+  } else {
+    fail('lib/pagamentosContadorFromForm ainda não envolve o fromForm')
+  }
 } catch (e) {
   fail(`módulo pagamentos-contador: ${e.message}`)
 }
@@ -5885,6 +5949,27 @@ try {
     ok('RegistroDespesasContent usa tipos/fromForm do módulo registro-despesas')
   } else {
     fail('RegistroDespesasContent ainda define cartão/despesa/documento no sítio')
+  }
+  const regFromForm = fs.readFileSync(path.join(root, 'app/modules/registro-despesas/fromForm.ts'), 'utf8')
+  const libRegFromForm = exists('app/lib/registroDespesasFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/registroDespesasFromForm.ts'), 'utf8')
+    : ''
+  if (
+    regFromForm.includes('nowMs: number') &&
+    !regFromForm.includes('Date.now()') &&
+    !regFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo registro-despesas fromForm é puro (relógio injectado)')
+  } else {
+    fail('módulo registro-despesas/fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libRegFromForm.includes('createCartaoEmpresaDespesasFromForm as createCartaoEmpresaDespesasFromFormPure') &&
+    rdcMod.includes("from '../lib/registroDespesasFromForm'")
+  ) {
+    ok('RegistroDespesasContent usa fromForm via lib')
+  } else {
+    fail('lib/registroDespesasFromForm ainda não envolve o fromForm')
   }
 } catch (e) {
   fail(`módulo registro-despesas: ${e.message}`)

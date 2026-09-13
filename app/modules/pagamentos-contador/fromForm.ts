@@ -11,21 +11,22 @@ export type CreateEntidadeContadorFromFormOpts = {
   id?: string
   criadoEm?: string
   ativo?: boolean
+  nowMs: number
 }
 
 export function createEntidadeContadorFromForm(
   form: EntidadeContadorFormState,
-  opts: CreateEntidadeContadorFromFormOpts = {}
+  opts: CreateEntidadeContadorFromFormOpts
 ): EntidadeContador {
   return {
-    id: opts.id ?? `ent-${Date.now()}`,
+    id: opts.id ?? `ent-${opts.nowMs}`,
     nome: form.nome.trim(),
     categoria: form.categoria,
     nif: form.nif.trim() || undefined,
     contacto: form.contacto.trim() || undefined,
     notas: form.notas.trim() || undefined,
     ativo: opts.ativo ?? true,
-    criadoEm: opts.criadoEm ?? new Date().toISOString(),
+    criadoEm: opts.criadoEm ?? new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -40,15 +41,16 @@ export type CreatePagamentoContadorFromFormOpts = {
   id?: string
   criadoEm?: string
   atualizadoEm?: string
+  nowMs: number
 }
 
 export function createPagamentoContadorFromForm(
   form: PagamentoContadorFormState,
   opts: CreatePagamentoContadorFromFormOpts
 ): PagamentoContador {
-  const now = opts.atualizadoEm ?? new Date().toISOString()
+  const now = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
   return {
-    id: opts.id ?? `pag-${Date.now()}`,
+    id: opts.id ?? `pag-${opts.nowMs}`,
     entidadeId: form.entidadeId,
     entidadeNome: opts.entidadeNome,
     dataPagamento: form.dataPagamento,
@@ -66,6 +68,7 @@ export function createPagamentoContadorFromForm(
 export type UpdatePagamentoContadorFromFormOpts = {
   entidadeNome: string
   atualizadoEm?: string
+  nowMs: number
 }
 
 export function updatePagamentoContadorFromForm(
@@ -78,6 +81,7 @@ export function updatePagamentoContadorFromForm(
     id: existing.id,
     criadoEm: existing.criadoEm,
     atualizadoEm: opts.atualizadoEm,
+    nowMs: opts.nowMs,
   })
 }
 
@@ -88,17 +92,19 @@ export function isAnexoContadorFormValid(form: Pick<AnexoContador, 'nome' | 'bas
 export type CreateAnexoContadorFromFormOpts = {
   id?: string
   criadoEm?: string
+  nowMs: number
+  random: () => number
 }
 
 export function createAnexoContadorFromForm(
   form: Pick<AnexoContador, 'nome' | 'mime' | 'base64'>,
-  opts: CreateAnexoContadorFromFormOpts = {}
+  opts: CreateAnexoContadorFromFormOpts
 ): AnexoContador {
   return {
-    id: opts.id ?? `anx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: opts.id ?? `anx-${opts.nowMs}-${opts.random().toString(36).slice(2, 7)}`,
     nome: form.nome,
     mime: form.mime,
     base64: form.base64,
-    criadoEm: opts.criadoEm ?? new Date().toISOString(),
+    criadoEm: opts.criadoEm ?? new Date(opts.nowMs).toISOString(),
   }
 }

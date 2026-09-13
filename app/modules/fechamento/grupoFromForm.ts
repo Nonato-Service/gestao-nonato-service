@@ -14,14 +14,16 @@ export type CreateServicoCadastroGrupoFromFormOpts = {
   id?: string
   ordem?: number
   grupos?: { ordem: number }[]
+  nowMs: number
+  random: () => number
 }
 
 export function createServicoCadastroGrupoFromForm(
   nome: string,
-  opts: CreateServicoCadastroGrupoFromFormOpts = {}
+  opts: CreateServicoCadastroGrupoFromFormOpts
 ): ServicoCadastroGrupo {
   return {
-    id: opts.id ?? Date.now().toString() + Math.random().toString(36).slice(2, 10),
+    id: opts.id ?? String(opts.nowMs) + opts.random().toString(36).slice(2, 10),
     nome: nome.trim(),
     ordem: opts.ordem ?? (opts.grupos ? proximaOrdemServicoCadastroGrupo(opts.grupos) : 0),
   }
