@@ -8,8 +8,8 @@ export type PasswordEntry = {
   updatedAt?: string
 }
 
-/** Gera senha com maiúscula, minúscula, dígito e símbolo; embaralha o resto. */
-export function generatePassword(length: number = 16): string {
+/** Gera senha com maiúscula, minúscula, dígito e símbolo; embaralha o resto. Aleatório injectado. */
+export function generatePassword(length: number, random: () => number): string {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const lowercase = 'abcdefghijklmnopqrstuvwxyz'
   const numbers = '0123456789'
@@ -17,17 +17,17 @@ export function generatePassword(length: number = 16): string {
   const allChars = uppercase + lowercase + numbers + symbols
 
   let password = ''
-  password += uppercase[Math.floor(Math.random() * uppercase.length)]
-  password += lowercase[Math.floor(Math.random() * lowercase.length)]
-  password += numbers[Math.floor(Math.random() * numbers.length)]
-  password += symbols[Math.floor(Math.random() * symbols.length)]
+  password += uppercase[Math.floor(random() * uppercase.length)]
+  password += lowercase[Math.floor(random() * lowercase.length)]
+  password += numbers[Math.floor(random() * numbers.length)]
+  password += symbols[Math.floor(random() * symbols.length)]
 
   for (let i = password.length; i < length; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)]
+    password += allChars[Math.floor(random() * allChars.length)]
   }
 
   return password
     .split('')
-    .sort(() => Math.random() - 0.5)
+    .sort(() => random() - 0.5)
     .join('')
 }

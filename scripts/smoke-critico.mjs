@@ -3840,6 +3840,29 @@ try {
   } else {
     fail('NonatoMainApp ainda define PasswordEntry/generatePassword localmente ou não usa fromForm')
   }
+  const pwdMod = fs.readFileSync(path.join(root, 'app/modules/admin/passwords.ts'), 'utf8')
+  const libAdminPwd = exists('app/lib/adminPasswords.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/adminPasswords.ts'), 'utf8')
+    : ''
+  if (pwdMod.includes('random: () => number') && !pwdMod.includes('Math.random')) {
+    ok('módulo admin generatePassword é puro (aleatório injectado)')
+  } else {
+    fail('módulo admin/passwords ainda usa Math.random')
+  }
+  if (
+    libAdminPwd.includes("from '../modules/admin/passwords'") &&
+    libAdminPwd.includes('Math.random') &&
+    !libAdminPwd.includes('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+  ) {
+    ok('lib/adminPasswords só envolve o aleatório de generatePassword')
+  } else {
+    fail('lib/adminPasswords ainda implementa o gerador de senha')
+  }
+  if (nma.includes("from './lib/adminPasswords'")) {
+    ok('NonatoMainApp usa generatePassword via lib')
+  } else {
+    fail('NonatoMainApp não importa generatePassword do lib')
+  }
   if (
     !nma.includes('type LogoRelatorio = {') &&
     !nma.includes('const parseLogosRelatoriosArr = (raw') &&
