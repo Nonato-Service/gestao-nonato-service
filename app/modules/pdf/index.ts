@@ -46,3 +46,6 @@ export { PDF_MODELO_TO_PROTOCOLO_NUM, pdfModeloToProtocoloNum, protocoloNumToPdf
 
 export type { PdfStorageDomain } from './storageKeys'
 export { PDF_STORAGE_KEYS } from './storageKeys'
+
+export type { PdfDocTheme } from './themes'
+export { orcamentoPdfThemeCss, relatorioPdfThemeCss, documentPdfThemeCss } from './themes'

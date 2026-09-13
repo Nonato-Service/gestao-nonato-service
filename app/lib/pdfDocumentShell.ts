@@ -11,12 +11,12 @@ import {
   type PdfDocumentHeaderVariant,
   type PdfMetaField,
 } from './pdfDocumentLayout'
-import { documentPdfThemeCss } from './pdfDocumentThemes'
+import { documentPdfThemeCss, type PdfDocTheme } from './pdfDocumentThemes'
 import { normalizePdfModelo, pdfModeloBodyClass } from './pdfModelTypes'
 
 export { escapePdfHtml, buildPdfDocumentFooterHtml, buildPdfMetaSectionHtml }
 
-export type PdfDocTheme = 'service' | 'expense' | 'billing' | 'cadastro'
+export type { PdfDocTheme }
 
 export type PdfDataCardRow = {
   label: string

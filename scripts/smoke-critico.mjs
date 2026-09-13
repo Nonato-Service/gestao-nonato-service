@@ -3445,6 +3445,27 @@ try {
   } else {
     fail('PDF_STORAGE_KEYS ainda definido em lib ou consumidores não usam o módulo')
   }
+  if (
+    idx.includes('orcamentoPdfThemeCss') &&
+    idx.includes('relatorioPdfThemeCss') &&
+    idx.includes('documentPdfThemeCss') &&
+    exists('app/modules/pdf/themes.ts')
+  ) {
+    ok('módulo pdf exporta themes')
+  } else {
+    fail('módulo pdf sem themes')
+  }
+  const libThemes = fs.readFileSync(path.join(root, 'app/lib/pdfDocumentThemes.ts'), 'utf8')
+  if (
+    libThemes.includes("from '../modules/pdf/themes'") &&
+    !libThemes.includes('export function orcamentoPdfThemeCss(') &&
+    !libThemes.includes('export function relatorioPdfThemeCss(') &&
+    !libThemes.includes('export function documentPdfThemeCss(')
+  ) {
+    ok('lib/pdfDocumentThemes só reexporta themes do módulo pdf')
+  } else {
+    fail('lib/pdfDocumentThemes ainda implementa os temas CSS')
+  }
 } catch (e) {
   fail(`módulo pdf: ${e.message}`)
 }
