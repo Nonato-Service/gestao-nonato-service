@@ -43,3 +43,14 @@ export function formatDemoCredentialsText(creds: { demoUsuario?: string; demoSen
   if (!creds.demoUsuario || !creds.demoSenha) return ''
   return `Utilizador: ${creds.demoUsuario}\nSenha: ${creds.demoSenha}`
 }
+
+const DEMO_PASSWORD_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+
+/** Senha de 8 caracteres. Aleatório injectado (`random`). */
+export function generateDemoPassword(random: () => number): string {
+  let pwd = ''
+  for (let i = 0; i < 8; i += 1) {
+    pwd += DEMO_PASSWORD_CHARS[Math.floor(random() * DEMO_PASSWORD_CHARS.length)]
+  }
+  return pwd
+}

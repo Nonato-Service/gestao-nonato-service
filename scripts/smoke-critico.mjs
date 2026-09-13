@@ -4940,6 +4940,7 @@ try {
   if (
     idx.includes('buildDemoUsername') &&
     idx.includes('formatDemoCredentialsText') &&
+    idx.includes('generateDemoPassword') &&
     exists('app/modules/demo/credentials.ts')
   ) {
     ok('módulo demo exporta credentials')
@@ -4951,8 +4952,10 @@ try {
     libCreds.includes("from '../modules/demo/credentials'") &&
     libCreds.includes('export function generateDemoPassword(') &&
     libCreds.includes('export function generateDemoAccessCredentials(') &&
+    libCreds.includes('Math.random') &&
     !libCreds.includes('export function formatDemoCredentialsText(') &&
     !libCreds.includes('function slugifyName(') &&
+    !libCreds.includes('ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789') &&
     gestao.includes('buildDemoUsername') &&
     gestao.includes('formatDemoCredentialsText') &&
     gestao.includes('generateDemoAccessCredentials') &&
@@ -4961,6 +4964,14 @@ try {
     ok('GestaoDemos usa credentials do módulo demo')
   } else {
     fail('demoCredentials ainda definido em lib ou GestaoDemos não usa o módulo')
+  }
+  if (
+    libCreds.includes('generateDemoPassword as generateDemoPasswordPure') &&
+    libCreds.includes('generateDemoPasswordPure(Math.random)')
+  ) {
+    ok('lib/demoCredentials só envolve o aleatório da senha demo')
+  } else {
+    fail('lib/demoCredentials ainda implementa generateDemoPassword')
   }
   if (
     idx.includes('clampDemoDays') &&

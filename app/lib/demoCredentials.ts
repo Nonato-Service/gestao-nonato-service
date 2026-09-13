@@ -1,4 +1,7 @@
-import { buildDemoUsername as buildDemoUsernamePure } from '../modules/demo/credentials'
+import {
+  buildDemoUsername as buildDemoUsernamePure,
+  generateDemoPassword as generateDemoPasswordPure,
+} from '../modules/demo/credentials'
 
 /** Re-export fino — fonte canónica em `app/modules/demo/credentials`. */
 export { formatDemoCredentialsText } from '../modules/demo/credentials'
@@ -13,13 +16,9 @@ export function buildDemoUsername(
   return buildDemoUsernamePure(nome, email, recipientId, existingUsernames, String(Date.now()).slice(-4))
 }
 
+/** Injeta Math.random() na senha canónica. */
 export function generateDemoPassword(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
-  let pwd = ''
-  for (let i = 0; i < 8; i += 1) {
-    pwd += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return pwd
+  return generateDemoPasswordPure(Math.random)
 }
 
 export function generateDemoAccessCredentials(
