@@ -63,3 +63,10 @@ export {
   buildDemoModulesFromPreset,
   createDefaultDemoLinkForm,
 } from './policy'
+
+export type { DemoShareCreds } from './share'
+export {
+  buildDemoShareMessage,
+  buildDemoMailto,
+  buildDemoWhatsAppUrl,
+} from './share'

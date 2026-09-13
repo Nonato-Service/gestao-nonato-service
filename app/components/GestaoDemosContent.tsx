@@ -3,9 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import {
-  buildDemoMailto,
-  buildDemoShareMessage,
-  buildDemoWhatsAppUrl,
   countActiveModules,
   DEMO_DAYS_DEFAULT,
   DEMO_DAYS_MAX,
@@ -39,6 +36,9 @@ import {
   buildDemoModulesFromPreset,
   createDefaultDemoLinkForm,
   finalizeDemoModulesPolicy,
+  buildDemoShareMessage,
+  buildDemoMailto,
+  buildDemoWhatsAppUrl,
 } from '../modules/demo'
 import { generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'

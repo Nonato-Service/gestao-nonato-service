@@ -4810,6 +4810,35 @@ try {
   } else {
     fail('GestaoDemos ainda importa policy do lib')
   }
+  if (
+    idx.includes('buildDemoShareMessage') &&
+    idx.includes('buildDemoMailto') &&
+    idx.includes('buildDemoWhatsAppUrl') &&
+    exists('app/modules/demo/share.ts')
+  ) {
+    ok('módulo demo exporta share')
+  } else {
+    fail('módulo demo sem share')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/share'") &&
+    !libDemo.includes('export function buildDemoShareMessage(') &&
+    !libDemo.includes('export function buildDemoMailto(')
+  ) {
+    ok('lib/demoManagement só reexporta share do módulo demo')
+  } else {
+    fail('lib/demoManagement ainda implementa o texto de envio')
+  }
+  if (
+    gestao.includes('buildDemoShareMessage') &&
+    gestao.includes('buildDemoWhatsAppUrl') &&
+    gestao.includes('enrichDemoRecipients') &&
+    gestao.includes("from '../lib/demoManagement'")
+  ) {
+    ok('GestaoDemos usa share do módulo; enrich via lib')
+  } else {
+    fail('GestaoDemos ainda importa share do lib')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }
