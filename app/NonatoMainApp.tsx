@@ -59,13 +59,6 @@ import {
 import { mergePecasBibliotecaArrays, pecasBibliotecaArraysDiffer, deduplicarPecasBibliotecaPorCodigo } from './lib/mergePecasBiblioteca'
 import { mergeHomagExportIntoBiblioteca, parseHomagExportJson } from './lib/mergeHomagExport'
 import {
-  countHomagCodesInText,
-  looksLikeHomagClipboard,
-  matchHomagCodeLine,
-  mergeHomagClipboardItems,
-  parseHomagPlainTextCatalog,
-} from './lib/parseHomagClipboard'
-import {
   calcularPecasBibliotecaImagemStats,
   pecaBibliotecaTemFotoVisivel,
   pecaBibliotecaTemImagemPropria,
@@ -158,6 +151,11 @@ import {
   isSubcategoriaPecaFormValid,
   createSubcategoriaPecaFromForm,
   inserirSubcategoriaPecaAposRef,
+  countHomagCodesInText,
+  looksLikeHomagClipboard,
+  matchHomagCodeLine,
+  mergeHomagClipboardItems,
+  parseHomagPlainTextCatalog,
 } from './modules/biblioteca'
 import {
   type DiaTrabalho,

@@ -1,4 +1,4 @@
-import { countHomagCodesInText } from '../../lib/parseHomagClipboard'
+import { countHomagCodesInText } from './homagClipboard'
 
 /** HTML/texto colado de uma página de catálogo (não tratar como colagem só de imagem). */
 export function clipboardLooksLikeCatalogImport(html: string, plain: string): boolean {

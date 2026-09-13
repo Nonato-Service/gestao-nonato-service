@@ -145,6 +145,20 @@ export { parseRawCatalogItensPlain, csvSplit, pushIfValidCatalogItem } from './i
 export { parseRawCatalogItensHtml } from './importParseHtml'
 export { parseRawToPecas, looksLikeCatalogImportHtml } from './importParse'
 
+export type { HomagClipboardItem } from './homagClipboard'
+export {
+  HOMAG_CODE_STRICT_RE,
+  HOMAG_CODE_LOOSE_RE,
+  HOMAG_CODE_R_VARIANT_RE,
+  isHomagUiNoiseLine,
+  countHomagCodesInText,
+  looksLikeHomagClipboard,
+  extractHomagCatalogSection,
+  matchHomagCodeLine,
+  parseHomagPlainTextCatalog,
+  mergeHomagClipboardItems,
+} from './homagClipboard'
+
 export type { RegraClassificacaoPeca, DestinoClassificacaoResolvido } from './classificacao'
 export {
   parsePalavrasClassificacao,

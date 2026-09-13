@@ -4,7 +4,7 @@ import {
   looksLikeHomagClipboard,
   matchHomagCodeLine,
   parseHomagPlainTextCatalog,
-} from '../../lib/parseHomagClipboard'
+} from './homagClipboard'
 
 export function csvSplit(line: string, sep: string): string[] {
   const out: string[] = []

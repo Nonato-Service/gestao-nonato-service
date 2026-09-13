@@ -5,7 +5,7 @@ import {
   matchHomagCodeLine,
   mergeHomagClipboardItems,
   parseHomagPlainTextCatalog,
-} from '../../lib/parseHomagClipboard'
+} from './homagClipboard'
 import { pushIfValidCatalogItem } from './importParsePlain'
 
 const decodeHtmlUrl = (u: string) =>

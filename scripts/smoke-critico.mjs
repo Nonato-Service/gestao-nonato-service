@@ -1328,6 +1328,39 @@ try {
   } else {
     fail('NonatoMainApp não usa parseRawToPecas do módulo biblioteca')
   }
+  const libHomag = fs.readFileSync(path.join(root, 'app/lib/parseHomagClipboard.ts'), 'utf8')
+  const parsePlain = fs.readFileSync(path.join(root, 'app/modules/biblioteca/importParsePlain.ts'), 'utf8')
+  const parseHtml = fs.readFileSync(path.join(root, 'app/modules/biblioteca/importParseHtml.ts'), 'utf8')
+  const clip = fs.readFileSync(path.join(root, 'app/modules/biblioteca/catalogClipboard.ts'), 'utf8')
+  if (
+    idx.includes('parseHomagPlainTextCatalog') &&
+    idx.includes('looksLikeHomagClipboard') &&
+    idx.includes('mergeHomagClipboardItems') &&
+    exists('app/modules/biblioteca/homagClipboard.ts')
+  ) {
+    ok('módulo biblioteca exporta homagClipboard')
+  } else {
+    fail('módulo biblioteca sem homagClipboard')
+  }
+  if (
+    libHomag.includes("from '../modules/biblioteca/homagClipboard'") &&
+    !libHomag.includes('export function parseHomagPlainTextCatalog(')
+  ) {
+    ok('lib/parseHomagClipboard só reexporta biblioteca/homagClipboard')
+  } else {
+    fail('lib/parseHomagClipboard ainda implementa o parser HOMAG')
+  }
+  if (
+    nma.includes('parseHomagPlainTextCatalog') &&
+    !nma.includes("from './lib/parseHomagClipboard'") &&
+    parsePlain.includes("from './homagClipboard'") &&
+    parseHtml.includes("from './homagClipboard'") &&
+    clip.includes("from './homagClipboard'")
+  ) {
+    ok('NMA/import parse usam homagClipboard do módulo biblioteca')
+  } else {
+    fail('consumidores ainda importam parseHomagClipboard do lib')
+  }
   if (
     idx.includes('aplicarRegrasClassificacaoEmLista') ||
     idx.includes('criarRegraClassificacaoPeca')
