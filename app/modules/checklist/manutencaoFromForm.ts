@@ -9,19 +9,25 @@ export function isManutencaoChecklistFormValid(
   return Boolean(form.nome.trim())
 }
 
+export type CreateManutencaoChecklistFromFormOpts = {
+  id?: string
+  dataCriacao?: string
+  nowMs: number
+}
+
 export function createManutencaoChecklistFromForm(
   form: ManutencaoChecklistFormState,
-  opts?: { id?: string; dataCriacao?: string }
+  opts: CreateManutencaoChecklistFromFormOpts
 ): ManutencaoChecklist {
   return {
-    id: opts?.id ?? Date.now().toString(),
+    id: opts.id ?? String(opts.nowMs),
     nome: form.nome.trim(),
     avaliacaoFeitaVisual: form.avaliacaoFeitaVisual,
     testeMecanico: form.testeMecanico,
     testeEletrico: form.testeEletrico,
     testeOperacional: form.testeOperacional,
     pecas: form.pecas || [],
-    dataCriacao: opts?.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -32,5 +38,6 @@ export function updateManutencaoChecklistFromForm(
   return createManutencaoChecklistFromForm(form, {
     id: existing.id,
     dataCriacao: existing.dataCriacao,
+    nowMs: 0,
   })
 }

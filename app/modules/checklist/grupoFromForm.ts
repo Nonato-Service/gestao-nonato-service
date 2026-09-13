@@ -28,13 +28,20 @@ export function isGrupoChecklistFormValid(
   return grupoChecklistFormMissing(form, novaFamilia) === null
 }
 
+export type CreateGrupoChecklistFromFormOpts = {
+  id?: string
+  dataCriacao?: string
+  manutencoes?: GrupoChecklist['manutencoes']
+  nowMs: number
+}
+
 export function createGrupoChecklistFromForm(
   form: GrupoChecklistFormState,
   novaFamilia: string,
-  opts?: { id?: string; dataCriacao?: string; manutencoes?: GrupoChecklist['manutencoes'] }
+  opts: CreateGrupoChecklistFromFormOpts
 ): GrupoChecklist {
   return {
-    id: opts?.id ?? Date.now().toString(),
+    id: opts.id ?? String(opts.nowMs),
     numeroGrupo: form.numeroGrupo.trim(),
     nomeGrupo: form.nomeGrupo.trim(),
     familia: resolveGrupoChecklistFamilia(form, novaFamilia),
@@ -42,7 +49,7 @@ export function createGrupoChecklistFromForm(
     imagem: form.imagem || undefined,
     trabalhosASeremExecutados: form.trabalhosASeremExecutados?.trim() || undefined,
     manutencoes: opts?.manutencoes ?? [],
-    dataCriacao: opts?.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -55,6 +62,7 @@ export function updateGrupoChecklistFromForm(
     id: existing.id,
     dataCriacao: existing.dataCriacao,
     manutencoes: existing.manutencoes,
+    nowMs: 0,
   })
   return {
     ...existing,

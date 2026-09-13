@@ -17,16 +17,22 @@ export function isChecklistTemplateFormValid(
   return checklistTemplateFormMissing(form) === null
 }
 
+export type CreateChecklistTemplateFromFormOpts = {
+  id?: string
+  dataCriacao?: string
+  nowMs: number
+}
+
 export function createChecklistTemplateFromForm(
   form: ChecklistTemplateFormState,
-  opts?: { id?: string; dataCriacao?: string }
+  opts: CreateChecklistTemplateFromFormOpts
 ): ChecklistTemplate {
   return {
-    id: opts?.id ?? Date.now().toString(),
+    id: opts.id ?? String(opts.nowMs),
     nome: form.nome,
     descricao: form.descricao,
     itens: form.itens,
-    dataCriacao: opts?.dataCriacao ?? new Date().toISOString(),
+    dataCriacao: opts.dataCriacao ?? new Date(opts.nowMs).toISOString(),
   }
 }
 

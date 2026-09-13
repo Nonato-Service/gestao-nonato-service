@@ -38,6 +38,7 @@ export {
 export type { ChecklistTemplateFormState } from './templateForm'
 export { emptyChecklistTemplateForm, checklistTemplateToForm } from './templateForm'
 
+export type { CreateChecklistTemplateFromFormOpts } from './templateFromForm'
 export {
   checklistTemplateFormMissing,
   isChecklistTemplateFormValid,
@@ -48,6 +49,7 @@ export {
 export type { GrupoChecklistFormState } from './grupoForm'
 export { emptyGrupoChecklistForm, grupoChecklistToForm } from './grupoForm'
 
+export type { CreateGrupoChecklistFromFormOpts } from './grupoFromForm'
 export {
   resolveGrupoChecklistFamilia,
   grupoChecklistFormMissing,
@@ -59,6 +61,7 @@ export {
 export type { ManutencaoChecklistFormState } from './manutencaoForm'
 export { emptyManutencaoChecklistForm, manutencaoChecklistToForm } from './manutencaoForm'
 
+export type { CreateManutencaoChecklistFromFormOpts } from './manutencaoFromForm'
 export {
   isManutencaoChecklistFormValid,
   createManutencaoChecklistFromForm,

@@ -3602,6 +3602,42 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia ManutencaoChecklist no sítio')
   }
+  const tplFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/templateFromForm.ts'), 'utf8')
+  const grpFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/grupoFromForm.ts'), 'utf8')
+  const manFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/manutencaoFromForm.ts'), 'utf8')
+  const libChecklistFromForm = exists('app/lib/checklistFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/checklistFromForm.ts'), 'utf8')
+    : ''
+  if (
+    tplFromForm.includes('nowMs: number') &&
+    !tplFromForm.includes('Date.now()') &&
+    !tplFromForm.includes('new Date().toISOString()') &&
+    grpFromForm.includes('nowMs: number') &&
+    !grpFromForm.includes('Date.now()') &&
+    !grpFromForm.includes('new Date().toISOString()') &&
+    manFromForm.includes('nowMs: number') &&
+    !manFromForm.includes('Date.now()') &&
+    !manFromForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo checklist template/grupo/manutencao fromForm é puro')
+  } else {
+    fail('módulo checklist fromForm ainda usa Date.now ou new Date()')
+  }
+  if (
+    libChecklistFromForm.includes('createChecklistTemplateFromForm as createChecklistTemplateFromFormPure') &&
+    libChecklistFromForm.includes('createGrupoChecklistFromForm as createGrupoChecklistFromFormPure') &&
+    libChecklistFromForm.includes('createManutencaoChecklistFromForm as createManutencaoChecklistFromFormPure') &&
+    libChecklistFromForm.includes('Date.now()')
+  ) {
+    ok('lib/checklistFromForm só envolve o relógio do checklist')
+  } else {
+    fail('lib/checklistFromForm ainda não envolve o checklist fromForm')
+  }
+  if (nma.includes("from './lib/checklistFromForm'")) {
+    ok('NonatoMainApp usa checklist fromForm via lib')
+  } else {
+    fail('NonatoMainApp não importa checklist fromForm do lib')
+  }
   if (
     idx.includes('isChecklistSalvoFormValid') &&
     idx.includes('createChecklistSalvoFromForm') &&

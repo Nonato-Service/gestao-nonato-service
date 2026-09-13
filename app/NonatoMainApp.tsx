@@ -1006,18 +1006,15 @@ import {
   checklistTemplateToForm,
   checklistTemplateFormMissing,
   isChecklistTemplateFormValid,
-  createChecklistTemplateFromForm,
   updateChecklistTemplateFromForm,
   emptyGrupoChecklistForm,
   grupoChecklistToForm,
   grupoChecklistFormMissing,
   isGrupoChecklistFormValid,
-  createGrupoChecklistFromForm,
   updateGrupoChecklistFromForm,
   emptyManutencaoChecklistForm,
   manutencaoChecklistToForm,
   isManutencaoChecklistFormValid,
-  createManutencaoChecklistFromForm,
   updateManutencaoChecklistFromForm,
   buildManutencoesDoGrupo,
   buildPecasPorGrupoVisualizacao,
@@ -1027,6 +1024,11 @@ import {
   createChecklistSalvoFromForm,
   emptyCriacaoChecklistItemForm,
 } from './modules/checklist'
+import {
+  createChecklistTemplateFromForm,
+  createGrupoChecklistFromForm,
+  createManutencaoChecklistFromForm,
+} from './lib/checklistFromForm'
 import {
   emptyOrdemPreparacaoForm,
   ordemPreparacaoToForm,
