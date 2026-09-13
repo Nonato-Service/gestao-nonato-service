@@ -23,6 +23,11 @@ import {
   emptyDemoRecipientForm,
 } from '../modules/demo'
 import { DEMO_DAYS_DEFAULT, clampDemoDays } from '../modules/demo/limits'
+import {
+  DEMO_HIDDEN_ACTIONS,
+  DEMO_ALLOWED_ACTIONS,
+  FULL_DEMO_ACTION_KEYS,
+} from '../modules/demo/actions'
 
 export {
   DEMO_DAYS_DEFAULT,
@@ -34,89 +39,13 @@ export {
   resolveDemoDaysForRecipient,
   DEMO_VISITOR_USER,
 } from '../modules/demo/limits'
-
-export const DEMO_HIDDEN_ACTIONS = new Set([
-  'open-administrador',
-  'open-cadastro-nonato-service',
-  'open-ficha-cadastral',
-  'open-ficha-pagamento-transferencia',
-  'open-ficha-fatura-cliente',
-  'open-translator',
-  'open-manual-gestor',
-  'open-gestao-demos',
-  'open-biblia-nonato-service',
-])
-
-export const DEMO_ALLOWED_ACTIONS = new Set([
-  'open-clientes',
-  'open-fornecedores',
-  'open-relatorio-servico',
-  'open-biblioteca-pecas',
-  'open-importacao-pecas',
-  'open-pecas-substituicao',
-  'open-solicitacao-servico-tecnico',
-  'open-agenda',
-  'open-biblioteca-relatorios',
-  'open-checklist-hub',
-  'open-pre-checklist',
-  'open-checklist',
-  'open-familias-grupos',
-  'open-familias-grupos-equipamentos',
-  'open-equipamentos',
-  'open-desmontados',
-  'open-cadastro-servicos',
-  'open-fechamento-relatorios-servicos',
-  'open-gestores',
-  'open-gestao-industrial',
-  'open-gestao-tecnica',
-  'open-parceiros-comercial',
-  'open-documentacao-relatorios',
-  'open-ordem-preparacao',
-  'open-formularios-checklist-tecnicos',
-  'open-verificacao-final-entrega',
-  'open-protocolos-servico',
-  'open-extra',
-])
-
-export const FULL_DEMO_ACTION_KEYS: string[] = Array.from(
-  new Set([
-    ...DEMO_ALLOWED_ACTIONS,
-    'open-gestao-custos',
-    'open-gestao-financeira',
-    'open-comunicacao-interna',
-    'open-extra',
-    'open-biblioteca-hub',
-    'open-gestao-grupos-checklist',
-    'open-orcamentos-avulso',
-    'open-pedido-orcamentos-avulso',
-    'open-orcamento-servico-tecnico',
-    'open-registro-despesas',
-    'open-mapa-visual-separacao',
-    'open-mapa-visual-separacao-pecas',
-    'open-clientes-financeiro',
-    'open-comprovantes-despesas',
-    'open-pagamentos-contador',
-    'open-hub-comunicacao',
-    'open-mensagens-internas',
-    'open-mensagens-internas-tecnicos',
-    'open-alerta-mensagens',
-    'open-quick-gestao-custos',
-    'open-quick-gestao-financeira',
-    'open-quick-biblioteca-pecas',
-    'open-relatorios-excluidos-clientes',
-    'open-manuais-informacoes-tecnicas',
-    'open-biblia-nonato-service',
-    'open-almoxarifado-armazem',
-    'open-parceiros-comercial',
-    'open-documentacao-relatorios',
-    'open-administrador',
-    'open-gestao-demos',
-  ])
-)
-
-export const DEMO_EDITABLE_ACTION_KEYS = FULL_DEMO_ACTION_KEYS.filter(
-  (a) => !DEMO_HIDDEN_ACTIONS.has(a)
-).sort((a, b) => getDemoModuleLabelForGrid(a).localeCompare(getDemoModuleLabelForGrid(b), 'pt', { sensitivity: 'base' }))
+export {
+  DEMO_HIDDEN_ACTIONS,
+  DEMO_ALLOWED_ACTIONS,
+  FULL_DEMO_ACTION_KEYS,
+  DEMO_EDITABLE_ACTION_KEYS,
+  getDemoModuleLabelForGrid,
+} from '../modules/demo/actions'
 
 export const DEMO_MODULE_GROUP_ORDER = ['clientes', 'tecnica', 'gestao', 'outros'] as const
 export type DemoModuleGroupId = (typeof DEMO_MODULE_GROUP_ORDER)[number]
@@ -144,72 +73,6 @@ export const DEMO_PRESET_CARDS: DemoPresetCard[] = [
   { id: 'basic', title: 'Mínima', desc: '3 funções na área técnica', icon: '🎯', mode: 'legacy-teaser' },
   { id: 'partial', title: 'Mista', desc: 'Combinação parcial de áreas', icon: '🔀', mode: 'legacy-teaser' },
 ]
-
-export function getDemoModuleLabelForGrid(action: string): string {
-  const labels: Record<string, string> = {
-    'open-gestores': 'Gestores e Técnicos',
-    'open-equipamentos': 'Equipamentos',
-    'open-clientes': 'Clientes',
-    'open-fornecedores': 'Fornecedores',
-    'open-relatorio-servico': 'Relatório de Serviço',
-    'open-biblioteca-pecas': 'Biblioteca de Peças',
-    'open-importacao-pecas': 'Importação de Peças',
-    'open-pecas-substituicao': 'Peças de substituição',
-    'open-solicitacao-servico-tecnico': 'Solicitação de serviço técnico',
-    'open-agenda': 'Agenda',
-    'open-biblioteca-relatorios': 'Biblioteca de relatórios',
-    'open-checklist-hub': 'Hub do Checklist',
-    'open-pre-checklist': 'Pré-checklist',
-    'open-checklist': 'Checklist',
-    'open-familias-grupos': 'Famílias e grupos (checklist)',
-    'open-familias-grupos-equipamentos': 'Famílias e grupos (equipamentos)',
-    'open-desmontados': 'Desmontados',
-    'open-cadastro-servicos': 'Cadastro de serviços / valores',
-    'open-fechamento-relatorios-servicos': 'Fechamento relatórios de serviço',
-    'open-gestao-industrial': 'Gestão Industrial',
-    'open-gestao-tecnica': 'Gestão técnica (hub)',
-    'open-parceiros-comercial': 'Clientes e fornecedores (hub)',
-    'open-documentacao-relatorios': 'Documentação e relatórios (hub)',
-    'open-ordem-preparacao': 'Ordem de preparação',
-    'open-formularios-checklist-tecnicos': 'Formulários checklist técnicos',
-    'open-verificacao-final-entrega': 'Verificação final de entrega',
-    'open-protocolos-servico': 'Protocolos de Serviço',
-    'open-gestao-custos': 'Gestão de Custos',
-    'open-gestao-financeira': 'Gestão Financeira',
-    'open-comunicacao-interna': 'Comunicação Interna',
-    'open-biblioteca-hub': 'Hub da biblioteca',
-    'open-gestao-grupos-checklist': 'Gestão de grupos (checklist)',
-    'open-orcamentos-avulso': 'Orçamentos avulso',
-    'open-pedido-orcamentos-avulso': 'Pedido de orçamentos avulso',
-    'open-orcamento-servico-tecnico': 'Orçamento de serviço técnico',
-    'open-registro-despesas': 'Registro de despesas',
-    'open-mapa-visual-separacao': 'Mapa visual separação',
-    'open-mapa-visual-separacao-pecas': 'Mapa visual separação (peças)',
-    'open-clientes-financeiro': 'Clientes (financeiro)',
-    'open-comprovantes-despesas': 'Comprovantes de despesas',
-    'open-pagamentos-contador': 'Pagamentos ao contador',
-    'open-hub-comunicacao': 'Hub de comunicação',
-    'open-mensagens-internas': 'Mensagens internas',
-    'open-mensagens-internas-tecnicos': 'Mensagens internas (técnicos)',
-    'open-alerta-mensagens': 'Alerta de mensagens',
-    'open-quick-gestao-custos': 'Atalho: Gestão de custos',
-    'open-quick-gestao-financeira': 'Atalho: Gestão financeira',
-    'open-quick-biblioteca-pecas': 'Atalho: Biblioteca de peças',
-    'open-relatorios-excluidos-clientes': 'Relatórios excluídos (clientes)',
-    'open-manuais-informacoes-tecnicas': 'Manuais e informações técnicas',
-    'open-biblia-nonato-service': 'Bíblia da Nonato Service',
-    'open-almoxarifado-armazem': 'Almoxarifado / armazém',
-    'open-ficha-pagamento-transferencia': 'Ficha para transferência / pagamento',
-    'open-ficha-fatura-cliente': 'Ficha para o cliente emitir fatura',
-    'open-extra': 'Extras (idioma)',
-  }
-  if (labels[action]) return labels[action]
-  return action
-    .replace(/^open-/, '')
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-}
 
 export function getDemoModuleGroupId(action: string): DemoModuleGroupId {
   const CLIENTES = new Set([

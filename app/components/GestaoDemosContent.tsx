@@ -13,7 +13,6 @@ import {
   DEMO_DAYS_DEFAULT,
   DEMO_DAYS_MAX,
   DEMO_DAYS_MIN,
-  DEMO_EDITABLE_ACTION_KEYS,
   DEMO_MODULE_GROUP_LABELS,
   DEMO_MODULE_GROUP_ORDER,
   DEMO_PRESET_CARDS,
@@ -24,7 +23,6 @@ import {
   finalizeDemoModulesPolicy,
   enrichDemoRecipients,
   getDemoModuleGroupId,
-  getDemoModuleLabelForGrid,
   getDemoPresetLabel,
   resolveDemoDaysForRecipient,
 } from '../lib/demoManagement'
@@ -40,6 +38,8 @@ import {
   emptyDemoRecipientForm,
   buildDemoUsername,
   formatDemoCredentialsText,
+  DEMO_EDITABLE_ACTION_KEYS,
+  getDemoModuleLabelForGrid,
 } from '../modules/demo'
 import { generateDemoAccessCredentials } from '../lib/demoCredentials'
 import type { SafeT } from './admin/adminTypes'

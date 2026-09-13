@@ -38,3 +38,11 @@ export {
   resolveDemoDaysForRecipient,
   DEMO_VISITOR_USER,
 } from './limits'
+
+export {
+  DEMO_HIDDEN_ACTIONS,
+  DEMO_ALLOWED_ACTIONS,
+  FULL_DEMO_ACTION_KEYS,
+  DEMO_EDITABLE_ACTION_KEYS,
+  getDemoModuleLabelForGrid,
+} from './actions'

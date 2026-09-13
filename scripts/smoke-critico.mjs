@@ -4723,6 +4723,34 @@ try {
   } else {
     fail('NonatoMainApp ainda importa DEMO_VISITOR_USER do lib')
   }
+  if (
+    idx.includes('getDemoModuleLabelForGrid') &&
+    idx.includes('DEMO_HIDDEN_ACTIONS') &&
+    idx.includes('FULL_DEMO_ACTION_KEYS') &&
+    exists('app/modules/demo/actions.ts')
+  ) {
+    ok('módulo demo exporta actions')
+  } else {
+    fail('módulo demo sem actions')
+  }
+  if (
+    libDemo.includes("from '../modules/demo/actions'") &&
+    !libDemo.includes('export function getDemoModuleLabelForGrid(') &&
+    !libDemo.includes('export const DEMO_HIDDEN_ACTIONS = new Set([')
+  ) {
+    ok('lib/demoManagement só reexporta actions do módulo demo')
+  } else {
+    fail('lib/demoManagement ainda implementa DEMO_HIDDEN_ACTIONS / labels')
+  }
+  if (
+    gestao.includes('getDemoModuleLabelForGrid') &&
+    gestao.includes('DEMO_EDITABLE_ACTION_KEYS') &&
+    (gestao.includes("from '../modules/demo'") || gestao.includes('from "../modules/demo"'))
+  ) {
+    ok('GestaoDemos usa actions do módulo demo')
+  } else {
+    fail('GestaoDemos ainda importa labels/actions do lib')
+  }
 } catch (e) {
   fail(`módulo demo: ${e.message}`)
 }
