@@ -193,6 +193,7 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 173. `app/modules/protocolo/` (clampProtocoloPdfModelo / constantes) — feito
 174. `app/modules/clientes/` (codigo NS / garantir / exibição) — feito
 175. `app/modules/clientes/` (EnderecoMapsParts / URLs Maps) — feito
+176. `app/modules/clientes/` (contactoEnvio / prefill / URLs) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

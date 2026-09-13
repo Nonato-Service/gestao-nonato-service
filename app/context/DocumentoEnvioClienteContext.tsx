@@ -13,10 +13,10 @@ import {
 import { DocumentoEnvioClienteModal } from '../components/DocumentoEnvioClienteModal'
 import {
   buildDocumentoEnvioClienteConfig,
+  findClienteParaEnvio,
   type AbrirEnvioDocumentoClienteOpts,
   type DocumentoEnvioClienteConfig,
 } from '../modules/clientes'
-import { findClienteParaEnvio } from '../lib/clienteContactEnvio'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
 
 export type { AbrirEnvioDocumentoClienteOpts, DocumentoEnvioClienteConfig }

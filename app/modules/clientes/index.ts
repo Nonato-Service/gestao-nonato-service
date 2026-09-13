@@ -182,3 +182,12 @@ export {
   buildGoogleMapsSearchUrl,
   buildGoogleMapsNavigationUrl,
 } from './enderecoMaps'
+
+export type { ClienteContactoEnvio, ClienteContactoPrefill } from './contactoEnvio'
+export {
+  normalizarTelefoneWhatsApp,
+  prefillContactFromCliente,
+  buildMailtoUrl,
+  buildWhatsAppUrl,
+  findClienteParaEnvio,
+} from './contactoEnvio'

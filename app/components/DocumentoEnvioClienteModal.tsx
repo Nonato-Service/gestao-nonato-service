@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ClienteAlfabetoPicker } from './ClienteAlfabetoPicker'
 import type { ClienteAlfabetoRow } from '../lib/clienteAlfabetoBusca'
+import { abrirEmailCliente, abrirWhatsAppCliente } from '../lib/clienteContactEnvio'
 import {
-  abrirEmailCliente,
-  abrirWhatsAppCliente,
   buildWhatsAppUrl,
   prefillContactFromCliente,
-} from '../lib/clienteContactEnvio'
-import type { DocumentoEnvioClienteConfig } from '../modules/clientes'
+  type DocumentoEnvioClienteConfig,
+} from '../modules/clientes'
 
 export type { DocumentoEnvioClienteConfig }
 

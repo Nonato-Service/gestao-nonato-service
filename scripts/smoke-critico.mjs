@@ -816,6 +816,36 @@ try {
   } else {
     fail('enderecoMaps ainda definido em lib ou ecrãs não usam o módulo')
   }
+  if (
+    idx.includes('ClienteContactoEnvio') &&
+    idx.includes('prefillContactFromCliente') &&
+    idx.includes('findClienteParaEnvio') &&
+    idx.includes('buildWhatsAppUrl') &&
+    exists('app/modules/clientes/contactoEnvio.ts')
+  ) {
+    ok('módulo clientes exporta contactoEnvio')
+  } else {
+    fail('módulo clientes sem contactoEnvio')
+  }
+  const libContacto = fs.readFileSync(path.join(root, 'app/lib/clienteContactEnvio.ts'), 'utf8')
+  if (
+    libContacto.includes("from '../modules/clientes/contactoEnvio'") &&
+    libContacto.includes('export function abrirUrlExterna(') &&
+    !libContacto.includes('export function prefillContactFromCliente(') &&
+    !libContacto.includes('export function findClienteParaEnvio(') &&
+    nma.includes('prefillContactFromCliente') &&
+    !nma.includes("from './lib/clienteContactEnvio'") &&
+    envioCtx.includes('findClienteParaEnvio') &&
+    !envioCtx.includes("from '../lib/clienteContactEnvio'") &&
+    envioModal.includes('buildWhatsAppUrl') &&
+    envioModal.includes('prefillContactFromCliente') &&
+    envioModal.includes('abrirEmailCliente') &&
+    envioModal.includes("from '../lib/clienteContactEnvio'")
+  ) {
+    ok('NMA/contexto/modal usam contactoEnvio do módulo clientes')
+  } else {
+    fail('contactoEnvio ainda definido em lib ou consumidores não usam o módulo')
+  }
 } catch (e) {
   fail(`módulo clientes: ${e.message}`)
 }

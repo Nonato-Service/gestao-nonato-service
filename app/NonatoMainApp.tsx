@@ -536,6 +536,8 @@ import {
   garantirCodigosClientes,
   gerarProximoCodigoCliente,
   codigoClienteExibicao,
+  prefillContactFromCliente,
+  normalizarTelefoneWhatsApp,
 } from './modules/clientes'
 import { buildMenuItemsFromLegacyPermissions, canAccessSidebarMenuItem, canAccessSidebarModule, ensureUserMenuPolicy, getButtonIdForAction, hasLinkedMenuAccess, hasStrictMenuPolicy, normalizeMenuItems, normalizeMenuItemsWithLegacyFallback, syncLegacyPermissionsFromMenuItems } from './lib/sidebarMenuPermissions'
 import {
@@ -919,7 +921,6 @@ import {
   type AbrirEnvioDocumentoClienteOpts,
 } from './context/DocumentoEnvioClienteContext'
 import { DocumentoEnvioAcoes } from './components/DocumentoEnvioAcoes'
-import { prefillContactFromCliente, normalizarTelefoneWhatsApp } from './lib/clienteContactEnvio'
 import { AlfabetoIndiceBusca } from './components/AlfabetoIndiceBusca'
 import { FornecedorCadastroForm } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
