@@ -73,8 +73,10 @@ export type BibliaStore = {
   updatedAt?: string
 }
 
-export function bibliaUid(): string {
-  return `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
+export type BibliaClockOpts = { nowMs: number; random: () => number }
+
+export function bibliaUid(opts: BibliaClockOpts): string {
+  return `${opts.random().toString(36).slice(2)}${opts.nowMs.toString(36)}`
 }
 
 function parseInformacoesSections(text: string): Pick<BibliaModelo, 'software' | 'mecanica' | 'eletrica' | 'notas'> {
@@ -94,7 +96,7 @@ function parseInformacoesSections(text: string): Pick<BibliaModelo, 'software' |
   return { software: '', mecanica: '', eletrica: '', notas: raw.trim() }
 }
 
-function normalizeModelo(mod: any, mi: number): BibliaModelo {
+function normalizeModelo(mod: any, mi: number, opts: BibliaClockOpts): BibliaModelo {
   const anexosRaw = Array.isArray(mod?.anexos) ? mod.anexos : []
   const anexos: BibliaAnexo[] = anexosRaw
     .filter((a: any) => a && typeof a.dataUrl === 'string' && a.dataUrl.startsWith('data:'))
@@ -105,7 +107,7 @@ function normalizeModelo(mod: any, mi: number): BibliaModelo {
         normalizeBibliaSecao(a.section) ||
         inferBibliaSecaoFromName(nome)
       return {
-        id: a.id || bibliaUid(),
+        id: a.id || bibliaUid(opts),
         nome,
         mime: a.mime || 'application/octet-stream',
         dataUrl: a.dataUrl,
@@ -122,7 +124,7 @@ function normalizeModelo(mod: any, mi: number): BibliaModelo {
         }
       : parseInformacoesSections(String(mod?.informacoes || mod?.notas || ''))
   return {
-    id: mod?.id || bibliaUid(),
+    id: mod?.id || bibliaUid(opts),
     nome: String(mod?.nome || mod?.name || mod?.titulo || '').trim(),
     ordem: typeof mod?.ordem === 'number' ? mod.ordem : mi,
     software: parsed.software,
@@ -133,17 +135,17 @@ function normalizeModelo(mod: any, mi: number): BibliaModelo {
   }
 }
 
-function normalizeLinha(lin: any, bi: number): BibliaLinha {
+function normalizeLinha(lin: any, bi: number, opts: BibliaClockOpts): BibliaLinha {
   const modelosRaw = Array.isArray(lin?.modelos) ? lin.modelos : []
   return {
-    id: lin?.id || bibliaUid(),
+    id: lin?.id || bibliaUid(opts),
     titulo: String(lin?.titulo || lin?.name || '').trim(),
     ordem: typeof lin?.ordem === 'number' ? lin.ordem : bi,
-    modelos: modelosRaw.map(normalizeModelo).sort((a, b) => a.ordem - b.ordem),
+    modelos: modelosRaw.map((mod, mi) => normalizeModelo(mod, mi, opts)).sort((a, b) => a.ordem - b.ordem),
   }
 }
 
-function normalizeFamilia(fam: any, ci: number): BibliaFamilia {
+function normalizeFamilia(fam: any, ci: number, opts: BibliaClockOpts): BibliaFamilia {
   const linhasRaw = Array.isArray(fam?.linhas)
     ? fam.linhas
     : Array.isArray(fam?.grupos)
@@ -152,21 +154,21 @@ function normalizeFamilia(fam: any, ci: number): BibliaFamilia {
         ? fam.brands
         : []
   return {
-    id: fam?.id || bibliaUid(),
+    id: fam?.id || bibliaUid(opts),
     nome: String(fam?.nome || fam?.name || '').trim(),
     ordem: typeof fam?.ordem === 'number' ? fam.ordem : ci,
-    linhas: linhasRaw.map(normalizeLinha).sort((a, b) => a.ordem - b.ordem),
+    linhas: linhasRaw.map((lin, bi) => normalizeLinha(lin, bi, opts)).sort((a, b) => a.ordem - b.ordem),
   }
 }
 
-export function normalizeBibliaImport(data: unknown): BibliaStore {
+export function normalizeBibliaImport(data: unknown, opts: BibliaClockOpts): BibliaStore {
   if (!data || typeof data !== 'object') {
     return { familias: [] }
   }
   const obj = data as Record<string, unknown>
   if (Array.isArray(obj.familias)) {
     return {
-      familias: obj.familias.map(normalizeFamilia).sort((a, b) => a.ordem - b.ordem),
+      familias: obj.familias.map((fam, ci) => normalizeFamilia(fam, ci, opts)).sort((a, b) => a.ordem - b.ordem),
       updatedAt: typeof obj.updatedAt === 'string' ? obj.updatedAt : undefined,
     }
   }
@@ -184,7 +186,8 @@ export function normalizeBibliaImport(data: unknown): BibliaStore {
             modelos: br.models || [],
           })),
         },
-        ci
+        ci,
+        opts
       )
     )
     return { familias }
@@ -201,7 +204,7 @@ export function buildInformacoesText(m: BibliaModelo): string {
   return parts.join('\n\n')
 }
 
-export function serializeBibliaForServer(store: BibliaStore): BibliaStore {
+export function serializeBibliaForServer(store: BibliaStore, opts: { nowMs: number }): BibliaStore {
   return {
     familias: store.familias.map((fam, fi) => ({
       ...fam,
@@ -222,7 +225,7 @@ export function serializeBibliaForServer(store: BibliaStore): BibliaStore {
         })),
       })),
     })),
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -242,10 +245,10 @@ export function countBibliaStats(store: BibliaStore) {
   return { familias: store.familias.length, marcas, modelos, anexos }
 }
 
-export function seedBibliaExample(): BibliaStore {
-  const holzmaId = bibliaUid()
+export function seedBibliaExample(opts: BibliaClockOpts): BibliaStore {
+  const holzmaId = bibliaUid(opts)
   const modelos = ['HPP 230', 'HPP 250', 'HPP 350', 'HPP 380', 'HPL 300', 'HPL 380'].map((nome, i) => ({
-    id: bibliaUid(),
+    id: bibliaUid(opts),
     nome,
     ordem: i,
     software: '',
@@ -257,16 +260,16 @@ export function seedBibliaExample(): BibliaStore {
   return {
     familias: [
       {
-        id: bibliaUid(),
+        id: bibliaUid(opts),
         nome: 'Seccionadoras',
         ordem: 0,
         linhas: [
           { id: holzmaId, titulo: 'Holzma', ordem: 0, modelos },
-          { id: bibliaUid(), titulo: 'Homag (Espanha)', ordem: 1, modelos: [] },
+          { id: bibliaUid(opts), titulo: 'Homag (Espanha)', ordem: 1, modelos: [] },
         ],
       },
     ],
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date(opts.nowMs).toISOString(),
   }
 }
 

@@ -35,6 +35,7 @@ export type BuildManutencoesDoGrupoOpts = {
   usaMontagemPorFamiliaParente: boolean
   montagemServicosSelecionados: Set<string>
   manutencoesSelecionadas: Set<string>
+  nowMs: number
 }
 
 export function buildManutencoesDoGrupo(
@@ -55,7 +56,7 @@ export function buildManutencoesDoGrupo(
           testeEletrico: false,
           testeOperacional: false,
           pecas: [],
-          dataCriacao: it.dataCriacao || new Date().toISOString(),
+          dataCriacao: it.dataCriacao || new Date(opts.nowMs).toISOString(),
         })
       )
   }
@@ -105,6 +106,7 @@ export type BuildChecklistGeradoRecordInput = {
   montagemServicosSelecionados: Set<string>
   manutencoesSelecionadas: Set<string>
   pecasPorGrupoVisualizacao: PecaPorGrupoVisualizacao[]
+  nowMs: number
   dataCriacao?: string
 }
 
@@ -120,7 +122,8 @@ export function buildChecklistGeradoRecord(input: BuildChecklistGeradoRecordInpu
     montagemServicosSelecionados,
     manutencoesSelecionadas,
     pecasPorGrupoVisualizacao,
-    dataCriacao = new Date().toISOString(),
+    nowMs,
+    dataCriacao = new Date(nowMs).toISOString(),
   } = input
 
   const grupos = mapGruposGerados(gruposComSelecao)
@@ -167,7 +170,7 @@ export type BuildPecasArmazemFromChecklistInput = {
   tecnico?: TecnicoChecklistLike | null
   gruposComSelecao: GrupoComManutencoesFormulario[]
   pecasPorGrupo: Record<string, PecaMontagemChecklist[] | undefined>
-  nowMs?: number
+  nowMs: number
   dataEnvio?: string
 }
 
@@ -180,7 +183,7 @@ export function buildPecasArmazemFromChecklist(
     tecnico,
     gruposComSelecao,
     pecasPorGrupo,
-    nowMs = Date.now(),
+    nowMs,
     dataEnvio = new Date(nowMs).toISOString(),
   } = input
 

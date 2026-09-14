@@ -2000,6 +2000,32 @@ try {
   } else {
     fail('lib/bibliotecaFromForm ainda não envolve o fromForm')
   }
+  const importMappers = fs.readFileSync(path.join(root, 'app/modules/biblioteca/importMappers.ts'), 'utf8')
+  const importParse = fs.readFileSync(path.join(root, 'app/modules/biblioteca/importParse.ts'), 'utf8')
+  const libBibImport = exists('app/lib/bibliotecaImport.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/bibliotecaImport.ts'), 'utf8')
+    : ''
+  if (
+    importMappers.includes('nowMs: number') &&
+    importMappers.includes('random: () => number') &&
+    !importMappers.includes('Date.now()') &&
+    !importMappers.includes('Math.random') &&
+    importParse.includes('MapItemToPecaBibliotecaOpts') &&
+    !importParse.includes('Date.now()')
+  ) {
+    ok('módulo biblioteca importMappers/importParse é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo biblioteca importMappers/importParse ainda usa Date.now ou Math.random')
+  }
+  if (
+    libBibImport.includes('mapItemToPecaBiblioteca as mapItemToPecaBibliotecaPure') &&
+    libBibImport.includes('parseRawToPecas as parseRawToPecasPure') &&
+    nma.includes("from './lib/bibliotecaImport'")
+  ) {
+    ok('NonatoMainApp usa importação da biblioteca via lib')
+  } else {
+    fail('lib/bibliotecaImport ainda não envolve o parse/map de importação')
+  }
   const pecaForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/pecaForm.ts'), 'utf8')
   if (
     pecaForm.includes('nowMs: number') &&
@@ -2054,6 +2080,27 @@ try {
     ok('RelatorioEspecialHub usa tipos vazios via lib')
   } else {
     fail('lib/relatorioEspecialTypes ainda não envolve os formulários vazios')
+  }
+  const reShared = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/shared.ts'), 'utf8')
+  const libReShared = exists('app/lib/relatorioEspecialShared.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioEspecialShared.ts'), 'utf8')
+    : ''
+  if (
+    reShared.includes('nowMs: number') &&
+    !reShared.includes('date = new Date()') &&
+    !reShared.includes('Date.now()')
+  ) {
+    ok('módulo relatorios-especiais shared é puro (relógio injectado)')
+  } else {
+    fail('módulo relatorios-especiais/shared ainda usa new Date() por omissão')
+  }
+  if (
+    libReShared.includes('dataLocalHojeISO as dataLocalHojeISOPure') &&
+    hub.includes("from '../lib/relatorioEspecialShared'")
+  ) {
+    ok('RelatorioEspecialHub usa dataLocalHojeISO via lib')
+  } else {
+    fail('lib/relatorioEspecialShared ainda não envolve dataLocalHojeISO')
   }
   const pdfMod = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/pdf.ts'), 'utf8')
   if (
@@ -2612,6 +2659,28 @@ try {
     ok('NonatoMainApp usa equipamentos fromForm via lib')
   } else {
     fail('lib/equipamentosFromForm ainda não envolve o fromForm')
+  }
+  const relatorioEq = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')
+  const libEqRelatorio = exists('app/lib/equipamentosRelatorio.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/equipamentosRelatorio.ts'), 'utf8')
+    : ''
+  if (
+    relatorioEq.includes('nowMs: number') &&
+    relatorioEq.includes('random: () => number') &&
+    !relatorioEq.includes('Date.now()') &&
+    !relatorioEq.includes('Math.random')
+  ) {
+    ok('módulo equipamentos relatorio baixa-venda é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo equipamentos/relatorio ainda usa Date.now ou Math.random na baixa')
+  }
+  if (
+    libEqRelatorio.includes('aplicarBaixaVendaEquipamentosArmazemRelatorio as aplicarBaixaVendaEquipamentosArmazemRelatorioPure') &&
+    nma.includes("from './lib/equipamentosRelatorio'")
+  ) {
+    ok('NonatoMainApp usa baixa-venda de equipamentos via lib')
+  } else {
+    fail('lib/equipamentosRelatorio ainda não envolve a baixa por venda')
   }
   if (
     idx.includes('resolverNumeroEquipamentoPdf') &&
@@ -3930,6 +3999,25 @@ try {
     ok('NonatoMainApp usa checklist fromForm via lib')
   } else {
     fail('NonatoMainApp não importa checklist fromForm do lib')
+  }
+  const gerarMappers = fs.readFileSync(path.join(root, 'app/modules/checklist/gerarMappers.ts'), 'utf8')
+  if (
+    gerarMappers.includes('nowMs: number') &&
+    !gerarMappers.includes('Date.now()') &&
+    !gerarMappers.includes('new Date().toISOString()')
+  ) {
+    ok('módulo checklist gerarMappers é puro (relógio injectado)')
+  } else {
+    fail('módulo checklist/gerarMappers ainda usa Date.now ou new Date()')
+  }
+  if (
+    libChecklistFromForm.includes('buildManutencoesDoGrupo as buildManutencoesDoGrupoPure') &&
+    libChecklistFromForm.includes('buildChecklistGeradoRecord as buildChecklistGeradoRecordPure') &&
+    libChecklistFromForm.includes('buildPecasArmazemFromChecklist as buildPecasArmazemFromChecklistPure')
+  ) {
+    ok('lib/checklistFromForm envolve os mappers de geração')
+  } else {
+    fail('lib/checklistFromForm ainda não envolve gerarMappers')
   }
   const salvoFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/salvoFromForm.ts'), 'utf8')
   const itemTrabFromForm = fs.readFileSync(path.join(root, 'app/modules/checklist/itemTrabalhoFromForm.ts'), 'utf8')
@@ -5362,6 +5450,30 @@ try {
     ok('bibliaNonatoTypes re-exporta app/modules/manuais')
   } else {
     fail('bibliaNonatoTypes ainda define tipos da Bíblia no sítio')
+  }
+  const bibliaTipos = fs.readFileSync(path.join(root, 'app/modules/manuais/bibliaTipos.ts'), 'utf8')
+  const libManuaisBiblia = exists('app/lib/manuaisBiblia.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/manuaisBiblia.ts'), 'utf8')
+    : ''
+  if (
+    bibliaTipos.includes('nowMs: number') &&
+    bibliaTipos.includes('random: () => number') &&
+    !bibliaTipos.includes('Date.now()') &&
+    !bibliaTipos.includes('Math.random') &&
+    !bibliaTipos.includes('new Date().toISOString()')
+  ) {
+    ok('módulo manuais bibliaTipos é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo manuais/bibliaTipos ainda usa Date.now, Math.random ou new Date()')
+  }
+  if (
+    libManuaisBiblia.includes('bibliaUid as bibliaUidPure') &&
+    libManuaisBiblia.includes('seedBibliaExample as seedBibliaExamplePure') &&
+    bibliaCompat.includes("from '../lib/manuaisBiblia'")
+  ) {
+    ok('bibliaNonatoTypes usa Bíblia via lib')
+  } else {
+    fail('lib/manuaisBiblia ainda não envolve uid/normalize da Bíblia')
   }
   const tiposManuais = fs.readFileSync(path.join(root, 'app/modules/manuais/tipos.ts'), 'utf8')
   if (

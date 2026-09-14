@@ -127,8 +127,6 @@ import {
   pecaBibliotecaEstaNoCatalogo,
   codigoExisteNaBibliotecaPecas,
   separarPecasImportacao as separarPecasImportacaoBase,
-  mapItemToPecaBiblioteca,
-  parseRawToPecas as parseRawToPecasFromModule,
   type RegraClassificacaoPeca,
   parsePalavrasClassificacao,
   resolverDestinoClassificacaoLote,
@@ -150,6 +148,10 @@ import {
   parseHomagPlainTextCatalog,
   parseHomagExportJson,
 } from './modules/biblioteca'
+import {
+  mapItemToPecaBiblioteca,
+  parseRawToPecas as parseRawToPecasFromModule,
+} from './lib/bibliotecaImport'
 import {
   type DiaTrabalho,
   type PecaSubstituicao,
@@ -651,7 +653,6 @@ import {
   formatarLabelEquipamentoSelectCurto,
   coletarRelatoriosServicoPorEquipamentoCliente,
   prepararEquipamentosRelatorioParaEdicao,
-  aplicarBaixaVendaEquipamentosArmazemRelatorio,
   encontrarEquipamentoArmazemCorrespondenteCliente,
   clientesExternosParaEquipamentoRelatorio,
   normalizarEquipamentoOrigem,
@@ -683,6 +684,7 @@ import {
   createEquipamentoFromForm,
   updateEquipamentoFromForm,
 } from './modules/equipamentos'
+import { aplicarBaixaVendaEquipamentosArmazemRelatorio } from './lib/equipamentosRelatorio'
 import {
   snapshotRelatoriosServicoBackup,
   restaurarRelatoriosDeBackupsLocais,
@@ -1032,10 +1034,7 @@ import {
   manutencaoChecklistToForm,
   isManutencaoChecklistFormValid,
   updateManutencaoChecklistFromForm,
-  buildManutencoesDoGrupo,
   buildPecasPorGrupoVisualizacao,
-  buildChecklistGeradoRecord,
-  buildPecasArmazemFromChecklist,
   isChecklistSalvoFormValid,
   emptyCriacaoChecklistItemForm,
 } from './modules/checklist'
@@ -1044,6 +1043,9 @@ import {
   createGrupoChecklistFromForm,
   createManutencaoChecklistFromForm,
   createChecklistSalvoFromForm,
+  buildManutencoesDoGrupo,
+  buildChecklistGeradoRecord,
+  buildPecasArmazemFromChecklist,
 } from './lib/checklistFromForm'
 import {
   emptyOrdemPreparacaoForm,

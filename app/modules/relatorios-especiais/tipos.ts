@@ -112,7 +112,7 @@ export function criarDiaTrabalhoEspecialVazio(
 }
 
 export function criarRelatorioEspecialVazio(opts: RelatorioEspecialClockOpts): RelatorioEspecial {
-  const hoje = dataLocalHojeISO(new Date(opts.nowMs))
+  const hoje = dataLocalHojeISO(opts.nowMs)
   return {
     id: `re-${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     numero: '',

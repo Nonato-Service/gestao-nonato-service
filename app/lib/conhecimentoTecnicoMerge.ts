@@ -6,7 +6,15 @@ import {
   CONHECIMENTO_TECNICO_STORAGE_KEY,
   type ManuaisFamiliasGruposPayload,
 } from '../modules/manuais/conhecimentoMerge'
-import { BIBLIA_NONATO_STORAGE_KEY, bibliaUid } from '../modules/manuais/bibliaTipos'
+import { BIBLIA_NONATO_STORAGE_KEY, bibliaUid as bibliaUidPure } from '../modules/manuais/bibliaTipos'
+
+function bibliaClock() {
+  return { nowMs: Date.now(), random: Math.random }
+}
+
+function bibliaUid(): string {
+  return bibliaUidPure(bibliaClock())
+}
 
 /** Re-export fino — fonte canónica em `app/modules/manuais/conhecimentoMerge`. */
 export type { ManuaisFamiliasGruposPayload, ConhecimentoMergeIdFactory } from '../modules/manuais/conhecimentoMerge'
@@ -31,12 +39,12 @@ export function mergeBibliaIntoManuais(
   bibliaRaw: unknown,
   manuais: ManuaisFamiliasGruposPayload
 ): ManuaisFamiliasGruposPayload {
-  return mergeBibliaIntoManuaisPure(bibliaRaw, manuais, makeConhecimentoMergeId)
+  return mergeBibliaIntoManuaisPure(bibliaRaw, manuais, makeConhecimentoMergeId, bibliaClock())
 }
 
-/** Injeta bibliaUid no mapper canónico. */
+/** Injeta bibliaUid / Date.now() no mapper canónico. */
 export function manuaisToBibliaStore(payload: ManuaisFamiliasGruposPayload) {
-  return manuaisToBibliaStorePure(payload, bibliaUid)
+  return manuaisToBibliaStorePure(payload, bibliaUid, { nowMs: Date.now() })
 }
 
 export function buildBibliaConhecimentoFromSources(
@@ -44,7 +52,13 @@ export function buildBibliaConhecimentoFromSources(
   bibliaLegacyRaw?: unknown,
   idbBibliaRaw?: unknown
 ): ManuaisFamiliasGruposPayload {
-  return buildBibliaConhecimentoFromSourcesPure(bibliaRaw, bibliaLegacyRaw, idbBibliaRaw, makeConhecimentoMergeId)
+  return buildBibliaConhecimentoFromSourcesPure(
+    bibliaRaw,
+    bibliaLegacyRaw,
+    idbBibliaRaw,
+    makeConhecimentoMergeId,
+    bibliaClock()
+  )
 }
 
 /** @deprecated Preferir buildManuaisFromSources + buildBibliaConhecimentoFromSources separados. */
@@ -61,7 +75,8 @@ export function buildConhecimentoTecnicoFromSources(
     idbManuaisRaw,
     bibliaLegacyRaw,
     unifiedRaw,
-    makeConhecimentoMergeId
+    makeConhecimentoMergeId,
+    bibliaClock()
   )
 }
 

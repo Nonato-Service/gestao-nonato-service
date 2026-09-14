@@ -34,8 +34,14 @@ export function buildImportedPecaDescricao(
   return descricaoLimpa
 }
 
+export type MapItemToPecaBibliotecaOpts = { nowMs: number; random: () => number }
+
 /** Mapeia objeto genérico (JSON do site / CSV) para peça da biblioteca. */
-export function mapItemToPecaBiblioteca(item: any, index: number): PecaBibliotecaLike {
+export function mapItemToPecaBiblioteca(
+  item: any,
+  index: number,
+  opts: MapItemToPecaBibliotecaOpts
+): PecaBibliotecaLike {
   const codigo = String(
     item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? ''
   ).trim()
@@ -161,7 +167,7 @@ export function mapItemToPecaBiblioteca(item: any, index: number): PecaBibliotec
     id:
       item?.id && typeof item.id === 'string'
         ? item.id
-        : `import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
+        : `import-${opts.nowMs}-${index}-${opts.random().toString(36).slice(2, 9)}`,
     nome: nome || codigo || `Peça ${index + 1}`,
     codigo: codigo || `IMP-${index + 1}`,
     preco: preco || '',
@@ -178,6 +184,6 @@ export function mapItemToPecaBiblioteca(item: any, index: number): PecaBibliotec
     imagem,
     ...(referenciasAlternativas.length ? { referenciasAlternativas } : {}),
     ...(codigosAlternativos.length ? { codigosAlternativos } : {}),
-    dataCriacao: new Date().toISOString(),
+    dataCriacao: new Date(opts.nowMs).toISOString(),
   }
 }

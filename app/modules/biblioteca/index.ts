@@ -2,6 +2,8 @@
 
 export type { PecaBibliotecaLike, CategoriaPecaLike, SubcategoriaPecaLike } from './tipos'
 
+export type { MapItemToPecaBibliotecaOpts } from './importMappers'
+
 export type { CategoriaPeca, SubcategoriaPeca, PecaBiblioteca } from './pecaTipos'
 export type { EmptyPecaBibliotecaFormOpts } from './pecaForm'
 export { createEmptyPecaBibliotecaForm } from './pecaForm'

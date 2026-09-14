@@ -2,7 +2,7 @@
 
 import { parseRawCatalogItensHtml } from './importParseHtml'
 import { parseRawCatalogItensPlain } from './importParsePlain'
-import { mapItemToPecaBiblioteca } from './importMappers'
+import { mapItemToPecaBiblioteca, type MapItemToPecaBibliotecaOpts } from './importMappers'
 import { normalizeImportKey } from './merge'
 import type { PecaBibliotecaLike } from './tipos'
 
@@ -46,7 +46,8 @@ function resolvePageBaseHref(pageUrl: string): string {
 export function parseRawToPecas(
   raw: string,
   lojaBaseUrl = '',
-  pageUrl = ''
+  pageUrl = '',
+  opts: MapItemToPecaBibliotecaOpts
 ): PecaBibliotecaLike[] {
   const trimRaw = raw.trim()
   const lojaOrigin = resolveLojaOrigin(lojaBaseUrl)
@@ -73,7 +74,7 @@ export function parseRawToPecas(
     return p
   }
   const mapped = itens.map((item, idx) =>
-    absolutizeImagem(mapItemToPecaBiblioteca(item, idx) as PecaBibliotecaLike)
+    absolutizeImagem(mapItemToPecaBiblioteca(item, idx, opts) as PecaBibliotecaLike)
   )
   return mapped.filter((p) => {
     const codigoNorm = normalizeImportKey(p.codigo)

@@ -30,6 +30,14 @@ import {
   type CreateItemTrabalhoCriacaoFromFormOpts,
 } from '../modules/checklist/itemTrabalhoFromForm'
 import type { CriacaoChecklistItemForm } from '../modules/checklist/itemTrabalhoForm'
+import {
+  buildChecklistGeradoRecord as buildChecklistGeradoRecordPure,
+  buildManutencoesDoGrupo as buildManutencoesDoGrupoPure,
+  buildPecasArmazemFromChecklist as buildPecasArmazemFromChecklistPure,
+  type BuildChecklistGeradoRecordInput,
+  type BuildManutencoesDoGrupoOpts,
+  type BuildPecasArmazemFromChecklistInput,
+} from '../modules/checklist/gerarMappers'
 
 export { updateChecklistTemplateFromForm, updateGrupoChecklistFromForm, updateManutencaoChecklistFromForm }
 
@@ -67,4 +75,24 @@ export function createItemTrabalhoCriacaoFromForm(
   opts: Omit<CreateItemTrabalhoCriacaoFromFormOpts, 'nowMs'> = {}
 ): ItemTrabalhoCriacao {
   return createItemTrabalhoCriacaoFromFormPure(form, { ...opts, nowMs: Date.now() })
+}
+
+/** Injeta Date.now() na data de criação das manutenções geradas. */
+export function buildManutencoesDoGrupo(
+  g: GrupoChecklist,
+  opts: Omit<BuildManutencoesDoGrupoOpts, 'nowMs'>
+) {
+  return buildManutencoesDoGrupoPure(g, { ...opts, nowMs: Date.now() })
+}
+
+export function buildChecklistGeradoRecord(
+  input: Omit<BuildChecklistGeradoRecordInput, 'nowMs'> & { nowMs?: number }
+) {
+  return buildChecklistGeradoRecordPure({ ...input, nowMs: input.nowMs ?? Date.now() })
+}
+
+export function buildPecasArmazemFromChecklist(
+  input: Omit<BuildPecasArmazemFromChecklistInput, 'nowMs'> & { nowMs?: number }
+) {
+  return buildPecasArmazemFromChecklistPure({ ...input, nowMs: input.nowMs ?? Date.now() })
 }

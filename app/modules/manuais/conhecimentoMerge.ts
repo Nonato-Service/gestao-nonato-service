@@ -2,7 +2,7 @@
 
 import type { ManuaisGrupo, ManuaisModelo } from './tipos'
 import type { BibliaAnexo, BibliaStore } from './bibliaTipos'
-import { normalizeBibliaImport, serializeBibliaForServer } from './bibliaTipos'
+import { normalizeBibliaImport, serializeBibliaForServer, type BibliaClockOpts } from './bibliaTipos'
 
 export const CONHECIMENTO_TECNICO_STORAGE_KEY = 'nonato-conhecimento-tecnico-unificado'
 export const MANUAIS_STORAGE_KEY = 'nonato-manuais-familias-grupos'
@@ -135,9 +135,10 @@ function findModeloInGrupo(
 export function mergeBibliaIntoManuais(
   bibliaRaw: unknown,
   manuais: ManuaisFamiliasGruposPayload,
-  makeId: ConhecimentoMergeIdFactory
+  makeId: ConhecimentoMergeIdFactory,
+  clock: BibliaClockOpts
 ): ManuaisFamiliasGruposPayload {
-  const biblia = normalizeBibliaImport(bibliaRaw)
+  const biblia = normalizeBibliaImport(bibliaRaw, clock)
   let familias = [...(manuais.familias || [])]
   let grupos = [...(manuais.grupos || [])]
   let modelos = [...(manuais.modelos || [])]
@@ -193,7 +194,8 @@ export function mergeBibliaIntoManuais(
 /** Converte a estrutura unificada de volta para o formato da Bíblia (compatibilidade legado). */
 export function manuaisToBibliaStore(
   payload: ManuaisFamiliasGruposPayload,
-  makeFamiliaId: () => string
+  makeFamiliaId: () => string,
+  clock: { nowMs: number }
 ): BibliaStore {
   const familias = (payload.familias || [])
     .map((famNome, fi) => {
@@ -230,7 +232,7 @@ export function manuaisToBibliaStore(
     })
     .filter((f) => f.linhas.some((l) => l.modelos.length > 0) || f.linhas.length > 0)
 
-  return serializeBibliaForServer({ familias })
+  return serializeBibliaForServer({ familias }, clock)
 }
 
 export function buildManuaisFromSources(
@@ -264,12 +266,13 @@ export function buildBibliaConhecimentoFromSources(
   bibliaRaw: unknown,
   bibliaLegacyRaw: unknown | undefined,
   idbBibliaRaw: unknown | undefined,
-  makeId: ConhecimentoMergeIdFactory
+  makeId: ConhecimentoMergeIdFactory,
+  clock: BibliaClockOpts
 ): ManuaisFamiliasGruposPayload {
   const empty: ManuaisFamiliasGruposPayload = { familias: [], grupos: [], modelos: [] }
-  let merged = mergeBibliaIntoManuais(bibliaRaw, empty, makeId)
+  let merged = mergeBibliaIntoManuais(bibliaRaw, empty, makeId, clock)
   if (bibliaLegacyRaw) {
-    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged, makeId)
+    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged, makeId, clock)
   }
   if (idbBibliaRaw && typeof idbBibliaRaw === 'object') {
     merged = mergeManuaisPayloads(merged, idbBibliaRaw as ManuaisFamiliasGruposPayload)
@@ -284,12 +287,13 @@ export function buildConhecimentoTecnicoFromSources(
   idbManuaisRaw: unknown | undefined,
   bibliaLegacyRaw: unknown | undefined,
   unifiedRaw: unknown | undefined,
-  makeId: ConhecimentoMergeIdFactory
+  makeId: ConhecimentoMergeIdFactory,
+  clock: BibliaClockOpts
 ): ManuaisFamiliasGruposPayload {
   let merged = buildManuaisFromSources(manuaisRaw, idbManuaisRaw, unifiedRaw)
-  merged = mergeBibliaIntoManuais(bibliaRaw, merged, makeId)
+  merged = mergeBibliaIntoManuais(bibliaRaw, merged, makeId, clock)
   if (bibliaLegacyRaw) {
-    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged, makeId)
+    merged = mergeBibliaIntoManuais(bibliaLegacyRaw, merged, makeId, clock)
   }
   return merged
 }

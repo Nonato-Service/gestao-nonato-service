@@ -82,6 +82,8 @@ export function encontrarEquipamentoArmazemCorrespondenteCliente(
   )
 }
 
+export type AplicarBaixaVendaClockOpts = { nowMs: number; random: () => number }
+
 export function aplicarBaixaVendaEquipamentosArmazemRelatorio<
   T extends EquipamentoArmazemBaixaLookup
 >(
@@ -91,13 +93,14 @@ export function aplicarBaixaVendaEquipamentosArmazemRelatorio<
     cliente?: string
     tecnico?: string
   },
-  equipamentosArmazem: T[]
+  equipamentosArmazem: T[],
+  opts: AplicarBaixaVendaClockOpts
 ): { equipamentos: T[]; vendidos: EquipamentoArmazemVendidoInfo[] } {
   const list = equipamentosRelatorioPreenchidos(normalizarEquipamentosRelatorio(relatorio))
   const vendidos: EquipamentoArmazemVendidoInfo[] = []
   const idsBaixados = new Set<string>()
   let equipamentos = equipamentosArmazem
-  const dataBaixa = String(relatorio.data ?? '').trim() || new Date().toISOString().split('T')[0]
+  const dataBaixa = String(relatorio.data ?? '').trim() || new Date(opts.nowMs).toISOString().split('T')[0]
   const obsRelatorio = [
     relatorio.numero ? `Relatório n.º ${relatorio.numero}` : '',
     relatorio.cliente ? `Cliente: ${relatorio.cliente}` : '',
@@ -120,7 +123,7 @@ export function aplicarBaixaVendaEquipamentosArmazemRelatorio<
       if (item.id !== match.id) return item
       const historico = [...(item.historico ?? [])]
       historico.unshift({
-        id: `venda-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        id: `venda-${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
         data: dataBaixa,
         tipo: 'baixa',
         descricao: TEXTO_EQUIPAMENTO_VENDIDO,

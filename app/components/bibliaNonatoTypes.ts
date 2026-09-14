@@ -16,13 +16,16 @@ export {
   inferBibliaSecaoFromName,
   normalizeBibliaSecao,
   resolveBibliaSecao,
-  bibliaUid,
-  normalizeBibliaImport,
   buildInformacoesText,
-  serializeBibliaForServer,
   countBibliaStats,
-  seedBibliaExample,
   moveItem,
   normalizeSearch,
   bibliaMatchesSearch,
 } from '../modules/manuais'
+
+export {
+  bibliaUid,
+  normalizeBibliaImport,
+  serializeBibliaForServer,
+  seedBibliaExample,
+} from '../lib/manuaisBiblia'

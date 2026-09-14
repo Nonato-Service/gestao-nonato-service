@@ -15,6 +15,7 @@ export type {
   BibliaLinha,
   BibliaFamilia,
   BibliaStore,
+  BibliaClockOpts,
 } from './bibliaTipos'
 export {
   BIBLIA_NONATO_STORAGE_KEY,
