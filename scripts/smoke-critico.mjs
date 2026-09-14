@@ -5156,6 +5156,28 @@ try {
   } else {
     fail('ManuaisInformacoesContent ainda mapeia grupo/modelo no sítio')
   }
+  const manuaisFromForm = fs.readFileSync(path.join(root, 'app/modules/manuais/fromForm.ts'), 'utf8')
+  const libManuaisFromForm = exists('app/lib/manuaisFromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/manuaisFromForm.ts'), 'utf8')
+    : ''
+  if (
+    manuaisFromForm.includes('nowMs: number') &&
+    !manuaisFromForm.includes('Date.now()') &&
+    !manuaisFromForm.includes('crypto.randomUUID')
+  ) {
+    ok('módulo manuais fromForm é puro (relógio/UUID injectados)')
+  } else {
+    fail('módulo manuais/fromForm ainda usa Date.now ou crypto')
+  }
+  if (
+    libManuaisFromForm.includes('createManuaisGrupoFromForm as createManuaisGrupoFromFormPure') &&
+    libManuaisFromForm.includes('createManuaisDocumentoFromForm as createManuaisDocumentoFromFormPure') &&
+    manuaisUi.includes("from '../lib/manuaisFromForm'")
+  ) {
+    ok('ManuaisInformacoesContent usa manuais fromForm via lib')
+  } else {
+    fail('lib/manuaisFromForm ainda não envolve o fromForm')
+  }
   if (
     idx.includes('isManuaisFamiliaNomeValid') &&
     idx.includes('addManuaisFamiliaFromForm') &&

@@ -13,15 +13,10 @@ import {
   addManuaisFamiliaFromForm,
   renameManuaisFamiliaFromForm,
   isManuaisGrupoNomeValid,
-  createManuaisGrupoFromForm,
   updateManuaisGrupoNomeFromForm,
   isManuaisModeloNomeValid,
-  createManuaisModeloFromForm,
   updateManuaisModeloNomeFromForm,
   resolveManuaisDocumentoTipo,
-  createManuaisDocumentoFromForm,
-  createManuaisImagemFromForm,
-  createBibliaAnexoFromForm,
   BIBLIA_ANEXO_MAX_BYTES,
   BIBLIA_ANEXO_MAX_PER_MODEL,
   BIBLIA_NONATO_STORAGE_KEY,
@@ -29,6 +24,13 @@ import {
   resolveBibliaSecao,
   mergeManuaisPayloads,
 } from '../modules/manuais'
+import {
+  createBibliaAnexoFromForm,
+  createManuaisDocumentoFromForm,
+  createManuaisGrupoFromForm,
+  createManuaisImagemFromForm,
+  createManuaisModeloFromForm,
+} from '../lib/manuaisFromForm'
 import type { BibliaSecao } from '../modules/manuais'
 import {
   manuaisToBibliaStore,

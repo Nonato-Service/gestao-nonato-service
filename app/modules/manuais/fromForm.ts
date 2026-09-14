@@ -3,11 +3,18 @@
 import type { BibliaAnexo } from './bibliaTipos'
 import type { ManuaisDocumento, ManuaisGrupo, ManuaisImagem, ManuaisModelo } from './tipos'
 
-export function newManuaisEntityId(prefix: string, suffix?: string | number): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return suffix == null ? `${prefix}-${Date.now()}` : `${prefix}-${Date.now()}-${suffix}`
+export type ManuaisClockOpts = {
+  nowMs: number
+  randomUUID?: () => string
+}
+
+export function newManuaisEntityId(
+  prefix: string,
+  suffix: string | number | undefined,
+  clock: ManuaisClockOpts
+): string {
+  if (clock.randomUUID) return clock.randomUUID()
+  return suffix == null ? `${prefix}-${clock.nowMs}` : `${prefix}-${clock.nowMs}-${suffix}`
 }
 
 export function isManuaisFamiliaNomeValid(nome: string): boolean {
@@ -63,15 +70,17 @@ export function isManuaisGrupoNomeValid(nome: string): boolean {
 export type CreateManuaisGrupoFromFormOpts = {
   id?: string
   idPrefix?: string
+  nowMs: number
+  randomUUID?: () => string
 }
 
 export function createManuaisGrupoFromForm(
   nome: string,
   familia: string,
-  opts: CreateManuaisGrupoFromFormOpts = {}
+  opts: CreateManuaisGrupoFromFormOpts
 ): ManuaisGrupo {
   return {
-    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'g'),
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'g', undefined, opts),
     nome: nome.trim(),
     familia,
   }
@@ -88,15 +97,17 @@ export function isManuaisModeloNomeValid(nome: string): boolean {
 export type CreateManuaisModeloFromFormOpts = {
   id?: string
   idPrefix?: string
+  nowMs: number
+  randomUUID?: () => string
 }
 
 export function createManuaisModeloFromForm(
   nome: string,
   grupoId: string,
-  opts: CreateManuaisModeloFromFormOpts = {}
+  opts: CreateManuaisModeloFromFormOpts
 ): ManuaisModelo {
   return {
-    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'm'),
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'm', undefined, opts),
     nome: nome.trim(),
     grupoId,
   }
@@ -122,14 +133,16 @@ export type CreateManuaisDocumentoFromFormOpts = {
   id?: string
   idPrefix?: string
   idSuffix?: string | number
+  nowMs: number
+  randomUUID?: () => string
 }
 
 export function createManuaisDocumentoFromForm(
   form: Omit<ManuaisDocumento, 'id'>,
-  opts: CreateManuaisDocumentoFromFormOpts = {}
+  opts: CreateManuaisDocumentoFromFormOpts
 ): ManuaisDocumento {
   const doc: ManuaisDocumento = {
-    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'doc', opts.idSuffix),
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'doc', opts.idSuffix, opts),
     nome: form.nome,
     tipo: form.tipo,
     dados: form.dados,
@@ -146,14 +159,16 @@ export function isManuaisImagemFormValid(form: Pick<ManuaisImagem, 'nome' | 'dad
 export type CreateManuaisImagemFromFormOpts = {
   id?: string
   idPrefix?: string
+  nowMs: number
+  randomUUID?: () => string
 }
 
 export function createManuaisImagemFromForm(
   form: Omit<ManuaisImagem, 'id'>,
-  opts: CreateManuaisImagemFromFormOpts = {}
+  opts: CreateManuaisImagemFromFormOpts
 ): ManuaisImagem {
   const img: ManuaisImagem = {
-    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'img'),
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'img', undefined, opts),
     nome: form.nome,
     dados: form.dados,
   }
@@ -168,14 +183,16 @@ export function isBibliaAnexoFormValid(form: Pick<BibliaAnexo, 'nome' | 'dataUrl
 export type CreateBibliaAnexoFromFormOpts = {
   id?: string
   idPrefix?: string
+  nowMs: number
+  randomUUID?: () => string
 }
 
 export function createBibliaAnexoFromForm(
   form: Omit<BibliaAnexo, 'id'>,
-  opts: CreateBibliaAnexoFromFormOpts = {}
+  opts: CreateBibliaAnexoFromFormOpts
 ): BibliaAnexo {
   const anexo: BibliaAnexo = {
-    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'anx'),
+    id: opts.id ?? newManuaisEntityId(opts.idPrefix ?? 'anx', undefined, opts),
     nome: form.nome,
     mime: form.mime,
     dataUrl: form.dataUrl,
