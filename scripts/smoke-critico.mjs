@@ -1789,6 +1789,23 @@ try {
   } else {
     fail('lib/orcamentosNumero ainda não envolve gerarProximoNumeroOrcamentoAvulso')
   }
+  const eqOrc = fs.readFileSync(path.join(root, 'app/modules/orcamentos/equipamento.ts'), 'utf8')
+  if (
+    eqOrc.includes('nowMs: number') &&
+    !eqOrc.includes('new Date().getFullYear()')
+  ) {
+    ok('módulo orçamentos equipamento é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/equipamento ainda usa new Date().getFullYear()')
+  }
+  if (
+    libOrcNum.includes('gerarProximoCodigoPedidoRelatorio as gerarProximoCodigoPedidoRelatorioPure') &&
+    nma.includes('gerarProximoCodigoPedidoRelatorio')
+  ) {
+    ok('NonatoMainApp usa código POR via lib')
+  } else {
+    fail('lib/orcamentosNumero ainda não envolve gerarProximoCodigoPedidoRelatorio')
+  }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
 }
@@ -2105,6 +2122,30 @@ try {
   } else {
     fail('módulo biblioteca/pecaForm ainda usa new Date()')
   }
+  const pecasBackup = fs.readFileSync(path.join(root, 'app/modules/biblioteca/pecasBackup.ts'), 'utf8')
+  const libPecasBackup = exists('app/lib/bibliotecaPecasBackup.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/bibliotecaPecasBackup.ts'), 'utf8')
+    : ''
+  const adminPecasBackup = exists('app/components/admin/AdminPecasBackupSection.tsx')
+    ? fs.readFileSync(path.join(root, 'app/components/admin/AdminPecasBackupSection.tsx'), 'utf8')
+    : ''
+  if (
+    pecasBackup.includes('nowMs: number') &&
+    !pecasBackup.includes('new Date().toISOString()') &&
+    !pecasBackup.includes('date = new Date()')
+  ) {
+    ok('módulo biblioteca pecasBackup é puro (relógio injectado)')
+  } else {
+    fail('módulo biblioteca/pecasBackup ainda usa new Date()')
+  }
+  if (
+    libPecasBackup.includes('buildPecasBackupPayload as buildPecasBackupPayloadPure') &&
+    adminPecasBackup.includes("from '../../lib/bibliotecaPecasBackup'")
+  ) {
+    ok('AdminPecasBackupSection usa backup de peças via lib')
+  } else {
+    fail('lib/bibliotecaPecasBackup ainda não envolve o backup de peças')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
@@ -2173,6 +2214,19 @@ try {
     fail('lib/relatorioEspecialShared ainda não envolve dataLocalHojeISO')
   }
   const pdfMod = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/pdf.ts'), 'utf8')
+  const libRePdf = exists('app/lib/relatorioEspecialPdf.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioEspecialPdf.ts'), 'utf8')
+    : ''
+  if (
+    pdfMod.includes('nowMs: number') &&
+    !pdfMod.includes('new Date().toLocaleString') &&
+    libRePdf.includes('imprimirRelatorioEspecialPdf as imprimirRelatorioEspecialPdfPure') &&
+    hub.includes("from '../lib/relatorioEspecialPdf'")
+  ) {
+    ok('RelatorioEspecialHub usa PDF via lib (relógio injectado)')
+  } else {
+    fail('lib/relatorioEspecialPdf ainda não envolve imprimirRelatorioEspecialPdf')
+  }
   if (
     pdfMod.includes('secoes.infos') &&
     pdfMod.includes('secoes.equipamentos') &&
@@ -2402,6 +2456,27 @@ try {
     ok('lib/comprovantesFromForm envolve o relógio de periodo/envio')
   } else {
     fail('lib/comprovantesFromForm ainda não envolve mesesRolling / envioMensagem')
+  }
+  const folhaPdf = fs.readFileSync(path.join(root, 'app/modules/comprovantes/folhaSemanalPdf.ts'), 'utf8')
+  const libFolhaPdf = exists('app/lib/comprovantesFolhaSemanalPdf.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/comprovantesFolhaSemanalPdf.ts'), 'utf8')
+    : ''
+  if (
+    folhaPdf.includes('nowMs: number') &&
+    !folhaPdf.includes('Date.now()') &&
+    !folhaPdf.includes('new Date().toLocaleDateString')
+  ) {
+    ok('módulo comprovantes folhaSemanalPdf é puro (relógio injectado)')
+  } else {
+    fail('módulo comprovantes/folhaSemanalPdf ainda usa Date.now ou new Date()')
+  }
+  if (
+    libFolhaPdf.includes('buildFolhaSemanalContadorHtml as buildFolhaSemanalContadorHtmlPure') &&
+    nma.includes("from './lib/comprovantesFolhaSemanalPdf'")
+  ) {
+    ok('NonatoMainApp usa folha semanal PDF via lib')
+  } else {
+    fail('lib/comprovantesFolhaSemanalPdf ainda não envolve buildFolhaSemanalContadorHtml')
   }
   const compFormState = fs.readFileSync(path.join(root, 'app/modules/comprovantes/formState.ts'), 'utf8')
   const clientesAtivos = fs.readFileSync(path.join(root, 'app/modules/comprovantes/clientesAtivos.ts'), 'utf8')
@@ -3802,11 +3877,15 @@ try {
     fail('módulo protocolo sem intelFiltro')
   }
   const intelFiltroLib = fs.readFileSync(path.join(root, 'app/lib/protocoloInteligente.ts'), 'utf8')
+  const intelFiltroMod = fs.readFileSync(path.join(root, 'app/modules/protocolo/intelFiltro.ts'), 'utf8')
   if (
     intelFiltroLib.includes("from '../modules/protocolo/intelFiltro'") &&
     !intelFiltroLib.includes('export type ProtocoloFormMin = {') &&
-    !intelFiltroLib.includes('export function aplicarFiltroInteligenteChip<') &&
+    intelFiltroLib.includes('aplicarFiltroInteligenteChip as aplicarFiltroInteligenteChipPure') &&
+    intelFiltroMod.includes('nowMs: number') &&
+    !intelFiltroMod.includes('Date.now()') &&
     nma.includes('aplicarFiltroInteligenteChip') &&
+    nma.includes("from './lib/protocoloInteligente'") &&
     nma.includes('avaliarCompletudeProtocolo') &&
     nma.includes('PROTOCOLO_FILTRO_CHIPS')
   ) {
@@ -3902,8 +3981,7 @@ try {
     nma.includes('emptyProtocoloServicoForm') &&
     nma.includes('protocoloServicoToForm') &&
     !nma.includes('protocoloFormVazio') &&
-    !nma.includes('formRascunhoDeProtocolo') &&
-    !nma.includes("from './lib/protocoloInteligente'")
+    !nma.includes('formRascunhoDeProtocolo')
   ) {
     ok('NonatoMainApp usa empty/toForm canónicos do módulo protocolo')
   } else {

@@ -52,6 +52,7 @@ export type FolhaSemanalContadorParams = {
   totalClientes: number
   totalNonato: number
   totalPorCliente: Record<string, number>
+  nowMs: number
 }
 
 function clienteOuNonato(c: ComprovanteFolhaItem, labelNonato: string): string {
@@ -81,17 +82,18 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
     totalClientes,
     totalNonato,
     totalPorCliente,
+    nowMs,
   } = params
 
   const esc = escapePdfHtml
-  const dataGeracao = new Date().toLocaleDateString('pt-PT', {
+  const dataGeracao = new Date(nowMs).toLocaleDateString('pt-PT', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   })
-  const docRef = String(Date.now()).slice(-6)
+  const docRef = String(nowMs).slice(-6)
   const ordenados = [...comprovantes].sort((a, b) => {
     const da = String(a.data || '').slice(0, 10)
     const db = String(b.data || '').slice(0, 10)

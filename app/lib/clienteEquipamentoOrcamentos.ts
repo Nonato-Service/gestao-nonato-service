@@ -39,7 +39,6 @@ export {
   orcamentoEntregaAguardandoNotaFiscal,
   pedidoAvulsoAprovadoSemEntrega,
   orcamentoGeradoAprovadoSemEntrega,
-  gerarProximoCodigoPedidoRelatorio,
   clienteCorrespondeRegistro,
   pedidoRelatorioCorrespondeCliente,
   pedidoAvulsoCorrespondeCliente,
@@ -50,3 +49,4 @@ export {
   mergeOrcamentosGeradosArrays,
   enrichOrcamentosGeradosComPedidosAvulsos,
 } from '../modules/orcamentos/equipamento'
+export { gerarProximoCodigoPedidoRelatorio } from './orcamentosNumero'

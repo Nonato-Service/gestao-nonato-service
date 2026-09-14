@@ -31,7 +31,6 @@ import {
 } from '../context/DocumentoEnvioClienteContext'
 import {
   encontrarRelatorioEspecialParaUpsert,
-  imprimirRelatorioEspecialPdf,
   upsertRelatorioEspecialNaLista,
   RELATORIO_ESPECIAL_PDF_SECAO_IDS,
   defaultRelatorioEspecialPdfSecoes,
@@ -40,6 +39,7 @@ import {
   type RelatorioEspecialPdfSecaoId,
   type RelatorioEspecialPdfSecoes,
 } from '../modules/relatorios-especiais'
+import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
 import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
 import {
   criarDiaTrabalhoEspecialVazio,

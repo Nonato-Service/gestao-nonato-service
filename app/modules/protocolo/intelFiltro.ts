@@ -110,10 +110,11 @@ export function avaliarCompletudeProtocolo(form: ProtocoloFormMin): {
 
 export function aplicarFiltroInteligenteChip<T extends ProtocoloServicoMin>(
   lista: T[],
-  chip: ProtocoloIntelFiltroChip
+  chip: ProtocoloIntelFiltroChip,
+  nowMs: number
 ): T[] {
   if (chip === 'todos') return lista
-  const agora = Date.now()
+  const agora = nowMs
   return lista.filter((p) => {
     if (!p || typeof p !== 'object') return false
     switch (chip) {

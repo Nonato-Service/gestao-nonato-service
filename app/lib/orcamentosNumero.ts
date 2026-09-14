@@ -6,6 +6,8 @@ import {
   resolverNumeroOrcamentoAvulsoAoSalvar as resolverNumeroOrcamentoAvulsoAoSalvarPure,
   type OrcamentoAvulsoNumeroRef,
 } from '../modules/orcamentos/numeroAvulso'
+import { gerarProximoCodigoPedidoRelatorio as gerarProximoCodigoPedidoRelatorioPure } from '../modules/orcamentos/equipamento'
+import type { PedidoOrcamentoRef } from '../modules/orcamentos/equipamento'
 
 /** Injeta Date.now() quando a data ISO não traz dia/ano. */
 export function gerarProximoNumeroOrcamentoAvulso(
@@ -34,4 +36,9 @@ export function resolverNumeroOrcamentoAvulsoAoSalvar(
     excluirId,
     Date.now()
   )
+}
+
+/** Injeta Date.now() no ano do código POR-AAAA-NNNN. */
+export function gerarProximoCodigoPedidoRelatorio(pedidos: PedidoOrcamentoRef[]): string {
+  return gerarProximoCodigoPedidoRelatorioPure(pedidos, Date.now())
 }

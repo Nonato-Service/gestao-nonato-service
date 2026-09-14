@@ -16,6 +16,11 @@ export type {
   ProtocoloServicoMin,
   ProtocoloCompletudeItem,
 } from '../modules/protocolo/intelFiltro'
+import {
+  aplicarFiltroInteligenteChip as aplicarFiltroInteligenteChipPure,
+  type ProtocoloIntelFiltroChip,
+  type ProtocoloServicoMin,
+} from '../modules/protocolo/intelFiltro'
 export {
   PROTOCOLO_FILTRO_CHIPS,
   protocoloTemImagens,
@@ -24,8 +29,15 @@ export {
   protocoloConteudoOk,
   protocoloEstaIncompleto,
   avaliarCompletudeProtocolo,
-  aplicarFiltroInteligenteChip,
 } from '../modules/protocolo/intelFiltro'
+
+/** Injeta Date.now() no filtro «últimos 7 dias». */
+export function aplicarFiltroInteligenteChip<T extends ProtocoloServicoMin>(
+  lista: T[],
+  chip: ProtocoloIntelFiltroChip
+): T[] {
+  return aplicarFiltroInteligenteChipPure(lista, chip, Date.now())
+}
 
 export type { ProtocoloTemplateId } from '../modules/protocolo/intelTemplates'
 export { PROTOCOLO_TEMPLATE_IDS, blocosDeTemplate } from '../modules/protocolo/intelTemplates'

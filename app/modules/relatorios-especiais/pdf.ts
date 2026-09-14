@@ -1084,7 +1084,8 @@ function buildResumoViagemHtml(
 
 export function imprimirRelatorioEspecialPdf(
   relatorio: RelatorioEspecial,
-  labelsOrOptions?: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions
+  labelsOrOptions: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions | undefined,
+  nowMs: number
 ): void {
   const options: RelatorioEspecialPdfOptions =
     labelsOrOptions &&
@@ -1268,7 +1269,7 @@ export function imprimirRelatorioEspecialPdf(
         </section>`
       : ''
 
-  const dataGeracao = new Date().toLocaleString('pt-PT', {
+  const dataGeracao = new Date(nowMs).toLocaleString('pt-PT', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

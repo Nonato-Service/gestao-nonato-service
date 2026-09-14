@@ -4,17 +4,16 @@ import React, { useMemo, useRef, useState } from 'react'
 import type { CategoriaPeca, PecaBiblioteca, SubcategoriaPeca } from '../../modules/biblioteca/pecaTipos'
 import {
   applyPecasBackupImport,
-  buildPecasBackupPayload,
   countPecasComImagemBase64,
   downloadJsonBlob,
   enrichPecasParaBackup,
   parsePecasBackupJson,
-  pecasBackupFileName,
   CATEGORIAS_PECAS_STORAGE_KEY,
   PECAS_BIBLIOTECA_STORAGE_KEY,
   SUBCATEGORIAS_PECAS_STORAGE_KEY,
   type ApplyPecasBackupMode,
 } from '../../modules/biblioteca/pecasBackup'
+import { buildPecasBackupPayload, pecasBackupFileName } from '../../lib/bibliotecaPecasBackup'
 import type { SafeT } from './adminTypes'
 
 export type AdminPecasBackupSectionProps = {

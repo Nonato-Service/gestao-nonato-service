@@ -332,7 +332,6 @@ import {
   protocoloServicoFormMissing,
   PROTOCOLO_FILTRO_CHIPS,
   avaliarCompletudeProtocolo,
-  aplicarFiltroInteligenteChip,
   PROTOCOLO_TEMPLATE_IDS,
   blocosDeTemplate,
   historicoProtocolosCliente,
@@ -348,6 +347,7 @@ import {
   agruparProtocolosExecutadosPorClienteEData,
 } from './modules/protocolo'
 import { newProtocoloBlocoId, ensureProtocoloBlocosIds, protocoloServicoToForm } from './lib/protocoloBlocos'
+import { aplicarFiltroInteligenteChip } from './lib/protocoloInteligente'
 import { createProtocoloServicoFromForm, updateProtocoloServicoFromForm } from './lib/protocoloFromForm'
 import type {
   SolicitacaoDocDevolvido,
@@ -553,7 +553,6 @@ import {
   type ClienteAtivoComprovante,
   type MotivoAssociacaoRecibo,
   abrirFolhaSemanalContadorPdf,
-  buildFolhaSemanalContadorHtml,
   encontrarComprovanteDuplicado,
   encontrarDuplicadoImagemComprovante,
   hashImagemComprovante,
@@ -574,6 +573,7 @@ import {
   dadosDuplicadoComprovanteFromForm,
 } from './modules/comprovantes'
 import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido, mesesRollingCompetenciaKeys, buildMensagemEnvioComprovantes } from './lib/comprovantesFromForm'
+import { buildFolhaSemanalContadorHtml } from './lib/comprovantesFolhaSemanalPdf'
 import {
   horaAtualLocal,
   resolverClientesAtivosComprovanteHoje,
@@ -949,7 +949,6 @@ import {
   pedidoSeparacaoJaExiste,
   type OrcamentoWorkflowOrc,
   enrichOrcamentosGeradosComPedidosAvulsos,
-  gerarProximoCodigoPedidoRelatorio,
   mergeOrcamentosGeradosArrays,
   aprovarPedidosOrcamentoRelatorio,
   aprovarOrcamentosGeradosRelatorio,
@@ -969,6 +968,7 @@ import {
 import {
   gerarProximoNumeroOrcamentoAvulso,
   resolverNumeroOrcamentoAvulsoAoSalvar,
+  gerarProximoCodigoPedidoRelatorio,
 } from './lib/orcamentosNumero'
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'

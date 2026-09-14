@@ -89,6 +89,7 @@ export function buildPecasBackupPayload(input: {
   pecas: PecaBiblioteca[]
   categorias: CategoriaPeca[]
   subcategorias: SubcategoriaPeca[]
+  nowMs: number
   exportedAt?: string
 }): PecasBackupPayload {
   const pecas = Array.isArray(input.pecas) ? input.pecas : []
@@ -97,7 +98,7 @@ export function buildPecasBackupPayload(input: {
   return {
     version: PECAS_BACKUP_VERSION,
     type: PECAS_BACKUP_TYPE,
-    exportedAt: input.exportedAt || new Date().toISOString(),
+    exportedAt: input.exportedAt || new Date(input.nowMs).toISOString(),
     key: PECAS_BIBLIOTECA_STORAGE_KEY,
     pecas,
     categorias,
@@ -111,7 +112,8 @@ export function buildPecasBackupPayload(input: {
   }
 }
 
-export function pecasBackupFileName(date = new Date()): string {
+export function pecasBackupFileName(nowMs: number): string {
+  const date = new Date(nowMs)
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')

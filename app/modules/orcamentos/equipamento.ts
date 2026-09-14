@@ -475,8 +475,11 @@ export function orcamentoGeradoAprovadoSemEntrega(status?: OrcamentoGeradoRef['s
   return status === 'aprovado' || status === 'concluido'
 }
 
-export function gerarProximoCodigoPedidoRelatorio(pedidos: PedidoOrcamentoRef[]): string {
-  const ano = new Date().getFullYear()
+export function gerarProximoCodigoPedidoRelatorio(
+  pedidos: PedidoOrcamentoRef[],
+  nowMs: number
+): string {
+  const ano = new Date(nowMs).getFullYear()
   const prefix = `POR-${ano}-`
   const mesmosAno = pedidos.filter((p) => (p.codigo || '').startsWith(prefix))
   const nums = mesmosAno.map((p) => {
