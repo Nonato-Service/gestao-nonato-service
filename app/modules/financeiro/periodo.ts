@@ -50,9 +50,9 @@ export function isoWeekStringFromDate(d: Date): string {
   return `${tmp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
 }
 
-export function dateFromIsoWeekString(isoWeek: string): Date {
+export function dateFromIsoWeekString(isoWeek: string, nowMs: number): Date {
   const m = isoWeek.match(/^(\d{4})-W(\d{2})$/)
-  if (!m) return new Date()
+  if (!m) return new Date(nowMs)
   const y = parseInt(m[1], 10)
   const w = parseInt(m[2], 10)
   const jan4 = new Date(y, 0, 4)
@@ -67,14 +67,15 @@ export function financeiroReferenciaDateFromFiltros(
   tipo: TipoPeriodoFinanceiro,
   refMes: string,
   refAno: number,
-  refSemana: string
+  refSemana: string,
+  nowMs: number
 ): Date {
   if (tipo === 'mensal') {
     const [y, mo] = refMes.split('-').map((x) => parseInt(x, 10))
     if (Number.isFinite(y) && Number.isFinite(mo)) return new Date(y, mo - 1, 15)
   }
   if (tipo === 'anual') return new Date(refAno, 6, 1)
-  return dateFromIsoWeekString(refSemana)
+  return dateFromIsoWeekString(refSemana, nowMs)
 }
 
 export function dataDentroPeriodoFinanceiro(d: Date, inicio: Date, fim: Date): boolean {

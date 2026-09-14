@@ -47,9 +47,9 @@ export type ClienteFaturaBadgeProps = {
 
 export function getSinalPagamentoFaturaFornecedor(
   f: Pick<FaturaFornecedorStatusLike, 'status' | 'dataVencimento'>,
-  hojeRef?: Date
+  hojeMs: number
 ): SinalPagamentoFaturaFornecedor {
-  const hoje = hojeRef ? new Date(hojeRef) : new Date()
+  const hoje = new Date(hojeMs)
   hoje.setHours(0, 0, 0, 0)
   if (f.status === 'paga') return 'pago'
   if (f.status === 'vencida') return 'atrasado'
@@ -89,9 +89,9 @@ export function sanitizeFaturaFornecedorValorDigitando(raw: string): string {
 
 export function getSinalPagamentoFaturaPecas(
   f: Pick<FaturaPecasStatusLike, 'status' | 'dataVencimento'>,
-  hojeRef?: Date
+  hojeMs: number
 ): SinalPagamentoFaturaPecas {
-  const hoje = hojeRef ? new Date(hojeRef) : new Date()
+  const hoje = new Date(hojeMs)
   hoje.setHours(0, 0, 0, 0)
   if (f.status === 'paga') return 'pago'
   if (f.status === 'cancelada') return 'cancelada'

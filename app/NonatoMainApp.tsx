@@ -181,7 +181,6 @@ import {
   countRelatorioIdInClientesRelatorios,
   relatorioServicoMesmaChaveNegocio,
   encontrarRelatorioServicoDuplicado,
-  dataIsoParaYYYYMMDDRelatorio,
   yyyymmddRelatorioValido,
   parseRelatorioServicoNumeroDataSeq,
   normalizeOsNumeroRelatorio,
@@ -587,6 +586,12 @@ import {
   faturaPecasToFormState,
   calcularClientesDevedores,
   buildRelatorioFinanceiroPeriodo,
+  getSinalPagamentoFaturaFornecedor,
+  getSinalPagamentoFaturaPecas,
+  normalizeFechamentoFluxoFinanceiroMap,
+  applyFechamentoEtapaFinanceiraToMap,
+  ensureDefaultFluxoEntriesForBibliotecaIds,
+  financeiroReferenciaDateFromFiltros,
 } from './lib/financeiroForm'
 import { emptyFaturaFornecedorFormState } from './lib/fornecedoresForm'
 import {
@@ -599,6 +604,7 @@ import {
   criarEquipamentoRelatorioVazio,
   emptyDiaTrabalhoFormWithKmPadrao,
   updateDiaTrabalhoFromForm,
+  dataIsoParaYYYYMMDDRelatorio,
 } from './lib/relatorioServicoFromForm'
 import { createPreCheckFromForm, emptyPreCheckForm } from './lib/preCheckFromForm'
 import {
@@ -807,10 +813,8 @@ import {
   ORDEM_ESTADOS_COBRANCA_FINANCEIRA,
   normalizarTextoFaturaBusca,
   numeroFaturaCorrespondeConsulta,
-  getSinalPagamentoFaturaFornecedor,
   parseMoedaPtFaturaFornecedor,
   sanitizeFaturaFornecedorValorDigitando,
-  getSinalPagamentoFaturaPecas,
   getStatusFaturasCliente as getStatusFaturasClienteModulo,
   getClienteFaturaBadgeProps as getClienteFaturaBadgePropsModulo,
   primeiroTelefoneSoDigitosCliente,
@@ -822,19 +826,14 @@ import {
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,
-  dateFromIsoWeekString,
-  financeiroReferenciaDateFromFiltros,
   dataDentroPeriodoFinanceiro,
   buildIvaControlesFromDados,
   FECHAMENTO_FLUXO_FINANCEIRO_KEY,
   CONTABILIDADE_CONFIG_KEY,
   defaultContabilidadeConfig,
-  applyFechamentoEtapaFinanceiraToMap,
   situacaoFaturaToEtapaOpts,
   removeFechamentoFluxoIdsFromMap,
-  ensureDefaultFluxoEntriesForBibliotecaIds,
   relatorioServicoFluxoFinanceiroPendente,
-  normalizeFechamentoFluxoFinanceiroMap,
   isFaturaPecasFormValid,
   isFaturaPecasValorValido,
   calcularFaturaPecasFromForm,
@@ -958,8 +957,6 @@ import {
   type PedidoAvulsoRef,
   type PedidoOrcamento,
   relatorioTemPecasParaPedidoOrcamento,
-  gerarProximoNumeroOrcamentoAvulso,
-  resolverNumeroOrcamentoAvulsoAoSalvar,
   snapshotDadosClienteOrcamentoAvulso,
   type OrcamentoAvulsoRascunhoPersist,
   type OrcamentoAvulsoTipoRascunho,
@@ -969,6 +966,10 @@ import {
   pedidoRelatorioCorrespondeEquipamento,
   pedidoRelatorioPendente,
 } from './modules/orcamentos'
+import {
+  gerarProximoNumeroOrcamentoAvulso,
+  resolverNumeroOrcamentoAvulsoAoSalvar,
+} from './lib/orcamentosNumero'
 import { ClienteEquipamentoHub } from './components/ClienteEquipamentoHub'
 import { openPedidoOrcamentoAvulsoPdf } from './lib/pedidoOrcamentoAvulsoPdf'
 import { buildPedidoOrcamentoFromRelatorio } from './lib/pedidoOrcamentoRelatorio'

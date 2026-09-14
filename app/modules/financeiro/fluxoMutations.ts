@@ -12,8 +12,8 @@ export function applyFechamentoEtapaFinanceiraToMap(
   prev: FechamentoFluxoFinanceiroMap,
   relatorioId: string,
   etapa: FechamentoFluxoFinanceiroEtapa,
-  opts?: FechamentoFluxoFinanceiroPatchOpts,
-  nowIso?: string
+  opts: FechamentoFluxoFinanceiroPatchOpts | undefined,
+  nowIso: string
 ): FechamentoFluxoFinanceiroMap {
   const next = { ...prev }
   if (etapa === 'none') {
@@ -58,7 +58,7 @@ export function applyFechamentoEtapaFinanceiraToMap(
       etapa,
       modo: opts?.modo || currObj?.modo || (etapa === 'enviado_fatura' ? 'com_fatura' : 'com_fatura'),
       pagamento: opts?.pagamento || currObj?.pagamento || 'pendente',
-      updatedAt: nowIso ?? new Date().toISOString(),
+      updatedAt: nowIso,
     }
     if (numeroFatura !== undefined && String(numeroFatura).trim() !== '') {
       entry.numeroFatura = String(numeroFatura).trim()
@@ -137,7 +137,7 @@ export function removeFechamentoFluxoIdsFromMap(
 export function ensureDefaultFluxoEntriesForBibliotecaIds(
   prev: FechamentoFluxoFinanceiroMap,
   ids: string[],
-  nowIso?: string
+  nowIso: string
 ): { next: FechamentoFluxoFinanceiroMap; changed: boolean } {
   let changed = false
   const next = { ...prev }

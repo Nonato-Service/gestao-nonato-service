@@ -53,12 +53,12 @@ export function encontrarRelatorioServicoDuplicado<T extends RelatorioServicoNum
   )
 }
 
-export function dataIsoParaYYYYMMDDRelatorio(dataIso: string | undefined): string {
+export function dataIsoParaYYYYMMDDRelatorio(dataIso: string | undefined, nowMs: number): string {
   const s = (dataIso || '').trim().slice(0, 10)
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
     return s.replace(/-/g, '')
   }
-  const d = new Date()
+  const d = new Date(nowMs)
   const y = d.getFullYear()
   const mo = String(d.getMonth() + 1).padStart(2, '0')
   const da = String(d.getDate()).padStart(2, '0')

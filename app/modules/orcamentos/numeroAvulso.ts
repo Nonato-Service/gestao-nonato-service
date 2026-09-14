@@ -28,10 +28,11 @@ export function dataIsoParaDiaAnoOrcamento(dataIso: string): { day: string; year
 export function gerarProximoNumeroOrcamentoAvulso(
   dataIso: string,
   orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
-  excluirId?: string
+  excluirId: string | undefined,
+  nowMs: number
 ): string {
   const da = dataIsoParaDiaAnoOrcamento(dataIso)
-  const now = new Date()
+  const now = new Date(nowMs)
   const day = da?.day ?? String(now.getDate()).padStart(2, '0')
   const year = da?.year ?? String(now.getFullYear())
 
@@ -69,18 +70,20 @@ export function resolverNumeroOrcamentoAvulsoAoSalvar(
   dataIso: string,
   numeroAtual: string,
   orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
-  excluirId?: string
+  excluirId: string | undefined,
+  nowMs: number
 ): string {
   let num =
     (numeroAtual || '').trim() ||
-    gerarProximoNumeroOrcamentoAvulso(dataIso, orcamentosExistentes, excluirId)
+    gerarProximoNumeroOrcamentoAvulso(dataIso, orcamentosExistentes, excluirId, nowMs)
 
   const outros = orcamentosExistentes.filter((o) => o.id !== excluirId)
   while (outros.some((o) => (o.numeroOrcamento || '').trim() === num)) {
     num = gerarProximoNumeroOrcamentoAvulso(
       dataIso,
       [...outros, { numeroOrcamento: num, data: dataIso }],
-      excluirId
+      excluirId,
+      nowMs
     )
   }
   return num

@@ -1247,6 +1247,37 @@ try {
   } else {
     fail('lib/financeiroForm ainda não envolve calcularClientesDevedores / buildRelatorioFinanceiroPeriodo')
   }
+  const fatStatus = fs.readFileSync(path.join(root, 'app/modules/financeiro/faturaStatus.ts'), 'utf8')
+  const fluxoNorm = fs.readFileSync(path.join(root, 'app/modules/financeiro/fluxoNormalize.ts'), 'utf8')
+  const fluxoMut = fs.readFileSync(path.join(root, 'app/modules/financeiro/fluxoMutations.ts'), 'utf8')
+  const fluxoTipos = fs.readFileSync(path.join(root, 'app/modules/financeiro/fluxoTipos.ts'), 'utf8')
+  const finPeriodo = fs.readFileSync(path.join(root, 'app/modules/financeiro/periodo.ts'), 'utf8')
+  if (
+    fatStatus.includes('hojeMs: number') &&
+    !fatStatus.includes('hojeRef ? new Date(hojeRef) : new Date()') &&
+    fluxoNorm.includes('nowIso: string') &&
+    !fluxoNorm.includes('nowIso ?? new Date().toISOString()') &&
+    fluxoMut.includes('nowIso: string') &&
+    !fluxoMut.includes('nowIso ?? new Date().toISOString()') &&
+    fluxoTipos.includes('nowIso: string') &&
+    !fluxoTipos.includes('nowIso ?? new Date().toISOString()') &&
+    finPeriodo.includes('nowMs: number') &&
+    !finPeriodo.includes('if (!m) return new Date()')
+  ) {
+    ok('módulo financeiro faturaStatus/fluxo/periodo é puro (relógio injectado)')
+  } else {
+    fail('módulo financeiro faturaStatus/fluxo/periodo ainda usa new Date() por omissão')
+  }
+  if (
+    libFinForm.includes('getSinalPagamentoFaturaFornecedor as getSinalPagamentoFaturaFornecedorPure') &&
+    libFinForm.includes('normalizeFechamentoFluxoFinanceiroMap as normalizeFechamentoFluxoFinanceiroMapPure') &&
+    libFinForm.includes('financeiroReferenciaDateFromFiltros as financeiroReferenciaDateFromFiltrosPure') &&
+    nma.includes("from './lib/financeiroForm'")
+  ) {
+    ok('NonatoMainApp usa faturaStatus/fluxo/periodo via lib')
+  } else {
+    fail('lib/financeiroForm ainda não envolve faturaStatus/fluxo/periodo')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
@@ -1737,6 +1768,26 @@ try {
     ok('lib/orcamentoPdfPro só envolve o relógio de fmtDataPdf')
   } else {
     fail('lib/orcamentoPdfPro ainda implementa a formatação de data do PDF')
+  }
+  const numAvulso = fs.readFileSync(path.join(root, 'app/modules/orcamentos/numeroAvulso.ts'), 'utf8')
+  const libOrcNum = exists('app/lib/orcamentosNumero.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/orcamentosNumero.ts'), 'utf8')
+    : ''
+  if (
+    numAvulso.includes('nowMs: number') &&
+    !numAvulso.includes('const now = new Date()')
+  ) {
+    ok('módulo orçamentos numeroAvulso é puro (relógio injectado)')
+  } else {
+    fail('módulo orçamentos/numeroAvulso ainda usa new Date()')
+  }
+  if (
+    libOrcNum.includes('gerarProximoNumeroOrcamentoAvulso as gerarProximoNumeroOrcamentoAvulsoPure') &&
+    nma.includes("from './lib/orcamentosNumero'")
+  ) {
+    ok('NonatoMainApp usa numeração avulsa via lib')
+  } else {
+    fail('lib/orcamentosNumero ainda não envolve gerarProximoNumeroOrcamentoAvulso')
   }
 } catch (e) {
   fail(`módulo orçamentos: ${e.message}`)
@@ -3013,6 +3064,22 @@ try {
     ok('NonatoMainApp usa relatorio-servico fromForm via lib')
   } else {
     fail('lib/relatorioServicoFromForm ainda não envolve o fromForm')
+  }
+  const rsNumero = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/numero.ts'), 'utf8')
+  if (
+    rsNumero.includes('nowMs: number') &&
+    !rsNumero.includes('const d = new Date()')
+  ) {
+    ok('módulo relatorio-servico numero é puro (relógio injectado)')
+  } else {
+    fail('módulo relatorio-servico/numero ainda usa new Date() por omissão')
+  }
+  if (
+    libRsFromForm.includes('dataIsoParaYYYYMMDDRelatorio as dataIsoParaYYYYMMDDRelatorioPure')
+  ) {
+    ok('lib/relatorioServicoFromForm envolve dataIsoParaYYYYMMDDRelatorio')
+  } else {
+    fail('lib/relatorioServicoFromForm ainda não envolve o número AAAAMMDD')
   }
   if (
     idx.includes('ItemRelatorioExcluidoArquivo') &&

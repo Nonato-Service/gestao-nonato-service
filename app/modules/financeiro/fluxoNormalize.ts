@@ -10,11 +10,11 @@ import type {
  */
 export function normalizeFechamentoFluxoFinanceiroMap(
   raw: unknown,
-  nowIso?: string
+  nowIso: string
 ): FechamentoFluxoFinanceiroMap {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
   const out: FechamentoFluxoFinanceiroMap = {}
-  const stamp = nowIso ?? new Date().toISOString()
+  const stamp = nowIso
   const rawFlux = raw as Record<string, unknown>
   for (const k of Object.keys(rawFlux)) {
     const v = rawFlux[k]

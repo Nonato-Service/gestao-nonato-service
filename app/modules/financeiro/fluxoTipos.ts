@@ -50,11 +50,11 @@ export type FechamentoFluxoFinanceiroPatchOpts = {
   tipoArquivo?: string
 }
 
-export function defaultFluxoEntryParaBiblioteca(nowIso?: string): FechamentoFluxoFinanceiroEntry {
+export function defaultFluxoEntryParaBiblioteca(nowIso: string): FechamentoFluxoFinanceiroEntry {
   return {
     etapa: 'controlo_pagamento',
     modo: 'com_fatura',
     pagamento: 'pendente',
-    updatedAt: nowIso ?? new Date().toISOString(),
+    updatedAt: nowIso,
   }
 }

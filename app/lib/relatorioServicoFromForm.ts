@@ -24,6 +24,7 @@ import type { EquipamentoArmazemIdLookup } from '../modules/equipamentos/relator
 import type { PecaSubstituicao } from '../modules/relatorio-servico/pecaSubstituicao'
 import type { RelatorioServico } from '../modules/relatorio-servico/relatorioServicoForm'
 import type { DiaTrabalho } from '../modules/relatorio-servico/tipos'
+import { dataIsoParaYYYYMMDDRelatorio as dataIsoParaYYYYMMDDRelatorioPure } from '../modules/relatorio-servico/numero'
 import {
   createEmptyEquipamentoRelatorioForm as createEmptyEquipamentoRelatorioFormPure,
   criarEquipamentoRelatorioVazio as criarEquipamentoRelatorioVazioPure,
@@ -103,4 +104,8 @@ export function emptyDiaTrabalhoFormWithKmPadrao(kmPadrao: DiaTrabalhoKmPadrao =
 
 export function createEmptyRelatorioServicoForm(overrides?: Partial<RelatorioServico>): RelatorioServico {
   return createEmptyRelatorioServicoFormPure(overrides, { nowMs: Date.now() })
+}
+
+export function dataIsoParaYYYYMMDDRelatorio(dataIso: string | undefined): string {
+  return dataIsoParaYYYYMMDDRelatorioPure(dataIso, Date.now())
 }
