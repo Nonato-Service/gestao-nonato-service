@@ -44,7 +44,7 @@ export type {
   FolhaSemanalContadorLabels,
   FolhaSemanalContadorParams,
 } from './folhaSemanalPdf'
-export { buildFolhaSemanalContadorHtml, abrirFolhaSemanalContadorPdf } from './folhaSemanalPdf'
+export { buildFolhaSemanalContadorHtml } from './folhaSemanalPdf'
 
 export type { ComprovantesGrupoPorData } from './periodo'
 export {

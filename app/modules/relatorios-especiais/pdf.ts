@@ -1082,11 +1082,11 @@ function buildResumoViagemHtml(
   </div>`
 }
 
-export function imprimirRelatorioEspecialPdf(
+export function buildRelatorioEspecialPdfHtml(
   relatorio: RelatorioEspecial,
   labelsOrOptions: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions | undefined,
   nowMs: number
-): void {
+): string {
   const options: RelatorioEspecialPdfOptions =
     labelsOrOptions &&
     ('logoHtml' in labelsOrOptions ||
@@ -1327,11 +1327,5 @@ export function imprimirRelatorioEspecialPdf(
     },
   })
 
-  const w = window.open('', '_blank')
-  if (!w) {
-    alert(L(labels, 'relatorioEspecialPdfPopupBlocked', 'Permita pop-ups para imprimir o PDF.'))
-    return
-  }
-  w.document.write(html)
-  w.document.close()
+  return html
 }

@@ -2,7 +2,7 @@
  * @deprecated Preferir `app/modules/relatorios-especiais` — reexport de compatibilidade.
  */
 import {
-  imprimirRelatorioEspecialPdf as imprimirRelatorioEspecialPdfPure,
+  buildRelatorioEspecialPdfHtml,
   type RelatorioEspecialPdfLabels,
   type RelatorioEspecialPdfOptions,
 } from '../modules/relatorios-especiais/pdf'
@@ -21,10 +21,28 @@ export {
   temAlgumaSecaoPdfEspecial,
 } from '../modules/relatorios-especiais/pdf'
 
-/** Injeta Date.now() na data de geração do rodapé. */
+/** Injeta Date.now() e abre a janela de impressão. */
 export function imprimirRelatorioEspecialPdf(
   relatorio: RelatorioEspecial,
   labelsOrOptions?: RelatorioEspecialPdfLabels | RelatorioEspecialPdfOptions
 ): void {
-  return imprimirRelatorioEspecialPdfPure(relatorio, labelsOrOptions, Date.now())
+  const html = buildRelatorioEspecialPdfHtml(relatorio, labelsOrOptions, Date.now())
+  const options: RelatorioEspecialPdfOptions =
+    labelsOrOptions &&
+    ('logoHtml' in labelsOrOptions ||
+      'empresaNome' in labelsOrOptions ||
+      'lang' in labelsOrOptions ||
+      'secoes' in labelsOrOptions)
+      ? labelsOrOptions
+      : { labels: labelsOrOptions as RelatorioEspecialPdfLabels | undefined }
+  const msg =
+    (options.labels && options.labels.relatorioEspecialPdfPopupBlocked) ||
+    'Permita pop-ups para imprimir o PDF.'
+  const w = window.open('', '_blank')
+  if (!w) {
+    alert(msg)
+    return
+  }
+  w.document.write(html)
+  w.document.close()
 }

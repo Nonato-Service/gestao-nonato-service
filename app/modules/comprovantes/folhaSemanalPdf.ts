@@ -285,12 +285,3 @@ export function buildFolhaSemanalContadorHtml(params: FolhaSemanalContadorParams
 </body>
 </html>`
 }
-
-/** Abre janela de impressão com a folha semanal (Ctrl+P → Guardar como PDF). */
-export function abrirFolhaSemanalContadorPdf(html: string): boolean {
-  const w = window.open('', '_blank')
-  if (!w) return false
-  w.document.write(html)
-  w.document.close()
-  return true
-}

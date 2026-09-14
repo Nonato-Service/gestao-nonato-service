@@ -95,7 +95,7 @@ export {
   defaultRelatorioEspecialPdfSecoes,
   normalizeRelatorioEspecialPdfSecoes,
   temAlgumaSecaoPdfEspecial,
-  imprimirRelatorioEspecialPdf,
+  buildRelatorioEspecialPdfHtml,
 } from './pdf'
 
 export {

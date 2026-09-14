@@ -61,8 +61,8 @@ export type EtiquetasArmazemLabels = {
   clienteOuCarga?: string
 }
 
-/** Abre janela de impressão das etiquetas de volumes do armazém. */
-export function openPrintEtiquetasArmazem(eq: EquipamentoEtiquetaLike, t: EtiquetasArmazemLabels) {
+/** HTML das etiquetas de volumes do armazém (sem window). */
+export function buildEtiquetasArmazemPrintHtml(eq: EquipamentoEtiquetaLike, t: EtiquetasArmazemLabels): string {
   const { total, linhas } = getSequenciaEtiquetasArmazem(eq)
   const esc = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -132,12 +132,5 @@ export function openPrintEtiquetasArmazem(eq: EquipamentoEtiquetaLike, t: Etique
   <div class="grid">${cards}</div>
   <script>window.onload=function(){window.print();}</script>
   </body></html>`
-  if (typeof window === 'undefined') return
-  const w = window.open('', '_blank')
-  if (!w) {
-    alert('Permita pop-ups para imprimir as etiquetas.')
-    return
-  }
-  w.document.write(html)
-  w.document.close()
+  return html
 }

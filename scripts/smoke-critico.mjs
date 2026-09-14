@@ -1278,6 +1278,19 @@ try {
   } else {
     fail('lib/financeiroForm ainda não envolve faturaStatus/fluxo/periodo')
   }
+  const faturaAnexo = fs.readFileSync(path.join(root, 'app/modules/financeiro/faturaAnexo.ts'), 'utf8')
+  const libFaturaAnexo = exists('app/lib/financeiroFaturaAnexo.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/financeiroFaturaAnexo.ts'), 'utf8')
+    : ''
+  if (
+    !faturaAnexo.includes('window.open') &&
+    libFaturaAnexo.includes('window.open') &&
+    nma.includes("from './lib/financeiroFaturaAnexo'")
+  ) {
+    ok('NonatoMainApp abre anexo de fatura via lib')
+  } else {
+    fail('lib/financeiroFaturaAnexo ainda não envolve abrirFaturaAnexoDataUrl')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
@@ -2146,6 +2159,15 @@ try {
   } else {
     fail('lib/bibliotecaPecasBackup ainda não envolve o backup de peças')
   }
+  if (
+    !pecasBackup.includes('document.createElement') &&
+    libPecasBackup.includes('downloadJsonBlob') &&
+    adminPecasBackup.includes('downloadJsonBlob')
+  ) {
+    ok('AdminPecasBackupSection descarrega JSON via lib')
+  } else {
+    fail('lib/bibliotecaPecasBackup ainda não envolve downloadJsonBlob')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
@@ -2157,7 +2179,7 @@ try {
     idx.includes('calcularTotaisRelatorioEspecial') &&
     idx.includes('adaptRelatorioEspecialParaFechamentoShape') &&
     idx.includes('filterByDeletedIds') &&
-    idx.includes('imprimirRelatorioEspecialPdf') &&
+    idx.includes('buildRelatorioEspecialPdfHtml') &&
     idx.includes('defaultRelatorioEspecialPdfSecoes') &&
     idx.includes('normalizeRelatorioEspecialPdfSecoes') &&
     idx.includes('temAlgumaSecaoPdfEspecial') &&
@@ -2219,13 +2241,16 @@ try {
     : ''
   if (
     pdfMod.includes('nowMs: number') &&
+    pdfMod.includes('buildRelatorioEspecialPdfHtml') &&
+    !pdfMod.includes('window.open') &&
     !pdfMod.includes('new Date().toLocaleString') &&
-    libRePdf.includes('imprimirRelatorioEspecialPdf as imprimirRelatorioEspecialPdfPure') &&
+    libRePdf.includes('buildRelatorioEspecialPdfHtml') &&
+    libRePdf.includes('window.open') &&
     hub.includes("from '../lib/relatorioEspecialPdf'")
   ) {
-    ok('RelatorioEspecialHub usa PDF via lib (relógio injectado)')
+    ok('RelatorioEspecialHub usa PDF via lib (relógio e janela injectados)')
   } else {
-    fail('lib/relatorioEspecialPdf ainda não envolve imprimirRelatorioEspecialPdf')
+    fail('lib/relatorioEspecialPdf ainda não envolve build/imprimirRelatorioEspecialPdf')
   }
   if (
     pdfMod.includes('secoes.infos') &&
@@ -2471,6 +2496,16 @@ try {
     fail('módulo comprovantes/folhaSemanalPdf ainda usa Date.now ou new Date()')
   }
   if (
+    !folhaPdf.includes('window.open') &&
+    libFolhaPdf.includes('window.open') &&
+    libFolhaPdf.includes('abrirFolhaSemanalContadorPdf') &&
+    nma.includes("from './lib/comprovantesFolhaSemanalPdf'")
+  ) {
+    ok('NonatoMainApp abre folha semanal PDF via lib')
+  } else {
+    fail('lib/comprovantesFolhaSemanalPdf ainda não envolve abrirFolhaSemanalContadorPdf')
+  }
+  if (
     libFolhaPdf.includes('buildFolhaSemanalContadorHtml as buildFolhaSemanalContadorHtmlPure') &&
     nma.includes("from './lib/comprovantesFolhaSemanalPdf'")
   ) {
@@ -2553,6 +2588,21 @@ try {
     ok('módulo equipamentos exporta relatório/etiquetas/formState')
   } else {
     fail('módulo equipamentos incompleto (index.ts)')
+  }
+  const etqMod = fs.readFileSync(path.join(root, 'app/modules/equipamentos/etiquetas.ts'), 'utf8')
+  const libEtq = exists('app/lib/equipamentosEtiquetas.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/equipamentosEtiquetas.ts'), 'utf8')
+    : ''
+  const nmaEq = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    etqMod.includes('buildEtiquetasArmazemPrintHtml') &&
+    !etqMod.includes('window.open') &&
+    libEtq.includes('window.open') &&
+    nmaEq.includes("from './lib/equipamentosEtiquetas'")
+  ) {
+    ok('NonatoMainApp imprime etiquetas via lib')
+  } else {
+    fail('lib/equipamentosEtiquetas ainda não envolve openPrintEtiquetasArmazem')
   }
   {
     const mergeUtils = fs.readFileSync(path.join(root, 'app/modules/clientes/merge.ts'), 'utf8')

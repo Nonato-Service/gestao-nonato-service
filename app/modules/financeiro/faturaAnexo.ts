@@ -50,12 +50,3 @@ export async function readFaturaAnexoFromFile(file: File): Promise<FaturaAnexoPa
     tipoArquivo: file.type || '',
   }
 }
-
-export function abrirFaturaAnexoDataUrl(dataUrl: string): void {
-  if (!dataUrl || typeof window === 'undefined') return
-  try {
-    window.open(dataUrl, '_blank', 'noopener,noreferrer')
-  } catch {
-    /* ignore */
-  }
-}

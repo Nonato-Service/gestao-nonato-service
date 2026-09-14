@@ -21,7 +21,7 @@ export type {
   EquipamentoEtiquetaLike,
   EtiquetasArmazemLabels,
 } from './etiquetas'
-export { getSequenciaEtiquetasArmazem, openPrintEtiquetasArmazem } from './etiquetas'
+export { getSequenciaEtiquetasArmazem, buildEtiquetasArmazemPrintHtml } from './etiquetas'
 
 export type {
   HistoricoEquipamento,

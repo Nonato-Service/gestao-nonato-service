@@ -20,3 +20,13 @@ export function buildPecasBackupPayload(input: {
 export function pecasBackupFileName(date?: Date): string {
   return pecasBackupFileNamePure((date ?? new Date()).getTime())
 }
+
+export function downloadJsonBlob(fileName: string, payload: unknown): void {
+  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = fileName
+  anchor.click()
+  URL.revokeObjectURL(url)
+}

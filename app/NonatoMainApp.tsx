@@ -552,7 +552,6 @@ import {
   labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
   type MotivoAssociacaoRecibo,
-  abrirFolhaSemanalContadorPdf,
   encontrarComprovanteDuplicado,
   encontrarDuplicadoImagemComprovante,
   hashImagemComprovante,
@@ -573,7 +572,9 @@ import {
   dadosDuplicadoComprovanteFromForm,
 } from './modules/comprovantes'
 import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido, mesesRollingCompetenciaKeys, buildMensagemEnvioComprovantes } from './lib/comprovantesFromForm'
-import { buildFolhaSemanalContadorHtml } from './lib/comprovantesFolhaSemanalPdf'
+import { buildFolhaSemanalContadorHtml, abrirFolhaSemanalContadorPdf } from './lib/comprovantesFolhaSemanalPdf'
+import { abrirFaturaAnexoDataUrl } from './lib/financeiroFaturaAnexo'
+import { openPrintEtiquetasArmazem } from './lib/equipamentosEtiquetas'
 import {
   horaAtualLocal,
   resolverClientesAtivosComprovanteHoje,
@@ -665,7 +666,6 @@ import {
   type EquipamentoArmazemIdLookup,
   type EquipamentoArmazemVendidoInfo,
   getSequenciaEtiquetasArmazem,
-  openPrintEtiquetasArmazem,
   enriquecerBlocoEquipamentoPedido,
   montarCamposEquipamentoPedidoPdf,
   type HistoricoEquipamento,
@@ -822,7 +822,6 @@ import {
   buildCorpoEnvioIbanFaturaPecas,
   buildCorpoEnvioCobrancaFechamentoBiblioteca,
   readFaturaAnexoFromFile,
-  abrirFaturaAnexoDataUrl,
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,

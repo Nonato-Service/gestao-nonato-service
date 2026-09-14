@@ -5,7 +5,6 @@ import type { CategoriaPeca, PecaBiblioteca, SubcategoriaPeca } from '../../modu
 import {
   applyPecasBackupImport,
   countPecasComImagemBase64,
-  downloadJsonBlob,
   enrichPecasParaBackup,
   parsePecasBackupJson,
   CATEGORIAS_PECAS_STORAGE_KEY,
@@ -13,7 +12,7 @@ import {
   SUBCATEGORIAS_PECAS_STORAGE_KEY,
   type ApplyPecasBackupMode,
 } from '../../modules/biblioteca/pecasBackup'
-import { buildPecasBackupPayload, pecasBackupFileName } from '../../lib/bibliotecaPecasBackup'
+import { buildPecasBackupPayload, pecasBackupFileName, downloadJsonBlob } from '../../lib/bibliotecaPecasBackup'
 import type { SafeT } from './adminTypes'
 
 export type AdminPecasBackupSectionProps = {

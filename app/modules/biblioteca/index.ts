@@ -240,5 +240,4 @@ export {
   mergeCategoriasPecas,
   mergeSubcategoriasPecas,
   applyPecasBackupImport,
-  downloadJsonBlob,
 } from './pecasBackup'
