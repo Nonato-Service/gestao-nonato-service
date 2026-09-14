@@ -45,12 +45,14 @@ export function shouldDeferPecasBibliotecaImageHydration(): boolean {
   return true
 }
 
-export function isBibliotecaMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false
+export function isBibliotecaMobileDevice(
+  matchMedia: (query: string) => boolean,
+  userAgent: string
+): boolean {
   try {
-    const coarse = window.matchMedia('(pointer: coarse)').matches
-    const narrow = window.matchMedia('(max-width: 900px)').matches
-    const ua = navigator.userAgent || ''
+    const coarse = matchMedia('(pointer: coarse)')
+    const narrow = matchMedia('(max-width: 900px)')
+    const ua = userAgent || ''
     const mobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
     return coarse || narrow || mobileUa
   } catch {

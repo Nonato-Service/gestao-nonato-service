@@ -71,10 +71,6 @@ import {
   pecaPassaBuscaBibliotecaTexto,
   BIBLIOTECA_AVISO_POLL_MS,
   formatBibliotecaNovidadesMsg,
-  gravarUltimoServidorTotalAvisado,
-  lerUltimoServidorTotalAvisado,
-  pedirPermissaoAvisoBibliotecaSeNecessario,
-  showBibliotecaBrowserNotification,
   resolverClienteIdRelatorioFlexivel,
   recuperarRelatoriosServicoPerdidos,
   mergeRelatoriosServicoDeferServerLocal,
@@ -88,7 +84,6 @@ import {
   getCachedPecasBibliotecaServerTotal,
   setCachedPecasBibliotecaServerTotal,
   isPecasBibliotecaSyncInFlight,
-  isBibliotecaMobileDevice,
   shouldDeferPecasBibliotecaImageHydration,
   ehImportacaoPendenteStrict,
   sanitizarPecaBibliotecaImportacaoFlag,
@@ -318,7 +313,6 @@ import {
   normalizeDiarioAnexos,
   diarioPedidoTituloECorpo,
   diarioPedidoLinhasTarefas,
-  compressImageFileToJpegDataUrl,
   isDiarioPedidoConteudoValid,
   buildDiarioPedidoTexto,
   cloneDiarioPedidoAnexos,
@@ -573,8 +567,17 @@ import {
 } from './modules/comprovantes'
 import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido, mesesRollingCompetenciaKeys, buildMensagemEnvioComprovantes } from './lib/comprovantesFromForm'
 import { buildFolhaSemanalContadorHtml, abrirFolhaSemanalContadorPdf } from './lib/comprovantesFolhaSemanalPdf'
-import { abrirFaturaAnexoDataUrl } from './lib/financeiroFaturaAnexo'
+import { abrirFaturaAnexoDataUrl, readFaturaAnexoFromFile } from './lib/financeiroFaturaAnexo'
 import { openPrintEtiquetasArmazem } from './lib/equipamentosEtiquetas'
+import { compressImageFileToJpegDataUrl } from './lib/diarioCompressImage'
+import {
+  gravarUltimoServidorTotalAvisado,
+  lerUltimoServidorTotalAvisado,
+  pedirPermissaoAvisoBibliotecaSeNecessario,
+  showBibliotecaBrowserNotification,
+} from './lib/bibliotecaAviso'
+import { isBibliotecaMobileDevice } from './lib/pecasBibliotecaSyncCoordinator'
+import { readDeletedIdsFromLocalStorage } from './lib/relatorioEspecialDeleted'
 import {
   horaAtualLocal,
   resolverClientesAtivosComprovanteHoje,
@@ -821,7 +824,6 @@ import {
   digitosWhatsAppFromTelefonesCliente,
   buildCorpoEnvioIbanFaturaPecas,
   buildCorpoEnvioCobrancaFechamentoBiblioteca,
-  readFaturaAnexoFromFile,
   parseDataFinanceiroParaDate,
   periodoFinanceiroFromDate,
   isoWeekStringFromDate,
@@ -1001,7 +1003,6 @@ import {
   filterByDeletedIds,
   mergeDeletedIds,
   normalizeDeletedIds,
-  readDeletedIdsFromLocalStorage,
   dedupeRelatoriosEspeciais,
 } from './modules/relatorios-especiais'
 import type {

@@ -313,6 +313,11 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 293. `app/modules/biblioteca/` (pecasBackup download; Blob no lib) — feito
 294. `app/modules/financeiro/` (faturaAnexo window; janela no lib) — feito
 295. `app/modules/equipamentos/` (etiquetas window; janela no lib) — feito
+296. `app/modules/diario/` (compressImage canvas; I/O no lib) — feito
+297. `app/modules/financeiro/` (faturaAnexo FileReader; I/O no lib) — feito
+298. `app/modules/biblioteca/` (syncCoordinator matchMedia; I/O no lib) — feito
+299. `app/modules/relatorios-especiais/` (deleted localStorage; I/O no lib) — feito
+300. `app/modules/biblioteca/` (aviso storage/Notification; I/O no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

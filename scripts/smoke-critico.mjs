@@ -1284,7 +1284,9 @@ try {
     : ''
   if (
     !faturaAnexo.includes('window.open') &&
+    !faturaAnexo.includes('FileReader') &&
     libFaturaAnexo.includes('window.open') &&
+    libFaturaAnexo.includes('FileReader') &&
     nma.includes("from './lib/financeiroFaturaAnexo'")
   ) {
     ok('NonatoMainApp abre anexo de fatura via lib')
@@ -2168,6 +2170,35 @@ try {
   } else {
     fail('lib/bibliotecaPecasBackup ainda não envolve downloadJsonBlob')
   }
+  const avisoMod = fs.readFileSync(path.join(root, 'app/modules/biblioteca/aviso.ts'), 'utf8')
+  const libAviso = exists('app/lib/bibliotecaAviso.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/bibliotecaAviso.ts'), 'utf8')
+    : ''
+  const syncMod = fs.readFileSync(path.join(root, 'app/modules/biblioteca/syncCoordinator.ts'), 'utf8')
+  const libSync = exists('app/lib/pecasBibliotecaSyncCoordinator.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pecasBibliotecaSyncCoordinator.ts'), 'utf8')
+    : ''
+  if (
+    avisoMod.includes('readItem: (key: string) => string | null') &&
+    !avisoMod.includes('localStorage') &&
+    !avisoMod.includes('Notification') &&
+    libAviso.includes('localStorage') &&
+    nma.includes("from './lib/bibliotecaAviso'")
+  ) {
+    ok('NonatoMainApp usa aviso de biblioteca via lib')
+  } else {
+    fail('lib/bibliotecaAviso ainda não envolve storage/notificação')
+  }
+  if (
+    syncMod.includes('matchMedia: (query: string) => boolean') &&
+    !syncMod.includes('window.matchMedia') &&
+    libSync.includes('window.matchMedia') &&
+    nma.includes("from './lib/pecasBibliotecaSyncCoordinator'")
+  ) {
+    ok('NonatoMainApp detecta biblioteca mobile via lib')
+  } else {
+    fail('lib/pecasBibliotecaSyncCoordinator ainda não envolve isBibliotecaMobileDevice')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
@@ -2371,6 +2402,20 @@ try {
     ok('NonatoMainApp importa app/modules/relatorios-especiais')
   } else {
     fail('NonatoMainApp não importa o módulo relatorios-especiais')
+  }
+  const deletedMod = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/deleted.ts'), 'utf8')
+  const libDeleted = exists('app/lib/relatorioEspecialDeleted.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioEspecialDeleted.ts'), 'utf8')
+    : ''
+  if (
+    deletedMod.includes('raw: string | null') &&
+    !deletedMod.includes('localStorage') &&
+    libDeleted.includes('localStorage.getItem') &&
+    nma.includes("from './lib/relatorioEspecialDeleted'")
+  ) {
+    ok('NonatoMainApp lê tombstones de relatórios especiais via lib')
+  } else {
+    fail('lib/relatorioEspecialDeleted ainda não envolve readDeletedIdsFromLocalStorage')
   }
 } catch (e) {
   fail(`módulo relatorios-especiais: ${e.message}`)
@@ -3720,7 +3765,7 @@ try {
     idx.includes('normalizeDiarioAnexos') &&
     idx.includes('diarioPedidoTituloECorpo') &&
     idx.includes('DIARIO_PEDIDOS_DIA_STORAGE_KEY') &&
-    idx.includes('compressImageFileToJpegDataUrl')
+    idx.includes('COMPRESS_IMAGE_MAX_W')
   ) {
     ok('módulo diario exporta tipos/anexos/texto/compressImage')
   } else {
@@ -3741,6 +3786,20 @@ try {
     ok('NonatoMainApp usa compressImage do módulo diario')
   } else {
     fail('NonatoMainApp ainda define compressImageFileToJpegDataUrl localmente')
+  }
+  const compressMod = fs.readFileSync(path.join(root, 'app/modules/diario/compressImage.ts'), 'utf8')
+  const libCompress = exists('app/lib/diarioCompressImage.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/diarioCompressImage.ts'), 'utf8')
+    : ''
+  if (
+    !compressMod.includes('document.createElement') &&
+    !compressMod.includes('createImageBitmap') &&
+    libCompress.includes('document.createElement') &&
+    nma.includes("from './lib/diarioCompressImage'")
+  ) {
+    ok('NonatoMainApp comprime imagens do diário via lib')
+  } else {
+    fail('lib/diarioCompressImage ainda não envolve compressImageFileToJpegDataUrl')
   }
   if (
     idx.includes('isDiarioPedidoConteudoValid') &&

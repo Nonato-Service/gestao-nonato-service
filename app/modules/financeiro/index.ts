@@ -86,7 +86,7 @@ export { normalizarTextoFaturaBusca, numeroFaturaCorrespondeConsulta } from './f
 
 export {
   MAX_FATURA_ANEXO_BYTES,
-  readFaturaAnexoFromFile,
+  isFaturaAnexoImageFile,
 } from './faturaAnexo'
 export type { FaturaAnexoPayload } from './faturaAnexo'
 

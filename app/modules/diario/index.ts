@@ -10,7 +10,14 @@ export {
 
 export { normalizeDiarioAnexos } from './normalize'
 export { diarioPedidoTituloECorpo, diarioPedidoLinhasTarefas } from './texto'
-export { compressImageFileToJpegDataUrl } from './compressImage'
+export {
+  COMPRESS_IMAGE_MAX_W,
+  COMPRESS_IMAGE_MAX_H,
+  COMPRESS_IMAGE_QUALITY_START,
+  COMPRESS_IMAGE_QUALITY_MIN,
+  COMPRESS_IMAGE_QUALITY_STEP,
+  COMPRESS_IMAGE_MAX_DATA_URL_LEN,
+} from './compressImage'
 export type { CreateDiarioPedidoFromFormOpts, UpdateDiarioPedidoFromFormOpts } from './fromForm'
 export {
   isDiarioPedidoConteudoValid,

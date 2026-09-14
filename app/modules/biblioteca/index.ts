@@ -29,10 +29,6 @@ export {
 export type { BibliotecaNovidadesMsgTemplates } from './aviso'
 export {
   BIBLIOTECA_AVISO_POLL_MS,
-  lerUltimoServidorTotalAvisado,
-  gravarUltimoServidorTotalAvisado,
-  pedirPermissaoAvisoBibliotecaSeNecessario,
-  showBibliotecaBrowserNotification,
   formatBibliotecaNovidadesMsg,
 } from './aviso'
 

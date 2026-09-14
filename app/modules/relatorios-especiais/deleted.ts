@@ -22,12 +22,10 @@ export function filterByDeletedIds<T extends { id?: unknown }>(list: T[], delete
   return (Array.isArray(list) ? list : []).filter((r) => !ban.has(String(r?.id ?? '').trim()))
 }
 
-/** Lê tombstones do localStorage (não usar getData do bootstrap — só existe dentro de loadAllData). */
-export function readDeletedIdsFromLocalStorage(): string[] {
-  if (typeof window === 'undefined') return []
+/** Lê tombstones já obtidos do storage (JSON cru). */
+export function readDeletedIdsFromLocalStorage(raw: string | null): string[] {
+  if (raw == null || raw === '') return []
   try {
-    const raw = localStorage.getItem(RELATORIOS_ESPECIAIS_DELETED_IDS_KEY)
-    if (raw == null || raw === '') return []
     return normalizeDeletedIds(JSON.parse(raw) as unknown)
   } catch {
     return []
