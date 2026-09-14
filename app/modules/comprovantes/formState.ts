@@ -17,13 +17,13 @@ export type ComprovanteDespesaFormState = {
   motivoAssociacao: MotivoAssociacaoRecibo
 }
 
-export function emptyComprovanteDespesaForm(): ComprovanteDespesaFormState {
+export function emptyComprovanteDespesaForm(opts: { nowMs: number }): ComprovanteDespesaFormState {
   return {
     tipo: 'cliente',
     cliente: '',
-    data: new Date().toISOString().slice(0, 10),
-    horaUsada: horaAtualLocal(),
-    mesCompetencia: new Date().toISOString().slice(0, 7),
+    data: new Date(opts.nowMs).toISOString().slice(0, 10),
+    horaUsada: horaAtualLocal(opts.nowMs),
+    mesCompetencia: new Date(opts.nowMs).toISOString().slice(0, 7),
     valorUnitario: 0,
     quantidade: 1,
     descricao: '',
@@ -50,20 +50,22 @@ export function formCompComClienteSugerido(
   dataIso: string,
   horaIso: string | null | undefined,
   base: Partial<ComprovanteDespesaFormState> | undefined,
-  resolverEstado: (data: string, hora: string) => EstadoClienteParaFormComp
+  resolverEstado: (data: string, hora: string) => EstadoClienteParaFormComp,
+  opts: { nowMs: number }
 ): ComprovanteDespesaFormState {
   const data = String(dataIso || '').slice(0, 10)
-  const hora = horaIso?.trim() || horaAtualLocal()
+  const hora = horaIso?.trim() || horaAtualLocal(opts.nowMs)
   const estado = resolverEstado(data, hora)
+  const hojeIso = new Date(opts.nowMs).toISOString().slice(0, 10)
   return {
     tipo: (estado.tipoSelecionado === 'pessoal' ? 'pessoal' : 'cliente') as 'cliente' | 'pessoal',
     cliente: base?.cliente?.trim() ? base.cliente : estado.clienteSelecionado || '',
-    data: data || new Date().toISOString().slice(0, 10),
+    data: data || hojeIso,
     horaUsada: estado.horaUsada || hora,
     mesCompetencia:
       typeof base?.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(base.mesCompetencia)
         ? base.mesCompetencia
-        : (data || new Date().toISOString().slice(0, 10)).slice(0, 7),
+        : (data || hojeIso).slice(0, 7),
     valorUnitario: base?.valorUnitario ?? 0,
     quantidade: base?.quantidade ?? 1,
     descricao: base?.descricao ?? '',

@@ -11,7 +11,8 @@ export type AgendamentoFormState = Agendamento
 
 /** Formulário inicial (serviço ou pessoal). Datas no call-site via overrides se precisar de um instante fixo. */
 export function emptyAgendamentoFormState(
-  overrides?: Partial<Agendamento>
+  overrides: Partial<Agendamento> | undefined,
+  opts: { nowMs: number }
 ): Agendamento {
   const categoria = overrides?.categoria === 'pessoal' ? 'pessoal' : 'servico'
   return {
@@ -22,7 +23,7 @@ export function emptyAgendamentoFormState(
     clienteId: '',
     equipamento: '',
     equipamentoId: '',
-    data: new Date().toISOString().split('T')[0],
+    data: new Date(opts.nowMs).toISOString().split('T')[0],
     hora: '09:00',
     duracaoEstimada: categoria === 'pessoal' ? '1' : '2',
     diasSelecionados: undefined,
@@ -35,7 +36,7 @@ export function emptyAgendamentoFormState(
     telefone: '',
     endereco: '',
     cidade: '',
-    dataCriacao: new Date().toISOString(),
+    dataCriacao: new Date(opts.nowMs).toISOString(),
     relatorioTrabalhoExecutado: '',
     dataRegistoConclusao: undefined,
     categoria,

@@ -18,12 +18,12 @@ export type OrdemServicoFormState = {
   equipamentoId: string
 }
 
-export function emptyOrdemServicoFormState(): OrdemServicoFormState {
+export function emptyOrdemServicoFormState(opts: { nowMs: number }): OrdemServicoFormState {
   return {
     numeroOS: '',
     clienteId: '',
     clienteNome: '',
-    dataAbertura: new Date().toISOString().split('T')[0],
+    dataAbertura: new Date(opts.nowMs).toISOString().split('T')[0],
     status: 'aberta',
     valorServico: 0,
     valorPecas: 0,

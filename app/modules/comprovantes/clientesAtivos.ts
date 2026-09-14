@@ -10,13 +10,13 @@ export type ClienteAtivoComprovante = {
 
 export type MotivoAssociacaoRecibo = 'unico' | 'hora' | 'perguntar' | 'pessoal'
 
-export function isoHojeLocal(): string {
-  return new Date().toISOString().slice(0, 10)
+export function isoHojeLocal(nowMs: number): string {
+  return new Date(nowMs).toISOString().slice(0, 10)
 }
 
 /** Hora local actual HH:MM (ex.: hora da foto). */
-export function horaAtualLocal(): string {
-  const d = new Date()
+export function horaAtualLocal(nowMs: number): string {
+  const d = new Date(nowMs)
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
@@ -308,11 +308,12 @@ export function resolverClientesAtivosComprovanteHoje(params: {
   dataReferencia?: string
   /** @deprecated use dataReferencia */
   hoje?: string
+  nowMs: number
   relatoriosAbertos: RelatorioRef[]
   relatoriosFechados?: RelatorioRef[]
   agendamentos: AgendamentoRef[]
 }): ClienteAtivoComprovante[] {
-  const dataRef = String(params.dataReferencia || params.hoje || isoHojeLocal())
+  const dataRef = String(params.dataReferencia || params.hoje || isoHojeLocal(params.nowMs))
     .trim()
     .slice(0, 10)
   const fechados = params.relatoriosFechados ?? []
@@ -324,7 +325,7 @@ export function resolverClientesAtivosComprovanteHoje(params: {
   const mesclado = mesclarClientesPrioridade(deAbertos, deFechadosNoDia, deAgenda)
   if (mesclado.length > 0) return mesclado
 
-  if (dataRef === isoHojeLocal()) {
+  if (dataRef === isoHojeLocal(params.nowMs)) {
     return mesclarClientesPrioridade(
       clientesDeRelatoriosFechados(fechados, dataRef, DIAS_RELATORIOS_FECHADOS_RECENTES)
     )
@@ -379,6 +380,7 @@ export function resolverEstadoClienteComprovanteRecibo(params: {
   dataReferencia: string
   /** HH:MM do recibo (OCR) ou hora da captura */
   horaReferencia?: string | null
+  nowMs: number
   relatoriosAbertos: RelatorioRef[]
   relatoriosFechados?: RelatorioRef[]
   agendamentos: AgendamentoRef[]
@@ -394,13 +396,14 @@ export function resolverEstadoClienteComprovanteRecibo(params: {
   const dataRef = normalizarDataRef(params.dataReferencia)
   const candidatos = resolverClientesAtivosComprovanteHoje({
     dataReferencia: dataRef,
+    nowMs: params.nowMs,
     relatoriosAbertos: params.relatoriosAbertos,
     relatoriosFechados: params.relatoriosFechados,
     agendamentos: params.agendamentos,
   })
 
   const horaOcr = params.horaReferencia?.trim() || null
-  const horaFoto = horaAtualLocal()
+  const horaFoto = horaAtualLocal(params.nowMs)
   const horaUsada = horaOcr || horaFoto
   const horaOrigem: 'recibo' | 'foto' | null = horaOcr ? 'recibo' : horaUsada ? 'foto' : null
   const horaMin = parseHoraMinutos(horaUsada)

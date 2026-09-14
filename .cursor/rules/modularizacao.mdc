@@ -283,6 +283,11 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 263. `app/modules/relatorio-servico/` (diaTrabalhoForm data; Date.now() no lib) — feito
 264. `app/modules/relatorio-servico/` (relatorioServicoForm data; Date.now() no lib) — feito
 265. `app/modules/biblioteca/` (pecaForm dataCriacao; Date.now() no lib) — feito
+266. `app/modules/comprovantes/` (formState + clientesAtivos relógio; Date.now() no lib) — feito
+267. `app/modules/agenda/` (agendamentoForm data; Date.now() no lib) — feito
+268. `app/modules/financeiro/` (ordemServicoForm data; Date.now() no lib) — feito
+269. `app/modules/financeiro/` (faturaPecasForm data; Date.now() no lib) — feito
+270. `app/modules/fornecedores/` (formState mês; Date.now() no lib) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

@@ -43,11 +43,12 @@ export function fornecedorToFormState(fornecedor: Fornecedor): FornecedorFormSta
 }
 
 export function emptyFaturaFornecedorFormState(
-  overrides?: Partial<FaturaFornecedorFormState>
+  overrides: Partial<FaturaFornecedorFormState> | undefined,
+  opts: { nowMs: number }
 ): FaturaFornecedorFormState {
   return {
     numeroFatura: '',
-    mes: new Date().toISOString().slice(0, 7), // YYYY-MM
+    mes: new Date(opts.nowMs).toISOString().slice(0, 7), // YYYY-MM
     valorText: '',
     clienteId: '',
     clienteNome: '',

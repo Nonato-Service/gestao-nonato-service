@@ -1204,6 +1204,30 @@ try {
   } else {
     fail('NonatoMainApp ainda mapeia OrdemServico no sítio')
   }
+  const fatForm = fs.readFileSync(path.join(root, 'app/modules/financeiro/faturaPecasForm.ts'), 'utf8')
+  const osForm = fs.readFileSync(path.join(root, 'app/modules/financeiro/ordemServicoForm.ts'), 'utf8')
+  const libFinForm = exists('app/lib/financeiroForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/financeiroForm.ts'), 'utf8')
+    : ''
+  if (
+    fatForm.includes('nowMs: number') &&
+    !fatForm.includes('new Date().toISOString()') &&
+    osForm.includes('nowMs: number') &&
+    !osForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo financeiro formState é puro (relógio injectado)')
+  } else {
+    fail('módulo financeiro faturaPecasForm/ordemServicoForm ainda usa new Date()')
+  }
+  if (
+    libFinForm.includes('emptyFaturaPecasFormState as emptyFaturaPecasFormStatePure') &&
+    libFinForm.includes('emptyOrdemServicoFormState as emptyOrdemServicoFormStatePure') &&
+    nma.includes("from './lib/financeiroForm'")
+  ) {
+    ok('NonatoMainApp usa forms vazios financeiro via lib')
+  } else {
+    fail('lib/financeiroForm ainda não envolve os forms vazios')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
@@ -2235,11 +2259,36 @@ try {
   }
   if (
     libCompFromForm.includes('createComprovanteDespesaFromForm as createComprovanteDespesaFromFormPure') &&
+    libCompFromForm.includes('emptyComprovanteDespesaForm as emptyComprovanteDespesaFormPure') &&
     nma.includes("from './lib/comprovantesFromForm'")
   ) {
     ok('NonatoMainApp usa comprovante fromForm via lib')
   } else {
     fail('lib/comprovantesFromForm ainda não envolve o comprovante fromForm')
+  }
+  const compFormState = fs.readFileSync(path.join(root, 'app/modules/comprovantes/formState.ts'), 'utf8')
+  const clientesAtivos = fs.readFileSync(path.join(root, 'app/modules/comprovantes/clientesAtivos.ts'), 'utf8')
+  const libCompHoje = exists('app/lib/comprovanteClientesAtivosHoje.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/comprovanteClientesAtivosHoje.ts'), 'utf8')
+    : ''
+  if (
+    compFormState.includes('nowMs: number') &&
+    !compFormState.includes('new Date().toISOString()') &&
+    clientesAtivos.includes('nowMs: number') &&
+    !clientesAtivos.includes('Date.now()') &&
+    !clientesAtivos.includes('new Date().toISOString()')
+  ) {
+    ok('módulo comprovantes formState/clientesAtivos é puro (relógio injectado)')
+  } else {
+    fail('módulo comprovantes formState/clientesAtivos ainda usa Date.now ou new Date()')
+  }
+  if (
+    libCompHoje.includes('horaAtualLocal as horaAtualLocalPure') &&
+    nma.includes("from './lib/comprovanteClientesAtivosHoje'")
+  ) {
+    ok('NonatoMainApp usa hora/clientes ativos via lib')
+  } else {
+    fail('lib/comprovanteClientesAtivosHoje ainda não envolve o relógio')
   }
   if (
     idx.includes('formCompComClienteSugerido') &&
@@ -3109,6 +3158,26 @@ try {
     ok('módulo agenda exporta Agendamento form/fromForm')
   } else {
     fail('módulo agenda sem Agendamento form/fromForm')
+  }
+  const agendaForm = fs.readFileSync(path.join(root, 'app/modules/agenda/agendamentoForm.ts'), 'utf8')
+  const libAgendaForm = exists('app/lib/agendaForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/agendaForm.ts'), 'utf8')
+    : ''
+  if (
+    agendaForm.includes('nowMs: number') &&
+    !agendaForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo agenda agendamentoForm é puro (relógio injectado)')
+  } else {
+    fail('módulo agenda/agendamentoForm ainda usa new Date()')
+  }
+  if (
+    libAgendaForm.includes('emptyAgendamentoFormState as emptyAgendamentoFormStatePure') &&
+    nma.includes("from './lib/agendaForm'")
+  ) {
+    ok('NonatoMainApp usa emptyAgendamentoFormState via lib')
+  } else {
+    fail('lib/agendaForm ainda não envolve o form vazio')
   }
   if (
     nma.includes('isAgendamentoFormValid') &&
@@ -6322,6 +6391,26 @@ try {
     ok('NonatoMainApp usa Fornecedor/FaturaFornecedor/fromForm do módulo fornecedores')
   } else {
     fail('NonatoMainApp ainda define Fornecedor/FaturaFornecedor/fromForm localmente')
+  }
+  const fornFormState = fs.readFileSync(path.join(root, 'app/modules/fornecedores/formState.ts'), 'utf8')
+  const libFornForm = exists('app/lib/fornecedoresForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/fornecedoresForm.ts'), 'utf8')
+    : ''
+  if (
+    fornFormState.includes('nowMs: number') &&
+    !fornFormState.includes('new Date().toISOString()')
+  ) {
+    ok('módulo fornecedores formState é puro (relógio injectado)')
+  } else {
+    fail('módulo fornecedores/formState ainda usa new Date()')
+  }
+  if (
+    libFornForm.includes('emptyFaturaFornecedorFormState as emptyFaturaFornecedorFormStatePure') &&
+    nma.includes("from './lib/fornecedoresForm'")
+  ) {
+    ok('NonatoMainApp usa emptyFaturaFornecedorFormState via lib')
+  } else {
+    fail('lib/fornecedoresForm ainda não envolve o form vazio')
   }
   const formComp = fs.readFileSync(path.join(root, 'app/components/FornecedorCadastroForm.tsx'), 'utf8')
   if (

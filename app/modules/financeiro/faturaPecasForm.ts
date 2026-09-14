@@ -31,7 +31,7 @@ export type FaturaPecasFormState = {
   itens: FaturaPecasItemForm[]
 }
 
-export function emptyFaturaPecasFormState(): FaturaPecasFormState {
+export function emptyFaturaPecasFormState(opts: { nowMs: number }): FaturaPecasFormState {
   return {
     numeroFatura: '',
     ordemServicoId: '',
@@ -40,7 +40,7 @@ export function emptyFaturaPecasFormState(): FaturaPecasFormState {
     clienteNome: '',
     equipamentoId: '',
     equipamentoTexto: '',
-    dataEmissao: new Date().toISOString().split('T')[0],
+    dataEmissao: new Date(opts.nowMs).toISOString().split('T')[0],
     dataVencimento: '',
     taxaIVA: 23,
     status: 'pendente',
@@ -56,7 +56,7 @@ export function emptyFaturaPecasFormState(): FaturaPecasFormState {
 
 export function faturaPecasToFormState(
   fatura: FaturaPecas,
-  opts?: { valorManualSemIVA?: string }
+  opts: { valorManualSemIVA?: string; nowMs: number }
 ): FaturaPecasFormState {
   return {
     numeroFatura: fatura.numeroFatura,
@@ -68,7 +68,7 @@ export function faturaPecasToFormState(
     equipamentoTexto: fatura.equipamentoTexto || '',
     dataEmissao:
       (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) ||
-      new Date().toISOString().split('T')[0],
+      new Date(opts.nowMs).toISOString().split('T')[0],
     dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
     taxaIVA: fatura.taxaIVA,
     status: fatura.status,

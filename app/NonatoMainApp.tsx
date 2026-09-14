@@ -253,7 +253,6 @@ import {
   encontrarConflitoTecnicoEmAndamento,
   temConflitosAgendaLegados,
   agendamentoActivoParaConflitoCliente,
-  emptyAgendamentoFormState,
   agendamentoToFormState,
   isAgendamentoFormValid,
   aplicarPeriodoAgendamentoForm,
@@ -390,7 +389,6 @@ import type {
 import {
   emptyFornecedorFormState,
   fornecedorToFormState,
-  emptyFaturaFornecedorFormState,
   faturaFornecedorToFormState,
   inferFaturaFornecedorEntidadeOrigem,
   isFornecedorFormValid,
@@ -551,9 +549,6 @@ import {
   parseDataReciboIso,
   parseHoraRecibo,
   extrairDescricaoRecibo,
-  resolverClientesAtivosComprovanteHoje,
-  resolverEstadoClienteComprovanteRecibo,
-  horaAtualLocal,
   labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
   type MotivoAssociacaoRecibo,
@@ -576,13 +571,23 @@ import {
   prefixarMensagemEnvioComTecnico,
   type ComprovanteDespesa,
   type ComprovanteDespesaFormState,
-  emptyComprovanteDespesaForm,
-  formCompComClienteSugerido,
   isComprovanteDespesaClienteNomeValid,
   comprovanteDespesaClienteCadastrado,
   dadosDuplicadoComprovanteFromForm,
 } from './modules/comprovantes'
-import { createComprovanteDespesaFromForm } from './lib/comprovantesFromForm'
+import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido } from './lib/comprovantesFromForm'
+import {
+  horaAtualLocal,
+  resolverClientesAtivosComprovanteHoje,
+  resolverEstadoClienteComprovanteRecibo,
+} from './lib/comprovanteClientesAtivosHoje'
+import { emptyAgendamentoFormState } from './lib/agendaForm'
+import {
+  emptyFaturaPecasFormState,
+  emptyOrdemServicoFormState,
+  faturaPecasToFormState,
+} from './lib/financeiroForm'
+import { emptyFaturaFornecedorFormState } from './lib/fornecedoresForm'
 import {
   createDiaTrabalhoFromForm,
   createEmptyDiaTrabalhoForm,
@@ -831,14 +836,11 @@ import {
   ensureDefaultFluxoEntriesForBibliotecaIds,
   relatorioServicoFluxoFinanceiroPendente,
   normalizeFechamentoFluxoFinanceiroMap,
-  emptyFaturaPecasFormState,
-  faturaPecasToFormState,
   isFaturaPecasFormValid,
   isFaturaPecasValorValido,
   calcularFaturaPecasFromForm,
   createFaturaPecasFromForm,
   updateFaturaPecasFromForm,
-  emptyOrdemServicoFormState,
   ordemServicoToFormState,
   isOrdemServicoFormValid,
   calcularTotaisOrdemServico,
