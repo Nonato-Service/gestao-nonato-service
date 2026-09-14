@@ -6,7 +6,13 @@ import {
   emptyFaturaPecasFormState as emptyFaturaPecasFormStatePure,
   faturaPecasToFormState as faturaPecasToFormStatePure,
 } from '../modules/financeiro/faturaPecasForm'
-import type { FaturaPecas } from '../modules/financeiro/tiposOs'
+import {
+  calcularClientesDevedores as calcularClientesDevedoresPure,
+  type CalcularClientesDevedoresInput,
+} from '../modules/financeiro/calcularDevedores'
+import { buildRelatorioFinanceiroPeriodo as buildRelatorioFinanceiroPeriodoPure } from '../modules/financeiro/buildPeriodo'
+import type { FaturaPecas, BuildFinanceiroPeriodoInput, RelatorioFinanceiro } from '../modules/financeiro/tiposOs'
+import type { ClienteDevedor } from '../modules/financeiro/tipos'
 import type { OrdemServicoFormState } from '../modules/financeiro/ordemServicoForm'
 import type { FaturaPecasFormState } from '../modules/financeiro/faturaPecasForm'
 
@@ -24,4 +30,17 @@ export function faturaPecasToFormState(
   opts: { valorManualSemIVA?: string } = {}
 ): FaturaPecasFormState {
   return faturaPecasToFormStatePure(fatura, { ...opts, nowMs: Date.now() })
+}
+
+/** Injeta new Date() no cálculo de devedores e no relatório de período. */
+export function calcularClientesDevedores(
+  input: Omit<CalcularClientesDevedoresInput, 'agora'> & { agora?: Date }
+): ClienteDevedor[] {
+  return calcularClientesDevedoresPure({ ...input, agora: input.agora ?? new Date() })
+}
+
+export function buildRelatorioFinanceiroPeriodo(
+  input: BuildFinanceiroPeriodoInput
+): RelatorioFinanceiro {
+  return buildRelatorioFinanceiroPeriodoPure({ ...input, agora: input.agora ?? new Date() })
 }

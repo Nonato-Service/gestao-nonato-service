@@ -12,6 +12,11 @@ import {
   type EstadoClienteParaFormComp,
 } from '../modules/comprovantes/formState'
 import type { ComprovanteDespesa } from '../modules/comprovantes/tipos'
+import { mesesRollingCompetenciaKeys as mesesRollingCompetenciaKeysPure } from '../modules/comprovantes/periodo'
+import {
+  buildMensagemEnvioComprovantes as buildMensagemEnvioComprovantesPure,
+  type BuildMensagemEnvioComprovantesParams,
+} from '../modules/comprovantes/envioMensagem'
 
 /** Injeta Date.now() no id e nas datas quando o call-site não envia. */
 export function createComprovanteDespesaFromForm(
@@ -33,5 +38,19 @@ export function formCompComClienteSugerido(
 ): ComprovanteDespesaFormState {
   return formCompComClienteSugeridoPure(dataIso, horaIso, base, resolverEstado, {
     nowMs: Date.now(),
+  })
+}
+
+/** Injeta Date.now() na janela de meses de competência. */
+export function mesesRollingCompetenciaKeys(count = 30, now?: Date): string[] {
+  return mesesRollingCompetenciaKeysPure(count, (now ?? new Date()).getTime())
+}
+
+export function buildMensagemEnvioComprovantes(
+  params: Omit<BuildMensagemEnvioComprovantesParams, 'reportDate'> & { reportDate?: Date }
+): string {
+  return buildMensagemEnvioComprovantesPure({
+    ...params,
+    reportDate: params.reportDate ?? new Date(),
   })
 }

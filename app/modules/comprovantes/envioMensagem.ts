@@ -49,7 +49,7 @@ export type BuildMensagemEnvioComprovantesParams = {
   totalGeral: number
   totalPorCliente: Record<string, number>
   labelCliente: (c: ComprovanteDespesa) => string
-  reportDate?: Date
+  reportDate: Date
 }
 
 export function buildMensagemEnvioComprovantes(params: BuildMensagemEnvioComprovantesParams): string {
@@ -61,7 +61,7 @@ export function buildMensagemEnvioComprovantes(params: BuildMensagemEnvioComprov
     totalGeral,
     totalPorCliente,
     labelCliente,
-    reportDate = new Date(),
+    reportDate,
   } = params
 
   if (templateId === 1) {

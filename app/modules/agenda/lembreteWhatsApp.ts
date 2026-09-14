@@ -7,7 +7,7 @@ import { rotuloTituloAgendamento } from './rotulos'
 /** Agendamentos de hoje e amanhã (exclui cancelados). */
 export function filterAgendamentosLembrete(
   agendamentos: Agendamento[],
-  now: Date = new Date()
+  now: Date
 ): Agendamento[] {
   const tomorrow = new Date(now)
   tomorrow.setDate(tomorrow.getDate() + 1)

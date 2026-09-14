@@ -92,12 +92,12 @@ export type CalcularClientesDevedoresInput = {
   fechamentosRelatorios: Record<string, FechamentoItemDevedorLike[] | undefined>
   fechamentoItensOmitidosPorRelatorio: Record<string, string[]>
   fechamentoIvaPorRelatorioId: Record<string, FechamentoIvaDevedorLike | undefined>
-  agora?: Date
+  agora: Date
 }
 
 /** Calcula o mapa de clientes devedores (faturas de peças + fechamentos «não pago»). */
 export function calcularClientesDevedores(input: CalcularClientesDevedoresInput): ClienteDevedor[] {
-  const agora = input.agora ?? new Date()
+  const agora = input.agora
   const hoje = new Date(agora)
   hoje.setHours(0, 0, 0, 0)
   const agoraIso = agora.toISOString()

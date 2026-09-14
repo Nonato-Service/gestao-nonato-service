@@ -112,8 +112,10 @@ export function buildIvaControlesFromDados(input: BuildFinanceiroPeriodoInput): 
     .sort((a, b) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime())
 }
 
-export function buildRelatorioFinanceiroPeriodo(input: BuildFinanceiroPeriodoInput): RelatorioFinanceiro {
-  const agora = input.agora ?? new Date()
+export function buildRelatorioFinanceiroPeriodo(
+  input: BuildFinanceiroPeriodoInput & { agora: Date }
+): RelatorioFinanceiro {
+  const agora = input.agora
   const { periodo, dataInicio, dataFim } = periodoFinanceiroFromDate(agora, input.tipo)
 
   let totalVendas = 0

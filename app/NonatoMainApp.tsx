@@ -247,7 +247,6 @@ import {
   renderBlocoEquipamentoAgendamentoEstadoVisual,
   renderBlocoAssuntoPessoalEstadoVisual,
   renderLegendaEstadosAgenda,
-  filterAgendamentosLembrete,
   formatTelefoneWhatsApp,
   buildMensagemLembreteAgenda,
   encontrarConflitoClienteMesmoDia,
@@ -563,13 +562,11 @@ import {
   getWeekKey,
   mesCompetenciaKey,
   anoCompetenciaKey,
-  mesesRollingCompetenciaKeys,
   localeListaComprovantes,
   formatarDataListaComprovante,
   agruparComprovantesPorData,
   buildPeriodoLabelEnvioComprovantes,
   buildPeriodoPdfEnvioComprovantes,
-  buildMensagemEnvioComprovantes,
   prefixarMensagemEnvioComTecnico,
   type ComprovanteDespesa,
   type ComprovanteDespesaFormState,
@@ -577,17 +574,19 @@ import {
   comprovanteDespesaClienteCadastrado,
   dadosDuplicadoComprovanteFromForm,
 } from './modules/comprovantes'
-import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido } from './lib/comprovantesFromForm'
+import { createComprovanteDespesaFromForm, emptyComprovanteDespesaForm, formCompComClienteSugerido, mesesRollingCompetenciaKeys, buildMensagemEnvioComprovantes } from './lib/comprovantesFromForm'
 import {
   horaAtualLocal,
   resolverClientesAtivosComprovanteHoje,
   resolverEstadoClienteComprovanteRecibo,
 } from './lib/comprovanteClientesAtivosHoje'
-import { emptyAgendamentoFormState } from './lib/agendaForm'
+import { emptyAgendamentoFormState, filterAgendamentosLembrete } from './lib/agendaForm'
 import {
   emptyFaturaPecasFormState,
   emptyOrdemServicoFormState,
   faturaPecasToFormState,
+  calcularClientesDevedores,
+  buildRelatorioFinanceiroPeriodo,
 } from './lib/financeiroForm'
 import { emptyFaturaFornecedorFormState } from './lib/fornecedoresForm'
 import {
@@ -792,7 +791,6 @@ import {
   formatMoneyNumber,
   isClienteMarcadoDevedor,
   relatorioFluxoFinanceiroNaoPago,
-  calcularClientesDevedores,
   aplicarFlagsDevedorNosClientes,
   hashFlagsClientesDevedores,
   refreshDevedoresListaSegura,
@@ -828,7 +826,6 @@ import {
   financeiroReferenciaDateFromFiltros,
   dataDentroPeriodoFinanceiro,
   buildIvaControlesFromDados,
-  buildRelatorioFinanceiroPeriodo,
   FECHAMENTO_FLUXO_FINANCEIRO_KEY,
   CONTABILIDADE_CONFIG_KEY,
   defaultContabilidadeConfig,

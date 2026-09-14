@@ -1228,6 +1228,25 @@ try {
   } else {
     fail('lib/financeiroForm ainda não envolve os forms vazios')
   }
+  const calcDev = fs.readFileSync(path.join(root, 'app/modules/financeiro/calcularDevedores.ts'), 'utf8')
+  const buildPer = fs.readFileSync(path.join(root, 'app/modules/financeiro/buildPeriodo.ts'), 'utf8')
+  if (
+    calcDev.includes('agora: Date') &&
+    !calcDev.includes('agora ?? new Date()') &&
+    !buildPer.includes('agora ?? new Date()')
+  ) {
+    ok('módulo financeiro devedores/periodo é puro (relógio injectado)')
+  } else {
+    fail('módulo financeiro calcularDevedores/buildPeriodo ainda usa new Date() por omissão')
+  }
+  if (
+    libFinForm.includes('calcularClientesDevedores as calcularClientesDevedoresPure') &&
+    libFinForm.includes('buildRelatorioFinanceiroPeriodo as buildRelatorioFinanceiroPeriodoPure')
+  ) {
+    ok('lib/financeiroForm envolve o relógio de devedores/periodo')
+  } else {
+    fail('lib/financeiroForm ainda não envolve calcularClientesDevedores / buildRelatorioFinanceiroPeriodo')
+  }
 } catch (e) {
   fail(`módulo financeiro: ${e.message}`)
 }
@@ -2313,6 +2332,26 @@ try {
   } else {
     fail('lib/comprovantesFromForm ainda não envolve o comprovante fromForm')
   }
+  const compPeriodo = fs.readFileSync(path.join(root, 'app/modules/comprovantes/periodo.ts'), 'utf8')
+  const compEnvio = fs.readFileSync(path.join(root, 'app/modules/comprovantes/envioMensagem.ts'), 'utf8')
+  if (
+    compPeriodo.includes('nowMs: number') &&
+    !compPeriodo.includes('now: Date = new Date()') &&
+    compEnvio.includes('reportDate: Date') &&
+    !compEnvio.includes('reportDate = new Date()')
+  ) {
+    ok('módulo comprovantes periodo/envio é puro (relógio injectado)')
+  } else {
+    fail('módulo comprovantes periodo/envioMensagem ainda usa new Date() por omissão')
+  }
+  if (
+    libCompFromForm.includes('mesesRollingCompetenciaKeys as mesesRollingCompetenciaKeysPure') &&
+    libCompFromForm.includes('buildMensagemEnvioComprovantes as buildMensagemEnvioComprovantesPure')
+  ) {
+    ok('lib/comprovantesFromForm envolve o relógio de periodo/envio')
+  } else {
+    fail('lib/comprovantesFromForm ainda não envolve mesesRolling / envioMensagem')
+  }
   const compFormState = fs.readFileSync(path.join(root, 'app/modules/comprovantes/formState.ts'), 'utf8')
   const clientesAtivos = fs.readFileSync(path.join(root, 'app/modules/comprovantes/clientesAtivos.ts'), 'utf8')
   const libCompHoje = exists('app/lib/comprovanteClientesAtivosHoje.ts')
@@ -3247,6 +3286,22 @@ try {
     ok('NonatoMainApp usa emptyAgendamentoFormState via lib')
   } else {
     fail('lib/agendaForm ainda não envolve o form vazio')
+  }
+  const lembreteWa = fs.readFileSync(path.join(root, 'app/modules/agenda/lembreteWhatsApp.ts'), 'utf8')
+  if (
+    lembreteWa.includes('now: Date') &&
+    !lembreteWa.includes('now: Date = new Date()')
+  ) {
+    ok('módulo agenda lembreteWhatsApp é puro (relógio injectado)')
+  } else {
+    fail('módulo agenda/lembreteWhatsApp ainda usa new Date() por omissão')
+  }
+  if (
+    libAgendaForm.includes('filterAgendamentosLembrete as filterAgendamentosLembretePure')
+  ) {
+    ok('lib/agendaForm envolve o filtro de lembretes')
+  } else {
+    fail('lib/agendaForm ainda não envolve filterAgendamentosLembrete')
   }
   if (
     nma.includes('isAgendamentoFormValid') &&

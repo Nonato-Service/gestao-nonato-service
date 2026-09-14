@@ -28,7 +28,8 @@ export function anoCompetenciaKey(c: Pick<ComprovanteDespesa, 'mesCompetencia' |
 }
 
 /** Últimos N meses YYYY-MM a partir de `now` (mês actual inclusive). */
-export function mesesRollingCompetenciaKeys(count = 30, now: Date = new Date()): string[] {
+export function mesesRollingCompetenciaKeys(count: number, nowMs: number): string[] {
+  const now = new Date(nowMs)
   const meses: string[] = []
   for (let i = 0; i < count; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
