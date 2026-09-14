@@ -11,11 +11,12 @@ export type EmptyPecaBibliotecaFormOpts = {
   imagemCapa?: string
   /** Após salvar: força flag de importação (opcional). */
   importacaoPendente?: boolean
+  nowMs: number
 }
 
 /** Estado inicial / limpo do formulário de peça na biblioteca. */
 export function createEmptyPecaBibliotecaForm(
-  opts: EmptyPecaBibliotecaFormOpts = {}
+  opts: EmptyPecaBibliotecaFormOpts
 ): PecaBiblioteca {
   const form: PecaBiblioteca = {
     id: '',
@@ -28,7 +29,7 @@ export function createEmptyPecaBibliotecaForm(
     subcategoria: opts.subcategoria ?? '',
     subcategoriaId: opts.subcategoriaId ?? '',
     imagem: '',
-    dataCriacao: new Date().toISOString(),
+    dataCriacao: new Date(opts.nowMs).toISOString(),
   }
   if (opts.imagemCapa !== undefined) form.imagemCapa = opts.imagemCapa
   if (opts.importacaoPendente !== undefined) form.importacaoPendente = opts.importacaoPendente

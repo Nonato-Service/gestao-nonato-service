@@ -2,9 +2,9 @@
 
 import type { PreCheckFormState } from './tipos'
 
-export function emptyPreCheckForm(): PreCheckFormState {
+export function emptyPreCheckForm(opts: { nowMs: number }): PreCheckFormState {
   return {
-    data: new Date().toISOString().split('T')[0],
+    data: new Date(opts.nowMs).toISOString().split('T')[0],
     tecnicoResponsavel: '',
     observacoes: '',
     status: 'pendente',

@@ -1969,11 +1969,21 @@ try {
     libBibFromForm.includes('createCategoriaPecaFromForm as createCategoriaPecaFromFormPure') &&
     libBibFromForm.includes('createSubcategoriaPecaFromForm as createSubcategoriaPecaFromFormPure') &&
     libBibFromForm.includes('criarRegraClassificacaoPeca as criarRegraClassificacaoPecaPure') &&
+    libBibFromForm.includes('createEmptyPecaBibliotecaForm as createEmptyPecaBibliotecaFormPure') &&
     nma.includes("from './lib/bibliotecaFromForm'")
   ) {
     ok('NonatoMainApp usa biblioteca fromForm via lib')
   } else {
     fail('lib/bibliotecaFromForm ainda não envolve o fromForm')
+  }
+  const pecaForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/pecaForm.ts'), 'utf8')
+  if (
+    pecaForm.includes('nowMs: number') &&
+    !pecaForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo biblioteca pecaForm é puro (relógio injectado)')
+  } else {
+    fail('módulo biblioteca/pecaForm ainda usa new Date()')
   }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
@@ -2822,11 +2832,25 @@ try {
   } else {
     fail('módulo relatorio-servico fromForm ainda usa Date.now, Math.random ou new Date()')
   }
+  const diaForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/diaTrabalhoForm.ts'), 'utf8')
+  const rsForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/relatorioServicoForm.ts'), 'utf8')
+  if (
+    diaForm.includes('nowMs: number') &&
+    !diaForm.includes('new Date().toISOString()') &&
+    rsForm.includes('nowMs: number') &&
+    !rsForm.includes('new Date().toISOString()')
+  ) {
+    ok('módulo relatorio-servico form vazio é puro (relógio injectado)')
+  } else {
+    fail('módulo relatorio-servico diaTrabalhoForm/relatorioServicoForm ainda usa new Date()')
+  }
   if (
     libRsFromForm.includes('createPecaSubstituicaoFromForm as createPecaSubstituicaoFromFormPure') &&
     libRsFromForm.includes('createDiaTrabalhoFromForm as createDiaTrabalhoFromFormPure') &&
     libRsFromForm.includes('createRelatorioServicoFromForm as createRelatorioServicoFromFormPure') &&
     libRsFromForm.includes('criarEquipamentoRelatorioVazio as criarEquipamentoRelatorioVazioPure') &&
+    libRsFromForm.includes('createEmptyDiaTrabalhoForm as createEmptyDiaTrabalhoFormPure') &&
+    libRsFromForm.includes('createEmptyRelatorioServicoForm as createEmptyRelatorioServicoFormPure') &&
     nma.includes("from './lib/relatorioServicoFromForm'")
   ) {
     ok('NonatoMainApp usa relatorio-servico fromForm via lib')
@@ -4106,8 +4130,18 @@ try {
   } else {
     fail('módulo pre-check/fromForm ainda usa Date.now ou Math.random')
   }
+  const pcFormState = fs.readFileSync(path.join(root, 'app/modules/pre-check/formState.ts'), 'utf8')
+  if (
+    pcFormState.includes('nowMs: number') &&
+    !pcFormState.includes('new Date().toISOString()')
+  ) {
+    ok('módulo pre-check formState é puro (relógio injectado)')
+  } else {
+    fail('módulo pre-check/formState ainda usa new Date()')
+  }
   if (
     libPcFromForm.includes('createPreCheckFromForm as createPreCheckFromFormPure') &&
+    libPcFromForm.includes('emptyPreCheckForm as emptyPreCheckFormPure') &&
     nma.includes("from './lib/preCheckFromForm'")
   ) {
     ok('NonatoMainApp usa PreCheck fromForm via lib')
@@ -6139,8 +6173,18 @@ try {
   } else {
     fail('módulo pagamentos-contador/fromForm ainda usa Date.now ou Math.random')
   }
+  const pagFormState = fs.readFileSync(path.join(root, 'app/modules/pagamentos-contador/formState.ts'), 'utf8')
+  if (
+    pagFormState.includes('nowMs: number') &&
+    !pagFormState.includes('new Date().toISOString()')
+  ) {
+    ok('módulo pagamentos-contador formState é puro (relógio injectado)')
+  } else {
+    fail('módulo pagamentos-contador/formState ainda usa new Date()')
+  }
   if (
     libPagFromForm.includes('createEntidadeContadorFromForm as createEntidadeContadorFromFormPure') &&
+    libPagFromForm.includes('emptyPagamentoContadorForm as emptyPagamentoContadorFormPure') &&
     pccMod.includes("from '../lib/pagamentosContadorFromForm'")
   ) {
     ok('PagamentosContadorContent usa fromForm via lib')
@@ -6203,8 +6247,18 @@ try {
   } else {
     fail('módulo registro-despesas/fromForm ainda usa Date.now ou new Date()')
   }
+  const regFormState = fs.readFileSync(path.join(root, 'app/modules/registro-despesas/formState.ts'), 'utf8')
+  if (
+    regFormState.includes('nowMs: number') &&
+    !regFormState.includes('new Date().toISOString()')
+  ) {
+    ok('módulo registro-despesas formState é puro (relógio injectado)')
+  } else {
+    fail('módulo registro-despesas/formState ainda usa new Date()')
+  }
   if (
     libRegFromForm.includes('createCartaoEmpresaDespesasFromForm as createCartaoEmpresaDespesasFromFormPure') &&
+    libRegFromForm.includes('emptyDespesaRegistroForm as emptyDespesaRegistroFormPure') &&
     rdcMod.includes("from '../lib/registroDespesasFromForm'")
   ) {
     ok('RegistroDespesasContent usa fromForm via lib')

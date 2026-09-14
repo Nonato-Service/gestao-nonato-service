@@ -37,11 +37,14 @@ export type PagamentoContadorFormState = {
   anexos: AnexoContador[]
 }
 
-export function emptyPagamentoContadorForm(entidadeId = ''): PagamentoContadorFormState {
+export function emptyPagamentoContadorForm(
+  entidadeId: string,
+  opts: { nowMs: number }
+): PagamentoContadorFormState {
   return {
     entidadeId,
     entidadeNome: '',
-    dataPagamento: new Date().toISOString().slice(0, 10),
+    dataPagamento: new Date(opts.nowMs).toISOString().slice(0, 10),
     valor: 0,
     periodoReferencia: '',
     numeroDocumento: '',

@@ -1,9 +1,9 @@
 import type { DiaTrabalho } from './tipos'
 
 /** Estado inicial / limpo do formulário de dia de trabalho. */
-export function createEmptyDiaTrabalhoForm(): DiaTrabalho {
+export function createEmptyDiaTrabalhoForm(opts: { nowMs: number }): DiaTrabalho {
   return {
-    data: new Date().toISOString().split('T')[0],
+    data: new Date(opts.nowMs).toISOString().split('T')[0],
     idaHora: '',
     idaChegada: '',
     idaDuracao: '',

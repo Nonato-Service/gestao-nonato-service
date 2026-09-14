@@ -14,7 +14,6 @@ import { LISTA_UI_LOTE } from '../lib/listaUiLote'
 import type { AnexoContador, CategoriaEntidadeContador, EntidadeContador, PagamentoContador } from '../modules/pagamentos-contador'
 import {
   emptyEntidadeContadorForm,
-  emptyPagamentoContadorForm,
   isEntidadeContadorFormValid,
   pagamentoContadorToForm,
 } from '../modules/pagamentos-contador'
@@ -22,6 +21,7 @@ import {
   createAnexoContadorFromForm,
   createEntidadeContadorFromForm,
   createPagamentoContadorFromForm,
+  emptyPagamentoContadorForm,
   updatePagamentoContadorFromForm,
 } from '../lib/pagamentosContadorFromForm'
 

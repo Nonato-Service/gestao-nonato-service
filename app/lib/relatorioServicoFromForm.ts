@@ -9,13 +9,17 @@ import {
 } from '../modules/relatorio-servico/pecaSubstituicaoFromForm'
 import {
   createDiaTrabalhoFromForm as createDiaTrabalhoFromFormPure,
+  emptyDiaTrabalhoFormWithKmPadrao as emptyDiaTrabalhoFormWithKmPadraoPure,
   updateDiaTrabalhoFromForm as updateDiaTrabalhoFromFormPure,
   type DiaTrabalhoFromFormOpts,
+  type DiaTrabalhoKmPadrao,
 } from '../modules/relatorio-servico/diaTrabalhoFromForm'
+import { createEmptyDiaTrabalhoForm as createEmptyDiaTrabalhoFormPure } from '../modules/relatorio-servico/diaTrabalhoForm'
 import {
   createRelatorioServicoFromForm as createRelatorioServicoFromFormPure,
   type CreateRelatorioServicoFromFormOpts,
 } from '../modules/relatorio-servico/relatorioServicoFromForm'
+import { createEmptyRelatorioServicoForm as createEmptyRelatorioServicoFormPure } from '../modules/relatorio-servico/relatorioServicoForm'
 import type { EquipamentoArmazemIdLookup } from '../modules/equipamentos/relatorio'
 import type { PecaSubstituicao } from '../modules/relatorio-servico/pecaSubstituicao'
 import type { RelatorioServico } from '../modules/relatorio-servico/relatorioServicoForm'
@@ -87,4 +91,16 @@ export function createEmptyEquipamentoRelatorioForm(
   origem: RelatorioEquipamentoOrigem = 'cliente'
 ): RelatorioEquipamentoRef {
   return createEmptyEquipamentoRelatorioFormPure(origem, { nowMs: Date.now(), random: Math.random })
+}
+
+export function createEmptyDiaTrabalhoForm(): DiaTrabalho {
+  return createEmptyDiaTrabalhoFormPure({ nowMs: Date.now() })
+}
+
+export function emptyDiaTrabalhoFormWithKmPadrao(kmPadrao: DiaTrabalhoKmPadrao = {}): DiaTrabalho {
+  return emptyDiaTrabalhoFormWithKmPadraoPure(kmPadrao, { nowMs: Date.now() })
+}
+
+export function createEmptyRelatorioServicoForm(overrides?: Partial<RelatorioServico>): RelatorioServico {
+  return createEmptyRelatorioServicoFormPure(overrides, { nowMs: Date.now() })
 }

@@ -48,7 +48,8 @@ export type RelatorioServico = {
 
 /** Estado inicial / limpo do formulário de relatório de serviço. */
 export function createEmptyRelatorioServicoForm(
-  overrides?: Partial<RelatorioServico>
+  overrides: Partial<RelatorioServico> | undefined,
+  opts: { nowMs: number }
 ): RelatorioServico {
   return {
     id: '',
@@ -57,7 +58,7 @@ export function createEmptyRelatorioServicoForm(
     cliente: '',
     cidade: '',
     telefone: '',
-    data: new Date().toISOString().split('T')[0],
+    data: new Date(opts.nowMs).toISOString().split('T')[0],
     maquinaModelo: '',
     numeroMaquina: '',
     tipoServico: '',

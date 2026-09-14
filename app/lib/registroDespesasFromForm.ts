@@ -10,6 +10,7 @@ import {
   type CreateDespesaRegistroFromFormOpts,
 } from '../modules/registro-despesas/fromForm'
 import type { CartaoEmpresaDespesasFormState, DespesaRegistroFormState } from '../modules/registro-despesas/formState'
+import { emptyDespesaRegistroForm as emptyDespesaRegistroFormPure } from '../modules/registro-despesas/formState'
 import type { CartaoEmpresaDespesas, DespesaDocumento, DespesaRegistro } from '../modules/registro-despesas/tipos'
 
 /** Injeta Date.now() no id e nas datas quando o call-site não envia. */
@@ -38,4 +39,8 @@ export function createDespesaDocumentoFromForm(
   opts: Omit<CreateDespesaDocumentoFromFormOpts, 'nowMs'> = {}
 ): DespesaDocumento {
   return createDespesaDocumentoFromFormPure(form, { ...opts, nowMs: Date.now() })
+}
+
+export function emptyDespesaRegistroForm(): DespesaRegistroFormState {
+  return emptyDespesaRegistroFormPure({ nowMs: Date.now() })
 }

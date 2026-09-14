@@ -13,6 +13,10 @@ import {
 } from '../modules/biblioteca/categoriaFromForm'
 import type { CategoriaPeca, PecaBiblioteca, SubcategoriaPeca } from '../modules/biblioteca/pecaTipos'
 import {
+  createEmptyPecaBibliotecaForm as createEmptyPecaBibliotecaFormPure,
+  type EmptyPecaBibliotecaFormOpts,
+} from '../modules/biblioteca/pecaForm'
+import {
   aplicarClassificacaoManualEmLista as aplicarClassificacaoManualEmListaPure,
   aplicarClassificacaoPorPalavrasEmLista as aplicarClassificacaoPorPalavrasEmListaPure,
   aplicarRegrasClassificacaoEmLista as aplicarRegrasClassificacaoEmListaPure,
@@ -99,5 +103,11 @@ export function criarRegraClassificacaoPeca(
     nowMs: Date.now(),
     random: Math.random,
   })
+}
+
+export function createEmptyPecaBibliotecaForm(
+  opts: Omit<EmptyPecaBibliotecaFormOpts, 'nowMs'> = {}
+): PecaBiblioteca {
+  return createEmptyPecaBibliotecaFormPure({ ...opts, nowMs: Date.now() })
 }
 

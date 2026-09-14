@@ -12,6 +12,7 @@ import {
   type UpdatePagamentoContadorFromFormOpts,
 } from '../modules/pagamentos-contador/fromForm'
 import type { EntidadeContadorFormState, PagamentoContadorFormState } from '../modules/pagamentos-contador/formState'
+import { emptyPagamentoContadorForm as emptyPagamentoContadorFormPure } from '../modules/pagamentos-contador/formState'
 import type { AnexoContador, EntidadeContador, PagamentoContador } from '../modules/pagamentos-contador/tipos'
 
 /** Injeta Date.now() (e Math.random no anexo) quando o call-site não envia. */
@@ -42,4 +43,8 @@ export function createAnexoContadorFromForm(
   opts: Omit<CreateAnexoContadorFromFormOpts, 'nowMs' | 'random'> = {}
 ): AnexoContador {
   return createAnexoContadorFromFormPure(form, { ...opts, nowMs: Date.now(), random: Math.random })
+}
+
+export function emptyPagamentoContadorForm(entidadeId = ''): PagamentoContadorFormState {
+  return emptyPagamentoContadorFormPure(entidadeId, { nowMs: Date.now() })
 }

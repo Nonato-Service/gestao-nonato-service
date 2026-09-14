@@ -137,7 +137,6 @@ import {
   type CategoriaPeca,
   type SubcategoriaPeca,
   type PecaBiblioteca,
-  createEmptyPecaBibliotecaForm,
   isPecaBibliotecaFormValid,
   updatePecaBibliotecaFromForm,
   isCategoriaPecaFormValid,
@@ -159,14 +158,11 @@ import {
   type ItemRelatorioExcluidoArquivo,
   type PastaRelatoriosExcluidosCliente,
   type RelatoriosExcluidosClientesStorage,
-  createEmptyDiaTrabalhoForm,
   isDiaTrabalhoFormValid,
-  emptyDiaTrabalhoFormWithKmPadrao,
   createEmptyPecaSubstituicaoForm,
   isPecaSubstituicaoFormValid,
   pecaBibliotecaToPecaSubstituicaoForm,
   pecaSubstituicaoCodigoDuplicado,
-  createEmptyRelatorioServicoForm,
   relatorioServicoFormMissing,
   isRelatorioServicoFormValid,
   updateRelatorioServicoFromForm,
@@ -589,13 +585,16 @@ import {
 import { createComprovanteDespesaFromForm } from './lib/comprovantesFromForm'
 import {
   createDiaTrabalhoFromForm,
+  createEmptyDiaTrabalhoForm,
+  createEmptyRelatorioServicoForm,
   createPecaSubstituicaoFromBiblioteca,
   createPecaSubstituicaoFromForm,
   createRelatorioServicoFromForm,
   criarEquipamentoRelatorioVazio,
+  emptyDiaTrabalhoFormWithKmPadrao,
   updateDiaTrabalhoFromForm,
 } from './lib/relatorioServicoFromForm'
-import { createPreCheckFromForm } from './lib/preCheckFromForm'
+import { createPreCheckFromForm, emptyPreCheckForm } from './lib/preCheckFromForm'
 import {
   createFormularioChecklistFromOrdem,
   createOrdemPreparacaoFromForm,
@@ -604,6 +603,7 @@ import {
   createPecaBibliotecaFromForm,
   createCategoriaPecaFromForm,
   createSubcategoriaPecaFromForm,
+  createEmptyPecaBibliotecaForm,
   aplicarRegrasClassificacaoEmLista,
   aplicarClassificacaoManualEmLista,
   aplicarClassificacaoPorPalavrasEmLista,
@@ -1051,7 +1051,6 @@ import {
   type OrdemPreparacao,
 } from './modules/ordem-preparacao'
 import {
-  emptyPreCheckForm,
   isPreCheckFormValid,
   type PreCheck,
   type PreCheckStatus,

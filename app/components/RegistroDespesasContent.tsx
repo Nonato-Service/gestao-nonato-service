@@ -16,7 +16,6 @@ import {
 } from '../lib/reciboComprovanteParser'
 import type { CartaoEmpresaDespesas, DespesaDocumento, DespesaRegistro } from '../modules/registro-despesas'
 import {
-  emptyDespesaRegistroForm,
   isCartaoEmpresaApelidoValid,
   isCartaoEmpresaUltimos4Valid,
   isDespesaDocumentoClienteValid,
@@ -29,6 +28,7 @@ import {
   createCartaoEmpresaDespesasFromForm,
   createDespesaDocumentoFromForm,
   createDespesaRegistroFromForm,
+  emptyDespesaRegistroForm,
 } from '../lib/registroDespesasFromForm'
 
 export type {

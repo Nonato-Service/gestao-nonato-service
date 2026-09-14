@@ -7,6 +7,7 @@ import {
 } from '../modules/pre-check/fromForm'
 import type { Equipamento } from '../modules/equipamentos/formState'
 import type { PreCheck, PreCheckFormState } from '../modules/pre-check/tipos'
+import { emptyPreCheckForm as emptyPreCheckFormPure } from '../modules/pre-check/formState'
 
 /** Injeta Date.now() e Math.random() no id quando o call-site não envia. */
 export function createPreCheckFromForm(
@@ -19,4 +20,8 @@ export function createPreCheckFromForm(
     nowMs: Date.now(),
     random: Math.random,
   })
+}
+
+export function emptyPreCheckForm(): PreCheckFormState {
+  return emptyPreCheckFormPure({ nowMs: Date.now() })
 }

@@ -68,9 +68,12 @@ export function updateDiaTrabalhoFromForm(
   return { ...createDiaTrabalhoFromForm(form, opts), id: existing.id }
 }
 
-export function emptyDiaTrabalhoFormWithKmPadrao(kmPadrao: DiaTrabalhoKmPadrao = {}): DiaTrabalho {
+export function emptyDiaTrabalhoFormWithKmPadrao(
+  kmPadrao: DiaTrabalhoKmPadrao = {},
+  opts: { nowMs: number }
+): DiaTrabalho {
   return atualizarCalculosDia({
-    ...createEmptyDiaTrabalhoForm(),
+    ...createEmptyDiaTrabalhoForm(opts),
     kmIda: kmPadrao.kmIda || '',
     kmRetorno: kmPadrao.kmRetorno || '',
   })

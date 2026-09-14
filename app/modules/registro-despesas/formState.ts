@@ -22,7 +22,7 @@ export type DespesaRegistroFormState = {
   cartaoId: string
 }
 
-export function emptyDespesaRegistroForm(): DespesaRegistroFormState {
+export function emptyDespesaRegistroForm(opts: { nowMs: number }): DespesaRegistroFormState {
   return {
     tipoId: '',
     tipoNome: '',
@@ -30,7 +30,7 @@ export function emptyDespesaRegistroForm(): DespesaRegistroFormState {
     descricao: '',
     codigoBarras: '',
     fotos: [],
-    data: new Date().toISOString().split('T')[0],
+    data: new Date(opts.nowMs).toISOString().split('T')[0],
     cartaoId: '',
   }
 }
