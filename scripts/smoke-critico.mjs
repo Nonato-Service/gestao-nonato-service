@@ -1937,6 +1937,7 @@ try {
   }
   const pecaFromForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/pecaFromForm.ts'), 'utf8')
   const catFromForm = fs.readFileSync(path.join(root, 'app/modules/biblioteca/categoriaFromForm.ts'), 'utf8')
+  const classif = fs.readFileSync(path.join(root, 'app/modules/biblioteca/classificacao.ts'), 'utf8')
   const libBibFromForm = exists('app/lib/bibliotecaFromForm.ts')
     ? fs.readFileSync(path.join(root, 'app/lib/bibliotecaFromForm.ts'), 'utf8')
     : ''
@@ -1954,9 +1955,20 @@ try {
     fail('módulo biblioteca pecaFromForm/categoriaFromForm ainda usa Date.now ou Math.random')
   }
   if (
+    classif.includes('nowMs: number') &&
+    !classif.includes('Date.now()') &&
+    !classif.includes('Math.random') &&
+    !classif.includes('new Date().toISOString()')
+  ) {
+    ok('módulo biblioteca classificacao é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo biblioteca/classificacao ainda usa Date.now, Math.random ou new Date()')
+  }
+  if (
     libBibFromForm.includes('createPecaBibliotecaFromForm as createPecaBibliotecaFromFormPure') &&
     libBibFromForm.includes('createCategoriaPecaFromForm as createCategoriaPecaFromFormPure') &&
     libBibFromForm.includes('createSubcategoriaPecaFromForm as createSubcategoriaPecaFromFormPure') &&
+    libBibFromForm.includes('criarRegraClassificacaoPeca as criarRegraClassificacaoPecaPure') &&
     nma.includes("from './lib/bibliotecaFromForm'")
   ) {
     ok('NonatoMainApp usa biblioteca fromForm via lib')
@@ -1987,6 +1999,28 @@ try {
     fail('módulo relatorios-especiais incompleto (index.ts)')
   }
   const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  const reTipos = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/tipos.ts'), 'utf8')
+  const libReTypes = exists('app/lib/relatorioEspecialTypes.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/relatorioEspecialTypes.ts'), 'utf8')
+    : ''
+  if (
+    reTipos.includes('nowMs: number') &&
+    !reTipos.includes('Date.now()') &&
+    !reTipos.includes('Math.random')
+  ) {
+    ok('módulo relatorios-especiais tipos é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo relatorios-especiais/tipos ainda usa Date.now ou Math.random')
+  }
+  if (
+    libReTypes.includes('criarDiaTrabalhoEspecialVazio as criarDiaTrabalhoEspecialVazioPure') &&
+    libReTypes.includes('criarRelatorioEspecialVazio as criarRelatorioEspecialVazioPure') &&
+    hub.includes("from '../lib/relatorioEspecialTypes'")
+  ) {
+    ok('RelatorioEspecialHub usa tipos vazios via lib')
+  } else {
+    fail('lib/relatorioEspecialTypes ainda não envolve os formulários vazios')
+  }
   const pdfMod = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/pdf.ts'), 'utf8')
   if (
     pdfMod.includes('secoes.infos') &&
@@ -2714,6 +2748,16 @@ try {
   } else {
     fail('NonatoMainApp ainda define criarEquipamentoRelatorioVazio localmente ou não importa')
   }
+  const eqRelForm = fs.readFileSync(path.join(root, 'app/modules/relatorio-servico/equipamentoRelatorioForm.ts'), 'utf8')
+  if (
+    eqRelForm.includes('nowMs: number') &&
+    !eqRelForm.includes('Date.now()') &&
+    !eqRelForm.includes('Math.random')
+  ) {
+    ok('módulo relatorio-servico equipamentoRelatorioForm é puro (relógio/aleatório injectados)')
+  } else {
+    fail('módulo relatorio-servico/equipamentoRelatorioForm ainda usa Date.now ou Math.random')
+  }
   if (
     idx.includes('createEmptyRelatorioServicoForm') &&
     idx.includes('RelatorioServico')
@@ -2782,6 +2826,7 @@ try {
     libRsFromForm.includes('createPecaSubstituicaoFromForm as createPecaSubstituicaoFromFormPure') &&
     libRsFromForm.includes('createDiaTrabalhoFromForm as createDiaTrabalhoFromFormPure') &&
     libRsFromForm.includes('createRelatorioServicoFromForm as createRelatorioServicoFromFormPure') &&
+    libRsFromForm.includes('criarEquipamentoRelatorioVazio as criarEquipamentoRelatorioVazioPure') &&
     nma.includes("from './lib/relatorioServicoFromForm'")
   ) {
     ok('NonatoMainApp usa relatorio-servico fromForm via lib')
@@ -5469,6 +5514,24 @@ try {
   } else {
     fail('lib/tradutorFromForm ainda não envolve o tradutor fromForm')
   }
+  const tradLib = fs.readFileSync(path.join(root, 'app/modules/tradutor/library.ts'), 'utf8')
+  const libTradTypes = fs.readFileSync(path.join(root, 'app/lib/translatorLibraryTypes.ts'), 'utf8')
+  if (
+    tradLib.includes('nowMs: number') &&
+    !tradLib.includes('Date.now()')
+  ) {
+    ok('módulo tradutor library é puro (relógio injectado)')
+  } else {
+    fail('módulo tradutor/library ainda usa Date.now')
+  }
+  if (
+    libTradTypes.includes('normalizeTranslatorLibrary as normalizeTranslatorLibraryPure') &&
+    nma.includes("from './lib/translatorLibraryTypes'")
+  ) {
+    ok('NonatoMainApp usa normalizeTranslatorLibrary via lib')
+  } else {
+    fail('lib/translatorLibraryTypes ainda não envolve o normalize')
+  }
   const libTypes = fs.readFileSync(path.join(root, 'app/lib/translatorLibraryTypes.ts'), 'utf8')
   if (libTypes.includes("from '../modules/tradutor'") || libTypes.includes('from "../modules/tradutor"')) {
     ok('lib/translatorLibraryTypes re-exporta app/modules/tradutor')
@@ -5604,6 +5667,24 @@ try {
     ok('NonatoMainApp usa conhecimento-tecnico do módulo')
   } else {
     fail('NonatoMainApp ainda define ConhecimentoTecnicoEntry localmente ou não usa normalize')
+  }
+  const ctEntries = fs.readFileSync(path.join(root, 'app/modules/conhecimento-tecnico/entries.ts'), 'utf8')
+  const libCtTypes = fs.readFileSync(path.join(root, 'app/lib/conhecimentoTecnicoTypes.ts'), 'utf8')
+  if (
+    ctEntries.includes('nowMs: number') &&
+    !ctEntries.includes('Date.now()')
+  ) {
+    ok('módulo conhecimento-tecnico entries é puro (relógio injectado)')
+  } else {
+    fail('módulo conhecimento-tecnico/entries ainda usa Date.now')
+  }
+  if (
+    libCtTypes.includes('normalizeConhecimentoTecnicos as normalizeConhecimentoTecnicosPure') &&
+    nma.includes("from './lib/conhecimentoTecnicoTypes'")
+  ) {
+    ok('NonatoMainApp usa normalizeConhecimentoTecnicos via lib')
+  } else {
+    fail('lib/conhecimentoTecnicoTypes ainda não envolve o normalize')
   }
   const content = fs.readFileSync(path.join(root, 'app/components/ConhecimentoTecnicosContent.tsx'), 'utf8')
   if (

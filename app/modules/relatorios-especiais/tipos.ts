@@ -83,9 +83,17 @@ export function criarHorasEquipamentoDiaVazio(equipamentoUid = ''): HorasEquipam
   return { equipamentoUid, horasInicio: '', horasFim: '', horasDuracao: '' }
 }
 
-export function criarDiaTrabalhoEspecialVazio(data = ''): DiaTrabalhoEspecial {
+export type RelatorioEspecialClockOpts = {
+  nowMs: number
+  random: () => number
+}
+
+export function criarDiaTrabalhoEspecialVazio(
+  data: string,
+  opts: RelatorioEspecialClockOpts
+): DiaTrabalhoEspecial {
   return {
-    id: `dia-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: `dia-${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     data,
     idaHora: '',
     idaChegada: '',
@@ -103,10 +111,10 @@ export function criarDiaTrabalhoEspecialVazio(data = ''): DiaTrabalhoEspecial {
   }
 }
 
-export function criarRelatorioEspecialVazio(): RelatorioEspecial {
-  const hoje = dataLocalHojeISO()
+export function criarRelatorioEspecialVazio(opts: RelatorioEspecialClockOpts): RelatorioEspecial {
+  const hoje = dataLocalHojeISO(new Date(opts.nowMs))
   return {
-    id: `re-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: `re-${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     numero: '',
     tecnico: '',
     cliente: '',

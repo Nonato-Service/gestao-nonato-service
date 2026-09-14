@@ -50,8 +50,15 @@ export function getDescricaoValue(entry: ConhecimentoTecnicoEntry, field: Conhec
   return entry[DESCRICAO_KEY[field]] ?? ''
 }
 
+export type NormalizeConhecimentoTecnicosOpts = {
+  nowMs: number
+}
+
 /** Normaliza payload persistido (localStorage / servidor) para lista de entradas. */
-export function normalizeConhecimentoTecnicos(raw: unknown): ConhecimentoTecnicoEntry[] {
+export function normalizeConhecimentoTecnicos(
+  raw: unknown,
+  opts: NormalizeConhecimentoTecnicosOpts
+): ConhecimentoTecnicoEntry[] {
   if (!Array.isArray(raw)) return []
   const out: ConhecimentoTecnicoEntry[] = []
   for (const item of raw) {
@@ -63,7 +70,7 @@ export function normalizeConhecimentoTecnicos(raw: unknown): ConhecimentoTecnico
     const equipamentoTipoNome = strOrEmpty(o.equipamentoTipoNome)
     if (!id && !tecnicoId && !equipamentoTipoId) continue
     const entry: ConhecimentoTecnicoEntry = {
-      id: id || `ct-${Date.now()}-${out.length}`,
+      id: id || `ct-${opts.nowMs}-${out.length}`,
       tecnicoId,
       equipamentoTipoId,
       equipamentoTipoNome,

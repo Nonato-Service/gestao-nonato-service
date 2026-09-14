@@ -35,10 +35,11 @@ export function clientesExternosParaEquipamentoRelatorio<T extends { id?: string
 
 /** Estado inicial / limpo de uma linha de equipamento no relatório. */
 export function criarEquipamentoRelatorioVazio(
-  origem: RelatorioEquipamentoOrigem = 'cliente'
+  origem: RelatorioEquipamentoOrigem = 'cliente',
+  opts: { nowMs: number; random: () => number }
 ): RelatorioEquipamentoRef {
   return {
-    uid: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    uid: `${opts.nowMs}-${opts.random().toString(36).slice(2, 9)}`,
     equipamentoOrigem: origem,
     equipamentoId: '',
     maquinaModelo: '',
@@ -50,7 +51,8 @@ export function criarEquipamentoRelatorioVazio(
 
 /** Alias alinhado aos createEmpty*Form do módulo. */
 export function createEmptyEquipamentoRelatorioForm(
-  origem: RelatorioEquipamentoOrigem = 'cliente'
+  origem: RelatorioEquipamentoOrigem = 'cliente',
+  opts: { nowMs: number; random: () => number }
 ): RelatorioEquipamentoRef {
-  return criarEquipamentoRelatorioVazio(origem)
+  return criarEquipamentoRelatorioVazio(origem, opts)
 }

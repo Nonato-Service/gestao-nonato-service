@@ -132,10 +132,6 @@ import {
   type RegraClassificacaoPeca,
   parsePalavrasClassificacao,
   resolverDestinoClassificacaoLote,
-  aplicarRegrasClassificacaoEmLista,
-  aplicarClassificacaoManualEmLista,
-  aplicarClassificacaoPorPalavrasEmLista,
-  criarRegraClassificacaoPeca,
   renomearRegraClassificacaoCategoria,
   renomearRegraClassificacaoSubcategoria,
   type CategoriaPeca,
@@ -174,7 +170,6 @@ import {
   relatorioServicoFormMissing,
   isRelatorioServicoFormValid,
   updateRelatorioServicoFromForm,
-  criarEquipamentoRelatorioVazio,
   diaTrabalhoDataChaveOrdenacao,
   sortDiasTrabalhoCronologicamente,
   diasTrabalhoRelatorioOrdenados,
@@ -597,6 +592,7 @@ import {
   createPecaSubstituicaoFromBiblioteca,
   createPecaSubstituicaoFromForm,
   createRelatorioServicoFromForm,
+  criarEquipamentoRelatorioVazio,
   updateDiaTrabalhoFromForm,
 } from './lib/relatorioServicoFromForm'
 import { createPreCheckFromForm } from './lib/preCheckFromForm'
@@ -608,6 +604,10 @@ import {
   createPecaBibliotecaFromForm,
   createCategoriaPecaFromForm,
   createSubcategoriaPecaFromForm,
+  aplicarRegrasClassificacaoEmLista,
+  aplicarClassificacaoManualEmLista,
+  aplicarClassificacaoPorPalavrasEmLista,
+  criarRegraClassificacaoPeca,
 } from './lib/bibliotecaFromForm'
 import {
   createHistoricoEquipamentoFromForm,
@@ -742,17 +742,19 @@ import type { FichaCadastral } from './modules/ficha-cadastral'
 import { emptyFichaCadastral, normalizeFichaCadastral } from './modules/ficha-cadastral'
 import type { TranslatorLibraryEntry } from './modules/tradutor'
 import {
-  normalizeTranslatorLibrary,
   filterLibraryByLangPair,
   findLibraryMatch,
   libraryEntryExists,
-  createTranslatorLibraryEntry,
   isTranslatorLibraryFormValid,
   WRITING_ASSIST_FIELD_MAX_CHARS,
 } from './modules/tradutor'
 import { createTranslatorLibraryFromForm } from './lib/tradutorFromForm'
+import {
+  createTranslatorLibraryEntry,
+  normalizeTranslatorLibrary,
+} from './lib/translatorLibraryTypes'
 import type { ConhecimentoTecnicoEntry } from './modules/conhecimento-tecnico'
-import { normalizeConhecimentoTecnicos } from './modules/conhecimento-tecnico'
+import { normalizeConhecimentoTecnicos } from './lib/conhecimentoTecnicoTypes'
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { DiarioLembreteIntervalPicker } from './components/DiarioLembreteIntervalPicker'
 import { DashboardEntryShowcase } from './components/DashboardEntryShowcase'

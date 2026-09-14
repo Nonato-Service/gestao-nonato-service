@@ -13,8 +13,15 @@ function normSourceKey(text: string): string {
   return text.trim().toLowerCase()
 }
 
+export type NormalizeTranslatorLibraryOpts = {
+  nowMs: number
+}
+
 /** Normaliza payload persistido (localStorage / servidor) para lista de entradas. */
-export function normalizeTranslatorLibrary(raw: unknown): TranslatorLibraryEntry[] {
+export function normalizeTranslatorLibrary(
+  raw: unknown,
+  opts: NormalizeTranslatorLibraryOpts
+): TranslatorLibraryEntry[] {
   if (!Array.isArray(raw)) return []
   const out: TranslatorLibraryEntry[] = []
   for (const item of raw) {
@@ -27,7 +34,7 @@ export function normalizeTranslatorLibrary(raw: unknown): TranslatorLibraryEntry
     const targetText = strOrEmpty(o.targetText)
     if (!id && !sourceText && !targetText) continue
     out.push({
-      id: id || `${Date.now()}-${out.length}`,
+      id: id || `${opts.nowMs}-${out.length}`,
       sourceLang,
       sourceText,
       targetLang,

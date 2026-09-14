@@ -68,7 +68,7 @@ function textoBasePecaClassificacao(peca: PecaBibliotecaLike): string {
 export function aplicarClassificacaoCamposNaPeca<T extends PecaBibliotecaLike>(
   peca: T,
   destino: DestinoClassificacaoResolvido,
-  agora = new Date().toISOString()
+  agora: string
 ): { peca: T; alterou: boolean } {
   const proximaPeca: T = {
     ...peca,
@@ -96,7 +96,8 @@ export function aplicarClassificacaoCamposNaPeca<T extends PecaBibliotecaLike>(
 export function aplicarRegrasClassificacaoEmLista<T extends PecaBibliotecaLike>(
   lista: T[],
   regras: RegraClassificacaoPeca[],
-  somenteSemGrupo = true
+  somenteSemGrupo: boolean,
+  agora: string
 ): { lista: T[]; alteradas: number } {
   if (regras.length === 0) return { lista, alteradas: 0 }
 
@@ -118,7 +119,7 @@ export function aplicarRegrasClassificacaoEmLista<T extends PecaBibliotecaLike>(
       subcategoria: regra.subcategoria || '',
     }
 
-    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino)
+    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino, agora)
     if (alterou) alteradas++
     return next
   })
@@ -131,7 +132,8 @@ export function aplicarClassificacaoManualEmLista<T extends PecaBibliotecaLike>(
   lista: T[],
   ids: string[],
   destino: DestinoClassificacaoResolvido,
-  somenteSemGrupo = true
+  somenteSemGrupo: boolean,
+  agora: string
 ): { lista: T[]; alteradas: number } {
   let alteradas = 0
   const idSet = new Set(ids)
@@ -139,7 +141,7 @@ export function aplicarClassificacaoManualEmLista<T extends PecaBibliotecaLike>(
     if (!idSet.has(peca.id)) return peca
     if (somenteSemGrupo && peca.categoriaId) return peca
 
-    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino)
+    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino, agora)
     if (alterou) alteradas++
     return next
   })
@@ -153,7 +155,8 @@ export function aplicarClassificacaoPorPalavrasEmLista<T extends PecaBibliotecaL
   ids: string[],
   palavras: string[],
   destino: DestinoClassificacaoResolvido,
-  somenteSemGrupo = true
+  somenteSemGrupo: boolean,
+  agora: string
 ): { lista: T[]; alteradas: number } {
   let alteradas = 0
   const idSet = new Set(ids)
@@ -165,7 +168,7 @@ export function aplicarClassificacaoPorPalavrasEmLista<T extends PecaBibliotecaL
     const combina = palavras.some((palavra) => textoBase.includes(palavra))
     if (!combina) return peca
 
-    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino)
+    const { peca: next, alterou } = aplicarClassificacaoCamposNaPeca(peca, destino, agora)
     if (alterou) alteradas++
     return next
   })
@@ -174,20 +177,26 @@ export function aplicarClassificacaoPorPalavrasEmLista<T extends PecaBibliotecaL
 }
 
 /** Cria uma regra de classificação automática (palavras → destino). */
+export type CriarRegraClassificacaoPecaOpts = {
+  nowMs: number
+  random: () => number
+  createdAt?: string
+  id?: string
+}
+
 export function criarRegraClassificacaoPeca(
   palavras: string[],
   destino: DestinoClassificacaoResolvido,
-  createdAt = new Date().toISOString(),
-  id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  opts: CriarRegraClassificacaoPecaOpts
 ): RegraClassificacaoPeca {
   return {
-    id,
+    id: opts.id ?? `${opts.nowMs}-${opts.random().toString(36).slice(2, 8)}`,
     palavras,
     categoriaId: destino.categoriaId,
     categoria: destino.categoria,
     subcategoriaId: destino.subcategoriaId || '',
     subcategoria: destino.subcategoria || '',
-    createdAt,
+    createdAt: opts.createdAt ?? new Date(opts.nowMs).toISOString(),
   }
 }
 

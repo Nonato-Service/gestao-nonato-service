@@ -20,6 +20,12 @@ import type { EquipamentoArmazemIdLookup } from '../modules/equipamentos/relator
 import type { PecaSubstituicao } from '../modules/relatorio-servico/pecaSubstituicao'
 import type { RelatorioServico } from '../modules/relatorio-servico/relatorioServicoForm'
 import type { DiaTrabalho } from '../modules/relatorio-servico/tipos'
+import {
+  createEmptyEquipamentoRelatorioForm as createEmptyEquipamentoRelatorioFormPure,
+  criarEquipamentoRelatorioVazio as criarEquipamentoRelatorioVazioPure,
+  type RelatorioEquipamentoOrigem,
+  type RelatorioEquipamentoRef,
+} from '../modules/relatorio-servico/equipamentoRelatorioForm'
 
 /** Injeta Date.now() e Math.random() quando o call-site não envia. */
 export function createPecaSubstituicaoFromForm(
@@ -69,4 +75,16 @@ export function createRelatorioServicoFromForm(
     ...opts,
     nowMs: Date.now(),
   })
+}
+
+export function criarEquipamentoRelatorioVazio(
+  origem: RelatorioEquipamentoOrigem = 'cliente'
+): RelatorioEquipamentoRef {
+  return criarEquipamentoRelatorioVazioPure(origem, { nowMs: Date.now(), random: Math.random })
+}
+
+export function createEmptyEquipamentoRelatorioForm(
+  origem: RelatorioEquipamentoOrigem = 'cliente'
+): RelatorioEquipamentoRef {
+  return createEmptyEquipamentoRelatorioFormPure(origem, { nowMs: Date.now(), random: Math.random })
 }

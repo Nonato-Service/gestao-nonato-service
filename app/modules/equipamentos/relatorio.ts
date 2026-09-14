@@ -8,7 +8,6 @@ export type {
   RelatorioEquipamentoRef,
 } from '../relatorio-servico/equipamentoRelatorioForm'
 export {
-  criarEquipamentoRelatorioVazio,
   normalizarEquipamentoOrigem,
   clientesExternosParaEquipamentoRelatorio,
 } from '../relatorio-servico/equipamentoRelatorioForm'
