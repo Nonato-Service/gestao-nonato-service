@@ -1,20 +1,25 @@
-const SERVER_TOTAL_CACHE_KEY = 'nonato-pecas-biblioteca-server-total'
+export const SERVER_TOTAL_CACHE_KEY = 'nonato-pecas-biblioteca-server-total'
+
+export type BibliotecaStorageGet = (key: string) => string | null
+export type BibliotecaStorageSet = (key: string, value: string) => void
 
 /** Total conhecido no servidor (cacheado após meta ou repor bem-sucedido). */
-export function getCachedPecasBibliotecaServerTotal(): number | null {
-  if (typeof window === 'undefined') return null
+export function getCachedPecasBibliotecaServerTotal(readItem: BibliotecaStorageGet): number | null {
   try {
-    const n = parseInt(localStorage.getItem(SERVER_TOTAL_CACHE_KEY) || '', 10)
+    const n = parseInt(readItem(SERVER_TOTAL_CACHE_KEY) || '', 10)
     return Number.isFinite(n) && n > 0 ? n : null
   } catch {
     return null
   }
 }
 
-export function setCachedPecasBibliotecaServerTotal(total: number): void {
-  if (typeof window === 'undefined' || !Number.isFinite(total) || total <= 0) return
+export function setCachedPecasBibliotecaServerTotal(
+  total: number,
+  writeItem: BibliotecaStorageSet
+): void {
+  if (!Number.isFinite(total) || total <= 0) return
   try {
-    localStorage.setItem(SERVER_TOTAL_CACHE_KEY, String(Math.round(total)))
+    writeItem(SERVER_TOTAL_CACHE_KEY, String(Math.round(total)))
   } catch {
     /* ignorar */
   }
@@ -30,14 +35,17 @@ export function pecasBibliotecaMinExpected(categoriasCount: number): number {
 export function isPecasBibliotecaCatalogIncomplete(
   count: number,
   categoriasCount: number,
-  serverTotal?: number | null
+  serverTotal?: number | null,
+  readItem?: BibliotecaStorageGet
 ): boolean {
   if (count <= 0) return categoriasCount >= 5
 
   const expected =
     typeof serverTotal === 'number' && serverTotal > 0
       ? serverTotal
-      : getCachedPecasBibliotecaServerTotal()
+      : readItem
+        ? getCachedPecasBibliotecaServerTotal(readItem)
+        : null
 
   /** Incompleto quando falta peça face ao servidor (PC com mais locais não é «incompleto»). */
   if (typeof expected === 'number' && expected > 0) {

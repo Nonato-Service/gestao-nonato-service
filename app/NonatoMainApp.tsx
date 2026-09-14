@@ -77,12 +77,9 @@ import {
   relatoriosServicoOrfaosNaBiblioteca,
   agruparRelatoriosOrfaosPorNome,
   nomesClienteCorrespondem,
-  isPecasBibliotecaCatalogIncomplete,
   buildPecasBibliotecaLite,
   pecasBibliotecaMinExpected,
   pecasBibliotecaMeetsServerTotal,
-  getCachedPecasBibliotecaServerTotal,
-  setCachedPecasBibliotecaServerTotal,
   isPecasBibliotecaSyncInFlight,
   shouldDeferPecasBibliotecaImageHydration,
   ehImportacaoPendenteStrict,
@@ -577,6 +574,11 @@ import {
   showBibliotecaBrowserNotification,
 } from './lib/bibliotecaAviso'
 import { isBibliotecaMobileDevice } from './lib/pecasBibliotecaSyncCoordinator'
+import {
+  getCachedPecasBibliotecaServerTotal,
+  setCachedPecasBibliotecaServerTotal,
+  isPecasBibliotecaCatalogIncomplete,
+} from './lib/pecasBibliotecaCompleteness'
 import { readDeletedIdsFromLocalStorage } from './lib/relatorioEspecialDeleted'
 import {
   horaAtualLocal,
@@ -1108,7 +1110,7 @@ import {
   resolvePdfLogoHtmlBySelectedId as resolvePdfLogoHtmlBySelectedIdModulo,
   resolveBibliotecaLogoDataUrl as resolveBibliotecaLogoDataUrlModulo,
   resolveLogoPrincipalDataUrl as resolveLogoPrincipalDataUrlModulo,
-} from './modules/pdf'
+} from './lib/pdfLogos'
 import {
   buildSolicitacaoServicoTecnicoPrintHtml,
   downloadSolicitacaoServicoTecnicoHtmlFile,

@@ -2199,6 +2199,28 @@ try {
   } else {
     fail('lib/pecasBibliotecaSyncCoordinator ainda não envolve isBibliotecaMobileDevice')
   }
+  const completeMod = fs.readFileSync(path.join(root, 'app/modules/biblioteca/completeness.ts'), 'utf8')
+  const libComplete = exists('app/lib/pecasBibliotecaCompleteness.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pecasBibliotecaCompleteness.ts'), 'utf8')
+    : ''
+  if (
+    completeMod.includes('readItem: BibliotecaStorageGet') &&
+    !completeMod.includes('localStorage') &&
+    libComplete.includes('localStorage.getItem') &&
+    nma.includes("from './lib/pecasBibliotecaCompleteness'")
+  ) {
+    ok('NonatoMainApp usa cache de peças via lib')
+  } else {
+    fail('lib/pecasBibliotecaCompleteness ainda não envolve getCachedPecasBibliotecaServerTotal')
+  }
+  if (
+    syncMod.includes('readItem?: (key: string) => string | null') &&
+    libSync.includes('shouldRejectPartialPecasSave as shouldRejectPartialPecasSavePure')
+  ) {
+    ok('lib/pecasBibliotecaSyncCoordinator envolve shouldRejectPartialPecasSave')
+  } else {
+    fail('lib/pecasBibliotecaSyncCoordinator ainda não envolve shouldRejectPartialPecasSave')
+  }
 } catch (e) {
   fail(`módulo biblioteca: ${e.message}`)
 }
@@ -4775,6 +4797,20 @@ try {
   } else {
     fail('NonatoMainApp ainda define resolução de logos PDF localmente')
   }
+  const logosSrc = fs.readFileSync(path.join(root, 'app/modules/pdf/logos.ts'), 'utf8')
+  const libPdfLogos = exists('app/lib/pdfLogos.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/pdfLogos.ts'), 'utf8')
+    : ''
+  if (
+    logosSrc.includes('readItem?: PdfLogoStorageGet') &&
+    !logosSrc.includes('localStorage') &&
+    libPdfLogos.includes('localStorage.getItem') &&
+    nma.includes("from './lib/pdfLogos'")
+  ) {
+    ok('NonatoMainApp resolve logos PDF via lib')
+  } else {
+    fail('lib/pdfLogos ainda não envolve localStorage dos logos')
+  }
   if (
     idx.includes('PdfLogoSituationId') &&
     idx.includes('PDF_LOGO_SITUATIONS') &&
@@ -4786,7 +4822,6 @@ try {
   } else {
     fail('módulo pdf sem logoSituations')
   }
-  const logosSrc = fs.readFileSync(path.join(root, 'app/modules/pdf/logos.ts'), 'utf8')
   const libSit = fs.readFileSync(path.join(root, 'app/lib/adminPdfLogoSituations.ts'), 'utf8')
   const logosHub = fs.readFileSync(path.join(root, 'app/components/admin/AdminLogosHub.tsx'), 'utf8')
   if (

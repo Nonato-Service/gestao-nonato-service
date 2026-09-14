@@ -60,8 +60,12 @@ export function isBibliotecaMobileDevice(
   }
 }
 
-export function shouldRejectPartialPecasSave(count: number, expected?: number | null): boolean {
-  const exp = expected ?? getCachedPecasBibliotecaServerTotal()
+export function shouldRejectPartialPecasSave(
+  count: number,
+  expected?: number | null,
+  readItem?: (key: string) => string | null
+): boolean {
+  const exp = expected ?? (readItem ? getCachedPecasBibliotecaServerTotal(readItem) : null)
   if (!exp || exp <= 0) return false
   return count < exp
 }
