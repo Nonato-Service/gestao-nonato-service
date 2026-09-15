@@ -92,6 +92,7 @@ export type {
 } from './fechamentoPorCliente'
 export {
   FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL,
+  FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM,
   chaveGrupoClienteFechamentoEspecial,
   chaveLocalDiaTrabalhoEspecial,
   rotuloGrupoFechamentoEspecial,

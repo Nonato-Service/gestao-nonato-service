@@ -2252,6 +2252,7 @@ try {
     idx.includes('calcularTotaisFechamentoEspecialPorCliente') &&
     idx.includes('deveSepararFechamentoEspecialPorCliente') &&
     idx.includes('chaveLocalDiaTrabalhoEspecial') &&
+    idx.includes('FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM') &&
     idx.includes('rotuloLocalDiaTrabalhoEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
@@ -2400,7 +2401,8 @@ try {
   if (
     hub.includes('relatorioEspecialLocalDia') &&
     hub.includes('relatorioEspecialClienteInstalacao') &&
-    hub.includes('clienteInstalacaoId')
+    hub.includes('clienteInstalacaoId') &&
+    hub.includes('relatorioEspecialInstalacaoSemDia')
   ) {
     ok('RelatorioEspecialHub: local do dia + cliente de instalação no armazém')
   } else {
@@ -2415,6 +2417,7 @@ try {
       'relatorioEspecialLocalDiaHerdar',
       'relatorioEspecialLocalArmazem',
       'relatorioEspecialLocalDiaHint',
+      'relatorioEspecialInstalacaoSemDia',
     ]
     const missLocal = []
     for (const lang of ['pt-BR', 'es', 'fr', 'it', 'de', 'en']) {

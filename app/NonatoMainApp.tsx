@@ -13765,6 +13765,7 @@ export default function Dashboard() {
       diarias: (safeT as any)?.diarias,
       horasViagemIda: (safeT as any)?.horasViagemIda,
       horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
+      relatorioEspecialLocalArmazem: (safeT as any)?.relatorioEspecialLocalArmazem,
     }
     const base = buildItensFechamentoBaseRelatorioModulo(shape, {
       labels: labelsUi,
@@ -45288,6 +45289,7 @@ A1;Peça exemplo;10`}
           diarias: (safeT as any)?.diarias,
           horasViagemIda: (safeT as any)?.horasViagemIda,
           horasViagemRetorno: (safeT as any)?.horasViagemRetorno,
+          relatorioEspecialLocalArmazem: (safeT as any)?.relatorioEspecialLocalArmazem,
         }
         const itensIniciaisSempre = relatorioSelecionado
           ? buildItensFechamentoBaseRelatorioModulo(relatorioSelecionado, {

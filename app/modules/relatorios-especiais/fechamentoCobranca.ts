@@ -32,6 +32,7 @@ export type LabelsFechamentoEspecial = {
   diarias?: string
   horasViagemIda?: string
   horasViagemRetorno?: string
+  relatorioEspecialLocalArmazem?: string
 }
 
 export function isRelatorioEspecialId(id: string | undefined | null): boolean {
@@ -96,7 +97,9 @@ export function buildItensFechamentoBaseRelatorioEspecial(
     const grupos = calcularTotaisFechamentoEspecialPorCliente(rel)
     const out: FechamentoItemBaseEspecial[] = []
     for (const g of grupos) {
-      const grupoLabel = rotuloGrupoFechamentoEspecial(g)
+      const grupoLabel = rotuloGrupoFechamentoEspecial(g, {
+        oficinaLabel: labels.relatorioEspecialLocalArmazem,
+      })
       const extra = { grupoKey: g.key, grupoLabel }
       out.push(
         linha(idLinhaFechamentoGrupo('ht', g.key), nomes.ht, 'hora', g.ht, extra),

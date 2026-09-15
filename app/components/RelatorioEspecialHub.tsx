@@ -563,6 +563,30 @@ export default function RelatorioEspecialHub({
     ]
   )
 
+  const avisoInstalacaoSemDia = useMemo(() => {
+    const eqsInst = (form.equipamentos || []).filter(
+      (e) =>
+        e.equipamentoOrigem === 'armazem' &&
+        (String(e.clienteInstalacaoId || '').trim() || String(e.clienteInstalacaoNome || '').trim())
+    )
+    if (!eqsInst.length || !(form.diasTrabalho || []).length) return ''
+    const temDiaNoCliente = (form.diasTrabalho || []).some((d) => {
+      if (d.localTrabalho !== 'cliente') return false
+      const cid = String(d.clienteTrabalhoId || '').trim()
+      const nome = String(d.clienteTrabalhoNome || '').trim().toLowerCase()
+      return eqsInst.some((e) => {
+        const iid = String(e.clienteInstalacaoId || '').trim()
+        const inome = String(e.clienteInstalacaoNome || '').trim().toLowerCase()
+        return (iid && cid && iid === cid) || (inome && nome && inome === nome)
+      })
+    })
+    if (temDiaNoCliente) return ''
+    const nomes = [
+      ...new Set(eqsInst.map((e) => String(e.clienteInstalacaoNome || '').trim()).filter(Boolean)),
+    ]
+    return nomes.join(', ')
+  }, [form.equipamentos, form.diasTrabalho])
+
   /** Chips = só técnicos cadastrados; inclui valor já gravado se órfão. Gestores não entram. */
   const tecnicosOpcoes = useMemo(() => {
     const seen = new Set<string>()
@@ -890,10 +914,13 @@ export default function RelatorioEspecialHub({
     const dia = criarDiaTrabalhoEspecialVazio(data)
     const anteriores = sortDiasTrabalhoEspecialCronologicamente([...(form.diasTrabalho || [])])
     const ultimo = anteriores[anteriores.length - 1]
+    const temArmazem = (form.equipamentos || []).some((e) => e.equipamentoOrigem === 'armazem')
     if (ultimo?.localTrabalho) {
       dia.localTrabalho = ultimo.localTrabalho
       dia.clienteTrabalhoId = ultimo.clienteTrabalhoId || ''
       dia.clienteTrabalhoNome = ultimo.clienteTrabalhoNome || ''
+    } else if (temArmazem) {
+      dia.localTrabalho = 'armazem'
     }
     setForm((prev) => ({
       ...prev,
@@ -2358,6 +2385,19 @@ export default function RelatorioEspecialHub({
               'Sábado e domingo também contam como dias de trabalho (diárias).'}
           </p>
         </div>
+        {avisoInstalacaoSemDia ? (
+          <div className="relatorio-especial-callout" role="status" style={{ marginTop: 8, borderColor: '#ffd54f' }}>
+            <span className="relatorio-especial-callout__icon" aria-hidden="true">
+              !
+            </span>
+            <p>
+              {(
+                t.relatorioEspecialInstalacaoSemDia ||
+                'O equipamento tem cliente de instalação ({cliente}), mas nenhum dia está nesse cliente. Marque o local de cada dia: oficina (Ferwood) ou a casa do cliente. Várias visitas ao mesmo cliente somam no mesmo bloco.'
+              ).replace('{cliente}', avisoInstalacaoSemDia)}
+            </p>
+          </div>
+        ) : null}
         <p className="relatorio-especial-dia-secao__ajuda" style={{ marginTop: 8, marginBottom: 4 }}>
           {t.retornoMesmoDiaAjuda ||
             'Pode acrescentar outro horário no mesmo dia (ex.: voltar às 21:00) sem nova diária. Use «Adicionar retorno no mesmo dia».'}

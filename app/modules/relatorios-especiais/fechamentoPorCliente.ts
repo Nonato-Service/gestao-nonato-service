@@ -17,6 +17,8 @@ import {
 import type { RelatorioEspecial } from './tipos'
 
 export const FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL = 'p'
+/** Oficina / armazém (Ferwood), distinto do cliente de instalação (ex.: Burie). */
+export const FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM = 'a'
 
 export type ContextoVinculoClienteRelatorioEspecial = {
   clientes?: ClienteCadastroEquipamentosLookup[]
@@ -50,6 +52,8 @@ export type GrupoFechamentoEspecial = {
   key: string
   clienteId: string
   clienteNome: string
+  /** Bloco da oficina (Ferwood), não misturar com o cliente de instalação. */
+  oficina?: boolean
   equipamentos: EquipamentoGrupoFechamentoEspecial[]
   ht: number
   km: number
@@ -86,6 +90,7 @@ export function chaveGrupoClienteFechamentoEspecial(eq: {
     (!!cid && eq.equipamentoOrigem !== 'armazem') ||
     (!!nome && eq.equipamentoOrigem === 'clientes-externos')
   if (eExterno) return chaveGrupoPorClienteIdNome(cid, nome)
+  if (eq.equipamentoOrigem === 'armazem') return FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM
   return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
 }
 
@@ -99,7 +104,7 @@ export function chaveLocalDiaTrabalhoEspecial(
   principalId?: string
 ): string | null {
   const loc = String(dia.localTrabalho || '').trim()
-  if (loc === 'armazem') return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+  if (loc === 'armazem') return FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM
   if (loc === 'cliente') {
     const cid = String(dia.clienteTrabalhoId || '').trim()
     if (cid && principalId && cid === String(principalId).trim()) {
@@ -127,8 +132,15 @@ export function rotuloEquipamentoGrupoFechamento(eq: RelatorioEquipamentoRef, id
   return String(label || eq.maquinaModelo || eq.numeroMaquina || `#${idx + 1}`).trim()
 }
 
-export function rotuloGrupoFechamentoEspecial(grupo: Pick<GrupoFechamentoEspecial, 'clienteNome' | 'equipamentos'>): string {
-  const nome = String(grupo.clienteNome || '').trim() || '—'
+export function rotuloGrupoFechamentoEspecial(
+  grupo: Pick<GrupoFechamentoEspecial, 'clienteNome' | 'equipamentos' | 'oficina' | 'key'>,
+  opts?: { oficinaLabel?: string }
+): string {
+  let nome = String(grupo.clienteNome || '').trim() || '—'
+  if (grupo.oficina || grupo.key === FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM) {
+    const of = String(opts?.oficinaLabel || '').trim()
+    if (of) nome = nome === '—' ? of : `${nome} · ${of}`
+  }
   const eqs = (grupo.equipamentos || []).map((e) => e.label).filter(Boolean)
   const eqTxt = eqs.length ? eqs.join(' · ') : ''
   return eqTxt ? `${nome} — ${eqTxt}` : nome
@@ -167,6 +179,7 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
         key,
         clienteId,
         clienteNome,
+        oficina: key === FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM,
         equipamentos: [],
         ht: 0,
         km: 0,
@@ -179,9 +192,12 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
     return g
   }
 
-  ensure(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL, principalId, principalNome)
-
   const eqs = Array.isArray(r.equipamentos) ? r.equipamentos : []
+  const temArmazem = eqs.some((eq) => eq.equipamentoOrigem === 'armazem')
+  if (temArmazem) {
+    ensure(FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM, principalId, principalNome)
+  }
+  ensure(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL, principalId, principalNome)
   const addEq = (key: string, clienteId: string, clienteNome: string, eq: RelatorioEquipamentoRef, idx: number) => {
     const g = ensure(key, clienteId, clienteNome)
     const uid = String(eq.uid || '').trim()
@@ -229,7 +245,9 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
   const all = [...map.values()]
   const withEq = all.filter((g) => g.equipamentos.length > 0)
   if (withEq.length > 0) return withEq
-  return all.filter((g) => g.key === FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
+  return all.filter(
+    (g) => g.key === FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL || g.key === FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM
+  ).slice(0, 1)
 }
 
 export function deveSepararFechamentoEspecialPorCliente(r: RelatorioEspecial | null | undefined): boolean {
@@ -273,6 +291,7 @@ export function calcularTotaisFechamentoEspecialPorCliente(
           clienteNome:
             String(dia.clienteTrabalhoNome || eq?.clienteExternoNome || eq?.clienteInstalacaoNome || '').trim() ||
             '—',
+          oficina: key === FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM,
           equipamentos: [],
           ht: 0,
           km: 0,
@@ -294,7 +313,9 @@ export function calcularTotaisFechamentoEspecialPorCliente(
 
     if (presentes.size === 0) {
       if (locDia) presentes.add(locDia)
-      else presentes.add(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
+      else if (eqs.some((e) => e.equipamentoOrigem === 'armazem')) {
+        presentes.add(FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM)
+      } else presentes.add(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
     }
     const keys = [...presentes].filter((k) => byKey.has(k))
     if (keys.length === 0) continue
