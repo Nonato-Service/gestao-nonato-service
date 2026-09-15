@@ -338,6 +338,7 @@ import {
   ProtocoloCompletudeBar,
   ProtocoloTemplateGrid,
   ProtocoloCockpitLanes,
+  ProtocoloCockpitWizardSteps,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -29361,21 +29362,12 @@ export default function Dashboard() {
                       ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo'
                       : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
                   </h2>
-                  <div className="proto-cockpit-rail__steps" role="tablist" aria-label={protoT?.protocolosServicoFormPassosLabel || 'Passos'}>
-                    {protoWizardLabels.map((lab, wi) => (
-                      <button
-                        key={lab + wi}
-                        type="button"
-                        role="tab"
-                        aria-selected={protocoloFormPassoAtivo === wi + 1}
-                        className={`proto-cockpit-rail__step${protocoloFormPassoAtivo === wi + 1 ? ' is-active' : ''}`}
-                        onClick={() => setProtocoloFormPassoAtivo(wi + 1)}
-                      >
-                        <span className="proto-cockpit-rail__num">{wi + 1}</span>
-                        <span>{lab}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <ProtocoloCockpitWizardSteps
+                    labels={protoWizardLabels}
+                    passoAtivo={protocoloFormPassoAtivo}
+                    ariaLabel={protoT?.protocolosServicoFormPassosLabel || 'Passos'}
+                    onSelect={setProtocoloFormPassoAtivo}
+                  />
                   <ProtocoloCompletudeBar
                     percent={protoCompletude.percent}
                     pronto={protoCompletude.pronto}

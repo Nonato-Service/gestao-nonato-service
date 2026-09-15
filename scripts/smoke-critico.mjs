@@ -4071,6 +4071,16 @@ try {
     fail('NonatoMainApp ainda define grelha de modelos ou lanes de protocolo no sítio')
   }
   if (
+    idx.includes('ProtocoloCockpitWizardSteps') &&
+    exists('app/modules/protocolo/intelWizard.tsx') &&
+    nma.includes('ProtocoloCockpitWizardSteps') &&
+    !nma.includes('proto-cockpit-rail__steps')
+  ) {
+    ok('NonatoMainApp usa wizard steps do módulo protocolo')
+  } else {
+    fail('módulo protocolo sem intelWizard ou NMA ainda define os passos no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&
