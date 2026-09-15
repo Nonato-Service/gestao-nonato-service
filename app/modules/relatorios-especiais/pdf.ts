@@ -11,6 +11,7 @@ import {
   formatMinutosComoHHMM,
   getDiaSemanaInfo,
   resumoHorasTrabalhoDia,
+  rotuloLocalDiaTrabalhoEspecial,
   sortDiasTrabalhoEspecialCronologicamente,
 } from './calculos'
 import type { DiaTrabalhoEspecial, RelatorioEspecial } from './tipos'
@@ -93,6 +94,33 @@ export type RelatorioEspecialPdfOptions = {
 function L(labels: RelatorioEspecialPdfLabels | undefined, key: string, fallback: string): string {
   const v = labels?.[key]
   return v != null && String(v).trim() !== '' ? String(v) : fallback
+}
+
+function localePdfDatas(lang?: string): string {
+  const k = String(lang || 'pt-BR')
+  if (k === 'pt-BR') return 'pt-PT'
+  if (k === 'en') return 'en-GB'
+  if (k === 'en-US') return 'en-US'
+  if (k === 'es') return 'es-ES'
+  if (k === 'fr') return 'fr-FR'
+  if (k === 'it') return 'it-IT'
+  if (k === 'de') return 'de-DE'
+  return 'pt-PT'
+}
+
+function vinculoClienteEquipamentoPdf(
+  eq: RelatorioEquipamentoRef,
+  labels: RelatorioEspecialPdfLabels | undefined
+): string {
+  if (eq.equipamentoOrigem === 'clientes-externos' && String(eq.clienteExternoNome || '').trim()) {
+    return `${L(labels, 'clienteExternoRelatorio', 'Cliente externo')}: ${String(eq.clienteExternoNome).trim()}`
+  }
+  if (eq.equipamentoOrigem === 'armazem' && String(eq.clienteInstalacaoNome || '').trim()) {
+    return `${L(labels, 'relatorioEspecialClienteInstalacao', 'Cliente de instalação')}: ${String(
+      eq.clienteInstalacaoNome
+    ).trim()}`
+  }
+  return ''
 }
 
 const RELATORIO_ESPECIAL_PDF_CSS = `
@@ -364,6 +392,15 @@ body.rs-pdf--especial .re-doc {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
   line-height: 1.2;
+}
+
+.re-dia-local {
+  display: block;
+  margin-top: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  color: #0d7a3d;
+  line-height: 1.25;
 }
 
 .re-table .re-row-total td,
@@ -752,15 +789,20 @@ body.rs-pdf--especial .re-doc {
 function formatCelulaDataPdfHtml(
   dataRaw: string | undefined,
   labels: RelatorioEspecialPdfLabels | undefined,
-  esc: (s: string) => string
+  esc: (s: string) => string,
+  dateLocale = 'pt-PT',
+  extraLinha?: string
 ): string {
   const { abrev, isFimDeSemana } = getDiaSemanaInfo(dataRaw, labels)
-  const dataCurta = formatDiaCurtoPt(dataRaw)
+  const dataCurta = formatDiaCurtoPt(dataRaw, dateLocale)
   const fdsClass = isFimDeSemana ? ' re-col-data--fds' : ''
+  const extra = extraLinha
+    ? `<span class="re-dia-local">${esc(extraLinha)}</span>`
+    : ''
   if (!abrev) {
-    return `<td class="re-col-data${fdsClass}"><span class="re-dia-data">${esc(dataCurta)}</span></td>`
+    return `<td class="re-col-data${fdsClass}"><span class="re-dia-data">${esc(dataCurta)}</span>${extra}</td>`
   }
-  return `<td class="re-col-data${fdsClass}"><span class="re-dia-semana">${esc(abrev)}</span><span class="re-dia-data">${esc(dataCurta)}</span></td>`
+  return `<td class="re-col-data${fdsClass}"><span class="re-dia-semana">${esc(abrev)}</span><span class="re-dia-data">${esc(dataCurta)}</span>${extra}</td>`
 }
 
 function formatNotaAlmocoPdf(
@@ -883,7 +925,8 @@ function buildKpiStripHtml(
   rel: RelatorioEspecial,
   totais: ReturnType<typeof calcularTotaisRelatorioEspecial>,
   equipamentosCount: number,
-  labels: RelatorioEspecialPdfLabels | undefined
+  labels: RelatorioEspecialPdfLabels | undefined,
+  dateLocale: string
 ): string {
   const esc = escapePdfHtml
   const almocoHint =
@@ -907,7 +950,7 @@ function buildKpiStripHtml(
       <span class="re-kpi__valor">${esc(String(totais.diarias))}</span>
       <span class="re-kpi__hint">${esc(
         (totais.datasDiarias || []).length > 0
-          ? (totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · ')
+          ? (totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels, dateLocale)).join(' · ')
           : L(labels, 'relatorioEspecialDiariasAjuda', 'Dias registados (inclui sáb./dom. sem HT)')
       )}</span>
     </div>
@@ -924,7 +967,8 @@ function buildEquipamentoCardHtml(
   idx: number,
   total: string,
   sessoes: SessaoHorasEquipamentoEspecial[] | undefined,
-  labels: RelatorioEspecialPdfLabels | undefined
+  labels: RelatorioEspecialPdfLabels | undefined,
+  dateLocale: string
 ): string {
   const esc = escapePdfHtml
   const labelAlmoco = L(labels, 'horaAlmoco', 'almoço')
@@ -942,7 +986,7 @@ function buildEquipamentoCardHtml(
                       : ''
                   }</div>`
             return `<tr>
-                ${formatCelulaDataPdfHtml(s.data, labels, esc)}
+                ${formatCelulaDataPdfHtml(s.data, labels, esc, dateLocale)}
                 <td>${esc(formatHorarioIntervalo(s.horasInicio, s.horasFim))}</td>
                 <td class="re-col-total">${horasCell}</td>
               </tr>`
@@ -966,6 +1010,20 @@ function buildEquipamentoCardHtml(
           <span class="re-equip-card__label">${esc(L(labels, 'numeroSerie', 'N.º de série'))}</span>
           <span class="re-equip-card__value re-equip-card__value--mono">${esc(eq.numeroMaquina || '—')}</span>
         </div>
+        ${
+          vinculoClienteEquipamentoPdf(eq, labels)
+            ? `<div class="re-equip-card__field">
+          <span class="re-equip-card__label">${esc(
+            eq.equipamentoOrigem === 'armazem'
+              ? L(labels, 'relatorioEspecialClienteInstalacao', 'Cliente de instalação')
+              : L(labels, 'clienteExternoRelatorio', 'Cliente externo')
+          )}</span>
+          <span class="re-equip-card__value">${esc(
+            String(eq.clienteInstalacaoNome || eq.clienteExternoNome || '').trim() || '—'
+          )}</span>
+        </div>`
+            : ''
+        }
       </div>
     </div>
     <div class="re-equip-card__body">
@@ -1030,7 +1088,8 @@ function buildResumoCardsHtml(
 
 function buildResumoViagemHtml(
   diasSemMaquina: DiaSemMaquinaResumoEspecial[],
-  labels: RelatorioEspecialPdfLabels | undefined
+  labels: RelatorioEspecialPdfLabels | undefined,
+  dateLocale: string
 ): string {
   if (!diasSemMaquina.length) return ''
   const esc = escapePdfHtml
@@ -1053,7 +1112,7 @@ function buildResumoViagemHtml(
         ? `<div class="re-viagem-cliente">${esc(labCli)}: ${esc(d.clienteFmt)}</div>`
         : ''
       return `<tr>
-        ${formatCelulaDataPdfHtml(d.data, labels, esc)}
+        ${formatCelulaDataPdfHtml(d.data, labels, esc, dateLocale)}
         <td>${esc(d.horarioFmt || '—')}</td>
         <td class="re-col-total">${duracaoCell}</td>
         <td>
@@ -1097,6 +1156,7 @@ export function buildRelatorioEspecialPdfHtml(
       : { labels: labelsOrOptions as RelatorioEspecialPdfLabels | undefined }
 
   const labels = options.labels
+  const dateLocale = localePdfDatas(options.lang)
   const empresaNome = (options.empresaNome || 'Nonato Service').trim()
   const logoContent = (options.logoHtml || '').trim() || empresaNome
   const secoes = normalizeRelatorioEspecialPdfSecoes(options.secoes)
@@ -1118,7 +1178,7 @@ export function buildRelatorioEspecialPdfHtml(
   const labelViagem = L(labels, 'relatorioEspecialDiaSoViagem', L(labels, 'relatorioEspecialPdfHorasViagem', 'viagem'))
 
   const totalGeralFinalHtml = buildTotalGeralBannerHtml(rel, totais, labels, ' re-total-geral--fecho')
-  const kpiStripHtml = buildKpiStripHtml(rel, totais, equipamentos.length, labels)
+  const kpiStripHtml = buildKpiStripHtml(rel, totais, equipamentos.length, labels, dateLocale)
 
   const headerHtml = buildPdfDocumentHeaderHtml({
     logoContent,
@@ -1139,8 +1199,9 @@ export function buildRelatorioEspecialPdfHtml(
       const dia = atualizarCalculosDiaEspecial(diaRaw)
       const almoco = (dia.tempoPausa || '').trim() || (dia.pausa === 'sim' ? '01:00' : dia.pausa || '')
       const horas = resumoHorasDiaPdf(dia)
+      const localDia = rotuloLocalDiaTrabalhoEspecial(dia, labels)
       return `<tr>
-        ${formatCelulaDataPdfHtml(dia.data, labels, esc)}
+        ${formatCelulaDataPdfHtml(dia.data, labels, esc, dateLocale, localDia || undefined)}
         <td>${esc(dia.idaHora || '—')}</td>
         <td>${esc(dia.idaChegada || '—')}</td>
         <td class="re-col-total">${esc(dia.idaDuracao || '—')}</td>
@@ -1217,7 +1278,7 @@ export function buildRelatorioEspecialPdfHtml(
       ${tfootDeslocamento}
     </table>
     <div class="re-diarias-rodape">
-      <p class="re-diarias-rodape__total"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels)).join(' · '))}` : ''}</p>
+      <p class="re-diarias-rodape__total"><strong>${esc(L(labels, 'relatorioEspecialTotalDiarias', L(labels, 'diarias', 'TOTAL DE DIÁRIAS')))}:</strong> ${totais.diarias}${(totais.datasDiarias || []).length > 0 ? ` — ${esc((totais.datasDiarias || []).map((d) => formatDiaComDiaSemana(d, labels as DiaSemanaLabels, dateLocale)).join(' · '))}` : ''}</p>
       <p class="re-diarias-rodape__ajuda">${esc(L(labels, 'relatorioEspecialDiariasAjuda', '1 diária por data civil (inclui sáb./dom. e dias só com viagem), mesmo sem horas em máquina. Vários blocos no mesmo dia não duplicam a diária.'))}</p>
     </div>
   </section>`
@@ -1229,7 +1290,8 @@ export function buildRelatorioEspecialPdfHtml(
         i,
         rel.horasPorEquipamentoResumo?.[eq.uid] || '0:00',
         sessoesPorEquip[eq.uid],
-        labels
+        labels,
+        dateLocale
       )
     )
     .join('')
@@ -1243,7 +1305,7 @@ export function buildRelatorioEspecialPdfHtml(
   const resumoHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'resumo', 'Resumo'))}</h3>
     ${buildResumoCardsHtml(rel, totais, labels)}
-    ${buildResumoViagemHtml(diasSemMaquinaResumo, labels)}
+    ${buildResumoViagemHtml(diasSemMaquinaResumo, labels, dateLocale)}
   </section>`
 
   const observacoesHtml = rel.observacoes
@@ -1269,7 +1331,7 @@ export function buildRelatorioEspecialPdfHtml(
         </section>`
       : ''
 
-  const dataGeracao = new Date(nowMs).toLocaleString('pt-PT', {
+  const dataGeracao = new Date(nowMs).toLocaleString(dateLocale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

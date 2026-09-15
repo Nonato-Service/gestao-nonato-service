@@ -61,6 +61,7 @@ export {
   formatDiaComDiaSemana,
   sortDiasTrabalhoEspecialCronologicamente,
   formatDiaCurtoPt,
+  rotuloLocalDiaTrabalhoEspecial,
   intervaloHorasTrabalhoDia,
   intervaloViagemDia,
   resumoHorasTrabalhoDia,

@@ -2251,7 +2251,8 @@ try {
     idx.includes('upsertRelatorioEspecialNaLista') &&
     idx.includes('calcularTotaisFechamentoEspecialPorCliente') &&
     idx.includes('deveSepararFechamentoEspecialPorCliente') &&
-    idx.includes('chaveLocalDiaTrabalhoEspecial')
+    idx.includes('chaveLocalDiaTrabalhoEspecial') &&
+    idx.includes('rotuloLocalDiaTrabalhoEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
@@ -2404,6 +2405,26 @@ try {
     ok('RelatorioEspecialHub: local do dia + cliente de instalação no armazém')
   } else {
     fail('RelatorioEspecialHub sem local do dia / cliente de instalação')
+  }
+  {
+    const i18nKeysLocal = [
+      'relatorioEspecialClienteInstalacao',
+      'relatorioEspecialClienteInstalacaoVazio',
+      'relatorioEspecialClienteInstalacaoHint',
+      'relatorioEspecialLocalDia',
+      'relatorioEspecialLocalDiaHerdar',
+      'relatorioEspecialLocalArmazem',
+      'relatorioEspecialLocalDiaHint',
+    ]
+    const missLocal = []
+    for (const lang of ['pt-BR', 'es', 'fr', 'it', 'de', 'en']) {
+      const o = JSON.parse(fs.readFileSync(path.join(root, `app/i18n/messages/${lang}.json`), 'utf8'))
+      for (const k of i18nKeysLocal) {
+        if (!o[k] || !String(o[k]).trim()) missLocal.push(`${lang}.${k}`)
+      }
+    }
+    if (missLocal.length) fail(`i18n local/instalação especial em falta: ${missLocal.join(', ')}`)
+    else ok('i18n: local do dia e cliente de instalação nos 6 idiomas')
   }
   {
     const relEq = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')

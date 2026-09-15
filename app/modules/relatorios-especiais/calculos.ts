@@ -414,8 +414,12 @@ export function getDiaSemanaInfo(
   return { abrev: nomes[dow] || '', isFimDeSemana: dow === 0 || dow === 6 }
 }
 
-export function formatDiaComDiaSemana(dataRaw: string | undefined, labels?: DiaSemanaLabels): string {
-  const fmt = formatDiaCurtoPt(dataRaw)
+export function formatDiaComDiaSemana(
+  dataRaw: string | undefined,
+  labels?: DiaSemanaLabels,
+  dateLocale?: string
+): string {
+  const fmt = formatDiaCurtoPt(dataRaw, dateLocale)
   const { abrev } = getDiaSemanaInfo(dataRaw, labels)
   return abrev ? `${fmt} (${abrev})` : fmt
 }
@@ -430,12 +434,27 @@ export function sortDiasTrabalhoEspecialCronologicamente(dias: DiaTrabalhoEspeci
   })
 }
 
-export function formatDiaCurtoPt(dataRaw: string | undefined): string {
+export function formatDiaCurtoPt(dataRaw: string | undefined, dateLocale?: string): string {
   const key = diaTrabalhoDataChaveOrdenacao(dataRaw)
   if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return (dataRaw && String(dataRaw).trim()) || '-'
   const [y, m, d] = key.split('-').map((x) => parseInt(x, 10))
   const dt = new Date(y, m - 1, d)
-  return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+  const loc = String(dateLocale || '').trim() || 'pt-BR'
+  return dt.toLocaleDateString(loc, { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+/** Rótulo do sítio do dia (oficina vs cliente), no idioma das labels. */
+export function rotuloLocalDiaTrabalhoEspecial(
+  dia: { localTrabalho?: string; clienteTrabalhoNome?: string },
+  labels?: Record<string, string | undefined> | null
+): string {
+  const loc = String(dia.localTrabalho || '').trim()
+  if (loc === 'armazem') {
+    const v = String(labels?.relatorioEspecialLocalArmazem || '').trim()
+    return v || 'Armazém / oficina'
+  }
+  if (loc === 'cliente') return String(dia.clienteTrabalhoNome || '').trim()
+  return ''
 }
 
 export type SessaoHorasEquipamentoEspecial = {

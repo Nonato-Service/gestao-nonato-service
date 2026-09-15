@@ -18,6 +18,7 @@ import {
   minutosDeDuracaoHHMM,
   minutosAlmocoDia,
   resumoHorasTrabalhoDia,
+  rotuloLocalDiaTrabalhoEspecial,
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
@@ -138,11 +139,12 @@ function classNameResumoCobrancaEspecial(fase: 'laranja' | 'azul' | 'verde' | 'b
 function localeUiFromLang(lang: string): string {
   const map: Record<string, string> = {
     'pt-BR': 'pt-BR',
-    es: 'es',
-    fr: 'fr',
-    it: 'it',
-    de: 'de',
-    en: 'en',
+    es: 'es-ES',
+    fr: 'fr-FR',
+    it: 'it-IT',
+    de: 'de-DE',
+    en: 'en-GB',
+    'en-US': 'en-US',
   }
   return map[lang] || 'pt-BR'
 }
@@ -2436,7 +2438,7 @@ export default function RelatorioEspecialHub({
                             rowSpan={temDescricao ? 2 : 1}
                             className={`relatorio-especial-horas-table__data${sem.isFimDeSemana ? ' relatorio-especial-horas-table__data--fds' : ''}`}
                           >
-                            {formatDiaComDiaSemana(dia.data, t)}
+                            {formatDiaComDiaSemana(dia.data, t, uiLocale)}
                             {mostraBadgeDiaria ? (
                               <span className="relatorio-especial-badge-diaria" title={t.relatorioEspecialDiariasAjuda || ''}>
                                 {t.relatorioEspecialBadgeDiaria || t.diarias || 'Diária'}
@@ -2575,12 +2577,7 @@ export default function RelatorioEspecialHub({
               return `${eq ? labelEquipamentoCurto(eq, idx, labelOptsCadastro) : '?'}: ${h.horasDuracao}`
             })
             .join(' · ')
-          const localDiaTxt =
-            dia.localTrabalho === 'armazem'
-              ? t.relatorioEspecialLocalArmazem || 'Armazém / oficina'
-              : dia.localTrabalho === 'cliente' && dia.clienteTrabalhoNome
-                ? dia.clienteTrabalhoNome
-                : ''
+          const localDiaTxt = rotuloLocalDiaTrabalhoEspecial(dia, t)
           const resumoLinha =
             [localDiaTxt, resumoHoras || (horasResumoCard.soViagem
               ? `${horasResumoCard.viagemFmt} ${t.relatorioEspecialDiaSoViagem || t.relatorioEspecialPdfHorasViagem || 'viagem'}`
@@ -2595,7 +2592,7 @@ export default function RelatorioEspecialHub({
                 onClick={() => setDiaExpandido(aberto ? null : dia.id)}
               >
                 <strong style={{ color: getDiaSemanaInfo(dia.data, t).isFimDeSemana ? '#ffd54f' : undefined }}>
-                  {formatDiaComDiaSemana(dia.data, t)}
+                  {formatDiaComDiaSemana(dia.data, t, uiLocale)}
                 </strong>
                 {contaDiariaCard ? (
                   <span className="relatorio-especial-badge-diaria" title={t.relatorioEspecialDiariasAjuda || ''}>
@@ -3207,7 +3204,7 @@ export default function RelatorioEspecialHub({
             {datasDiariasUi.length > 0 ? (
               <div style={{ fontSize: 11, color: '#aaa', marginTop: 4, maxWidth: 360 }}>
                 {datasDiariasUi
-                  .map((d) => formatDiaComDiaSemana(d, t as Record<string, string | undefined>))
+                  .map((d) => formatDiaComDiaSemana(d, t as Record<string, string | undefined>, uiLocale))
                   .join(' · ')}
               </div>
             ) : null}
