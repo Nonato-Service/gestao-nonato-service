@@ -1,4 +1,4 @@
-import { FECHAMENTO_IDS_FIXOS_TEMPLATE } from './tipos'
+import { isLinhaFechamentoFixaId } from './tipos'
 import {
   normalizarFechamentoIvaOpcoes,
   type FechamentoIvaOpcoesRelatorio,
@@ -42,12 +42,11 @@ export function normalizeResumoCobrancaDecisaoMap(raw: unknown): Record<string, 
 
 export function normalizeFechamentoItensOmitidosMap(raw: unknown): Record<string, string[]> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
-  const fixos = new Set<string>([...FECHAMENTO_IDS_FIXOS_TEMPLATE])
   const out: Record<string, string[]> = {}
   for (const k of Object.keys(raw as Record<string, unknown>)) {
     const v = (raw as Record<string, unknown>)[k]
     if (!Array.isArray(v)) continue
-    const arr = v.filter((x): x is string => typeof x === 'string' && fixos.has(x))
+    const arr = v.filter((x): x is string => typeof x === 'string' && isLinhaFechamentoFixaId(x))
     if (arr.length > 0) out[k] = arr
   }
   return out

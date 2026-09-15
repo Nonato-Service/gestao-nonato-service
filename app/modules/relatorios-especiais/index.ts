@@ -85,6 +85,20 @@ export {
 } from './fechamentoCobranca'
 
 export type {
+  EquipamentoGrupoFechamentoEspecial,
+  GrupoFechamentoEspecial,
+} from './fechamentoPorCliente'
+export {
+  FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL,
+  chaveGrupoClienteFechamentoEspecial,
+  rotuloGrupoFechamentoEspecial,
+  listarGruposClienteFechamentoEspecial,
+  deveSepararFechamentoEspecialPorCliente,
+  calcularTotaisFechamentoEspecialPorCliente,
+  repartirTotalEquitativo,
+} from './fechamentoPorCliente'
+
+export type {
   RelatorioEspecialPdfLabels,
   RelatorioEspecialPdfOptions,
   RelatorioEspecialPdfSecaoId,

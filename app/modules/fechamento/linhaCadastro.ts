@@ -1,4 +1,5 @@
 import type { FechamentoItem, ServicoCadastroFechamentoMin } from './tipos'
+import { tipoLinhaFechamentoFixa } from './tipos'
 import { normalizeServicoValorStored } from './servicoValor'
 import { servicoCodParaExibicao, servicoDescricaoLegivelFechamento } from './servicoRotulos'
 
@@ -80,28 +81,29 @@ export function servicoCombinaLinhaFechamento(
   s: ServicoCadastroFechamentoMin,
   linhaId: string
 ): boolean {
+  const tipo = tipoLinhaFechamentoFixa(linhaId) || linhaId
   const cod = String(s.cod || '').trim().toUpperCase()
   const t = txtServicoFechamento(s)
-  if (linhaId === 'ht') {
+  if (tipo === 'ht') {
     return (
       /^(HT|HTT)$/i.test(cod) ||
       (s.tipoCobranca === 'hora' && /trabalho/i.test(t) && !/viaj|viagem|\bida\b|\bretorno\b/i.test(t))
     )
   }
-  if (linhaId === 'hida') {
+  if (tipo === 'hida') {
     return (
       /^(HVI|HIDA|HVIDA)$/i.test(cod) ||
       (/viaj|viagem/i.test(t) && /\bida\b/i.test(t) && !/retorno|volta/i.test(t))
     )
   }
-  if (linhaId === 'hret') {
+  if (tipo === 'hret') {
     return (
       /^(HVR|HRET|HVRET)$/i.test(cod) ||
       (/viaj|viagem/i.test(t) && /(retorno|volta)/i.test(t))
     )
   }
-  if (linhaId === 'km') return s.tipoCobranca === 'km' || /^KRC$/i.test(cod)
-  if (linhaId === 'diarias') {
+  if (tipo === 'km') return s.tipoCobranca === 'km' || /^KRC$/i.test(cod)
+  if (tipo === 'diarias') {
     if (s.tipoCobranca !== 'diarias') return false
     const codDiaria = String(s.cod || '').trim().toUpperCase()
     const v = normalizeServicoValorStored(s.valor)
@@ -142,11 +144,12 @@ export function getServicoParaLinhaFechamento(
     }
   }
   const r = resolverServicosFechamentoTemplate(list, grupoId)
-  if (linhaId === 'ht') return r.fechServHt
-  if (linhaId === 'hida') return r.fechServHida
-  if (linhaId === 'hret') return r.fechServHret
-  if (linhaId === 'km') return r.fechServKm
-  if (linhaId === 'diarias') return r.fechServDiarias
+  const tipo = tipoLinhaFechamentoFixa(linhaId) || linhaId
+  if (tipo === 'ht') return r.fechServHt
+  if (tipo === 'hida') return r.fechServHida
+  if (tipo === 'hret') return r.fechServHret
+  if (tipo === 'km') return r.fechServKm
+  if (tipo === 'diarias') return r.fechServDiarias
   return undefined
 }
 
@@ -172,7 +175,7 @@ export function enriquecerLinhaFechamentoComCadastro(
   if (savedMesmoGrupo && savedServicoId) {
     const bySaved = getServicoParaLinhaFechamento(list, item.id, savedServicoId, grupoId)
     const vSaved = bySaved ? normalizeServicoValorStored(bySaved.valor) : 0
-    if (item.id === 'diarias') {
+    if (tipoLinhaFechamentoFixa(item.id) === 'diarias') {
       const cod = String(bySaved?.cod || '').trim().toUpperCase()
       if (bySaved && vSaved > 0 && /^(DFC|DDT|DIAR|DIARIAS)$/i.test(cod)) svc = bySaved
     } else if (bySaved && vSaved > 0) {
@@ -215,8 +218,8 @@ export function enriquecerLinhaFechamentoComCadastro(
     item.tipoCobranca === 'hora' ||
     item.tipoCobranca === 'km' ||
     item.tipoCobranca === 'diarias' ||
-    item.id === 'hida' ||
-    item.id === 'hret'
+    tipoLinhaFechamentoFixa(item.id) === 'hida' ||
+    tipoLinhaFechamentoFixa(item.id) === 'hret'
   const valorTotal = mult ? Math.round(qty * valorUnitFinal * 100) / 100 : valorUnitFinal
   const cod =
     (typeof svc.cod === 'string' && svc.cod.trim()) || servicoCodParaExibicao(svc) || undefined

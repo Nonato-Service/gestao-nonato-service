@@ -5,6 +5,7 @@
  */
 import { enriquecerLinhaFechamentoComCadastro, filtrarServicosCadastroPorGrupo } from './linhaCadastro'
 import { isLinhaManualFechamento } from './cobrancaRelatorio'
+import { tipoLinhaFechamentoFixa } from './tipos'
 import type { FechamentoItem, ServicoCadastroFechamentoMin } from './tipos'
 
 export type LabelsLinhaFechamentoFixa = {
@@ -55,7 +56,7 @@ export function buildItensFechamentoParaExibirFromSalvos(
     const saved = salvos.find((s) => s.id === item.id)
     if (!saved) return item
     const cobrarDiaria =
-      item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
+      tipoLinhaFechamentoFixa(item.id) === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
         ? saved.cobrarDiaria
         : (item as FechamentoItem).cobrarDiaria !== false
     const enriched = enriquecerLinhaFechamentoComCadastro(
@@ -66,6 +67,8 @@ export function buildItensFechamentoParaExibirFromSalvos(
         quantidade: resolverQuantidadeLinhaFechamentoExibir(saved.quantidade, item.quantidade),
         tipoCobranca: item.tipoCobranca,
         origem: saved.origem ?? item.origem,
+        grupoKey: item.grupoKey ?? saved.grupoKey,
+        grupoLabel: item.grupoLabel ?? saved.grupoLabel,
       },
       opts.servicos,
       saved.servicoId,
@@ -73,17 +76,13 @@ export function buildItensFechamentoParaExibirFromSalvos(
     )
     return {
       ...enriched,
-      cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined,
+      cobrarDiaria: tipoLinhaFechamentoFixa(item.id) === 'diarias' ? cobrarDiaria : undefined,
     }
   })
-  const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
-  const comTodosSeis = seisIds
-    .map(
-      (id) =>
-        seisComQuantidadeDoResumo.find((i) => i.id === id) ||
-        seisDoResumo.find((i) => i.id === id)
-    )
-    .filter(Boolean) as FechamentoItem[]
+  const comTodosSeis = seisDoResumo.map(
+    (baseItem) =>
+      seisComQuantidadeDoResumo.find((i) => i.id === baseItem.id) || baseItem
+  )
   return [...comTodosSeis, ...itensManuaisSalvos].filter(
     (i) => !(i.id === 'hviagem' && i.origem === 'relatorio')
   )
@@ -94,12 +93,54 @@ export function labelLinhaFechamentoFixa(
   labels: LabelsLinhaFechamentoFixa | Record<string, string | undefined> = {}
 ): string {
   const tx = labels as LabelsLinhaFechamentoFixa
-  if (id === 'ht') return tx.horasTrabalho || 'HT'
-  if (id === 'km') return tx.kmsPercorridos || 'KM'
-  if (id === 'diarias') return tx.diarias || 'Diárias'
-  if (id === 'hida') return tx.horasViagemIda || 'Ida'
-  if (id === 'hret') return tx.horasViagemRetorno || 'Retorno'
+  const tipo = tipoLinhaFechamentoFixa(id) || id
+  if (tipo === 'ht') return tx.horasTrabalho || 'HT'
+  if (tipo === 'km') return tx.kmsPercorridos || 'KM'
+  if (tipo === 'diarias') return tx.diarias || 'Diárias'
+  if (tipo === 'hida') return tx.horasViagemIda || 'Ida'
+  if (tipo === 'hret') return tx.horasViagemRetorno || 'Retorno'
   return id
+}
+
+export function codFallbackLinhaFechamentoFixa(id: string): string {
+  const tipo = tipoLinhaFechamentoFixa(id)
+  if (tipo === 'ht') return 'HT'
+  if (tipo === 'km') return 'KM'
+  if (tipo === 'diarias') return 'DIAR'
+  if (tipo === 'hida') return 'H.Ida'
+  if (tipo === 'hret') return 'H.Ret'
+  if (id === 'hviagem') return 'H.Viag'
+  return ''
+}
+
+export type GrupoItensFechamentoExibir = {
+  grupoKey: string
+  grupoLabel: string
+  itens: FechamentoItem[]
+}
+
+/** Junta linhas do fechamento pelo cliente de trabalho (relatório especial). */
+export function agruparItensFechamentoPorCliente(itens: FechamentoItem[]): GrupoItensFechamentoExibir[] {
+  const UNG = '__ungrouped__'
+  const order: string[] = []
+  const map = new Map<string, GrupoItensFechamentoExibir>()
+  for (const item of itens || []) {
+    const key = String(item.grupoKey || '').trim() || UNG
+    if (!map.has(key)) {
+      order.push(key)
+      map.set(key, {
+        grupoKey: key === UNG ? '' : key,
+        grupoLabel: String(item.grupoLabel || '').trim(),
+        itens: [],
+      })
+    }
+    const g = map.get(key)!
+    if (!g.grupoLabel && item.grupoLabel) g.grupoLabel = String(item.grupoLabel).trim()
+    g.itens.push(item)
+  }
+  const grouped = order.filter((k) => k !== UNG).map((k) => map.get(k)!)
+  const ung = map.get(UNG)
+  return ung ? [...grouped, ung] : grouped
 }
 
 /** Opções do select de serviço por linha do fechamento (filtro puro). */
@@ -111,12 +152,13 @@ export function filtrarOpcoesServicoLinhaFechamento(
   const pool = filtrarServicosCadastroPorGrupo(servicos, grupoId)
   const txt = (s: ServicoCadastroFechamentoMin) =>
     ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
-  if (item.id === 'hida') {
+  const tipo = tipoLinhaFechamentoFixa(item.id)
+  if (tipo === 'hida') {
     return pool.filter(
       (s) => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s)))
     )
   }
-  if (item.id === 'hret') {
+  if (tipo === 'hret') {
     return pool.filter(
       (s) => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s)))
     )

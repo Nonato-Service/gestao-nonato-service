@@ -1,4 +1,5 @@
 import type { FechamentoItem } from './tipos'
+import { linhaFechamentoOmiteCobrar } from './tipos'
 
 export function filtrarFechamentoItensPorOmitidos(
   omitidosPorRelatorio: Record<string, string[]>,
@@ -49,7 +50,7 @@ export function totaisFechamentoLiquidoComIva(
   opts?: FechamentoIvaOpcoesRelatorio | null
 ): { liquido: number; iva: number; comIva: number; incluir: boolean; taxa: number } {
   const liquido = itens.reduce(
-    (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : Number(i.valorTotal) || 0),
+    (s, i) => s + (linhaFechamentoOmiteCobrar(i) ? 0 : Number(i.valorTotal) || 0),
     0
   )
   const o = normalizarFechamentoIvaOpcoes(opts ?? FECHAMENTO_IVA_PADRAO)

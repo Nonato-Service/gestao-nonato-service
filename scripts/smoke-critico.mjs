@@ -208,6 +208,11 @@ try {
   } else {
     fail('módulo fechamento sem buildItensFechamentoBaseRelatorio')
   }
+  if (idx.includes('tipoLinhaFechamentoFixa') && idx.includes('agruparItensFechamentoPorCliente')) {
+    ok('módulo fechamento exporta linhas agrupadas por cliente')
+  } else {
+    fail('módulo fechamento sem tipoLinhaFechamentoFixa / agruparItensFechamentoPorCliente')
+  }
   if (
     idx.includes('buildItensFechamentoParaExibirFromSalvos') &&
     idx.includes('filtrarOpcoesServicoLinhaFechamento') &&
@@ -294,6 +299,11 @@ try {
     ok('NonatoMainApp importa app/modules/fechamento')
   } else {
     fail('NonatoMainApp não importa o módulo fechamento')
+  }
+  if (nma.includes('agruparItensFechamentoPorCliente') && nma.includes('fechamentoAdicionarItemNesteCliente')) {
+    ok('NonatoMainApp fecha relatório especial por cliente de trabalho')
+  } else {
+    fail('NonatoMainApp sem fechamento especial por cliente (agruparItens / extras por bloco)')
   }
   if (nma.includes('TEMPLATE_SERVICOS_PADRAO') && !nma.includes("from './lib/servicosCadastroUtils'")) {
     ok('NonatoMainApp usa TEMPLATE_SERVICOS_PADRAO do módulo fechamento')
@@ -2238,7 +2248,9 @@ try {
     idx.includes('temAlgumaSecaoPdfEspecial') &&
     idx.includes('diaContaComoDiariaEspecial') &&
     idx.includes('dedupeRelatoriosEspeciais') &&
-    idx.includes('upsertRelatorioEspecialNaLista')
+    idx.includes('upsertRelatorioEspecialNaLista') &&
+    idx.includes('calcularTotaisFechamentoEspecialPorCliente') &&
+    idx.includes('deveSepararFechamentoEspecialPorCliente')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {

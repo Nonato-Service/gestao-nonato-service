@@ -3,7 +3,14 @@ export type {
   FechamentoItem,
   FechamentoLinhaIdFixo,
 } from './tipos'
-export { FECHAMENTO_IDS_FIXOS_TEMPLATE } from './tipos'
+export {
+  FECHAMENTO_IDS_FIXOS_TEMPLATE,
+  tipoLinhaFechamentoFixa,
+  isLinhaFechamentoFixaId,
+  grupoKeyLinhaFechamento,
+  idLinhaFechamentoGrupo,
+  linhaFechamentoOmiteCobrar,
+} from './tipos'
 
 export {
   normalizeServicoValorStored,
@@ -94,11 +101,14 @@ export {
 export type {
   LabelsLinhaFechamentoFixa,
   BuildItensFechamentoParaExibirOpts,
+  GrupoItensFechamentoExibir,
 } from './exibirItens'
 export {
   resolverQuantidadeLinhaFechamentoExibir,
   buildItensFechamentoParaExibirFromSalvos,
   labelLinhaFechamentoFixa,
+  codFallbackLinhaFechamentoFixa,
+  agruparItensFechamentoPorCliente,
   filtrarOpcoesServicoLinhaFechamento,
 } from './exibirItens'
 

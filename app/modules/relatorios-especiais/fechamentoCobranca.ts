@@ -4,9 +4,15 @@
  */
 import { calcularTotaisRelatorioEspecial } from './calculos'
 import type { RelatorioEspecial } from './tipos'
+import {
+  calcularTotaisFechamentoEspecialPorCliente,
+  deveSepararFechamentoEspecialPorCliente,
+  rotuloGrupoFechamentoEspecial,
+} from './fechamentoPorCliente'
+import { idLinhaFechamentoGrupo } from '../fechamento/tipos'
 
 export type FechamentoItemBaseEspecial = {
-  id: 'ht' | 'km' | 'diarias' | 'hida' | 'hret'
+  id: string
   descricao: string
   tipoCobranca: 'hora' | 'km' | 'diarias'
   quantidade: number
@@ -14,6 +20,8 @@ export type FechamentoItemBaseEspecial = {
   valorTotal: number
   origem: 'relatorio'
   cobrarDiaria?: boolean
+  grupoKey?: string
+  grupoLabel?: string
 }
 
 export type LabelsFechamentoEspecial = {
@@ -55,54 +63,58 @@ export function buildItensFechamentoBaseRelatorioEspecial(
   r: RelatorioEspecial,
   labels: LabelsFechamentoEspecial = {}
 ): FechamentoItemBaseEspecial[] {
+  const linha = (
+    id: string,
+    descricao: string,
+    tipoCobranca: FechamentoItemBaseEspecial['tipoCobranca'],
+    quantidade: number,
+    extra?: Partial<FechamentoItemBaseEspecial>
+  ): FechamentoItemBaseEspecial => ({
+    id,
+    descricao,
+    tipoCobranca,
+    quantidade,
+    valorUnitario: 0,
+    valorTotal: 0,
+    origem: 'relatorio',
+    ...extra,
+  })
+
+  const nomes = {
+    ht: labels.horasTrabalho || 'Horas de Trabalho',
+    km: labels.kmsPercorridos || "Km's Percorridos",
+    diarias: labels.diarias || 'Diárias',
+    hida: labels.horasViagemIda || 'Horas de Viagem de Ida',
+    hret: labels.horasViagemRetorno || 'Horas de Viagem de Retorno',
+  }
+
+  if (deveSepararFechamentoEspecialPorCliente(r)) {
+    const grupos = calcularTotaisFechamentoEspecialPorCliente(r)
+    const out: FechamentoItemBaseEspecial[] = []
+    for (const g of grupos) {
+      const grupoLabel = rotuloGrupoFechamentoEspecial(g)
+      const extra = { grupoKey: g.key, grupoLabel }
+      out.push(
+        linha(idLinhaFechamentoGrupo('ht', g.key), nomes.ht, 'hora', g.ht, extra),
+        linha(idLinhaFechamentoGrupo('km', g.key), nomes.km, 'km', g.km, extra),
+        linha(idLinhaFechamentoGrupo('diarias', g.key), nomes.diarias, 'diarias', g.diarias, {
+          ...extra,
+          cobrarDiaria: true,
+        }),
+        linha(idLinhaFechamentoGrupo('hida', g.key), nomes.hida, 'hora', g.hida, extra),
+        linha(idLinhaFechamentoGrupo('hret', g.key), nomes.hret, 'hora', g.hret, extra)
+      )
+    }
+    return out
+  }
+
   const q = quantidadesFechamentoCobrancaEspecial(r)
   return [
-    {
-      id: 'ht',
-      descricao: labels.horasTrabalho || 'Horas de Trabalho',
-      tipoCobranca: 'hora',
-      quantidade: q.ht,
-      valorUnitario: 0,
-      valorTotal: 0,
-      origem: 'relatorio',
-    },
-    {
-      id: 'km',
-      descricao: labels.kmsPercorridos || "Km's Percorridos",
-      tipoCobranca: 'km',
-      quantidade: q.km,
-      valorUnitario: 0,
-      valorTotal: 0,
-      origem: 'relatorio',
-    },
-    {
-      id: 'diarias',
-      descricao: labels.diarias || 'Diárias',
-      tipoCobranca: 'diarias',
-      quantidade: q.diarias,
-      valorUnitario: 0,
-      valorTotal: 0,
-      origem: 'relatorio',
-      cobrarDiaria: true,
-    },
-    {
-      id: 'hida',
-      descricao: labels.horasViagemIda || 'Horas de Viagem de Ida',
-      tipoCobranca: 'hora',
-      quantidade: q.hida,
-      valorUnitario: 0,
-      valorTotal: 0,
-      origem: 'relatorio',
-    },
-    {
-      id: 'hret',
-      descricao: labels.horasViagemRetorno || 'Horas de Viagem de Retorno',
-      tipoCobranca: 'hora',
-      quantidade: q.hret,
-      valorUnitario: 0,
-      valorTotal: 0,
-      origem: 'relatorio',
-    },
+    linha('ht', nomes.ht, 'hora', q.ht),
+    linha('km', nomes.km, 'km', q.km),
+    linha('diarias', nomes.diarias, 'diarias', q.diarias, { cobrarDiaria: true }),
+    linha('hida', nomes.hida, 'hora', q.hida),
+    linha('hret', nomes.hret, 'hora', q.hret),
   ]
 }
 

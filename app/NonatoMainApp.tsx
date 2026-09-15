@@ -889,7 +889,11 @@ import {
 } from './modules/financeiro'
 import { FechamentoFluxoPagamentoBar } from './components/FechamentoFluxoPagamentoBar'
 import {
-  FECHAMENTO_IDS_FIXOS_TEMPLATE,
+  tipoLinhaFechamentoFixa,
+  isLinhaFechamentoFixaId,
+  linhaFechamentoOmiteCobrar,
+  agruparItensFechamentoPorCliente,
+  codFallbackLinhaFechamentoFixa,
   type FechamentoItem,
   type ServicoCadastroFechamentoMin,
   type FechamentoIvaOpcoesRelatorio,
@@ -15874,6 +15878,7 @@ export default function Dashboard() {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
+    let lastGkBib = ''
     const rows = itens.map(item => {
       const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
       const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
@@ -15881,8 +15886,15 @@ export default function Dashboard() {
         .replace(/</g, '&lt;')
       const desc = (item.descricao || '').replace(/</g, '&lt;')
       const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-      const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-      return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
+      const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
+      const gk = String(item.grupoKey || '').trim()
+      const gl = String(item.grupoLabel || '').trim()
+      let header = ''
+      if (gk && gl && gk !== lastGkBib) {
+        lastGkBib = gk
+        header = `<tr><td colspan="5" style="padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d">${esc(gl)}</td></tr>`
+      }
+      return `${header}<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
     }).join('')
     const ivPdf = totaisFechamentoLiquidoComIva(
       itens,
@@ -24851,7 +24863,18 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {itensV.map(item => {
+                {agruparItensFechamentoPorCliente(itensV).flatMap((grupo) => {
+                  const header =
+                    grupo.grupoLabel
+                      ? [
+                          <tr key={`gh-${grupo.grupoKey || 'x'}`}>
+                            <td colSpan={5} style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 700, background: 'rgba(0,255,0,0.08)' }}>
+                              {grupo.grupoLabel}
+                            </td>
+                          </tr>,
+                        ]
+                      : []
+                  const rows = grupo.itens.map(item => {
                   const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
                   const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
                   const qtd =
@@ -24860,7 +24883,7 @@ export default function Dashboard() {
                       : item.tipoCobranca === 'km'
                         ? item.quantidade.toFixed(0) + ' km'
                         : String(item.quantidade)
-                  const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+                  const linTot = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
                   return (
                     <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
                       <td style={{ padding: '10px 8px', color: '#ffffff', fontWeight: 600 }}>{cod}</td>
@@ -24874,6 +24897,8 @@ export default function Dashboard() {
                       </td>
                     </tr>
                   )
+                  })
+                  return [...header, ...rows]
                 })}
               </tbody>
             </table>
@@ -45281,11 +45306,16 @@ A1;Peça exemplo;10`}
         const omitidosRelatorio = relatorioSelecionado ? (fechamentoItensOmitidosPorRelatorio[relatorioSelecionado.id] ?? []) : []
         const omitSetFechamento = new Set(omitidosRelatorio)
         const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
+        const gruposFechamentoExibir = agruparItensFechamentoPorCliente(itensVisiveisFechamento)
+        const mostrarBlocosClienteFechamento =
+          isFechamentoRelatorioEspecial &&
+          gruposFechamentoExibir.filter((g) => g.grupoKey).length >= 2
+        const fechamentoTabelaColSpan = 8 + (temLinhasManuaisFechamento ? 1 : 0)
         const labelLinhaFechamentoFixa = (id: string) =>
           labelLinhaFechamentoFixaModulo(id, safeT as Record<string, string | undefined>)
         const retirarLinhaTemplateFechamento = (itemId: string) => {
           if (!relatorioSelecionado) return
-          if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(itemId)) return
+          if (!isLinhaFechamentoFixaId(itemId)) return
           setFechamentoItensOmitidosPorRelatorio(prev => {
             const rid = relatorioSelecionado.id
             const cur = [...(prev[rid] || [])]
@@ -45332,11 +45362,14 @@ A1;Peça exemplo;10`}
               hret: q.hret,
             }
             const nova = list.map((item) => {
-              if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id)) return item
+              if (!isLinhaFechamentoFixaId(item.id)) return item
+              const tipoFixo = tipoLinhaFechamentoFixa(item.id)
               const enriched = enriquecerLinhaFechamentoComCadastro(
                 {
                   ...item,
-                  quantidade: qtyById[item.id] ?? item.quantidade,
+                  quantidade: (tipoFixo && qtyById[tipoFixo] != null && !item.grupoKey)
+                    ? qtyById[tipoFixo]
+                    : item.quantidade,
                   servicoId: undefined,
                   valorUnitario: 0,
                   valorTotal: 0,
@@ -45346,7 +45379,7 @@ A1;Peça exemplo;10`}
                 grupoId,
                 { forcarValorCadastro: true }
               )
-              if (item.id === 'diarias') {
+              if (tipoFixo === 'diarias') {
                 return { ...enriched, cobrarDiaria: item.cobrarDiaria !== false }
               }
               return enriched
@@ -45356,7 +45389,7 @@ A1;Peça exemplo;10`}
             return next
           })
         }
-        const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
+        const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (linhaFechamentoOmiteCobrar(i) ? 0 : i.valorTotal), 0)
         const ridFechIva = relatorioSelecionado?.id
         const ivaOptsFech = ridFechIva
           ? resolveFechamentoIvaOpcoes(
@@ -45394,7 +45427,7 @@ A1;Peça exemplo;10`}
             const vu = normalizeServicoValorStored(item.valorUnitario)
             item.quantidade = qty
             item.valorUnitario = vu
-            if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') {
+            if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || tipoLinhaFechamentoFixa(item.id) === 'hida' || tipoLinhaFechamentoFixa(item.id) === 'hret') {
               item.valorTotal = Math.round(qty * vu * 100) / 100
             } else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') {
               item.valorTotal = Math.round(vu * (qty || 1) * 100) / 100
@@ -45409,7 +45442,8 @@ A1;Peça exemplo;10`}
           const list = itensParaExibir
           const item = list.find(i => i.id === itemId)
           if (!item) return
-          const isHidaOuHret = itemId === 'hida' || itemId === 'hret'
+          const tipoFixo = tipoLinhaFechamentoFixa(itemId)
+          const isHidaOuHret = tipoFixo === 'hida' || tipoFixo === 'hret'
           const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km' || servico.tipoCobranca === 'diarias') ? servico.tipoCobranca : (isHidaOuHret ? 'hora' : 'valor-fixo')
           const valorUnit = normalizeServicoValorStored(servico.valor)
           let total = (tipo === 'hora' || tipo === 'km' || tipo === 'diarias' || isHidaOuHret) ? Math.round((item.quantidade || 0) * valorUnit * 100) / 100 : valorUnit
@@ -45427,9 +45461,11 @@ A1;Peça exemplo;10`}
             ...(isLinhaManualFechamento(item) ? ({ origem: 'manual' } as const) : {}),
           })
         }
-        const adicionarItemManual = () => {
+        const adicionarItemManual = (grupoKey?: string, grupoLabel?: string) => {
           if (!relatorioSelecionado) return
           const rid = relatorioSelecionado.id
+          const gk = String(grupoKey || '').trim()
+          const gl = String(grupoLabel || '').trim()
           const novo: FechamentoItem = {
             id: 'm' + Date.now(),
             descricao: (safeT as any)?.outroItem || 'Outro item',
@@ -45439,6 +45475,7 @@ A1;Peça exemplo;10`}
             valorTotal: 0,
             origem: 'manual',
             infoAdicional: '',
+            ...(gk ? { grupoKey: gk, grupoLabel: gl } : {}),
           }
           setFechamentosRelatorios(prev => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
@@ -45547,6 +45584,13 @@ A1;Peça exemplo;10`}
           const logoHtml = getLogoHtmlForFechamento()
           const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
           const docGeradoEm = (safeT as any)?.pdfDocumentoGeradoEm || 'Documento gerado em'
+          const esc = (s: string) =>
+            String(s ?? '')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+          let lastGkPdf = ''
           const rows = itensVisiveisFechamento.map((item, idx) => {
             const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
             const cod =
@@ -45559,19 +45603,20 @@ A1;Peça exemplo;10`}
               ? `${desc}<div style="font-size:10px;color:#888;margin-top:4px;font-style:italic">${infoExtra}</div>`
               : desc
             const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-            const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+            const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
             const vuLinha =
               item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
                 ? normalizeServicoValorStored(item.valorUnitario)
                 : item.valorUnitario
-            return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(vuLinha)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
+            const gk = String(item.grupoKey || '').trim()
+            const gl = String(item.grupoLabel || '').trim()
+            let header = ''
+            if (gk && gl && gk !== lastGkPdf) {
+              lastGkPdf = gk
+              header = `<tr><td colspan="5" style="padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d">${esc(gl)}</td></tr>`
+            }
+            return `${header}<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(vuLinha)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
           }).join('')
-          const esc = (s: string) =>
-            String(s ?? '')
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;')
-              .replace(/"/g, '&quot;')
           const titFechamento = (safeT as any)?.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
           const lblImprimir = (safeT as any)?.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
           const lblFechar = safeT?.close || 'Fechar'
@@ -46332,12 +46377,43 @@ A1;Peça exemplo;10`}
                       </tr>
                     </thead>
                     <tbody>
-                      {itensVisiveisFechamento.map(item => {
+                      {gruposFechamentoExibir.flatMap((grupo) => {
+                        const headerRow =
+                          mostrarBlocosClienteFechamento && (grupo.grupoLabel || grupo.grupoKey)
+                            ? [
+                                <tr key={`gh-${grupo.grupoKey || 'x'}`}>
+                                  <td
+                                    colSpan={fechamentoTabelaColSpan}
+                                    style={{
+                                      background: 'rgba(0, 255, 0, 0.08)',
+                                      borderBottom: '1px solid rgba(0, 255, 0, 0.35)',
+                                      padding: '10px 12px',
+                                    }}
+                                  >
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                                      <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '13px' }}>
+                                        {grupo.grupoLabel || grupo.grupoKey}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        className="btn-primary"
+                                        onClick={() => adicionarItemManual(grupo.grupoKey, grupo.grupoLabel)}
+                                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                                      >
+                                        + {(safeT as any)?.fechamentoAdicionarItemNesteCliente || 'Adicionar item a este cliente'}
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>,
+                              ]
+                            : []
+                        const itemRows = grupo.itens.map(item => {
                         const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
                         const codDoServico =
                           (item.cod ?? '').trim() ||
                           (servicoVinculado ? servicoCodParaExibicao(servicoVinculado) : '')
-                        const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
+                        const codFallbackRelatorio = item.origem === 'relatorio' && (codFallbackLinhaFechamentoFixa(item.id) || (item.id === 'hviagem' ? 'H.Viag' : ''))
+                        const tipoFixoLinha = tipoLinhaFechamentoFixa(item.id)
                         const codExibir = codDoServico || codFallbackRelatorio || '—'
                         const nomeExibir = (() => {
                           const codN = (codExibir || '').trim().toUpperCase()
@@ -46357,11 +46433,10 @@ A1;Peça exemplo;10`}
                         })()
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = isLinhaManualFechamento(item)
-                        const eDiarias = item.id === 'diarias'
+                        const eDiarias = tipoFixoLinha === 'diarias'
                         const cobrarDiaria = eDiarias ? (item.cobrarDiaria !== false) : true
                         const eLinhaTemplateEditavel =
-                          itemFixoDoRelatorio &&
-                          (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id)
+                          itemFixoDoRelatorio && isLinhaFechamentoFixaId(item.id)
                         const eCampoEditavel = eManual || eLinhaTemplateEditavel
                         const valorUnitExibir = (() => {
                           let v = normalizeServicoValorStored(item.valorUnitario)
@@ -46383,8 +46458,8 @@ A1;Peça exemplo;10`}
                             item.tipoCobranca === 'hora' ||
                             item.tipoCobranca === 'km' ||
                             item.tipoCobranca === 'diarias' ||
-                            item.id === 'hida' ||
-                            item.id === 'hret'
+                            tipoFixoLinha === 'hida' ||
+                            tipoFixoLinha === 'hret'
                           ) {
                             return Math.round(q * valorUnitExibir * 100) / 100
                           }
@@ -46499,8 +46574,8 @@ A1;Peça exemplo;10`}
                           <td className="fechamento-itens-cobrar-diaria-cell">
                             {eDiarias ? (
                               <div className="fechamento-itens-cobrar-diaria-pills" role="group" aria-label={(safeT as any)?.fechamentoColunaCobrarDiaria || 'Cobrar diária'}>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--sim fechamento-itens-btn-diaria--compact${cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.sim || 'Sim'}</button>
-                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--nao fechamento-itens-btn-diaria--compact${!cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.nao || 'Não'}</button>
+                                <button type="button" onClick={() => atualizarItem(item.id, { cobrarDiaria: true })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--sim fechamento-itens-btn-diaria--compact${cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.sim || 'Sim'}</button>
+                                <button type="button" onClick={() => atualizarItem(item.id, { cobrarDiaria: false })} className={`fechamento-itens-btn-diaria fechamento-itens-btn-diaria--nao fechamento-itens-btn-diaria--compact${!cobrarDiaria ? ' is-active' : ''}`}>{(safeT as any)?.nao || 'Não'}</button>
                               </div>
                             ) : (
                               <span className="fechamento-itens-cell-empty">—</span>
@@ -46513,7 +46588,7 @@ A1;Peça exemplo;10`}
                                 value={item.servicoId || ''}
                                 onChange={(e) => {
                                   const s = servicos.find((sv) => sv.id === e.target.value)
-                                  if (s) aplicarServico('diarias', s)
+                                  if (s) aplicarServico(item.id, s)
                                 }}
                                 title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
                               >
@@ -46524,7 +46599,7 @@ A1;Peça exemplo;10`}
                                   </option>
                                 ))}
                               </select>
-                            ) : itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) && item.id !== 'diarias' ? (
+                            ) : itemFixoDoRelatorio && isLinhaFechamentoFixaId(item.id) && tipoFixoLinha !== 'diarias' ? (
                               <select
                                 className="fechamento-itens-servico-select"
                                 value={item.servicoId || ''}
@@ -46562,7 +46637,7 @@ A1;Peça exemplo;10`}
                             </td>
                           )}
                           <td style={{ textAlign: 'center' }}>
-                            {itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) ? (
+                            {itemFixoDoRelatorio && isLinhaFechamentoFixaId(item.id) ? (
                               <button
                                 type="button"
                                 onClick={() => retirarLinhaTemplateFechamento(item.id)}
@@ -46577,6 +46652,8 @@ A1;Peça exemplo;10`}
                           </td>
                         </tr>
                         )
+                        })
+                        return [...headerRow, ...itemRows]
                       })}
                     </tbody>
                     <tfoot>

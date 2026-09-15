@@ -12,7 +12,8 @@ import {
 } from '../relatorios-especiais'
 import { enriquecerLinhaFechamentoComCadastro } from './linhaCadastro'
 import {
-  FECHAMENTO_IDS_FIXOS_TEMPLATE,
+  isLinhaFechamentoFixaId,
+  tipoLinhaFechamentoFixa,
   type FechamentoItem,
   type ServicoCadastroFechamentoMin,
 } from './tipos'
@@ -165,7 +166,7 @@ export function buildItensFechamentoBaseRelatorio(
 export function isLinhaManualFechamento(i: FechamentoItem): boolean {
   if (i.origem === 'manual') return true
   if (i.origem === 'relatorio') return false
-  return !(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(i.id)
+  return !isLinhaFechamentoFixaId(i.id)
 }
 
 /** Atualiza linhas fixas (horas/km/diárias) do fechamento guardado quando o relatório é editado. */
@@ -188,7 +189,7 @@ export function sincronizarItensFechamentoComRelatorioAtualizado(
     const saved = salvos.find((s) => s.id === item.id)
     if (!saved) return item
     const cobrarDiaria =
-      item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
+      tipoLinhaFechamentoFixa(item.id) === 'diarias' && typeof saved.cobrarDiaria === 'boolean'
         ? saved.cobrarDiaria
         : (item as FechamentoItem).cobrarDiaria !== false
     const enriched = enriquecerLinhaFechamentoComCadastro(
@@ -199,6 +200,8 @@ export function sincronizarItensFechamentoComRelatorioAtualizado(
         quantidade: item.quantidade ?? 0,
         tipoCobranca: item.tipoCobranca,
         origem: saved.origem ?? item.origem,
+        grupoKey: item.grupoKey ?? saved.grupoKey,
+        grupoLabel: item.grupoLabel ?? saved.grupoLabel,
       },
       opts.servicos,
       saved.servicoId,
@@ -206,17 +209,13 @@ export function sincronizarItensFechamentoComRelatorioAtualizado(
     )
     return {
       ...enriched,
-      cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined,
+      cobrarDiaria: tipoLinhaFechamentoFixa(item.id) === 'diarias' ? cobrarDiaria : undefined,
     }
   })
-  const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
-  const comTodosSeis = seisIds
-    .map(
-      (id) =>
-        seisComQuantidadeDoResumo.find((i) => i.id === id) ||
-        seisDoResumo.find((i) => i.id === id)
-    )
-    .filter(Boolean) as FechamentoItem[]
+  const comTodosSeis = seisDoResumo.map(
+    (baseItem) =>
+      seisComQuantidadeDoResumo.find((i) => i.id === baseItem.id) || baseItem
+  )
   return [...comTodosSeis, ...itensExtrasSalvos].filter(
     (i) => !(i.id === 'hviagem' && i.origem === 'relatorio')
   )
