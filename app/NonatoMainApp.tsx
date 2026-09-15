@@ -351,6 +351,8 @@ import {
   ProtocoloArquivoNav,
   ProtocoloArquivoClienteHead,
   ProtocoloArquivoClienteSection,
+  ProtocoloPdfModeloSelect,
+  ProtocoloCockpitCardQuick,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -29043,46 +29045,27 @@ export default function Dashboard() {
                 />
               </div>
               <div className="proto-cockpit-card__rail">
-                <select
+                <ProtocoloPdfModeloSelect
                   className="proto-cockpit-card__model"
-                  value={String(modeloImpressao)}
-                  onChange={(e) =>
+                  value={modeloImpressao}
+                  max={PROTOCOLO_SERVICO_PDF_MODELOS_MAX}
+                  labels={protoT}
+                  ariaLabel={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
+                  onChange={(n) =>
                     setProtocoloModeloImpressaoLista((prev) => ({
                       ...prev,
-                      [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
+                      [p.id]: n,
                     }))
                   }
-                  aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
-                >
-                  {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {rotuloProtocoloPdfModelo(n, protoT)}
-                    </option>
-                  ))}
-                </select>
-                <div className={`proto-cockpit-card__quick${lane === 'arquivo' ? ' proto-cockpit-card__quick--dual' : ''}`}>
-                  <button
-                    type="button"
-                    className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--pdf"
-                    onClick={() => gerarPDFProtocolo(p, modeloImpressao)}
-                  >
-                    PDF
-                  </button>
-                  {lane === 'exec' ? (
-                    <>
-                      <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--email" onClick={() => enviarEmailProtocolo(p)}>
-                        Email
-                      </button>
-                      <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>
-                        WA
-                      </button>
-                    </>
-                  ) : (
-                    <button type="button" className="proto-action-btn proto-cockpit-btn proto-cockpit-btn--ghost" onClick={() => reabrirProtocoloExecucao(p.id)}>
-                      ↩ {protoT?.protocolosServicoReabrirExecucao || 'Reabrir'}
-                    </button>
-                  )}
-                </div>
+                />
+                <ProtocoloCockpitCardQuick
+                  lane={lane}
+                  reabrirLabel={protoT?.protocolosServicoReabrirExecucao || 'Reabrir'}
+                  onPdf={() => gerarPDFProtocolo(p, modeloImpressao)}
+                  onEmail={() => enviarEmailProtocolo(p)}
+                  onWhatsApp={() => enviarWhatsAppProtocolo(p)}
+                  onReabrir={() => reabrirProtocoloExecucao(p.id)}
+                />
                 {lane === 'exec' ? (
                   <>
                     <button
@@ -29186,24 +29169,20 @@ export default function Dashboard() {
                 {viaLabel ? <span className="proto-arquivo-row__via">{viaLabel}</span> : null}
               </td>
               <td className="proto-arquivo-row__actions" data-label={protoT?.acoes || 'Ações'}>
-                <select
+                <ProtocoloPdfModeloSelect
                   className="proto-arquivo-row__model"
-                  value={String(modeloImpressao)}
-                  onChange={(e) =>
+                  value={modeloImpressao}
+                  max={PROTOCOLO_SERVICO_PDF_MODELOS_MAX}
+                  optionStyle="mn"
+                  ariaLabel={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
+                  title={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
+                  onChange={(n) =>
                     setProtocoloModeloImpressaoLista((prev) => ({
                       ...prev,
-                      [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
+                      [p.id]: n,
                     }))
                   }
-                  aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
-                  title={protoT?.protocolosServicoModeloImpressao || 'Modelo PDF'}
-                >
-                  {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      M{n}
-                    </option>
-                  ))}
-                </select>
+                />
                 <button
                   type="button"
                   className="proto-action-btn proto-arquivo-row__btn proto-arquivo-row__btn--pdf"

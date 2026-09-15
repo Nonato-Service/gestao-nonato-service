@@ -4129,6 +4129,25 @@ try {
     fail('NonatoMainApp ainda define tags/nav/arquivo cliente de protocolo no sítio')
   }
   if (
+    idx.includes('ProtocoloPdfModeloSelect') &&
+    idx.includes('ProtocoloCockpitCardQuick') &&
+    exists('app/modules/protocolo/intelPdfModeloSelect.tsx') &&
+    exists('app/modules/protocolo/intelCardQuick.tsx')
+  ) {
+    ok('módulo protocolo exporta select de modelo PDF e acções rápidas do cartão')
+  } else {
+    fail('módulo protocolo sem intelPdfModeloSelect/intelCardQuick')
+  }
+  if (
+    nma.includes('ProtocoloPdfModeloSelect') &&
+    nma.includes('ProtocoloCockpitCardQuick') &&
+    !nma.includes('proto-cockpit-card__quick')
+  ) {
+    ok('NonatoMainApp usa select PDF e acções rápidas do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda define select/quick de protocolo no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&

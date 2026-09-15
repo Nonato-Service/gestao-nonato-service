@@ -92,3 +92,7 @@ export type { ProtocoloArquivoNavItem, ProtocoloArquivoNavProps } from './intelA
 export { encurtarNomeProtocoloArquivoNav, ProtocoloArquivoNav } from './intelArquivoNav'
 export type { ProtocoloArquivoClienteHeadProps, ProtocoloArquivoClienteSectionProps } from './intelArquivoCliente'
 export { ProtocoloArquivoClienteHead, ProtocoloArquivoClienteSection } from './intelArquivoCliente'
+export type { ProtocoloPdfModeloSelectProps } from './intelPdfModeloSelect'
+export { ProtocoloPdfModeloSelect } from './intelPdfModeloSelect'
+export type { ProtocoloCockpitCardLane, ProtocoloCockpitCardQuickProps } from './intelCardQuick'
+export { ProtocoloCockpitCardQuick } from './intelCardQuick'
