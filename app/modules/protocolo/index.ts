@@ -59,3 +59,14 @@ export {
   dataChaveArquivoProtocolo,
   agruparProtocolosExecutadosPorClienteEData,
 } from './intelArquivo'
+
+export type { ProtocoloUiCopy } from './intelLabels'
+export {
+  rotuloProtocoloIntelFiltroChip,
+  rotuloProtocoloTemplate,
+  rotulosProtocoloWizardPassos,
+} from './intelLabels'
+export type { ProtocoloIntelFiltroChipsProps } from './intelChips'
+export { ProtocoloIntelFiltroChips } from './intelChips'
+export type { ProtocoloCompletudeBarProps } from './intelCompletude'
+export { ProtocoloCompletudeBar } from './intelCompletude'

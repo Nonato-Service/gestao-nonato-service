@@ -4025,6 +4025,32 @@ try {
     fail('intelFiltro ainda definido em lib ou NMA não usa o módulo')
   }
   if (
+    idx.includes('rotuloProtocoloIntelFiltroChip') &&
+    idx.includes('rotuloProtocoloTemplate') &&
+    idx.includes('rotulosProtocoloWizardPassos') &&
+    idx.includes('ProtocoloIntelFiltroChips') &&
+    idx.includes('ProtocoloCompletudeBar') &&
+    exists('app/modules/protocolo/intelLabels.ts') &&
+    exists('app/modules/protocolo/intelChips.tsx') &&
+    exists('app/modules/protocolo/intelCompletude.tsx')
+  ) {
+    ok('módulo protocolo exporta intelLabels/chips/completude UI')
+  } else {
+    fail('módulo protocolo sem intelLabels/chips/completude')
+  }
+  if (
+    nma.includes('rotuloProtocoloTemplate') &&
+    nma.includes('rotulosProtocoloWizardPassos') &&
+    nma.includes('ProtocoloIntelFiltroChips') &&
+    nma.includes('ProtocoloCompletudeBar') &&
+    !nma.includes('const protoChipLabel') &&
+    !nma.includes('const protoTemplateLabel')
+  ) {
+    ok('NonatoMainApp usa chips/completude/rótulos do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda define protoChipLabel/protoTemplateLabel no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&

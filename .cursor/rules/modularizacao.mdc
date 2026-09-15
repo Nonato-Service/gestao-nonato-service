@@ -323,6 +323,9 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 303. `app/modules/biblioteca/` (shouldRejectPartialPecasSave; cache no lib) — feito
 304. `app/modules/pdf/` (logos storage get; localStorage no lib) — feito
 305. `app/modules/pdf/` (getLogoHtml* SSR/window; janela no lib) — feito
+306. `app/modules/protocolo/` (intelLabels filtro/template/wizard) — feito
+307. `app/modules/protocolo/` (intelChips UI filtro) — feito
+308. `app/modules/protocolo/` (intelCompletude barra UI) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

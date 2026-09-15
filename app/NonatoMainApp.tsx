@@ -332,6 +332,10 @@ import {
   emptyProtocoloServicoForm,
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
   PROTOCOLO_PDF_MODELO_PADRAO,
+  rotuloProtocoloTemplate,
+  rotulosProtocoloWizardPassos,
+  ProtocoloIntelFiltroChips,
+  ProtocoloCompletudeBar,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -28859,12 +28863,7 @@ export default function Dashboard() {
           protoT?.protocolosServicoStep3 || 'PEÇAS',
           protoT?.protocolosServicoStep4 || 'GUARDAR',
         ]
-        const protoWizardLabels = [
-          protoT?.protocolosServicoWizardPasso1 || 'Identificação',
-          protoT?.protocolosServicoWizardPasso2 || 'Relatório',
-          protoT?.protocolosServicoWizardPasso3 || 'Peças',
-          protoT?.protocolosServicoWizardPasso4 || 'Concluir',
-        ]
+        const protoWizardLabels = rotulosProtocoloWizardPassos(protoT)
         const protoCompletude = avaliarCompletudeProtocolo(protocoloServicoForm)
         const protoHistorico = historicoProtocolosCliente(
           protocolosServico,
@@ -28914,27 +28913,8 @@ export default function Dashboard() {
                 observacaoCondicoes: protocoloServicoForm.observacaoCondicoes || undefined,
               })
             : ''
-        const protoChipLabel = (chip: ProtocoloIntelFiltroChip): string => {
-          const map: Record<ProtocoloIntelFiltroChip, string> = {
-            todos: protoT?.protocolosServicoFiltroChipTodos || 'Todos',
-            ultimos7d: protoT?.protocolosServicoFiltroChip7d || 'Últimos 7 dias',
-            com_fotos: protoT?.protocolosServicoFiltroChipFotos || 'Com fotos',
-            com_pecas: protoT?.protocolosServicoFiltroChipPecas || 'Com peças',
-            incompletos: protoT?.protocolosServicoFiltroChipIncompletos || 'Incompletos',
-          }
-          return map[chip]
-        }
-        const protoTemplateLabel = (id: ProtocoloTemplateId): string => {
-          const map: Record<ProtocoloTemplateId, string> = {
-            diagnostico: protoT?.protocolosServicoTemplateDiagnostico || 'Diagnóstico',
-            antes_depois: protoT?.protocolosServicoTemplateAntesDepois || 'Antes / Depois',
-            intervencao: protoT?.protocolosServicoTemplateIntervencao || 'Intervenção',
-            conclusao: protoT?.protocolosServicoTemplateConclusao || 'Conclusão',
-          }
-          return map[id]
-        }
         const aplicarTemplateProtocolo = (templateId: ProtocoloTemplateId) => {
-          const nome = protoTemplateLabel(templateId)
+          const nome = rotuloProtocoloTemplate(templateId, protoT)
           const msg = (protoT?.protocolosServicoTemplateConfirm || 'Substituir blocos atuais pelo modelo «{nome}»?').replace('{nome}', nome)
           if (protocoloServicoForm.blocos.length > 0 && !window.confirm(msg)) return
           const { textoInicial, blocos } = blocosDeTemplate(templateId, newProtocoloBlocoId)
@@ -29394,19 +29374,11 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
-                  <div className="proto-completude" aria-live="polite">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                        {protoT?.protocolosServicoCompletude || 'Completude'}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 900, color: protoCompletude.pronto ? '#4ade80' : '#fbbf24' }}>
-                        {protoCompletude.percent}%
-                      </span>
-                    </div>
-                    <div className="proto-completude__bar">
-                      <div className="proto-completude__fill" style={{ width: `${protoCompletude.percent}%` }} />
-                    </div>
-                  </div>
+                  <ProtocoloCompletudeBar
+                    percent={protoCompletude.percent}
+                    pronto={protoCompletude.pronto}
+                    titulo={protoT?.protocolosServicoCompletude || 'Completude'}
+                  />
                 </aside>
                 <div className="proto-editor-main">
                 {protocoloFormPassoAtivo === 1 ? (
@@ -29746,7 +29718,7 @@ export default function Dashboard() {
                     <div className="proto-template-grid">
                       {PROTOCOLO_TEMPLATE_IDS.map((tid) => (
                         <button key={tid} type="button" className="proto-template-btn" onClick={() => aplicarTemplateProtocolo(tid)}>
-                          + {protoTemplateLabel(tid)}
+                          + {rotuloProtocoloTemplate(tid, protoT)}
                         </button>
                       ))}
                     </div>
@@ -30766,18 +30738,12 @@ export default function Dashboard() {
                   </label>
                 </div>
 
-                <div className="proto-intel-chips" role="group" aria-label={protoT?.protocolosServicoIntelBadge || 'Filtros'}>
-                  {PROTOCOLO_FILTRO_CHIPS.map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      className={`proto-intel-chip${protocoloServicoFiltroChip === chip ? ' is-active' : ''}`}
-                      onClick={() => setProtocoloServicoFiltroChip(chip)}
-                    >
-                      {protoChipLabel(chip)}
-                    </button>
-                  ))}
-                </div>
+                <ProtocoloIntelFiltroChips
+                  selected={protocoloServicoFiltroChip}
+                  labels={protoT}
+                  ariaLabel={protoT?.protocolosServicoIntelBadge || 'Filtros'}
+                  onSelect={setProtocoloServicoFiltroChip}
+                />
 
                 <div className="proto-cockpit-lanes" role="tablist">
                   <button
