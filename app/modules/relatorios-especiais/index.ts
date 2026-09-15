@@ -92,6 +92,7 @@ export type {
 export {
   FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL,
   chaveGrupoClienteFechamentoEspecial,
+  chaveLocalDiaTrabalhoEspecial,
   rotuloGrupoFechamentoEspecial,
   listarGruposClienteFechamentoEspecial,
   deveSepararFechamentoEspecialPorCliente,

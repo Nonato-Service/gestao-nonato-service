@@ -733,11 +733,15 @@ export function preservarVinculoClienteLinhaEquipamentoRelatorio(
   const armazem = opts.equipamentosArmazem || []
 
   if (origem === 'armazem') {
+    const instId = String(eq.clienteInstalacaoId || eq.clienteExternoId || '').trim()
+    const instNome = String(eq.clienteInstalacaoNome || eq.clienteExternoNome || '').trim()
     return {
       ...eq,
       equipamentoOrigem: 'armazem',
       clienteExternoId: undefined,
       clienteExternoNome: undefined,
+      clienteInstalacaoId: instId || undefined,
+      clienteInstalacaoNome: instNome || undefined,
     }
   }
 
@@ -1004,6 +1008,8 @@ export function normalizarEquipamentosRelatorio(
       numeroMaquina: String(eq.numeroMaquina ?? '').trim(),
       clienteExternoId: String(eq.clienteExternoId ?? '').trim() || undefined,
       clienteExternoNome: String(eq.clienteExternoNome ?? '').trim() || undefined,
+      clienteInstalacaoId: String(eq.clienteInstalacaoId ?? '').trim() || undefined,
+      clienteInstalacaoNome: String(eq.clienteInstalacaoNome ?? '').trim() || undefined,
     }))
   }
 

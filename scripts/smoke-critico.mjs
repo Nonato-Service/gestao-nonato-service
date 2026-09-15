@@ -2250,7 +2250,8 @@ try {
     idx.includes('dedupeRelatoriosEspeciais') &&
     idx.includes('upsertRelatorioEspecialNaLista') &&
     idx.includes('calcularTotaisFechamentoEspecialPorCliente') &&
-    idx.includes('deveSepararFechamentoEspecialPorCliente')
+    idx.includes('deveSepararFechamentoEspecialPorCliente') &&
+    idx.includes('chaveLocalDiaTrabalhoEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
@@ -2394,6 +2395,15 @@ try {
     ok('RelatorioEspecialHub: select Hora trabalhada enriquece série do cadastro')
   } else {
     fail('RelatorioEspecialHub select Hora trabalhada sem enrich de série do cadastro')
+  }
+  if (
+    hub.includes('relatorioEspecialLocalDia') &&
+    hub.includes('relatorioEspecialClienteInstalacao') &&
+    hub.includes('clienteInstalacaoId')
+  ) {
+    ok('RelatorioEspecialHub: local do dia + cliente de instalação no armazém')
+  } else {
+    fail('RelatorioEspecialHub sem local do dia / cliente de instalação')
   }
   {
     const relEq = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')

@@ -886,6 +886,13 @@ export default function RelatorioEspecialHub({
   const adicionarDia = () => {
     const data = dataLocalHojeISO()
     const dia = criarDiaTrabalhoEspecialVazio(data)
+    const anteriores = sortDiasTrabalhoEspecialCronologicamente([...(form.diasTrabalho || [])])
+    const ultimo = anteriores[anteriores.length - 1]
+    if (ultimo?.localTrabalho) {
+      dia.localTrabalho = ultimo.localTrabalho
+      dia.clienteTrabalhoId = ultimo.clienteTrabalhoId || ''
+      dia.clienteTrabalhoNome = ultimo.clienteTrabalhoNome || ''
+    }
     setForm((prev) => ({
       ...prev,
       diasTrabalho: sortDiasTrabalhoEspecialCronologicamente([...(prev.diasTrabalho || []), dia]),
@@ -1881,6 +1888,10 @@ export default function RelatorioEspecialHub({
                                       maquinaModelo: '',
                                       clienteExternoId: '',
                                       clienteExternoNome: '',
+                                      clienteInstalacaoId:
+                                        item.clienteInstalacaoId || item.clienteExternoId || '',
+                                      clienteInstalacaoNome:
+                                        item.clienteInstalacaoNome || item.clienteExternoNome || '',
                                     }
                                   : item
                               )
@@ -1906,8 +1917,9 @@ export default function RelatorioEspecialHub({
                                       equipamentoId: '',
                                       numeroMaquina: '',
                                       maquinaModelo: '',
-                                      clienteExternoId: '',
-                                      clienteExternoNome: '',
+                                      clienteExternoId: item.clienteExternoId || item.clienteInstalacaoId || '',
+                                      clienteExternoNome:
+                                        item.clienteExternoNome || item.clienteInstalacaoNome || '',
                                     }
                                   : item
                               )
@@ -1922,6 +1934,49 @@ export default function RelatorioEspecialHub({
                       </label>
                     </div>
                   </div>
+
+                  {eq.equipamentoOrigem === 'armazem' && (
+                    <div className="relatorio-equipamento-card__field--full">
+                      <label className="relatorio-equipamento-card__label">
+                        {t.relatorioEspecialClienteInstalacao || 'Cliente de instalação (opcional)'}
+                      </label>
+                      <select
+                        value={eq.clienteInstalacaoId || ''}
+                        onChange={(e) => {
+                          const cid = e.target.value
+                          const found = clientes.find((c) => c.id === cid)
+                          atualizarEquipamentos(
+                            (form.equipamentos || []).map((item) =>
+                              item.uid === eq.uid
+                                ? {
+                                    ...item,
+                                    equipamentoOrigem: 'armazem' as const,
+                                    clienteInstalacaoId: cid,
+                                    clienteInstalacaoNome: found?.nomeEmpresa || '',
+                                  }
+                                : item
+                            )
+                          )
+                        }}
+                        className="relatorio-equipamento-card__select"
+                      >
+                        <option value="">
+                          {t.relatorioEspecialClienteInstalacaoVazio || 'Ainda não definido — pode indicar depois'}
+                        </option>
+                        {(clientes || [])
+                          .filter((c) => String(c.id || '').trim())
+                          .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nomeEmpresa || c.id}
+                          </option>
+                        ))}
+                      </select>
+                      <p style={{ margin: '6px 0 0', fontSize: 12, color: '#888', lineHeight: 1.4 }}>
+                        {t.relatorioEspecialClienteInstalacaoHint ||
+                          'Mesmo equipamento: oficina no armazém agora, instalação no cliente daqui a dias ou meses. Em cada dia indique o local.'}
+                      </p>
+                    </div>
+                  )}
 
                   {eq.equipamentoOrigem === 'clientes-externos' && (
                     <div className="relatorio-equipamento-card__field--full">
@@ -1983,8 +2038,6 @@ export default function RelatorioEspecialHub({
                                     equipamentoId: found?.id || '',
                                     numeroMaquina: found?.numeroSerie || '',
                                     maquinaModelo: found ? `${found.modelo} ${found.marca}`.trim() : '',
-                                    clienteExternoId: '',
-                                    clienteExternoNome: '',
                                   }
                                 : item
                             )
@@ -2246,6 +2299,12 @@ export default function RelatorioEspecialHub({
                           <span className="relatorio-equipamento-card__sep"> · </span>
                           <strong>{t.clienteExternoRelatorio || 'Cliente externo'}:</strong>{' '}
                           {eq.clienteExternoNome}
+                        </>
+                      ) : eq.clienteInstalacaoNome && eq.equipamentoOrigem === 'armazem' ? (
+                        <>
+                          <span className="relatorio-equipamento-card__sep"> · </span>
+                          <strong>{t.relatorioEspecialClienteInstalacao || 'Instalação'}:</strong>{' '}
+                          {eq.clienteInstalacaoNome}
                         </>
                       ) : null}
                     </div>
@@ -2516,11 +2575,18 @@ export default function RelatorioEspecialHub({
               return `${eq ? labelEquipamentoCurto(eq, idx, labelOptsCadastro) : '?'}: ${h.horasDuracao}`
             })
             .join(' · ')
+          const localDiaTxt =
+            dia.localTrabalho === 'armazem'
+              ? t.relatorioEspecialLocalArmazem || 'Armazém / oficina'
+              : dia.localTrabalho === 'cliente' && dia.clienteTrabalhoNome
+                ? dia.clienteTrabalhoNome
+                : ''
           const resumoLinha =
-            resumoHoras ||
-            (horasResumoCard.soViagem
+            [localDiaTxt, resumoHoras || (horasResumoCard.soViagem
               ? `${horasResumoCard.viagemFmt} ${t.relatorioEspecialDiaSoViagem || t.relatorioEspecialPdfHorasViagem || 'viagem'}`
-              : '')
+              : '')]
+              .filter(Boolean)
+              .join(' · ')
           return (
             <div key={dia.id} id={`re-dia-card-${dia.id}`} className="relatorio-especial-dia-card">
               <button
@@ -2552,6 +2618,63 @@ export default function RelatorioEspecialHub({
                       style={{ ...inputStyle, maxWidth: 220 }}
                       className="ns-datetime-input"
                     />
+                    <label style={{ display: 'block', marginTop: 12 }}>
+                      {t.relatorioEspecialLocalDia || 'Local deste dia'}
+                    </label>
+                    <select
+                      value={
+                        dia.localTrabalho === 'cliente' && dia.clienteTrabalhoId
+                          ? `c:${dia.clienteTrabalhoId}`
+                          : dia.localTrabalho === 'armazem'
+                            ? 'armazem'
+                            : ''
+                      }
+                      onChange={(e) => {
+                        const v = e.target.value
+                        if (!v) {
+                          actualizarDia(dia.id, {
+                            localTrabalho: undefined,
+                            clienteTrabalhoId: '',
+                            clienteTrabalhoNome: '',
+                          })
+                          return
+                        }
+                        if (v === 'armazem') {
+                          actualizarDia(dia.id, {
+                            localTrabalho: 'armazem',
+                            clienteTrabalhoId: '',
+                            clienteTrabalhoNome: '',
+                          })
+                          return
+                        }
+                        const cid = v.startsWith('c:') ? v.slice(2) : ''
+                        const found = clientes.find((c) => c.id === cid)
+                        actualizarDia(dia.id, {
+                          localTrabalho: 'cliente',
+                          clienteTrabalhoId: cid,
+                          clienteTrabalhoNome: found?.nomeEmpresa || '',
+                        })
+                      }}
+                      style={{ ...inputStyle, maxWidth: 420 }}
+                    >
+                      <option value="">
+                        {t.relatorioEspecialLocalDiaHerdar || 'Conforme o equipamento'}
+                      </option>
+                      <option value="armazem">
+                        {t.relatorioEspecialLocalArmazem || 'Armazém / oficina'}
+                      </option>
+                      {(clientes || [])
+                        .filter((c) => String(c.id || '').trim())
+                        .map((c) => (
+                        <option key={c.id} value={`c:${c.id}`}>
+                          {c.nomeEmpresa || c.id}
+                        </option>
+                      ))}
+                    </select>
+                    <p style={{ margin: '6px 0 0', fontSize: 12, color: '#888', lineHeight: 1.4 }}>
+                      {t.relatorioEspecialLocalDiaHint ||
+                        'Oficina no armazém ou instalação/visita no cliente. O mesmo equipamento pode ter dias nos dois sítios.'}
+                    </p>
                   </div>
 
                   <div className="relatorio-especial-dia-secao">

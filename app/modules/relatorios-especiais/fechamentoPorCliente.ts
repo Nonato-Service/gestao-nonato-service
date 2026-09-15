@@ -7,10 +7,12 @@ import { formatarLabelEquipamentoSelectCurto, preservarVinculoClienteLinhaEquipa
 import type { ClienteCadastroEquipamentosLookup, EquipamentoArmazemIdLookup } from '../equipamentos'
 import type { RelatorioEquipamentoRef } from '../relatorio-servico'
 import {
-  calcularTotaisRelatorioEspecial,
   minutosDeDuracaoHHMM,
   atualizarCalculosDiaEspecial,
   diaContaComoDiariaEspecial,
+  distribuirAlmocoPorLinhaEquipamentoDia,
+  minutosAlmocoDia,
+  horasEquipamentoDiaBruto,
 } from './calculos'
 import type { RelatorioEspecial } from './tipos'
 
@@ -65,6 +67,13 @@ function sanitizarChave(raw: string, prefix: string): string {
   return t ? `${prefix}${t}` : ''
 }
 
+export function chaveGrupoPorClienteIdNome(clienteId: string, clienteNome: string): string {
+  const byId = sanitizarChave(clienteId, 'c_')
+  if (byId) return byId
+  const byNome = sanitizarChave(String(clienteNome || '').toLowerCase(), 'n_')
+  return byNome || FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+}
+
 export function chaveGrupoClienteFechamentoEspecial(eq: {
   equipamentoOrigem?: string
   clienteExternoId?: string
@@ -76,13 +85,41 @@ export function chaveGrupoClienteFechamentoEspecial(eq: {
     eq.equipamentoOrigem === 'clientes-externos' ||
     (!!cid && eq.equipamentoOrigem !== 'armazem') ||
     (!!nome && eq.equipamentoOrigem === 'clientes-externos')
-  if (eExterno) {
-    const byId = sanitizarChave(cid, 'c_')
-    if (byId) return byId
-    const byNome = sanitizarChave(nome.toLowerCase(), 'n_')
-    if (byNome) return byNome
-  }
+  if (eExterno) return chaveGrupoPorClienteIdNome(cid, nome)
   return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+}
+
+/** Local explícito do dia: oficina (Ferwood) ou casa do cliente. Null = herdar do equipamento. */
+export function chaveLocalDiaTrabalhoEspecial(
+  dia: {
+    localTrabalho?: string
+    clienteTrabalhoId?: string
+    clienteTrabalhoNome?: string
+  },
+  principalId?: string
+): string | null {
+  const loc = String(dia.localTrabalho || '').trim()
+  if (loc === 'armazem') return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+  if (loc === 'cliente') {
+    const cid = String(dia.clienteTrabalhoId || '').trim()
+    if (cid && principalId && cid === String(principalId).trim()) {
+      return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+    }
+    const k = chaveGrupoPorClienteIdNome(cid, dia.clienteTrabalhoNome || '')
+    return k === FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL && !cid ? null : k
+  }
+  return null
+}
+
+export function chaveGrupoLinhaHorasEspecial(
+  dia: { localTrabalho?: string; clienteTrabalhoId?: string; clienteTrabalhoNome?: string },
+  eq: RelatorioEquipamentoRef | undefined,
+  principalId?: string
+): string {
+  const diaKey = chaveLocalDiaTrabalhoEspecial(dia, principalId)
+  if (diaKey) return diaKey
+  if (!eq) return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
+  return chaveGrupoClienteFechamentoEspecial(eq)
 }
 
 export function rotuloEquipamentoGrupoFechamento(eq: RelatorioEquipamentoRef, idx: number): string {
@@ -145,21 +182,49 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
   ensure(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL, principalId, principalNome)
 
   const eqs = Array.isArray(r.equipamentos) ? r.equipamentos : []
+  const addEq = (key: string, clienteId: string, clienteNome: string, eq: RelatorioEquipamentoRef, idx: number) => {
+    const g = ensure(key, clienteId, clienteNome)
+    const uid = String(eq.uid || '').trim()
+    if (uid && !g.equipamentos.some((e) => e.uid === uid)) {
+      g.equipamentos.push({ uid, label: rotuloEquipamentoGrupoFechamento(eq, idx) })
+    }
+  }
+
   eqs.forEach((eq, idx) => {
     const key = chaveGrupoClienteFechamentoEspecial(eq)
     const isExt =
       eq.equipamentoOrigem === 'clientes-externos' ||
       (String(eq.clienteExternoId || '').trim() !== '' && eq.equipamentoOrigem !== 'armazem')
-    const g = ensure(
+    addEq(
       key,
       isExt ? String(eq.clienteExternoId || '').trim() : principalId,
-      isExt ? String(eq.clienteExternoNome || '').trim() || '—' : principalNome
+      isExt ? String(eq.clienteExternoNome || '').trim() || '—' : principalNome,
+      eq,
+      idx
     )
-    const uid = String(eq.uid || '').trim()
-    if (uid && !g.equipamentos.some((e) => e.uid === uid)) {
-      g.equipamentos.push({ uid, label: rotuloEquipamentoGrupoFechamento(eq, idx) })
+    if (eq.equipamentoOrigem === 'armazem') {
+      const instId = String(eq.clienteInstalacaoId || '').trim()
+      const instNome = String(eq.clienteInstalacaoNome || '').trim()
+      if ((instId || instNome) && instId !== principalId) {
+        addEq(chaveGrupoPorClienteIdNome(instId, instNome), instId, instNome || '—', eq, idx)
+      }
     }
   })
+
+  for (const dia of r.diasTrabalho || []) {
+    const k = chaveLocalDiaTrabalhoEspecial(dia, principalId)
+    if (!k || k === FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL) continue
+    const cid = String(dia.clienteTrabalhoId || '').trim()
+    const nome = String(dia.clienteTrabalhoNome || '').trim() || '—'
+    ensure(k, cid, nome)
+    for (const linha of dia.horasPorEquipamento || []) {
+      const uid = String(linha.equipamentoUid || '').trim()
+      if (!uid) continue
+      const idx = eqs.findIndex((e) => e.uid === uid)
+      const eq = idx >= 0 ? eqs[idx] : undefined
+      if (eq) addEq(k, cid, nome, eq, idx)
+    }
+  }
 
   const all = [...map.values()]
   const withEq = all.filter((g) => g.equipamentos.length > 0)
@@ -169,17 +234,7 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
 
 export function deveSepararFechamentoEspecialPorCliente(r: RelatorioEspecial | null | undefined): boolean {
   if (!r) return false
-  return listarGruposClienteFechamentoEspecial(r).length >= 2
-}
-
-function uidParaGrupo(r: RelatorioEspecial): Map<string, string> {
-  const m = new Map<string, string>()
-  for (const eq of r.equipamentos || []) {
-    const uid = String(eq.uid || '').trim()
-    if (!uid) continue
-    m.set(uid, chaveGrupoClienteFechamentoEspecial(eq))
-  }
-  return m
+  return calcularTotaisFechamentoEspecialPorCliente(r).length >= 2
 }
 
 export function calcularTotaisFechamentoEspecialPorCliente(
@@ -187,40 +242,59 @@ export function calcularTotaisFechamentoEspecialPorCliente(
 ): GrupoFechamentoEspecial[] {
   const grupos = listarGruposClienteFechamentoEspecial(r)
   const byKey = new Map(grupos.map((g) => [g.key, g]))
-  const uidMap = uidParaGrupo(r)
-  const totais = calcularTotaisRelatorioEspecial(r.diasTrabalho)
-
-  for (const [uid, min] of Object.entries(totais.horasPorEquipamento || {})) {
-    const key = uidMap.get(uid) || FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
-    const g = byKey.get(key)
-    if (g) g.ht += min
-  }
+  const eqs = Array.isArray(r.equipamentos) ? r.equipamentos : []
+  const eqByUid = new Map(eqs.map((e) => [String(e.uid || '').trim(), e]))
+  const principalId = String(r.clienteId || '').trim()
 
   const lista = Array.isArray(r.diasTrabalho) ? r.diasTrabalho : []
   for (const diaRaw of lista) {
     const dia = atualizarCalculosDiaEspecial(diaRaw)
+    const locDia = chaveLocalDiaTrabalhoEspecial(dia, principalId)
+    const almoco = minutosAlmocoDia(dia)
+    const linhas = dia.horasPorEquipamento || []
+    const { liquidos } = distribuirAlmocoPorLinhaEquipamentoDia(linhas, almoco)
     const presentes = new Set<string>()
-    for (const linha of dia.horasPorEquipamento || []) {
-      const uid = String(linha.equipamentoUid || '').trim()
+
+    for (let i = 0; i < linhas.length; i++) {
+      const uid = String(linhas[i].equipamentoUid || '').trim()
       if (!uid) continue
-      const bruto = minutosDeDuracaoHHMM(
-        linha.horasInicio && linha.horasFim
-          ? linha.horasDuracao || ''
-          : linha.horasDuracao || ''
-      )
-      if (bruto <= 0 && !(linha.horasInicio && linha.horasFim)) continue
-      const iniFim =
-        linha.horasInicio && linha.horasFim
-          ? minutosDeDuracaoHHMM(
-              // duração já actualizada em atualizarCalculosDiaEspecial
-              linha.horasDuracao || ''
-            )
-          : bruto
-      if (iniFim <= 0) continue
-      presentes.add(uidMap.get(uid) || FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
+      const bruto = minutosDeDuracaoHHMM(horasEquipamentoDiaBruto(linhas[i]))
+      if (bruto <= 0 && !(linhas[i].horasInicio && linhas[i].horasFim)) continue
+      const liq = liquidos[i] ?? Math.max(0, bruto)
+      if (liq <= 0 && bruto <= 0) continue
+      const eq = eqByUid.get(uid)
+      const key = chaveGrupoLinhaHorasEspecial(dia, eq, principalId)
+      presentes.add(key)
+      let g = byKey.get(key)
+      if (!g && key !== FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL) {
+        g = {
+          key,
+          clienteId: String(dia.clienteTrabalhoId || eq?.clienteExternoId || eq?.clienteInstalacaoId || '').trim(),
+          clienteNome:
+            String(dia.clienteTrabalhoNome || eq?.clienteExternoNome || eq?.clienteInstalacaoNome || '').trim() ||
+            '—',
+          equipamentos: [],
+          ht: 0,
+          km: 0,
+          diarias: 0,
+          hida: 0,
+          hret: 0,
+        }
+        grupos.push(g)
+        byKey.set(key, g)
+      }
+      if (g) {
+        g.ht += liq
+        if (eq && !g.equipamentos.some((e) => e.uid === uid)) {
+          const idx = eqs.findIndex((e) => e.uid === uid)
+          g.equipamentos.push({ uid, label: rotuloEquipamentoGrupoFechamento(eq, idx >= 0 ? idx : 0) })
+        }
+      }
     }
+
     if (presentes.size === 0) {
-      for (const g of grupos) presentes.add(g.key)
+      if (locDia) presentes.add(locDia)
+      else presentes.add(FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
     }
     const keys = [...presentes].filter((k) => byKey.has(k))
     if (keys.length === 0) continue
@@ -229,11 +303,12 @@ export function calcularTotaisFechamentoEspecialPorCliente(
     const ida = minutosDeDuracaoHHMM(dia.idaDuracao || '')
     const ret = minutosDeDuracaoHHMM(dia.retornoDuracao || '')
     const diaria = diaContaComoDiariaEspecial(dia) ? 1 : 0
-    const kmPartes = repartirTotalEquitativo(kmDia, keys.length, 2)
-    const idaPartes = repartirTotalEquitativo(ida, keys.length, 0)
-    const retPartes = repartirTotalEquitativo(ret, keys.length, 0)
-    const diaPartes = repartirTotalEquitativo(diaria, keys.length, 2)
-    keys.forEach((k, i) => {
+    const destKeys = locDia && byKey.has(locDia) ? [locDia] : keys
+    const kmPartes = repartirTotalEquitativo(kmDia, destKeys.length, 2)
+    const idaPartes = repartirTotalEquitativo(ida, destKeys.length, 0)
+    const retPartes = repartirTotalEquitativo(ret, destKeys.length, 0)
+    const diaPartes = repartirTotalEquitativo(diaria, destKeys.length, 2)
+    destKeys.forEach((k, i) => {
       const g = byKey.get(k)
       if (!g) return
       g.km += kmPartes[i] || 0
@@ -243,7 +318,7 @@ export function calcularTotaisFechamentoEspecialPorCliente(
     })
   }
 
-  return grupos.map((g) => ({
+  const converted = grupos.map((g) => ({
     ...g,
     ht: Math.round(g.ht) / 60,
     km: roundN(g.km, 2),
@@ -251,4 +326,6 @@ export function calcularTotaisFechamentoEspecialPorCliente(
     hida: Math.round(g.hida) / 60,
     hret: Math.round(g.hret) / 60,
   }))
+  const filled = converted.filter((g) => g.ht || g.km || g.diarias || g.hida || g.hret)
+  return filled.length > 0 ? filled : converted.slice(0, 1)
 }

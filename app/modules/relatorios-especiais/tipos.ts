@@ -34,6 +34,13 @@ export type DiaTrabalhoEspecial = {
   descricaoTrabalho: string
   /** Até 4 equipamentos com horas neste dia */
   horasPorEquipamento: HorasEquipamentoDia[]
+  /**
+   * Onde correu este dia: oficina/armazém (Ferwood) ou casa do cliente (instalação/visita).
+   * Vazio = herda da origem de cada equipamento.
+   */
+  localTrabalho?: 'armazem' | 'cliente'
+  clienteTrabalhoId?: string
+  clienteTrabalhoNome?: string
 }
 
 export type FechamentoEquipamentoEspecial = {
@@ -108,6 +115,9 @@ export function criarDiaTrabalhoEspecialVazio(
     tempoPausa: '',
     descricaoTrabalho: '',
     horasPorEquipamento: [criarHorasEquipamentoDiaVazio()],
+    localTrabalho: undefined,
+    clienteTrabalhoId: '',
+    clienteTrabalhoNome: '',
   }
 }
 

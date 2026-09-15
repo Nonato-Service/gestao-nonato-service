@@ -12,6 +12,12 @@ export type RelatorioEquipamentoRef = {
   clienteExternoId?: string
   /** Nome do cliente externo (persistido para PDF/resumo se o cadastro mudar). */
   clienteExternoNome?: string
+  /**
+   * Equipamento do armazém que será (ou já foi) instalado neste cliente.
+   * O trabalho na oficina e a instalação no cliente são dias diferentes — pode ser meses depois.
+   */
+  clienteInstalacaoId?: string
+  clienteInstalacaoNome?: string
 }
 
 /** Normaliza origem antiga/desconhecida sem perder dados do utilizador. */
@@ -46,6 +52,8 @@ export function criarEquipamentoRelatorioVazio(
     numeroMaquina: '',
     clienteExternoId: '',
     clienteExternoNome: '',
+    clienteInstalacaoId: '',
+    clienteInstalacaoNome: '',
   }
 }
 
