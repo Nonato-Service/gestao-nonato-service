@@ -336,6 +336,8 @@ import {
   rotulosProtocoloWizardPassos,
   ProtocoloIntelFiltroChips,
   ProtocoloCompletudeBar,
+  ProtocoloTemplateGrid,
+  ProtocoloCockpitLanes,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -29708,21 +29710,7 @@ export default function Dashboard() {
                   {protoT?.protocolosServicoSecConteudoHint ? (
                     <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{protoT.protocolosServicoSecConteudoHint}</p>
                   ) : null}
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: '#5eead4', marginBottom: 8, textTransform: 'uppercase' }}>
-                      {protoT?.protocolosServicoTemplatesTitulo || 'Modelos rápidos'}
-                    </div>
-                    {protoT?.protocolosServicoTemplatesHint ? (
-                      <p style={{ margin: '0 0 10px', fontSize: 12, color: '#64748b' }}>{protoT.protocolosServicoTemplatesHint}</p>
-                    ) : null}
-                    <div className="proto-template-grid">
-                      {PROTOCOLO_TEMPLATE_IDS.map((tid) => (
-                        <button key={tid} type="button" className="proto-template-btn" onClick={() => aplicarTemplateProtocolo(tid)}>
-                          + {rotuloProtocoloTemplate(tid, protoT)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <ProtocoloTemplateGrid labels={protoT} onSelect={aplicarTemplateProtocolo} />
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
                   <AssistTextarea value={protocoloServicoForm.textoInicial} onValueChange={(v) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: v }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
                   {(protocoloServicoForm.blocos || []).map((bloco, idx) => {
@@ -30745,28 +30733,13 @@ export default function Dashboard() {
                   onSelect={setProtocoloServicoFiltroChip}
                 />
 
-                <div className="proto-cockpit-lanes" role="tablist">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={protocoloHubVista === 'exec'}
-                    className={`proto-cockpit-lane${protocoloHubVista === 'exec' ? ' is-active' : ''}`}
-                    onClick={() => setProtocoloHubVista('exec')}
-                  >
-                    {protoT?.protocolosServicoListaTituloEmExecucao || 'Em execução'}
-                    <span className="proto-cockpit-lane__count">{protocolosEmExecucao.length}</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={protocoloHubVista === 'arquivo'}
-                    className={`proto-cockpit-lane${protocoloHubVista === 'arquivo' ? ' is-active is-active--done' : ''}`}
-                    onClick={() => setProtocoloHubVista('arquivo')}
-                  >
-                    {protoT?.protocolosServicoExecutadosTitulo || 'Arquivo'}
-                    <span className="proto-cockpit-lane__count">{protocolosExecutadosFiltrados.length}</span>
-                  </button>
-                </div>
+                <ProtocoloCockpitLanes
+                  vista={protocoloHubVista}
+                  countExec={protocolosEmExecucao.length}
+                  countArquivo={protocolosExecutadosFiltrados.length}
+                  labels={protoT}
+                  onChange={setProtocoloHubVista}
+                />
 
                 <div className="proto-cockpit-feed">
                   {protocolosServico.length === 0 ? (

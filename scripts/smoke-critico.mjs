@@ -4051,6 +4051,26 @@ try {
     fail('NonatoMainApp ainda define protoChipLabel/protoTemplateLabel no sítio')
   }
   if (
+    idx.includes('ProtocoloTemplateGrid') &&
+    idx.includes('ProtocoloCockpitLanes') &&
+    exists('app/modules/protocolo/intelTemplatesUi.tsx') &&
+    exists('app/modules/protocolo/intelLanes.tsx')
+  ) {
+    ok('módulo protocolo exporta template grid e lanes UI')
+  } else {
+    fail('módulo protocolo sem intelTemplatesUi/intelLanes')
+  }
+  if (
+    nma.includes('ProtocoloTemplateGrid') &&
+    nma.includes('ProtocoloCockpitLanes') &&
+    !nma.includes('proto-template-grid') &&
+    !nma.includes('proto-cockpit-lanes')
+  ) {
+    ok('NonatoMainApp usa template grid e lanes do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda define grelha de modelos ou lanes de protocolo no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&
