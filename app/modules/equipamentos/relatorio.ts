@@ -673,77 +673,226 @@ export function resolverChaveEquipamentoClienteRelatorio(
   return alvo
 }
 
+export type ClienteCadastroEquipamentosLookup = {
+  id?: string
+  nomeEmpresa?: string
+  equipamentos?: EquipamentoClienteIdLookup[]
+}
+
+export type PrepararEquipamentosRelatorioEdicaoOpts = {
+  clientePrincipalId?: string
+  clientes?: ClienteCadastroEquipamentosLookup[]
+}
+
+function cadastroClientePorId(
+  clientes: ClienteCadastroEquipamentosLookup[] | undefined,
+  id: string | undefined | null
+): ClienteCadastroEquipamentosLookup | undefined {
+  const cid = String(id || '').trim()
+  if (!cid) return undefined
+  return (clientes || []).find((c) => String(c?.id || '').trim() === cid)
+}
+
+/** Quem no cadastro tem este equipamento (principal primeiro, depois os outros). */
+export function encontrarClienteDonoEquipamentoRelatorio(
+  eq: RelatorioEquipamentoRef,
+  clientes: ClienteCadastroEquipamentosLookup[] | undefined,
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  clientePrincipalId?: string
+): ClienteCadastroEquipamentosLookup | null {
+  const list = Array.isArray(clientes) ? clientes : []
+  if (list.length === 0) return null
+  if (!String(eq.equipamentoId || '').trim() && !String(eq.numeroMaquina || '').trim()) return null
+  const principal = String(clientePrincipalId || '').trim()
+  const ordered = [
+    ...list.filter((c) => String(c?.id || '').trim() === principal),
+    ...list.filter((c) => String(c?.id || '').trim() !== principal),
+  ]
+  for (const c of ordered) {
+    const match = encontrarEquipamentoClientePorRefRelatorio(eq, c.equipamentos, equipamentosArmazem)
+    if (match) return c
+  }
+  return null
+}
+
+/**
+ * Mantém o cliente de trabalho na linha (ex.: Burie em relatório especial),
+ * sem misturar com o cliente de faturação nem com o armazém.
+ */
+export function preservarVinculoClienteLinhaEquipamentoRelatorio(
+  eq: RelatorioEquipamentoRef,
+  opts: {
+    clientePrincipalId?: string
+    clientes?: ClienteCadastroEquipamentosLookup[]
+    equipamentosArmazem?: EquipamentoArmazemIdLookup[]
+  } = {}
+): RelatorioEquipamentoRef {
+  const origem = normalizarEquipamentoOrigem(eq.equipamentoOrigem)
+  const principal = String(opts.clientePrincipalId || '').trim()
+  const clientes = opts.clientes || []
+  const armazem = opts.equipamentosArmazem || []
+
+  if (origem === 'armazem') {
+    return {
+      ...eq,
+      equipamentoOrigem: 'armazem',
+      clienteExternoId: undefined,
+      clienteExternoNome: undefined,
+    }
+  }
+
+  let cidExt = String(eq.clienteExternoId || '').trim()
+  let nomeExt = String(eq.clienteExternoNome || '').trim()
+
+  if (origem === 'clientes-externos' || cidExt || nomeExt) {
+    if (cidExt && cidExt === principal) {
+      return {
+        ...eq,
+        equipamentoOrigem: 'cliente',
+        clienteExternoId: undefined,
+        clienteExternoNome: undefined,
+      }
+    }
+    if (!cidExt && nomeExt) {
+      const byNome = clientes.find(
+        (c) => String(c?.nomeEmpresa || '').trim().toLowerCase() === nomeExt.toLowerCase()
+      )
+      if (byNome?.id) cidExt = String(byNome.id).trim()
+    }
+    if (!cidExt) {
+      const dono = encontrarClienteDonoEquipamentoRelatorio(eq, clientes, armazem, principal)
+      const donoId = String(dono?.id || '').trim()
+      if (donoId && donoId !== principal) {
+        cidExt = donoId
+        nomeExt = String(dono?.nomeEmpresa || '').trim() || nomeExt
+      }
+    }
+    if (cidExt) {
+      const cad = cadastroClientePorId(clientes, cidExt)
+      return {
+        ...eq,
+        equipamentoOrigem: 'clientes-externos',
+        clienteExternoId: cidExt,
+        clienteExternoNome: String(cad?.nomeEmpresa || '').trim() || nomeExt || undefined,
+      }
+    }
+    return {
+      ...eq,
+      equipamentoOrigem: 'clientes-externos',
+      clienteExternoId: undefined,
+      clienteExternoNome: nomeExt || undefined,
+    }
+  }
+
+  const noPrincipal = encontrarEquipamentoClientePorRefRelatorio(
+    eq,
+    cadastroClientePorId(clientes, principal)?.equipamentos,
+    armazem
+  )
+  if (noPrincipal) {
+    return {
+      ...eq,
+      equipamentoOrigem: 'cliente',
+      clienteExternoId: undefined,
+      clienteExternoNome: undefined,
+    }
+  }
+  const dono = encontrarClienteDonoEquipamentoRelatorio(eq, clientes, armazem, principal)
+  const donoId = String(dono?.id || '').trim()
+  if (donoId && donoId !== principal) {
+    return {
+      ...eq,
+      equipamentoOrigem: 'clientes-externos',
+      clienteExternoId: donoId,
+      clienteExternoNome: String(dono?.nomeEmpresa || '').trim() || undefined,
+    }
+  }
+  return { ...eq, equipamentoOrigem: 'cliente' }
+}
+
 /** Normaliza linhas de equipamento ao abrir um relatório para edição (IDs visíveis + dados do cadastro). */
 export function prepararEquipamentosRelatorioParaEdicao(
   equipamentosRaw: RelatorioEquipamentoRef[],
   clienteEquipamentos: EquipamentoClienteIdLookup[] | undefined,
-  equipamentosArmazem: EquipamentoArmazemIdLookup[] = []
+  equipamentosArmazem: EquipamentoArmazemIdLookup[] = [],
+  opts?: PrepararEquipamentosRelatorioEdicaoOpts
 ): RelatorioEquipamentoRef[] {
   const cliEq = equipamentosClienteParaSelectRelatorio(clienteEquipamentos)
 
   return (equipamentosRaw || [])
     .filter((eqItem): eqItem is RelatorioEquipamentoRef => eqItem != null && typeof eqItem === 'object')
     .map((eqItem) => {
-    if (eqItem.equipamentoOrigem === 'armazem') {
+    const vinculado = preservarVinculoClienteLinhaEquipamentoRelatorio(eqItem, {
+      clientePrincipalId: opts?.clientePrincipalId,
+      clientes: opts?.clientes,
+      equipamentosArmazem,
+    })
+    if (vinculado.equipamentoOrigem === 'armazem') {
       const idArmazem =
-        resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem) ||
-        (equipamentoIdPlaceholderInvalido(eqItem.equipamentoId)
-          ? String(eqItem.numeroMaquina ?? '').trim()
-          : eqItem.equipamentoId)
+        resolverIdEquipamentoVisivelRelatorio(vinculado, equipamentosArmazem) ||
+        (equipamentoIdPlaceholderInvalido(vinculado.equipamentoId)
+          ? String(vinculado.numeroMaquina ?? '').trim()
+          : vinculado.equipamentoId)
       const wh = (equipamentosArmazem || []).find(
         (e) => String(e?.id ?? '').trim() === String(idArmazem || '').trim()
       )
       const serieArmazem =
         segmentoIdEquipamentoExibivel(wh?.numeroSerie) ||
-        serieSnapshotRelatorioUtil(eqItem)
+        serieSnapshotRelatorioUtil(vinculado)
       return {
-        ...eqItem,
+        ...vinculado,
         equipamentoId: idArmazem,
-        numeroMaquina: serieArmazem || (equipamentoIdPlaceholderInvalido(eqItem.numeroMaquina) ? '' : String(eqItem.numeroMaquina ?? '').trim()),
+        numeroMaquina: serieArmazem || (equipamentoIdPlaceholderInvalido(vinculado.numeroMaquina) ? '' : String(vinculado.numeroMaquina ?? '').trim()),
         maquinaModelo:
           (wh ? `${String(wh.modelo ?? '').trim()} ${String(wh.marca ?? '').trim()}`.trim() : '') ||
-          eqItem.maquinaModelo,
+          vinculado.maquinaModelo,
       }
     }
 
+    const cliEqAlvo =
+      vinculado.equipamentoOrigem === 'clientes-externos'
+        ? equipamentosClienteParaSelectRelatorio(
+            cadastroClientePorId(opts?.clientes, vinculado.clienteExternoId)?.equipamentos
+          )
+        : cliEq
+
     const eqMatch = encontrarEquipamentoClientePorRefRelatorio(
-      eqItem,
-      cliEq,
+      vinculado,
+      cliEqAlvo,
       equipamentosArmazem
     )
 
     if (eqMatch) {
-      const idx = cliEq.indexOf(eqMatch)
+      const idx = cliEqAlvo.indexOf(eqMatch)
       const idGravar = idEquipamentoCadastroParaGravarNoRelatorio(eqMatch, idx >= 0 ? idx : 0, equipamentosArmazem)
       const modeloCadastro =
         `${String(eqMatch.modelo ?? '').trim()} ${String(eqMatch.marca ?? '').trim()}`.trim()
-      // Mesma propriedade do cartão do cliente: `numeroSerie`.
       const serieFinal =
         segmentoIdEquipamentoExibivel(eqMatch.numeroSerie) ||
-        serieSnapshotRelatorioUtil(eqItem) ||
+        serieSnapshotRelatorioUtil(vinculado) ||
         ''
       return {
-        ...eqItem,
+        ...vinculado,
         equipamentoId:
           idGravar ||
-          segmentoIdEquipamentoExibivel(eqItem.equipamentoId) ||
+          segmentoIdEquipamentoExibivel(vinculado.equipamentoId) ||
           serieFinal ||
           '',
-        maquinaModelo: modeloCadastro || eqItem.maquinaModelo,
+        maquinaModelo: modeloCadastro || vinculado.maquinaModelo,
         numeroMaquina: serieFinal,
       }
     }
 
-    const idFallback = resolverIdEquipamentoVisivelRelatorio(eqItem, equipamentosArmazem)
-    const serieLimpa = serieSnapshotRelatorioUtil(eqItem)
+    const idFallback = resolverIdEquipamentoVisivelRelatorio(vinculado, equipamentosArmazem)
+    const serieLimpa = serieSnapshotRelatorioUtil(vinculado)
     const idLimpo =
       segmentoIdEquipamentoExibivel(idFallback) ||
-      segmentoIdEquipamentoExibivel(eqItem.equipamentoId) ||
+      segmentoIdEquipamentoExibivel(vinculado.equipamentoId) ||
       serieLimpa
     return {
-      ...eqItem,
+      ...vinculado,
       equipamentoId: idLimpo,
-      numeroMaquina: serieLimpa || (equipamentoIdPlaceholderInvalido(eqItem.numeroMaquina) ? '' : String(eqItem.numeroMaquina ?? '').trim()),
+      numeroMaquina: serieLimpa || (equipamentoIdPlaceholderInvalido(vinculado.numeroMaquina) ? '' : String(vinculado.numeroMaquina ?? '').trim()),
     }
   })
 }

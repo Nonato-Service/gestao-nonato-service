@@ -13773,6 +13773,8 @@ export default function Dashboard() {
       relatorioEspecial: relEsp || undefined,
       getRelatorioEspecial: (id: string) =>
         id === rid && relEsp ? relEsp : relatoriosEspeciais.find((e) => e.id === id),
+      clientes,
+      equipamentosArmazem: equipamentos,
     })
     const salvos = fechamentosRelatorios[rid]
     let itens = buildItensFechamentoParaExibirFromSalvos(salvos, base, {
@@ -15524,7 +15526,8 @@ export default function Dashboard() {
     let equipamentosEdit = prepararEquipamentosRelatorioParaEdicao(
       equipamentosEditRaw,
       clienteResolvido?.equipamentos,
-      equipamentos
+      equipamentos,
+      { clientePrincipalId: clienteId, clientes }
     )
     if (equipamentosEdit.length === 0) {
       equipamentosEdit = [criarEquipamentoRelatorioVazio('cliente')]
@@ -19470,6 +19473,8 @@ export default function Dashboard() {
       servicos: servicos as ServicoCadastroFechamentoMin[],
       grupoId: fechamentoGrupoPorRelatorioId[relId] || null,
       getRelatorioEspecial: (id: string) => relatoriosEspeciais.find((e) => e.id === id),
+      clientes,
+      equipamentosArmazem: equipamentos,
     }
   }
 
@@ -45291,6 +45296,8 @@ A1;Peça exemplo;10`}
               grupoId: fechamentoGrupoIdAtual,
               relatorioEspecial: relatorioEspecialSelecionado,
               getRelatorioEspecial: (id: string) => relatoriosEspeciais.find((e) => e.id === id),
+              clientes,
+              equipamentosArmazem: equipamentos,
             })
           : []
         const buildItensParaExibirFromSalvos = (salvosBrutos: FechamentoItem[] | undefined): FechamentoItem[] => {

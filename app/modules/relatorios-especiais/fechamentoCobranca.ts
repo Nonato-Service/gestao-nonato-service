@@ -5,9 +5,11 @@
 import { calcularTotaisRelatorioEspecial } from './calculos'
 import type { RelatorioEspecial } from './tipos'
 import {
+  aplicarVinculoClientesRelatorioEspecial,
   calcularTotaisFechamentoEspecialPorCliente,
   deveSepararFechamentoEspecialPorCliente,
   rotuloGrupoFechamentoEspecial,
+  type ContextoVinculoClienteRelatorioEspecial,
 } from './fechamentoPorCliente'
 import { idLinhaFechamentoGrupo } from '../fechamento/tipos'
 
@@ -61,8 +63,10 @@ export function quantidadesFechamentoCobrancaEspecial(r: RelatorioEspecial): {
 
 export function buildItensFechamentoBaseRelatorioEspecial(
   r: RelatorioEspecial,
-  labels: LabelsFechamentoEspecial = {}
+  labels: LabelsFechamentoEspecial = {},
+  vinculo?: ContextoVinculoClienteRelatorioEspecial | null
 ): FechamentoItemBaseEspecial[] {
+  const rel = aplicarVinculoClientesRelatorioEspecial(r, vinculo)
   const linha = (
     id: string,
     descricao: string,
@@ -88,8 +92,8 @@ export function buildItensFechamentoBaseRelatorioEspecial(
     hret: labels.horasViagemRetorno || 'Horas de Viagem de Retorno',
   }
 
-  if (deveSepararFechamentoEspecialPorCliente(r)) {
-    const grupos = calcularTotaisFechamentoEspecialPorCliente(r)
+  if (deveSepararFechamentoEspecialPorCliente(rel)) {
+    const grupos = calcularTotaisFechamentoEspecialPorCliente(rel)
     const out: FechamentoItemBaseEspecial[] = []
     for (const g of grupos) {
       const grupoLabel = rotuloGrupoFechamentoEspecial(g)
@@ -108,7 +112,7 @@ export function buildItensFechamentoBaseRelatorioEspecial(
     return out
   }
 
-  const q = quantidadesFechamentoCobrancaEspecial(r)
+  const q = quantidadesFechamentoCobrancaEspecial(rel)
   return [
     linha('ht', nomes.ht, 'hora', q.ht),
     linha('km', nomes.km, 'km', q.km),

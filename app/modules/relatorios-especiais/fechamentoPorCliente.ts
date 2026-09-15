@@ -3,7 +3,8 @@
  * sem inflar totais: HT já vem por máquina; KM / diárias / viagem repartem-se
  * pelos clientes presentes em cada dia.
  */
-import { formatarLabelEquipamentoSelectCurto } from '../equipamentos'
+import { formatarLabelEquipamentoSelectCurto, preservarVinculoClienteLinhaEquipamentoRelatorio } from '../equipamentos'
+import type { ClienteCadastroEquipamentosLookup, EquipamentoArmazemIdLookup } from '../equipamentos'
 import type { RelatorioEquipamentoRef } from '../relatorio-servico'
 import {
   calcularTotaisRelatorioEspecial,
@@ -14,6 +15,29 @@ import {
 import type { RelatorioEspecial } from './tipos'
 
 export const FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL = 'p'
+
+export type ContextoVinculoClienteRelatorioEspecial = {
+  clientes?: ClienteCadastroEquipamentosLookup[]
+  equipamentosArmazem?: EquipamentoArmazemIdLookup[]
+}
+
+export function aplicarVinculoClientesRelatorioEspecial(
+  r: RelatorioEspecial,
+  ctx?: ContextoVinculoClienteRelatorioEspecial | null
+): RelatorioEspecial {
+  const clientes = ctx?.clientes
+  if (!r || !Array.isArray(r.equipamentos) || !clientes?.length) return r
+  return {
+    ...r,
+    equipamentos: r.equipamentos.map((eq) =>
+      preservarVinculoClienteLinhaEquipamentoRelatorio(eq, {
+        clientePrincipalId: r.clienteId,
+        clientes,
+        equipamentosArmazem: ctx?.equipamentosArmazem,
+      })
+    ),
+  }
+}
 
 export type EquipamentoGrupoFechamentoEspecial = {
   uid: string
@@ -46,10 +70,16 @@ export function chaveGrupoClienteFechamentoEspecial(eq: {
   clienteExternoId?: string
   clienteExternoNome?: string
 }): string {
-  if (eq.equipamentoOrigem === 'clientes-externos') {
-    const byId = sanitizarChave(String(eq.clienteExternoId || ''), 'c_')
+  const cid = String(eq.clienteExternoId || '').trim()
+  const nome = String(eq.clienteExternoNome || '').trim()
+  const eExterno =
+    eq.equipamentoOrigem === 'clientes-externos' ||
+    (!!cid && eq.equipamentoOrigem !== 'armazem') ||
+    (!!nome && eq.equipamentoOrigem === 'clientes-externos')
+  if (eExterno) {
+    const byId = sanitizarChave(cid, 'c_')
     if (byId) return byId
-    const byNome = sanitizarChave(String(eq.clienteExternoNome || '').toLowerCase(), 'n_')
+    const byNome = sanitizarChave(nome.toLowerCase(), 'n_')
     if (byNome) return byNome
   }
   return FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL
@@ -117,7 +147,9 @@ export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): Gru
   const eqs = Array.isArray(r.equipamentos) ? r.equipamentos : []
   eqs.forEach((eq, idx) => {
     const key = chaveGrupoClienteFechamentoEspecial(eq)
-    const isExt = eq.equipamentoOrigem === 'clientes-externos'
+    const isExt =
+      eq.equipamentoOrigem === 'clientes-externos' ||
+      (String(eq.clienteExternoId || '').trim() !== '' && eq.equipamentoOrigem !== 'armazem')
     const g = ensure(
       key,
       isExt ? String(eq.clienteExternoId || '').trim() : principalId,

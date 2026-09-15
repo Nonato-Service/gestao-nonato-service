@@ -9,6 +9,7 @@ import {
   isRelatorioEspecialId,
   type LabelsFechamentoEspecial,
   type RelatorioEspecial,
+  type ContextoVinculoClienteRelatorioEspecial,
 } from '../relatorios-especiais'
 import { enriquecerLinhaFechamentoComCadastro } from './linhaCadastro'
 import {
@@ -34,6 +35,8 @@ export type BuildItensFechamentoBaseRelatorioOpts = {
   relatorioEspecial?: RelatorioEspecial | null
   /** Lookup por id quando o relatório tem id `re-…`. */
   getRelatorioEspecial?: (id: string) => RelatorioEspecial | undefined
+  clientes?: ContextoVinculoClienteRelatorioEspecial['clientes']
+  equipamentosArmazem?: ContextoVinculoClienteRelatorioEspecial['equipamentosArmazem']
 }
 
 export function hhmmToDecimal(s: string): number {
@@ -103,7 +106,10 @@ export function buildItensFechamentoBaseRelatorio(
 
   const esp = resolverRelatorioEspecial(r, opts)
   if (esp) {
-    const base = buildItensFechamentoBaseRelatorioEspecial(esp, labels) as FechamentoItem[]
+    const base = buildItensFechamentoBaseRelatorioEspecial(esp, labels, {
+      clientes: opts.clientes,
+      equipamentosArmazem: opts.equipamentosArmazem,
+    }) as FechamentoItem[]
     return base.map((item) =>
       enriquecerLinhaFechamentoComCadastro(item, servicos, undefined, grupoId)
     )

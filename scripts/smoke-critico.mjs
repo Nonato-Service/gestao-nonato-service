@@ -2400,6 +2400,7 @@ try {
     if (
       relEq.includes('preferirEquipamentoClienteComSerie') &&
       relEq.includes('encontrarEquipamentoClientePorRefRelatorio') &&
+      relEq.includes('preservarVinculoClienteLinhaEquipamentoRelatorio') &&
       relEq.includes('idsComSerieReal')
     ) {
       ok('equipamentos: match cadastro prefere série real vs fantasma 0000000000')

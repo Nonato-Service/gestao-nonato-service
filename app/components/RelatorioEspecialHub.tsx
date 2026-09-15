@@ -61,6 +61,7 @@ import {
   idEquipamentoCadastroParaGravarNoRelatorio,
   opcaoEquipamentoClienteSelectRelatorio,
   prepararEquipamentosRelatorioParaEdicao,
+  preservarVinculoClienteLinhaEquipamentoRelatorio,
   resolverChaveEquipamentoClienteRelatorio,
   resolverClienteIdRelatorio,
   resolverEquipamentoRelatorioParaExibicao,
@@ -710,7 +711,8 @@ export default function RelatorioEspecialHub({
       const next = prepararEquipamentosRelatorioParaEdicao(
         prev.equipamentos || [],
         clienteEquipamentos,
-        equipamentosArmazem
+        equipamentosArmazem,
+        { clientePrincipalId: clienteIdEfetivo, clientes }
       )
       const prevJson = JSON.stringify(prev.equipamentos || [])
       const nextJson = JSON.stringify(next)
@@ -719,7 +721,7 @@ export default function RelatorioEspecialHub({
     })
     // clienteEquipamentosSyncKey cobre mudanças de conteúdo sem reagir a nova referência vazia a cada render
     // eslint-disable-next-line react-hooks/exhaustive-deps -- syncKey é a fonte de verdade do cadastro
-  }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem])
+  }, [modo, clienteIdEfetivo, clienteEquipamentosSyncKey, equipamentosArmazem, clientes])
 
   const labelOptsCadastro = useMemo(
     () => ({
@@ -739,7 +741,8 @@ export default function RelatorioEspecialHub({
       const equipamentos = prepararEquipamentosRelatorioParaEdicao(
         rel.equipamentos || [],
         cliEq,
-        equipamentosArmazem
+        equipamentosArmazem,
+        { clientePrincipalId: cid, clientes }
       )
       const copia = {
         ...rel,
@@ -809,9 +812,15 @@ export default function RelatorioEspecialHub({
       alert(t.fillAllFields || 'Preencha técnico, cliente, data e número.')
       return
     }
-    const equipamentosOk = (form.equipamentos || []).filter(
-      (e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina
-    )
+      const equipamentosOk = (form.equipamentos || [])
+        .filter((e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina)
+        .map((e) =>
+          preservarVinculoClienteLinhaEquipamentoRelatorio(e, {
+            clientePrincipalId: form.clienteId,
+            clientes,
+            equipamentosArmazem,
+          })
+        )
     if (equipamentosOk.length === 0) {
       alert(t.relatorioEspecialSemEquipamentos || 'Adicione pelo menos um equipamento ao relatório.')
       return
@@ -842,7 +851,7 @@ export default function RelatorioEspecialHub({
       setSalvando(false)
       setAcaoEmCurso(null)
     }
-  }, [form, editandoId, relatorios, onSaveAll, t, marcarSnapshot])
+  }, [form, editandoId, relatorios, onSaveAll, t, marcarSnapshot, clientes, equipamentosArmazem])
 
   const adicionarEquipamento = () => {
     if ((form.equipamentos?.length || 0) >= MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES) {
@@ -1613,9 +1622,15 @@ export default function RelatorioEspecialHub({
                   onSelectGrupo={(gid) => onSelectGrupoTipoCobranca?.(editandoId, gid)}
                   onIrAoFechamento={() => {
                     void (async () => {
-                      const equipamentosOk = (form.equipamentos || []).filter(
-                        (e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina
-                      )
+                      const equipamentosOk = (form.equipamentos || [])
+                        .filter((e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina)
+                        .map((e) =>
+                          preservarVinculoClienteLinhaEquipamentoRelatorio(e, {
+                            clientePrincipalId: form.clienteId,
+                            clientes,
+                            equipamentosArmazem,
+                          })
+                        )
                       if (equipamentosOk.length === 0) {
                         alert(
                           t.relatorioEspecialSemEquipamentos ||
@@ -2046,6 +2061,12 @@ export default function RelatorioEspecialHub({
                                     ? {
                                         ...item,
                                         equipamentoOrigem: 'clientes-externos' as const,
+                                        clienteExternoId: item.clienteExternoId || cidExt,
+                                        clienteExternoNome:
+                                          item.clienteExternoNome ||
+                                          clientes.find((c) => c.id === (item.clienteExternoId || cidExt))
+                                            ?.nomeEmpresa ||
+                                          '',
                                         equipamentoId: idGravar || snSel || '',
                                         numeroMaquina: snSel,
                                         maquinaModelo: selectedEquipamento
@@ -2615,15 +2636,27 @@ export default function RelatorioEspecialHub({
                               <option value="">—</option>
                               {(form.equipamentos || []).map((eq, ei) => {
                                 // Enrich da série a partir do cadastro (evita fantasma 0000000000 / snapshot sem S/N).
+                                const eqCliEq =
+                                  eq.equipamentoOrigem === 'clientes-externos'
+                                    ? equipamentosClienteParaSelectRelatorio(
+                                        clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos
+                                      )
+                                    : clienteEquipamentos
                                 const eqLabel =
                                   prepararEquipamentosRelatorioParaEdicao(
                                     [eq],
-                                    clienteEquipamentos,
-                                    equipamentosArmazem
+                                    eqCliEq,
+                                    equipamentosArmazem,
+                                    { clientePrincipalId: clienteIdEfetivo, clientes }
                                   )[0] || eq
+                                const nomeCliTrabalho =
+                                  eqLabel.equipamentoOrigem === 'clientes-externos'
+                                    ? String(eqLabel.clienteExternoNome || '').trim()
+                                    : ''
+                                const curto = labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)
                                 return (
                                   <option key={eq.uid} value={eq.uid}>
-                                    {labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)}
+                                    {nomeCliTrabalho ? `${nomeCliTrabalho} — ${curto}` : curto}
                                   </option>
                                 )
                               })}

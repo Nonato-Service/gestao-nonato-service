@@ -87,6 +87,7 @@ export {
 export type {
   EquipamentoGrupoFechamentoEspecial,
   GrupoFechamentoEspecial,
+  ContextoVinculoClienteRelatorioEspecial,
 } from './fechamentoPorCliente'
 export {
   FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL,
@@ -96,6 +97,7 @@ export {
   deveSepararFechamentoEspecialPorCliente,
   calcularTotaisFechamentoEspecialPorCliente,
   repartirTotalEquitativo,
+  aplicarVinculoClientesRelatorioEspecial,
 } from './fechamentoPorCliente'
 
 export type {
