@@ -3,7 +3,10 @@ import type {
   HorasEquipamentoDia,
   RelatorioEspecial,
 } from './tipos'
-import { formatarLabelEquipamentoSelectCurto } from '../equipamentos'
+import {
+  formatarLabelEquipamentoSelectCurto,
+  type FormatLabelEquipamentoOpts,
+} from '../equipamentos'
 
 export function calcularDuracaoHoras(horaInicio: string, horaFim: string): string {
   if (!horaInicio || !horaFim) return ''
@@ -455,6 +458,39 @@ export function rotuloLocalDiaTrabalhoEspecial(
   }
   if (loc === 'cliente') return String(dia.clienteTrabalhoNome || '').trim()
   return ''
+}
+
+/** No select do dia: Ferwood (origem) · Cliente X (venda/instalação) — máquina. */
+export function rotuloEquipamentoDiaComClientesEspecial(
+  eq: {
+    equipamentoOrigem?: string
+    clienteExternoNome?: string
+    clienteInstalacaoNome?: string
+    equipamentoId?: string
+    maquinaModelo?: string
+    numeroMaquina?: string
+  },
+  idx: number,
+  opts?: {
+    clientePrincipalNome?: string
+    labelOpts?: FormatLabelEquipamentoOpts
+  }
+): string {
+  const curto = formatarLabelEquipamentoSelectCurto(eq, idx, opts?.labelOpts)
+  const principal = String(opts?.clientePrincipalNome || '').trim()
+  const dest =
+    eq.equipamentoOrigem === 'armazem'
+      ? String(eq.clienteInstalacaoNome || '').trim()
+      : eq.equipamentoOrigem === 'clientes-externos'
+        ? String(eq.clienteExternoNome || '').trim()
+        : ''
+  const destOut = dest && dest.toLowerCase() !== principal.toLowerCase() ? dest : ''
+  if (principal && destOut) return `${principal} · ${destOut} — ${curto}`
+  if (destOut) return `${destOut} — ${curto}`
+  if (principal && (eq.equipamentoOrigem === 'armazem' || eq.equipamentoOrigem === 'cliente')) {
+    return `${principal} — ${curto}`
+  }
+  return curto
 }
 
 export type SessaoHorasEquipamentoEspecial = {

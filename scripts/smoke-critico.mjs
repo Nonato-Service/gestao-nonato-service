@@ -2253,7 +2253,8 @@ try {
     idx.includes('deveSepararFechamentoEspecialPorCliente') &&
     idx.includes('chaveLocalDiaTrabalhoEspecial') &&
     idx.includes('FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM') &&
-    idx.includes('rotuloLocalDiaTrabalhoEspecial')
+    idx.includes('rotuloLocalDiaTrabalhoEspecial') &&
+    idx.includes('rotuloEquipamentoDiaComClientesEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {

@@ -19,6 +19,7 @@ import {
   minutosAlmocoDia,
   resumoHorasTrabalhoDia,
   rotuloLocalDiaTrabalhoEspecial,
+  rotuloEquipamentoDiaComClientesEspecial,
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
@@ -2614,7 +2615,14 @@ export default function RelatorioEspecialHub({
             .map((h) => {
               const eq = form.equipamentos?.find((e) => e.uid === h.equipamentoUid)
               const idx = eq ? form.equipamentos!.indexOf(eq) : 0
-              return `${eq ? labelEquipamentoCurto(eq, idx, labelOptsCadastro) : '?'}: ${h.horasDuracao}`
+              return `${
+                eq
+                  ? rotuloEquipamentoDiaComClientesEspecial(eq, idx, {
+                      clientePrincipalNome: form.cliente,
+                      labelOpts: labelOptsCadastro,
+                    })
+                  : '?'
+              }: ${h.horasDuracao}`
             })
             .join(' · ')
           const localDiaTxt = rotuloLocalDiaTrabalhoEspecial(dia, t)
@@ -2809,14 +2817,14 @@ export default function RelatorioEspecialHub({
                                     equipamentosArmazem,
                                     { clientePrincipalId: clienteIdEfetivo, clientes }
                                   )[0] || eq
-                                const nomeCliTrabalho =
-                                  eqLabel.equipamentoOrigem === 'clientes-externos'
-                                    ? String(eqLabel.clienteExternoNome || '').trim()
-                                    : ''
                                 const curto = labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)
+                                const comClientes = rotuloEquipamentoDiaComClientesEspecial(eqLabel, ei, {
+                                  clientePrincipalNome: form.cliente,
+                                  labelOpts: labelOptsCadastro,
+                                })
                                 return (
                                   <option key={eq.uid} value={eq.uid}>
-                                    {nomeCliTrabalho ? `${nomeCliTrabalho} — ${curto}` : curto}
+                                    {comClientes || curto}
                                   </option>
                                 )
                               })}
