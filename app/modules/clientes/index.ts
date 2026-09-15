@@ -64,6 +64,8 @@ export { buildDocumentoEnvioClienteConfig } from './envioDocumento'
 
 export type { ClienteListaLinhasData, ClienteIdentidadeTexto } from './listaLinhas'
 export { formatNifClienteExibicao, buildClienteInfAdicional, formatClienteIdentidadeTexto } from './listaLinhas'
+export type { ClienteDadosFatura, ClienteDadosFaturaLabels } from './dadosFatura'
+export { formatClienteDadosFaturaTexto } from './dadosFatura'
 
 export type { ClienteAlfabetoRow } from './busca'
 export {

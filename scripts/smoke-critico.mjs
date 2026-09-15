@@ -7272,6 +7272,15 @@ try {
     fail('NonatoMainApp sem wire dos callbacks Criar do hub')
   }
   if (
+    nma.includes('formatClienteDadosFaturaTexto') &&
+    nma.includes('faturaDadosFiscaisTitulo') &&
+    exists('app/modules/clientes/dadosFatura.ts')
+  ) {
+    ok('modal de fatura mostra dados fiscais do cliente para copiar')
+  } else {
+    fail('modal de fatura sem bloco de dados fiscais do cliente')
+  }
+  if (
     nma.includes('onCriarFaturaDeOrcamento={') &&
     nma.includes('handleCriarFaturaDeOrcamentoFromHub') &&
     nma.includes('onAbrirTimelineItem={') &&

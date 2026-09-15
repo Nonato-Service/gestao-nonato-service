@@ -497,6 +497,7 @@ import {
   filtrarClientesPorLetraAlfabeto,
   clienteNomeMatchesLetraAlfabeto,
   rotuloIdEquipamentoCliente,
+  formatClienteDadosFaturaTexto,
   getPagamentoRelatorio,
   emptyClienteFormState,
   clienteToForm,
@@ -4587,6 +4588,7 @@ export default function Dashboard() {
   const [financeiroRefSemana, setFinanceiroRefSemana] = useState(() => isoWeekStringFromDate(new Date()))
   const [showOSForm, setShowOSForm] = useState(false)
   const [showFaturaForm, setShowFaturaForm] = useState(false)
+  const [faturaDadosFiscaisCopiado, setFaturaDadosFiscaisCopiado] = useState(false)
   /** Seed do Hub Cliente→Equipamento para pedido de orçamento/peças avulso. */
   const [pedidoAvulsoHubSeed, setPedidoAvulsoHubSeed] = useState<PedidoAvulsoHubSeed | null>(null)
   const [editingOS, setEditingOS] = useState<OrdemServico | null>(null)
@@ -14212,6 +14214,7 @@ export default function Dashboard() {
   const fecharModalFaturaPecas = () => {
     setShowFaturaForm(false)
     setEditingFatura(null)
+    setFaturaDadosFiscaisCopiado(false)
     setFaturaForm(resetFaturaFormState())
   }
 
@@ -15370,6 +15373,9 @@ export default function Dashboard() {
       equipamentoId: eqId,
       equipamentoTexto: eqTexto,
     })
+    setSelectedClienteForEquipamento(null)
+    setShowEquipamentoClienteForm(false)
+    setEquipamentoClienteTemCodigoProprio(false)
     ensureGestaoFinanceiraSidebarExpanded()
     setClientesFinanceiroActiveTab('faturas')
     openTab('gestao-financeira', getTabTitle('gestao-financeira'))
@@ -15403,6 +15409,9 @@ export default function Dashboard() {
           ? String(payload.valorTotalHint)
           : '',
     })
+    setSelectedClienteForEquipamento(null)
+    setShowEquipamentoClienteForm(false)
+    setEquipamentoClienteTemCodigoProprio(false)
     ensureGestaoFinanceiraSidebarExpanded()
     setClientesFinanceiroActiveTab('faturas')
     openTab('gestao-financeira', getTabTitle('gestao-financeira'))
@@ -74406,6 +74415,86 @@ A1;Peça exemplo;10`}
                 }))
               }
             />
+
+            {(() => {
+              const ftDados = safeT as Record<string, string | undefined>
+              const cliFat = clientes.find((c) => c.id === faturaForm.clienteId)
+              const textoFat = formatClienteDadosFaturaTexto(cliFat, {
+                nome: ftDados.fichaCadastralNomeEmpresa || 'Nome',
+                nif: ftDados.nif || 'NIF',
+                morada: ftDados.morada || 'Morada',
+                codigoPostal: ftDados.codigoPostal || 'Código postal',
+                conselho: ftDados.conselho || 'Concelho',
+                pais: ftDados.pais || 'País',
+                telefone: ftDados.telefone || 'Telefone',
+                email: ftDados.email || 'E-mail',
+              })
+              return (
+                <div
+                  style={{
+                    margin: '0 0 14px',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(0, 200, 83, 0.28)',
+                    backgroundColor: 'rgba(0, 40, 20, 0.35)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <strong style={{ color: '#00c853', fontSize: '13px' }}>
+                      {ftDados.faturaDadosFiscaisTitulo || 'Dados fiscais do cliente'}
+                    </strong>
+                    {textoFat ? (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700 }}
+                        onClick={() => {
+                          const done = () => {
+                            setFaturaDadosFiscaisCopiado(true)
+                            window.setTimeout(() => setFaturaDadosFiscaisCopiado(false), 2000)
+                          }
+                          if (navigator.clipboard?.writeText) {
+                            void navigator.clipboard.writeText(textoFat).then(done).catch(() => {
+                              window.prompt(ftDados.faturaDadosFiscaisCopiar || 'Copiar dados', textoFat)
+                            })
+                          } else {
+                            window.prompt(ftDados.faturaDadosFiscaisCopiar || 'Copiar dados', textoFat)
+                          }
+                        }}
+                      >
+                        {faturaDadosFiscaisCopiado
+                          ? ftDados.faturaDadosFiscaisCopiado || 'Dados copiados'
+                          : ftDados.faturaDadosFiscaisCopiar || 'Copiar dados'}
+                      </button>
+                    ) : null}
+                  </div>
+                  <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'rgba(255,255,255,0.62)', lineHeight: 1.45 }}>
+                    {ftDados.faturaDadosFiscaisHint ||
+                      'Copie NIF, morada e contactos para o software de faturação.'}
+                  </p>
+                  {textoFat ? (
+                    <pre
+                      style={{
+                        margin: 0,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        fontFamily: 'inherit',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#f1f5f9',
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {textoFat}
+                    </pre>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>
+                      {ftDados.faturaDadosFiscaisSemCliente || 'Escolha o cliente para ver NIF e morada.'}
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>
               {(safeT as any)?.faturaEquipamentoLabel || 'Equipamento (opcional)'}
