@@ -339,6 +339,7 @@ import {
   rotuloProtocoloResumoBlocos,
   rotuloProtocoloResumoPecas,
   mensagemProtocoloListaVaziaExec,
+  rotuloProtocoloArquivoMeta,
   ProtocoloIntelFiltroChips,
   ProtocoloCompletudeBar,
   ProtocoloTemplateGrid,
@@ -346,6 +347,10 @@ import {
   ProtocoloCockpitWizardSteps,
   ProtocoloCockpitEmpty,
   ProtocoloCockpitGroup,
+  ProtocoloCockpitCardTags,
+  ProtocoloArquivoNav,
+  ProtocoloArquivoClienteHead,
+  ProtocoloArquivoClienteSection,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -29030,16 +29035,12 @@ export default function Dashboard() {
                 {(eq || (p.equipamentoNumeroSerie || '').trim()) ? (
                   <p className="proto-cockpit-card__mono">{eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}</p>
                 ) : null}
-                <div className="proto-cockpit-card__tags">
-                  <span className="proto-cockpit-tag proto-cockpit-tag--model">{modeloLabel}</span>
-                  <span className="proto-cockpit-tag">
-                    {rotuloProtocoloResumoBlocos(nBlocos, protoT)}
-                  </span>
-                  <span className="proto-cockpit-tag">
-                    {rotuloProtocoloResumoPecas(nPecas, protoT)}
-                  </span>
-                  {viaLabel ? <span className="proto-cockpit-tag proto-cockpit-tag--via">{viaLabel}</span> : null}
-                </div>
+                <ProtocoloCockpitCardTags
+                  modeloLabel={modeloLabel}
+                  resumoBlocos={rotuloProtocoloResumoBlocos(nBlocos, protoT)}
+                  resumoPecas={rotuloProtocoloResumoPecas(nPecas, protoT)}
+                  viaLabel={viaLabel || undefined}
+                />
               </div>
               <div className="proto-cockpit-card__rail">
                 <select
@@ -30807,45 +30808,34 @@ export default function Dashboard() {
                   ) : (
                     <>
                       {!clienteArquivoFiltrado && gruposProtocolosArquivo.length >= 4 ? (
-                        <nav className="proto-arquivo-nav" aria-label={protoT?.protocolosServicoArquivoNav || 'Ir para cliente'}>
-                          {gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => {
-                            const n = grupoCliente.porData.reduce((acc, g) => acc + g.itens.length, 0)
-                            const nomeCurto =
-                              grupoCliente.nomeCliente.length > 28
-                                ? `${grupoCliente.nomeCliente.slice(0, 28)}…`
-                                : grupoCliente.nomeCliente
-                            return (
-                              <button
-                                key={grupoCliente.clienteId}
-                                type="button"
-                                className="proto-arquivo-nav__pill"
-                                onClick={() => {
-                                  setProtocoloArquivoAbertos((prev) => ({ ...prev, [grupoCliente.clienteId]: true }))
-                                  document.getElementById(`proto-arq-${grupoCliente.clienteId}`)?.scrollIntoView({
-                                    behavior: 'smooth',
-                                    block: 'start',
-                                  })
-                                }}
-                              >
-                                {nomeCurto}
-                                <span className="proto-arquivo-nav__count">{n}</span>
-                              </button>
-                            )
-                          })}
-                          {gruposProtocolosArquivo.length > protocoloArquivoGruposLimite ? (
-                            <button
-                              type="button"
-                              className="proto-arquivo-nav__pill"
-                              style={{ fontWeight: 700 }}
-                              onClick={() => setProtocoloArquivoGruposLimite((n) => n + LISTA_UI_LOTE)}
-                            >
-                              {((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
-                                '{n}',
-                                String(gruposProtocolosArquivo.length - protocoloArquivoGruposLimite)
-                              )}
-                            </button>
-                          ) : null}
-                        </nav>
+                        <ProtocoloArquivoNav
+                          items={gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => ({
+                            id: grupoCliente.clienteId,
+                            nome: grupoCliente.nomeCliente,
+                            count: grupoCliente.porData.reduce((acc, g) => acc + g.itens.length, 0),
+                          }))}
+                          ariaLabel={protoT?.protocolosServicoArquivoNav || 'Ir para cliente'}
+                          moreLabel={
+                            gruposProtocolosArquivo.length > protocoloArquivoGruposLimite
+                              ? ((safeT as any)?.listaCarregarMais || 'Mostrar mais ({n})').replace(
+                                  '{n}',
+                                  String(gruposProtocolosArquivo.length - protocoloArquivoGruposLimite)
+                                )
+                              : undefined
+                          }
+                          onSelect={(id) => {
+                            setProtocoloArquivoAbertos((prev) => ({ ...prev, [id]: true }))
+                            document.getElementById(`proto-arq-${id}`)?.scrollIntoView({
+                              behavior: 'smooth',
+                              block: 'start',
+                            })
+                          }}
+                          onMore={
+                            gruposProtocolosArquivo.length > protocoloArquivoGruposLimite
+                              ? () => setProtocoloArquivoGruposLimite((n) => n + LISTA_UI_LOTE)
+                              : undefined
+                          }
+                        />
                       ) : null}
                       {gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite).map((grupoCliente) => {
                         const itensCliente = grupoCliente.porData.flatMap((g) => g.itens)
@@ -30854,40 +30844,18 @@ export default function Dashboard() {
                         const mostrarAcordeao = !clienteArquivoFiltrado && gruposProtocolosArquivo.length > 1
                         const arqLimite = protocoloArquivoItensLimites[grupoCliente.clienteId] ?? LISTA_UI_LOTE
                         return (
-                          <section
+                          <ProtocoloArquivoClienteSection
                             key={grupoCliente.clienteId}
                             id={`proto-arq-${grupoCliente.clienteId}`}
-                            className={`proto-arquivo-cliente${aberto ? ' is-open' : ''}`}
+                            aberto={aberto}
                           >
-                            {mostrarAcordeao ? (
-                              <button
-                                type="button"
-                                className="proto-arquivo-cliente__head"
-                                aria-expanded={aberto}
-                                onClick={() => toggleArquivoCliente(grupoCliente.clienteId)}
-                              >
-                                <span className="proto-arquivo-cliente__name">{grupoCliente.nomeCliente}</span>
-                                <span className="proto-arquivo-cliente__meta">
-                                  {totalItens}{' '}
-                                  {totalItens === 1
-                                    ? protoT?.protocolosServicoArquivoUm || 'protocolo'
-                                    : protoT?.protocolosServicoArquivoVarios || 'protocolos'}
-                                </span>
-                                <span className="proto-arquivo-cliente__chev" aria-hidden="true">
-                                  {aberto ? '▾' : '▸'}
-                                </span>
-                              </button>
-                            ) : (
-                              <div className="proto-arquivo-cliente__head proto-arquivo-cliente__head--static">
-                                <span className="proto-arquivo-cliente__name">{grupoCliente.nomeCliente}</span>
-                                <span className="proto-arquivo-cliente__meta">
-                                  {totalItens}{' '}
-                                  {totalItens === 1
-                                    ? protoT?.protocolosServicoArquivoUm || 'protocolo'
-                                    : protoT?.protocolosServicoArquivoVarios || 'protocolos'}
-                                </span>
-                              </div>
-                            )}
+                            <ProtocoloArquivoClienteHead
+                              nome={grupoCliente.nomeCliente}
+                              meta={rotuloProtocoloArquivoMeta(totalItens, protoT)}
+                              accordion={mostrarAcordeao}
+                              aberto={aberto}
+                              onToggle={() => toggleArquivoCliente(grupoCliente.clienteId)}
+                            />
                             {aberto ? (
                               <>
                                 {renderProtocoloArquivoTabela(itensCliente.slice(0, arqLimite))}
@@ -30911,7 +30879,7 @@ export default function Dashboard() {
                                 ) : null}
                               </>
                             ) : null}
-                          </section>
+                          </ProtocoloArquivoClienteSection>
                         )
                       })}
                       {gruposProtocolosArquivo.length > protocoloArquivoGruposLimite ? (

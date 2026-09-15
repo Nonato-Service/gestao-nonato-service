@@ -4104,6 +4104,31 @@ try {
     fail('NonatoMainApp ainda define empty/group/viaLabel de protocolo no sítio')
   }
   if (
+    idx.includes('ProtocoloCockpitCardTags') &&
+    idx.includes('ProtocoloArquivoNav') &&
+    idx.includes('ProtocoloArquivoClienteHead') &&
+    exists('app/modules/protocolo/intelCardTags.tsx') &&
+    exists('app/modules/protocolo/intelArquivoNav.tsx') &&
+    exists('app/modules/protocolo/intelArquivoCliente.tsx')
+  ) {
+    ok('módulo protocolo exporta tags, nav e cabeçalho de arquivo')
+  } else {
+    fail('módulo protocolo sem intelCardTags/intelArquivoNav/intelArquivoCliente')
+  }
+  if (
+    nma.includes('ProtocoloCockpitCardTags') &&
+    nma.includes('ProtocoloArquivoNav') &&
+    nma.includes('ProtocoloArquivoClienteSection') &&
+    nma.includes('rotuloProtocoloArquivoMeta') &&
+    !nma.includes('proto-cockpit-card__tags') &&
+    !nma.includes('proto-arquivo-nav') &&
+    !nma.includes('proto-arquivo-cliente')
+  ) {
+    ok('NonatoMainApp usa tags/nav/arquivo cliente do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda define tags/nav/arquivo cliente de protocolo no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&
@@ -7614,7 +7639,7 @@ try {
   } else {
     fail('FamiliasGruposChecklistContent ainda renderiza a lista toda')
   }
-  if (nma3.includes('proto-arquivo-nav') && nma3.includes('gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite)')) {
+  if (nma3.includes('ProtocoloArquivoNav') && nma3.includes('gruposProtocolosArquivo.slice(0, protocoloArquivoGruposLimite)')) {
     ok('pílulas do arquivo de protocolos usam lote de ecrã')
   } else {
     fail('pílulas do arquivo de protocolos ainda pintam todos os clientes')

@@ -70,6 +70,7 @@ export {
   rotuloProtocoloResumoBlocos,
   rotuloProtocoloResumoPecas,
   mensagemProtocoloListaVaziaExec,
+  rotuloProtocoloArquivoMeta,
 } from './intelLabels'
 export type { ProtocoloIntelFiltroChipsProps } from './intelChips'
 export { ProtocoloIntelFiltroChips } from './intelChips'
@@ -85,3 +86,9 @@ export type { ProtocoloCockpitEmptyProps } from './intelEmpty'
 export { ProtocoloCockpitEmpty } from './intelEmpty'
 export type { ProtocoloCockpitGroupProps } from './intelGroup'
 export { ProtocoloCockpitGroup } from './intelGroup'
+export type { ProtocoloCockpitCardTagsProps } from './intelCardTags'
+export { ProtocoloCockpitCardTags } from './intelCardTags'
+export type { ProtocoloArquivoNavItem, ProtocoloArquivoNavProps } from './intelArquivoNav'
+export { encurtarNomeProtocoloArquivoNav, ProtocoloArquivoNav } from './intelArquivoNav'
+export type { ProtocoloArquivoClienteHeadProps, ProtocoloArquivoClienteSectionProps } from './intelArquivoCliente'
+export { ProtocoloArquivoClienteHead, ProtocoloArquivoClienteSection } from './intelArquivoCliente'

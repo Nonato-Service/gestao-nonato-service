@@ -331,6 +331,9 @@ O monólito `app/NonatoMainApp.tsx` (~80k linhas) deve encolher por **extracçõ
 311. `app/modules/protocolo/` (intelWizard passos do editor) — feito
 312. `app/modules/protocolo/` (intelEmpty / intelGroup cockpit) — feito
 313. `app/modules/protocolo/` (rótulos via/modelo/resumo/lista vazia) — feito
+314. `app/modules/protocolo/` (intelCardTags resumo do cartão) — feito
+315. `app/modules/protocolo/` (intelArquivoNav pills por cliente) — feito
+316. `app/modules/protocolo/` (intelArquivoCliente cabeçalho/secção) — feito
 
 Próximos cortes (quando necessário): extrair mais UI/hooks destes módulos, ou novos domínios.
 

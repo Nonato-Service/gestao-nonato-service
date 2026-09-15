@@ -74,3 +74,11 @@ export function mensagemProtocoloListaVaziaExec(filtroAtivo: boolean, t?: Protoc
     ? t?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'
     : t?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução.'
 }
+
+export function rotuloProtocoloArquivoMeta(total: number, t?: ProtocoloUiCopy): string {
+  const palavra =
+    total === 1
+      ? t?.protocolosServicoArquivoUm || 'protocolo'
+      : t?.protocolosServicoArquivoVarios || 'protocolos'
+  return `${total} ${palavra}`
+}
