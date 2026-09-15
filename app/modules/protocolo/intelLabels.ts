@@ -37,3 +37,40 @@ export function rotulosProtocoloWizardPassos(t?: ProtocoloUiCopy): string[] {
     t?.protocolosServicoWizardPasso4 || 'Concluir',
   ]
 }
+
+export function rotuloProtocoloPdfModelo(
+  n: number,
+  t?: ProtocoloUiCopy,
+  opts?: { compact?: boolean }
+): string {
+  const fromT = t?.[`protocolosServicoPdfModelo${n}`]
+  if (fromT) return fromT
+  return opts?.compact ? `M${n}` : `Modelo ${n}`
+}
+
+export function rotuloProtocoloEnviadoVia(
+  via: string | undefined,
+  t?: ProtocoloUiCopy,
+  opts?: { compact?: boolean }
+): string {
+  if (via === 'email') return t?.protocolosServicoEnviadoViaEmail || 'E-mail'
+  if (via === 'whatsapp') {
+    return t?.protocolosServicoEnviadoViaWhatsApp || (opts?.compact ? 'WA' : 'WhatsApp')
+  }
+  if (via === 'manual') return t?.protocolosServicoEnviadoViaManual || 'Manual'
+  return ''
+}
+
+export function rotuloProtocoloResumoBlocos(n: number, t?: ProtocoloUiCopy): string {
+  return (t?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(n))
+}
+
+export function rotuloProtocoloResumoPecas(n: number, t?: ProtocoloUiCopy): string {
+  return (t?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(n))
+}
+
+export function mensagemProtocoloListaVaziaExec(filtroAtivo: boolean, t?: ProtocoloUiCopy): string {
+  return filtroAtivo
+    ? t?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'
+    : t?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução.'
+}

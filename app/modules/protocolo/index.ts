@@ -65,6 +65,11 @@ export {
   rotuloProtocoloIntelFiltroChip,
   rotuloProtocoloTemplate,
   rotulosProtocoloWizardPassos,
+  rotuloProtocoloPdfModelo,
+  rotuloProtocoloEnviadoVia,
+  rotuloProtocoloResumoBlocos,
+  rotuloProtocoloResumoPecas,
+  mensagemProtocoloListaVaziaExec,
 } from './intelLabels'
 export type { ProtocoloIntelFiltroChipsProps } from './intelChips'
 export { ProtocoloIntelFiltroChips } from './intelChips'
@@ -76,3 +81,7 @@ export type { ProtocoloHubVista, ProtocoloCockpitLanesProps } from './intelLanes
 export { ProtocoloCockpitLanes } from './intelLanes'
 export type { ProtocoloCockpitWizardStepsProps } from './intelWizard'
 export { ProtocoloCockpitWizardSteps } from './intelWizard'
+export type { ProtocoloCockpitEmptyProps } from './intelEmpty'
+export { ProtocoloCockpitEmpty } from './intelEmpty'
+export type { ProtocoloCockpitGroupProps } from './intelGroup'
+export { ProtocoloCockpitGroup } from './intelGroup'

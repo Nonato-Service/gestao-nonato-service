@@ -4081,6 +4081,29 @@ try {
     fail('módulo protocolo sem intelWizard ou NMA ainda define os passos no sítio')
   }
   if (
+    idx.includes('ProtocoloCockpitEmpty') &&
+    idx.includes('ProtocoloCockpitGroup') &&
+    exists('app/modules/protocolo/intelEmpty.tsx') &&
+    exists('app/modules/protocolo/intelGroup.tsx')
+  ) {
+    ok('módulo protocolo exporta empty e group do cockpit')
+  } else {
+    fail('módulo protocolo sem intelEmpty/intelGroup')
+  }
+  if (
+    nma.includes('ProtocoloCockpitEmpty') &&
+    nma.includes('ProtocoloCockpitGroup') &&
+    nma.includes('rotuloProtocoloEnviadoVia') &&
+    nma.includes('rotuloProtocoloPdfModelo') &&
+    nma.includes('mensagemProtocoloListaVaziaExec') &&
+    !nma.includes('proto-cockpit-empty') &&
+    !nma.includes('proto-cockpit-group')
+  ) {
+    ok('NonatoMainApp usa empty/group/rótulos do módulo protocolo')
+  } else {
+    fail('NonatoMainApp ainda define empty/group/viaLabel de protocolo no sítio')
+  }
+  if (
     idx.includes('ProtocoloTemplateId') &&
     idx.includes('PROTOCOLO_TEMPLATE_IDS') &&
     idx.includes('blocosDeTemplate') &&

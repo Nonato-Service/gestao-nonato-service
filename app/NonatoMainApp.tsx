@@ -334,11 +334,18 @@ import {
   PROTOCOLO_PDF_MODELO_PADRAO,
   rotuloProtocoloTemplate,
   rotulosProtocoloWizardPassos,
+  rotuloProtocoloPdfModelo,
+  rotuloProtocoloEnviadoVia,
+  rotuloProtocoloResumoBlocos,
+  rotuloProtocoloResumoPecas,
+  mensagemProtocoloListaVaziaExec,
   ProtocoloIntelFiltroChips,
   ProtocoloCompletudeBar,
   ProtocoloTemplateGrid,
   ProtocoloCockpitLanes,
   ProtocoloCockpitWizardSteps,
+  ProtocoloCockpitEmpty,
+  ProtocoloCockpitGroup,
   clampProtocoloPdfModelo,
   protocoloEstaEmExecucao,
   protocoloEstaExecutadoEnviado,
@@ -28992,18 +28999,10 @@ export default function Dashboard() {
             protocoloModeloImpressaoLista[p.id] !== undefined && protocoloModeloImpressaoLista[p.id] !== null
               ? clampProtocoloPdfModelo(protocoloModeloImpressaoLista[p.id])
               : modeloGuardado
-          const modeloLabel =
-            (protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${modeloGuardado}`] || `M${modeloGuardado}`
+          const modeloLabel = rotuloProtocoloPdfModelo(modeloGuardado, protoT, { compact: true })
           const nBlocos = p.blocos?.length ?? 0
           const nPecas = p.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
-          const viaLabel =
-            p.enviadoVia === 'email'
-              ? protoT?.protocolosServicoEnviadoViaEmail || 'E-mail'
-              : p.enviadoVia === 'whatsapp'
-                ? protoT?.protocolosServicoEnviadoViaWhatsApp || 'WhatsApp'
-                : p.enviadoVia === 'manual'
-                  ? protoT?.protocolosServicoEnviadoViaManual || 'Manual'
-                  : ''
+          const viaLabel = rotuloProtocoloEnviadoVia(p.enviadoVia, protoT)
           const acoesAbertas = protocoloCardAcoesId === p.id
           const assuntoEquip = eq
             ? [eq.tipoEquipamento, eq.marca, eq.modelo].filter(Boolean).join(' · ')
@@ -29034,10 +29033,10 @@ export default function Dashboard() {
                 <div className="proto-cockpit-card__tags">
                   <span className="proto-cockpit-tag proto-cockpit-tag--model">{modeloLabel}</span>
                   <span className="proto-cockpit-tag">
-                    {(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}
+                    {rotuloProtocoloResumoBlocos(nBlocos, protoT)}
                   </span>
                   <span className="proto-cockpit-tag">
-                    {(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}
+                    {rotuloProtocoloResumoPecas(nPecas, protoT)}
                   </span>
                   {viaLabel ? <span className="proto-cockpit-tag proto-cockpit-tag--via">{viaLabel}</span> : null}
                 </div>
@@ -29056,7 +29055,7 @@ export default function Dashboard() {
                 >
                   {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
                     <option key={n} value={n}>
-                      {(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}
+                      {rotuloProtocoloPdfModelo(n, protoT)}
                     </option>
                   ))}
                 </select>
@@ -29161,14 +29160,7 @@ export default function Dashboard() {
               : modeloGuardado
           const nBlocos = p.blocos?.length ?? 0
           const nPecas = p.pecasTrocadasCodigos?.filter((c) => c.trim()).length ?? 0
-          const viaLabel =
-            p.enviadoVia === 'email'
-              ? protoT?.protocolosServicoEnviadoViaEmail || 'E-mail'
-              : p.enviadoVia === 'whatsapp'
-                ? protoT?.protocolosServicoEnviadoViaWhatsApp || 'WA'
-                : p.enviadoVia === 'manual'
-                  ? protoT?.protocolosServicoEnviadoViaManual || 'Manual'
-                  : ''
+          const viaLabel = rotuloProtocoloEnviadoVia(p.enviadoVia, protoT, { compact: true })
           const equipTitulo = eq?.tipoEquipamento || (p.situacaoDescricao || '').trim().slice(0, 72) || '—'
           const equipSub = eq ? [eq.marca, eq.modelo].filter(Boolean).join(' · ') : ''
           const serie = (eq?.numeroSerie || p.equipamentoNumeroSerie || '—').trim() || '—'
@@ -29186,9 +29178,9 @@ export default function Dashboard() {
               </td>
               <td className="proto-arquivo-row__resumo" data-label={protoT?.protocolosServicoResumoCol || 'Resumo'}>
                 <span className="proto-arquivo-row__resumo-main">
-                  {(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}
+                  {rotuloProtocoloResumoBlocos(nBlocos, protoT)}
                   {' · '}
-                  {(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}
+                  {rotuloProtocoloResumoPecas(nPecas, protoT)}
                 </span>
                 {viaLabel ? <span className="proto-arquivo-row__via">{viaLabel}</span> : null}
               </td>
@@ -30529,7 +30521,7 @@ export default function Dashboard() {
                     <div style={{ padding: 12, borderRadius: 10, background: 'rgba(2,6,23,0.45)', border: '1px solid rgba(148,163,184,0.16)' }}>
                       <div style={{ fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.1em', marginBottom: 6 }}>PDF</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
-                        {(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${protocoloServicoForm.pdfModelo}`] || `M${protocoloServicoForm.pdfModelo}`}
+                        {rotuloProtocoloPdfModelo(protocoloServicoForm.pdfModelo, protoT, { compact: true })}
                       </div>
                     </div>
                     <div style={{ padding: 12, borderRadius: 10, background: 'rgba(2,6,23,0.45)', border: '1px solid rgba(148,163,184,0.16)' }}>
@@ -30735,29 +30727,25 @@ export default function Dashboard() {
 
                 <div className="proto-cockpit-feed">
                   {protocolosServico.length === 0 ? (
-                    <div className="proto-cockpit-empty">{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</div>
+                    <ProtocoloCockpitEmpty>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</ProtocoloCockpitEmpty>
                   ) : protocoloHubVista === 'exec' ? (
                     protocolosEmExecucao.length === 0 ? (
                       filtroClienteNenhum ? (
-                        <div className="proto-cockpit-empty" aria-hidden />
+                        <ProtocoloCockpitEmpty ariaHidden />
                       ) : (
-                        <div className="proto-cockpit-empty">
-                          {filtroLista || filtroClienteRaw || protocoloServicoFiltroChip !== 'todos'
-                            ? protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'
-                            : protoT?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução.'}
-                        </div>
+                        <ProtocoloCockpitEmpty>
+                          {mensagemProtocoloListaVaziaExec(
+                            !!(filtroLista || filtroClienteRaw || protocoloServicoFiltroChip !== 'todos'),
+                            protoT
+                          )}
+                        </ProtocoloCockpitEmpty>
                       )
                     ) : protocoloServicoAgruparPorCliente ? (
                       <>
                       {gruposProtocolosLista.slice(0, protocoloExecGruposLimite).map((grupo) => {
                         const itemLimite = protocoloExecItensLimites[grupo.clienteId] ?? LISTA_UI_LOTE
                         return (
-                        <section key={grupo.clienteId} className="proto-cockpit-group">
-                          <div className="proto-cockpit-group__head">
-                            <h3 className="proto-cockpit-group__title">{grupo.nomeGrupo}</h3>
-                            <span className="proto-cockpit-group__sub">{grupo.itens.length}</span>
-                          </div>
-                          <div className="proto-cockpit-feed">
+                        <ProtocoloCockpitGroup key={grupo.clienteId} title={grupo.nomeGrupo} count={grupo.itens.length}>
                             {grupo.itens.slice(0, itemLimite).map((p) => renderProtocoloCard(p, 'exec'))}
                             {grupo.itens.length > itemLimite ? (
                               <button
@@ -30777,8 +30765,7 @@ export default function Dashboard() {
                                 )}
                               </button>
                             ) : null}
-                          </div>
-                        </section>
+                        </ProtocoloCockpitGroup>
                         )
                       })}
                       {gruposProtocolosLista.length > protocoloExecGruposLimite ? (
@@ -30814,9 +30801,9 @@ export default function Dashboard() {
                       </>
                     )
                   ) : protocolosExecutadosFiltrados.length === 0 ? (
-                    <div className="proto-cockpit-empty">
+                    <ProtocoloCockpitEmpty>
                       {protoT?.protocolosServicoExecutadosVazioFiltro || 'Nenhum protocolo concluído com estes filtros.'}
-                    </div>
+                    </ProtocoloCockpitEmpty>
                   ) : (
                     <>
                       {!clienteArquivoFiltrado && gruposProtocolosArquivo.length >= 4 ? (
