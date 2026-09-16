@@ -496,6 +496,7 @@ import {
   contarClientesPorLetraAlfabeto,
   filtrarClientesPorLetraAlfabeto,
   clienteNomeMatchesLetraAlfabeto,
+  letrasAlfabetoParaListaNomes,
   rotuloIdEquipamentoCliente,
   formatClienteDadosFaturaTexto,
   getPagamentoRelatorio,
@@ -4473,6 +4474,7 @@ export default function Dashboard() {
       nenhumEncontrado: safeT?.nenhumEncontrado,
       selecioneLetra: safeT?.clientesAlfabetoSelecioneLetra,
       prompt: safeT?.clientesAlfabetoPrompt,
+      toqueFiltrar: safeT?.clientesAlfabetoToqueFiltrar,
       mostrando: safeT?.mostrando,
       de: safeT?.de,
       clientes: safeT?.clientes,
@@ -4616,6 +4618,7 @@ export default function Dashboard() {
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
   const [buscaFornecedor, setBuscaFornecedor] = useState('')
   const [fornecedorListaDetalheId, setFornecedorListaDetalheId] = useState<string | null>(null)
+  const [fornecedoresAlfaLetraFiltro, setFornecedoresAlfaLetraFiltro] = useState<string | null>(null)
   const [fornecedoresAlfaLetrasRecolhidas, setFornecedoresAlfaLetrasRecolhidas] = useState<Set<string>>(
     () => new Set(CLIENTES_ALFABETO_INDICE)
   )
@@ -33914,9 +33917,13 @@ export default function Dashboard() {
           contarClientesPorLetraAlfabeto(clientesFiltrados, clientesAlfaLetraFiltro) > 0
             ? clientesAlfaLetraFiltro
             : null
-        const clientesLetrasParaLista = clientesLetraAtiva
-          ? [clientesLetraAtiva]
-          : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
+        const clientesLetrasParaLista = letrasAlfabetoParaListaNomes({
+          letraAtiva: clientesLetraAtiva,
+          buscaAtiva: buscaCliAtiva,
+          letrasComItens: CLIENTES_ALFABETO_INDICE.filter(
+            (letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0
+          ),
+        })
         const clientesListaPorLetra = (letra: string) =>
           ordenarClientesPorNome(clientesPorLetra.get(letra) ?? [], localeOrdCli)
         const clientesListaFiltradaCount = clientesLetraAtiva
@@ -34768,6 +34775,9 @@ export default function Dashboard() {
                         setBuscaCliente(e.target.value)
                         setClienteListaDetalheId(null)
                         setClientesAlfaLetraFiltro(null)
+                        setClientesAlfaLetrasRecolhidas(
+                          e.target.value.trim() ? new Set() : new Set(CLIENTES_ALFABETO_INDICE)
+                        )
                       }}
                     />
                   </div>
@@ -34857,9 +34867,17 @@ export default function Dashboard() {
                       })}
                     </nav>
 
+                    {!clientesLetraAtiva && !buscaCliAtiva ? (
+                      <p className="clientes-alfa-prompt">
+                        {clientesHubT.clientesAlfabetoPrompt ||
+                          clientesHubT.clientesAlfabetoToqueFiltrar ||
+                          'Toque numa letra para ver os nomes.'}
+                      </p>
+                    ) : null}
+
                     {clientesLetrasParaLista.length > 0 ? (
                       clientesLetrasParaLista.map((letra) => {
-                        const letraAberta = !clientesAlfaLetrasRecolhidas.has(letra)
+                        const letraAberta = Boolean(clientesLetraAtiva) || !clientesAlfaLetrasRecolhidas.has(letra)
                         const listaLetra = clientesListaPorLetra(letra)
                         return (
                         <section
@@ -35009,6 +35027,16 @@ export default function Dashboard() {
           if (a === '#') return 1
           if (b === '#') return -1
           return a.localeCompare(b, 'pt-BR')
+        })
+        const buscaFornAtiva = buscaFornecedor.trim().length > 0
+        const fornecedoresLetraAtiva =
+          fornecedoresAlfaLetraFiltro && (fornecedoresPorLetra.get(fornecedoresAlfaLetraFiltro)?.length ?? 0) > 0
+            ? fornecedoresAlfaLetraFiltro
+            : null
+        const fornecedoresLetrasParaLista = letrasAlfabetoParaListaNomes({
+          letraAtiva: fornecedoresLetraAtiva,
+          buscaAtiva: buscaFornAtiva,
+          letrasComItens: fornecedoresLetrasOrdem,
         })
         const fornecedoresParaDetalhe = fornecedorListaDetalheId
           ? fornecedoresFiltrados.filter(f => f.id === fornecedorListaDetalheId)
@@ -35200,6 +35228,10 @@ export default function Dashboard() {
                   onChange={(e) => {
                     setBuscaFornecedor(e.target.value)
                     setFornecedorListaDetalheId(null)
+                    setFornecedoresAlfaLetraFiltro(null)
+                    setFornecedoresAlfaLetrasRecolhidas(
+                      e.target.value.trim() ? new Set() : new Set(CLIENTES_ALFABETO_INDICE)
+                    )
                   }}
                   style={{
                     width: '100%',
@@ -35228,24 +35260,54 @@ export default function Dashboard() {
 
             {fornecedoresFiltrados.length > 0 && !fornecedorListaDetalheId && (
               <div className="clientes-alfa-wrap">
-                {fornecedoresLetrasOrdem.length > 1 && (
-                  <nav
-                    className="clientes-alfa-jump"
-                    aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
-                  >
-                    {fornecedoresLetrasOrdem.map(letra => (
-                      <a
+                <nav
+                  className="clientes-alfa-jump clientes-alfa-jump--modern"
+                  aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                >
+                  {CLIENTES_ALFABETO_INDICE.map((letra) => {
+                    const count = fornecedoresPorLetra.get(letra)?.length ?? 0
+                    const tem = count > 0
+                    const active = fornecedoresLetraAtiva === letra
+                    return (
+                      <button
                         key={letra}
-                        href={`#fornecedores-letra-${letra}`}
-                        className="clientes-alfa-jump-link"
+                        type="button"
+                        className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}${!tem ? ' is-empty' : ''}`}
+                        disabled={!tem}
+                        aria-pressed={active}
+                        title={
+                          tem
+                            ? `${count} ${safeT?.fornecedores || 'fornecedor(es)'}`
+                            : (safeT as any)?.clientesAlfabetoSemClientes || 'Sem itens nesta letra'
+                        }
+                        onClick={() => {
+                          setFornecedoresAlfaLetraFiltro((prev) => (prev === letra ? null : letra))
+                          setFornecedoresAlfaLetrasRecolhidas((prev) => {
+                            const next = new Set(prev)
+                            next.delete(letra)
+                            return next
+                          })
+                        }}
                       >
-                        {letra === '#' ? '#' : letra}
-                      </a>
-                    ))}
-                  </nav>
-                )}
-                {fornecedoresLetrasOrdem.map(letra => {
-                  const letraAberta = !fornecedoresAlfaLetrasRecolhidas.has(letra)
+                        <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
+                        {tem ? (
+                          <span className="clientes-alfa-jump-btn__count" aria-hidden>
+                            {count}
+                          </span>
+                        ) : null}
+                      </button>
+                    )
+                  })}
+                </nav>
+                {!fornecedoresLetraAtiva && !buscaFornAtiva ? (
+                  <p className="clientes-alfa-prompt">
+                    {(safeT as any)?.clientesAlfabetoPrompt ||
+                      (safeT as any)?.clientesAlfabetoToqueFiltrar ||
+                      'Toque numa letra para ver os nomes.'}
+                  </p>
+                ) : null}
+                {fornecedoresLetrasParaLista.map((letra) => {
+                  const letraAberta = Boolean(fornecedoresLetraAtiva) || !fornecedoresAlfaLetrasRecolhidas.has(letra)
                   const listaLetra = fornecedoresPorLetra.get(letra) ?? []
                   const limite = limiteListaUi(fornecedoresLetraLimites[letra])
                   const visiveis = listaLetra.slice(0, limite)

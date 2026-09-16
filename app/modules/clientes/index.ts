@@ -35,7 +35,7 @@ export type {
   ClienteAlfabetoPickerAction,
   ClienteAlfabetoPickerMetaOpts,
 } from './alfabetoPicker'
-export { formatClienteAlfabetoPickerMeta } from './alfabetoPicker'
+export { formatClienteAlfabetoPickerMeta, letrasAlfabetoParaListaNomes } from './alfabetoPicker'
 
 export type { AlfabetoIndiceBuscaLabels, AlfabetoIndiceBuscaMetaOpts } from './indiceBusca'
 export { formatAlfabetoIndiceBuscaMeta } from './indiceBusca'

@@ -54,3 +54,14 @@ export function formatClienteAlfabetoPickerMeta(opts: ClienteAlfabetoPickerMetaO
     L.clientes || 'cliente(s)'
   } — ${L.toqueFiltrar || 'toque numa letra para filtrar'}`
 }
+
+/** Nomes só depois de escolher letra (ou busca). Sem isso o ecrã enche de barras A/B/C vazias. */
+export function letrasAlfabetoParaListaNomes(opts: {
+  letraAtiva: string | null
+  buscaAtiva: boolean
+  letrasComItens: readonly string[]
+}): string[] {
+  if (opts.letraAtiva) return [opts.letraAtiva]
+  if (opts.buscaAtiva) return [...opts.letrasComItens]
+  return []
+}

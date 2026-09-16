@@ -728,6 +728,7 @@ try {
     idx.includes('ClienteAlfabetoPickerLabels') &&
     idx.includes('ClienteAlfabetoPickerAction') &&
     idx.includes('formatClienteAlfabetoPickerMeta') &&
+    idx.includes('letrasAlfabetoParaListaNomes') &&
     exists('app/modules/clientes/alfabetoPicker.ts')
   ) {
     ok('módulo clientes exporta picker A–Z de clientes')
@@ -738,6 +739,8 @@ try {
   if (
     (alfaPicker.includes("from '../modules/clientes'") || alfaPicker.includes('from "../modules/clientes"')) &&
     alfaPicker.includes('formatClienteAlfabetoPickerMeta') &&
+    alfaPicker.includes('letrasAlfabetoParaListaNomes') &&
+    alfaPicker.includes('clientes-alfa-prompt') &&
     !alfaPicker.includes('export type ClienteAlfabetoPickerLabels = {') &&
     !alfaPicker.includes('export type ClienteAlfabetoPickerAction = {')
   ) {
@@ -7620,7 +7623,7 @@ try {
   if (lote.includes('export const LISTA_UI_LOTE')) ok('listaUiLote define lote de ecrã')
   else fail('listaUiLote sem LISTA_UI_LOTE')
   const nma3 = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
-  if (nma3.includes('new Set(CLIENTES_ALFABETO_INDICE)')) {
+  if (nma3.includes('new Set(CLIENTES_ALFABETO_INDICE)') && nma3.includes('letrasAlfabetoParaListaNomes')) {
     ok('lista de clientes arranca com letras retraídas')
   } else {
     fail('clientes A–Z ainda abrem todas as letras no arranque')

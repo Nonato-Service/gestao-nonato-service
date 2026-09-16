@@ -15,6 +15,7 @@ import { ClienteDevedorNomeTag } from './ClienteDevedorNomeTag'
 import { LISTA_UI_LOTE, limiteListaUi } from '../lib/listaUiLote'
 import {
   formatClienteAlfabetoPickerMeta,
+  letrasAlfabetoParaListaNomes,
   type ClienteAlfabetoPickerAction,
   type ClienteAlfabetoPickerLabels,
 } from '../modules/clientes'
@@ -68,9 +69,14 @@ export function ClienteAlfabetoPicker({
       ? letraFiltro
       : null
 
-  const letrasParaLista = letraAtiva
-    ? [letraAtiva]
-    : CLIENTES_ALFABETO_INDICE.filter((letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0)
+  const letrasComItens = CLIENTES_ALFABETO_INDICE.filter(
+    (letra) => (clientesPorLetra.get(letra)?.length ?? 0) > 0
+  )
+  const letrasParaLista = letrasAlfabetoParaListaNomes({
+    letraAtiva,
+    buscaAtiva,
+    letrasComItens,
+  })
 
   const clientesListaPorLetra = (letra: string) =>
     letraAtiva && letra === letraAtiva
@@ -141,8 +147,10 @@ export function ClienteAlfabetoPicker({
         }
         value={busca}
         onChange={(e) => {
-          setBusca(e.target.value)
+          const v = e.target.value
+          setBusca(v)
           setLetraFiltro(null)
+          setLetrasRecolhidas(v.trim() ? new Set() : new Set(CLIENTES_ALFABETO_INDICE))
         }}
       />
 
@@ -186,7 +194,14 @@ export function ClienteAlfabetoPicker({
                       ? `${count} ${L.clientes || 'cliente(s)'}`
                       : L.semClientesLetra || 'Sem clientes nesta letra'
                   }
-                  onClick={() => setLetraFiltro((prev) => (prev === letra ? null : letra))}
+                  onClick={() => {
+                    setLetraFiltro((prev) => (prev === letra ? null : letra))
+                    setLetrasRecolhidas((prev) => {
+                      const next = new Set(prev)
+                      next.delete(letra)
+                      return next
+                    })
+                  }}
                 >
                   <span className="clientes-alfa-jump-btn__letter">{letra === '#' ? '#' : letra}</span>
                   {temClientes ? (
@@ -199,9 +214,16 @@ export function ClienteAlfabetoPicker({
             })}
           </nav>
 
+          {!letraAtiva && !buscaAtiva ? (
+            <p className="clientes-alfa-prompt">
+              {L.prompt || L.toqueFiltrar || 'Toque numa letra para ver os nomes.'}
+            </p>
+          ) : null}
+
           <div className="cliente-alfabeto-picker__list" style={{ maxHeight: listMaxHeight }}>
             {letrasParaLista.length > 0 ? (
               <>
+                {buscaAtiva && letrasParaLista.length > 1 ? (
                 <div className="clientes-alfa-toolbar">
                   <button
                     type="button"
@@ -230,8 +252,9 @@ export function ClienteAlfabetoPicker({
                     {L.retrairTodos || 'Retrair todos'}
                   </button>
                 </div>
+                ) : null}
                 {letrasParaLista.map((letra) => {
-                  const letraAberta = !letrasRecolhidas.has(letra)
+                  const letraAberta = Boolean(letraAtiva) || !letrasRecolhidas.has(letra)
                   const listaLetra = clientesListaPorLetra(letra)
                   return (
                 <section

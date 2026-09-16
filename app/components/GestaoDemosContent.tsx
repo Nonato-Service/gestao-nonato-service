@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { LISTA_UI_LOTE } from '../lib/listaUiLote'
+import { letrasAlfabetoParaListaNomes } from '../modules/clientes'
 import {
   countActiveModules,
   DEMO_DAYS_DEFAULT,
@@ -104,6 +105,7 @@ export function GestaoDemosContent({
   const [step, setStep] = useState<WizardStep>(variant === 'compact' ? 'destinatario' : 'pacote')
   const [statusFilter, setStatusFilter] = useState<'todos' | DemoRecipientStatus>('todos')
   const [search, setSearch] = useState('')
+  const [demoAlfaLetraFiltro, setDemoAlfaLetraFiltro] = useState<string | null>(null)
   const [moduleSelectionMode, setModuleSelectionMode] = useState<ModuleSelectionMode>('pacote-completo')
   const [moduleWalkIndex, setModuleWalkIndex] = useState(0)
   const [showFullModuleGrid, setShowFullModuleGrid] = useState(false)
@@ -199,6 +201,18 @@ export function GestaoDemosContent({
     }
     return letras.map((letra) => ({ letra, items: map.get(letra)! }))
   }, [filtered])
+
+  const buscaDemoAtiva = search.trim().length > 0
+  const demoLetraAtiva =
+    demoAlfaLetraFiltro && demoListaAgrupada.some((g) => g.letra === demoAlfaLetraFiltro)
+      ? demoAlfaLetraFiltro
+      : null
+  const demoLetrasParaLista = letrasAlfabetoParaListaNomes({
+    letraAtiva: demoLetraAtiva,
+    buscaAtiva: buscaDemoAtiva,
+    letrasComItens: demoListaAgrupada.map((g) => g.letra),
+  })
+  const demoListaVisivel = demoListaAgrupada.filter((g) => demoLetrasParaLista.includes(g.letra))
 
   const demoDetalhe = useMemo(
     () => (demoListaDetalheId ? filtered.find((r) => r.id === demoListaDetalheId) ?? enriched.find((r) => r.id === demoListaDetalheId) : null),
@@ -1043,7 +1057,10 @@ export function GestaoDemosContent({
         <input
           type="search"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setDemoAlfaLetraFiltro(null)
+          }}
           placeholder={tr(safeT, 'adminDemosHubSearchPlaceholder', 'Procurar por nome, e-mail ou utilizador…')}
           style={{ ...inputStyle, width: '100%', maxWidth: '400px', marginBottom: '12px' }}
         />
@@ -1057,16 +1074,33 @@ export function GestaoDemosContent({
             <p style={{ fontSize: '12px', opacity: 0.75, margin: '0 0 12px' }}>
               {tr(safeT, 'adminDemosHubListHint', 'Clique num nome para ver link, credenciais, estado e acções.')}
             </p>
-            {demoListaAgrupada.length > 1 && (
-              <nav className="clientes-alfa-jump" aria-label="Índice alfabético">
-                {demoListaAgrupada.map(({ letra }) => (
-                  <a key={letra} className="clientes-alfa-jump-link" href={`#demo-alfa-${letra}`}>
-                    {letra}
-                  </a>
-                ))}
+            {demoListaAgrupada.length > 0 && (
+              <nav className="clientes-alfa-jump clientes-alfa-jump--modern" aria-label="Índice alfabético">
+                {demoListaAgrupada.map(({ letra, items }) => {
+                  const active = demoLetraAtiva === letra
+                  return (
+                    <button
+                      key={letra}
+                      type="button"
+                      className={`clientes-alfa-jump-btn${active ? ' is-active' : ''}`}
+                      aria-pressed={active}
+                      onClick={() => setDemoAlfaLetraFiltro((prev) => (prev === letra ? null : letra))}
+                    >
+                      <span className="clientes-alfa-jump-btn__letter">{letra}</span>
+                      <span className="clientes-alfa-jump-btn__count" aria-hidden>
+                        {items.length}
+                      </span>
+                    </button>
+                  )
+                })}
               </nav>
             )}
-            {demoListaAgrupada.map(({ letra, items }) => (
+            {!demoLetraAtiva && !buscaDemoAtiva ? (
+              <p className="clientes-alfa-prompt">
+                {tr(safeT, 'clientesAlfabetoPrompt', 'Toque numa letra para ver os nomes.')}
+              </p>
+            ) : null}
+            {demoListaVisivel.map(({ letra, items }) => (
               <section key={letra} id={`demo-alfa-${letra}`} className="clientes-alfa-secao">
                 <div className="clientes-alfa-letra">{letra}</div>
                 <div className="clientes-alfa-nomes">
