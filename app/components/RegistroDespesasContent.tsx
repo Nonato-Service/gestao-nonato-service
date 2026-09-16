@@ -20,6 +20,7 @@ import {
   isCartaoEmpresaUltimos4Valid,
   isDespesaDocumentoClienteValid,
   isDespesaRegistroTipoValid,
+  listarTiposDespesaDoCadastro,
   normalizeCartaoEmpresaUltimos4,
   rotuloCartaoEmpresaDespesas,
   rotuloLinhaCartaoEmpresa,
@@ -54,7 +55,7 @@ type RegistroOcrModalState =
 
 type Cliente = { id: string; nomeEmpresa: string }
 type RelatorioServico = { id: string; numero: string; cliente: string; clienteId?: string; data: string }
-type Servico = { id: string; nome: string; categoria: string }
+type Servico = { id: string; nome: string; categoria?: string; tipoCobranca?: string }
 
 type Props = {
   clientes: Cliente[]
@@ -109,7 +110,7 @@ export function RegistroDespesasContent({
   const ocrReciboFileRef = useRef<HTMLInputElement>(null)
   const [registroOcrModal, setRegistroOcrModal] = useState<RegistroOcrModalState>(null)
 
-  const despesasCadastradas = servicos.filter(s => s.categoria === 'despesa')
+  const despesasCadastradas = listarTiposDespesaDoCadastro(servicos)
   const clientesFiltrados = clientes.filter(c =>
     c.nomeEmpresa?.toLowerCase().includes(buscaCliente?.toLowerCase())
   )

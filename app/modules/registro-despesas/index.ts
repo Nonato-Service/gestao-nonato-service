@@ -16,6 +16,8 @@ export type {
   CreateDespesaDocumentoFromFormOpts,
 } from './fromForm'
 export {
+  servicoApareceComoTipoDespesa,
+  listarTiposDespesaDoCadastro,
   normalizeCartaoEmpresaUltimos4,
   isCartaoEmpresaApelidoValid,
   isCartaoEmpresaUltimos4Valid,

@@ -3,6 +3,31 @@
 import type { CartaoEmpresaDespesasFormState, DespesaRegistroFormState } from './formState'
 import type { CartaoEmpresaDespesas, DespesaDocumento, DespesaRegistro } from './tipos'
 
+/** Cadastro de serviços: o dropdown de despesas não pode exigir só categoria «despesa»
+ * (o formulário nasce como «serviço» + unidade / valor-fixo / extras). */
+export function servicoApareceComoTipoDespesa(s: {
+  categoria?: string
+  tipoCobranca?: string
+}): boolean {
+  const cat = String(s?.categoria || '').trim().toLowerCase()
+  if (cat === 'despesa') return true
+  const tipo = String(s?.tipoCobranca || '').trim().toLowerCase()
+  if (tipo === 'hora' || tipo === 'km' || tipo === 'diarias') return false
+  return tipo === 'extras' || tipo === 'unidade' || tipo === 'valor-fixo'
+}
+
+export function listarTiposDespesaDoCadastro<
+  T extends { id: string; nome?: string; categoria?: string; tipoCobranca?: string }
+>(servicos: readonly T[] | null | undefined): T[] {
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is T => !!s && typeof s === 'object' && typeof s.id === 'string' && Boolean(s.id))
+    : []
+  return list
+    .filter((s) => servicoApareceComoTipoDespesa(s))
+    .slice()
+    .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'))
+}
+
 export function normalizeCartaoEmpresaUltimos4(raw: string): string {
   return raw.replace(/\D/g, '').slice(-4)
 }

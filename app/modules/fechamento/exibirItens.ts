@@ -145,13 +145,37 @@ export function agruparItensFechamentoPorCliente(itens: FechamentoItem[]): Grupo
   return ung ? [...grouped, ung] : grouped
 }
 
+function servicoElegivelAnexarManualFechamento(s: ServicoCadastroFechamentoMin): boolean {
+  const cat = String(s?.categoria || '').trim().toLowerCase()
+  if (cat === 'despesa') return true
+  const tipo = String(s?.tipoCobranca || '').trim().toLowerCase()
+  return tipo === 'extras' || tipo === 'unidade' || tipo === 'valor-fixo'
+}
+
+function unirOpcoesServicoFechamentoUnicas(
+  a: ServicoCadastroFechamentoMin[],
+  b: ServicoCadastroFechamentoMin[]
+): ServicoCadastroFechamentoMin[] {
+  const seen = new Set<string>()
+  const out: ServicoCadastroFechamentoMin[] = []
+  for (const s of [...a, ...b]) {
+    if (!s || typeof s.id !== 'string' || !s.id || seen.has(s.id)) continue
+    seen.add(s.id)
+    out.push(s)
+  }
+  return out
+}
+
 /** Opções do select de serviço por linha do fechamento (filtro puro). */
 export function filtrarOpcoesServicoLinhaFechamento(
   item: FechamentoItem,
   servicos: ServicoCadastroFechamentoMin[],
   grupoId?: string | null
 ): ServicoCadastroFechamentoMin[] {
-  const pool = filtrarServicosCadastroPorGrupo(servicos, grupoId)
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
+    : []
+  const pool = filtrarServicosCadastroPorGrupo(list, grupoId)
   const txt = (s: ServicoCadastroFechamentoMin) =>
     ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
   const tipo = tipoLinhaFechamentoFixa(item.id)
@@ -168,5 +192,9 @@ export function filtrarOpcoesServicoLinhaFechamento(
   if (item.tipoCobranca === 'hora') return pool.filter((s) => s.tipoCobranca === 'hora')
   if (item.tipoCobranca === 'km') return pool.filter((s) => s.tipoCobranca === 'km')
   if (item.tipoCobranca === 'diarias') return pool.filter((s) => s.tipoCobranca === 'diarias')
-  return pool
+  /** Linha manual / extras: grupo actual + despesas (unidade, extras, valor-fixo) de qualquer grupo. */
+  return unirOpcoesServicoFechamentoUnicas(
+    pool,
+    list.filter(servicoElegivelAnexarManualFechamento)
+  )
 }

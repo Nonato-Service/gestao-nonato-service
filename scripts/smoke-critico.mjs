@@ -229,6 +229,14 @@ try {
     } else {
       fail('fechamento ainda pode ficar com horas antigas da Ferwood')
     }
+    if (
+      exibirItensSrc.includes('servicoElegivelAnexarManualFechamento') &&
+      exibirItensSrc.includes('unirOpcoesServicoFechamentoUnicas')
+    ) {
+      ok('fechamento: anexar linha manual junta despesas de qualquer grupo')
+    } else {
+      fail('fechamento ainda esconde itens novos do cadastro no select de despesas')
+    }
   }
   if (
     idx.includes('RESUMO_COBRANCA_DECISAO_KEY') &&
@@ -312,6 +320,14 @@ try {
     ok('NonatoMainApp fecha relatório especial por cliente de trabalho')
   } else {
     fail('NonatoMainApp sem fechamento especial por cliente (agruparItens / extras por bloco)')
+  }
+  if (
+    nma.includes('setServicoGrupoSelecionadoId(grupoId)') &&
+    cadastroServicos.includes('valorInput: servicoValorInput')
+  ) {
+    ok('cadastro de serviços mostra o grupo do item recém-gravado')
+  } else {
+    fail('cadastro de serviços não selecciona o grupo após gravar o item')
   }
   if (nma.includes('TEMPLATE_SERVICOS_PADRAO') && !nma.includes("from './lib/servicosCadastroUtils'")) {
     ok('NonatoMainApp usa TEMPLATE_SERVICOS_PADRAO do módulo fechamento')
@@ -6948,7 +6964,9 @@ try {
     idx.includes('emptyDespesaRegistroForm') &&
     idx.includes('createCartaoEmpresaDespesasFromForm') &&
     idx.includes('createDespesaRegistroFromForm') &&
-    idx.includes('createDespesaDocumentoFromForm')
+    idx.includes('createDespesaDocumentoFromForm') &&
+    idx.includes('listarTiposDespesaDoCadastro') &&
+    idx.includes('servicoApareceComoTipoDespesa')
   ) {
     ok('módulo registro-despesas exporta tipos/formState/fromForm')
   } else {
@@ -6971,6 +6989,8 @@ try {
     rdcMod.includes('createCartaoEmpresaDespesasFromForm') &&
     rdcMod.includes('createDespesaRegistroFromForm') &&
     rdcMod.includes('createDespesaDocumentoFromForm') &&
+    rdcMod.includes('listarTiposDespesaDoCadastro') &&
+    !rdcMod.includes("s.categoria === 'despesa'") &&
     !rdcMod.includes('export type CartaoEmpresaDespesas = {')
   ) {
     ok('RegistroDespesasContent usa tipos/fromForm do módulo registro-despesas')
@@ -7877,6 +7897,7 @@ try {
     'app/components/RelatorioEspecialHub.tsx',
     'app/components/OrcamentoPecasEspeciaisContent.tsx',
     'app/components/ClienteEquipamentoHistoricoPanel.tsx',
+    'app/components/RegistroDespesasContent.tsx',
   ]) {
     const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
     const extraParsed = tsExtra.transpileModule(extraSrc, {

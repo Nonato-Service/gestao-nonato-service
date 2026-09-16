@@ -12744,6 +12744,8 @@ export default function Dashboard() {
     setServicoForm(servicoCadastroToFormState(savedServico))
     setServicoValorInput(servicoValorToInputString(savedServico.valor))
     setEditingServico(savedServico)
+    setServicoGrupoSelecionadoId(grupoId)
+    setServicoGrupoNomeEdicao(servicoGrupos.find((g) => g.id === grupoId)?.nome ?? '')
     alert((t as any).servicoSalvo || 'Serviço salvo com sucesso!')
   }
 

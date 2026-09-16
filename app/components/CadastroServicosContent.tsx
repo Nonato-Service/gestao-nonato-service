@@ -173,7 +173,11 @@ function ServicoFormBlock(props: Pick<
         <option value="extras">{safeT.tipoCobrancaExtras || 'Extras'}</option>
       </select>
       <div className="orcamento-pecas-especiais-actions cadastro-valores-v2__form-actions">
-        <button type="button" className="btn-primary" onClick={() => void onSaveServico()}>
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => void onSaveServico({ form, valorInput: servicoValorInput })}
+        >
           {safeT.save || 'Salvar'}
         </button>
         <button type="button" className="cadastro-valores-v2__btn-secondary orcamento-pecas-especiais-btn-cancelar" onClick={onResetServicoForm}>
