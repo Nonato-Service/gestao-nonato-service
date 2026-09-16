@@ -101,6 +101,7 @@ export {
   chaveGrupoClienteFechamentoEspecial,
   chaveLocalDiaTrabalhoEspecial,
   rotuloGrupoFechamentoEspecial,
+  formatHorasGrupoFechamentoEspecial,
   listarGruposClienteFechamentoEspecial,
   deveSepararFechamentoEspecialPorCliente,
   calcularTotaisFechamentoEspecialPorCliente,

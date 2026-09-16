@@ -2255,7 +2255,8 @@ try {
     idx.includes('FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM') &&
     idx.includes('rotuloLocalDiaTrabalhoEspecial') &&
     idx.includes('rotuloEquipamentoDiaComClientesEspecial') &&
-    idx.includes('coletarOpcoesLocalDiaEspecial')
+    idx.includes('coletarOpcoesLocalDiaEspecial') &&
+    idx.includes('formatHorasGrupoFechamentoEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
@@ -2405,7 +2406,9 @@ try {
     hub.includes('relatorioEspecialClienteInstalacao') &&
     hub.includes('clienteInstalacaoId') &&
     hub.includes('relatorioEspecialInstalacaoSemDia') &&
-    hub.includes('relatorio-especial-local-eq')
+    hub.includes('relatorio-especial-local-eq') &&
+    hub.includes('TabelaResumoPorClienteEspecial') &&
+    hub.includes('calcularTotaisFechamentoEspecialPorCliente')
   ) {
     ok('RelatorioEspecialHub: local do dia + cliente de instalação no armazém')
   } else {
@@ -2423,6 +2426,8 @@ try {
       'relatorioEspecialLocalOndeEquipamento',
       'relatorioEspecialLocalOutroCliente',
       'relatorioEspecialInstalacaoSemDia',
+      'relatorioEspecialResumoPorCliente',
+      'relatorioEspecialResumoHorasCliente',
     ]
     const missLocal = []
     for (const lang of ['pt-BR', 'es', 'fr', 'it', 'de', 'en']) {
@@ -2468,6 +2473,25 @@ try {
     ok('calculos especiais: dias sem máquina com contexto equipamento/cliente')
   } else {
     fail('calculos especiais sem contexto de viagem no resumo')
+  }
+  {
+    const fechCli = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/fechamentoPorCliente.ts'), 'utf8')
+    if (
+      fechCli.includes('tratarPrincipalComoOficina') &&
+      fechCli.includes('ensureGrupo') &&
+      fechCli.includes('calcularTotaisRelatorioEspecial') &&
+      fechCli.includes('almocoJaAplicadoPorData')
+    ) {
+      ok('fechamento especial: horas por cliente não se perdem e batem com o total')
+    } else {
+      fail('fechamento especial ainda pode perder horas do cliente principal')
+    }
+    const pdfEsp = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/pdf.ts'), 'utf8')
+    if (pdfEsp.includes('buildResumoPorClienteHtml') && pdfEsp.includes('relatorioEspecialResumoPorCliente')) {
+      ok('PDF especial: resumo de horas por cliente')
+    } else {
+      fail('PDF especial sem resumo de horas por cliente')
+    }
   }
   if (
     calc.includes('indiceLinhaAlmocoActiva') &&

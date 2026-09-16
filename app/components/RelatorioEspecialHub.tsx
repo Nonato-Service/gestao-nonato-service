@@ -42,8 +42,12 @@ import {
   defaultRelatorioEspecialPdfSecoes,
   normalizeRelatorioEspecialPdfSecoes,
   temAlgumaSecaoPdfEspecial,
+  calcularTotaisFechamentoEspecialPorCliente,
+  rotuloGrupoFechamentoEspecial,
+  formatHorasGrupoFechamentoEspecial,
   type RelatorioEspecialPdfSecaoId,
   type RelatorioEspecialPdfSecoes,
+  type GrupoFechamentoEspecial,
 } from '../modules/relatorios-especiais'
 import { imprimirRelatorioEspecialPdf } from '../lib/relatorioEspecialPdf'
 import { dataLocalHojeISO } from '../lib/relatorioEspecialShared'
@@ -162,6 +166,51 @@ function labelResumoCobrancaEspecial(
   if (fase === 'verde') return t.resumoCobrancaEstadoNao || 'Não cobrar'
   if (fase === 'azul') return t.resumoCobrancaEstadoSim || 'Cobrar'
   return t.resumoCobrancaEstadoPendente || 'Decidir cobrança'
+}
+
+function TabelaResumoPorClienteEspecial({
+  grupos,
+  t,
+}: {
+  grupos: GrupoFechamentoEspecial[]
+  t: Record<string, string | undefined>
+}) {
+  if (grupos.length === 0) return null
+  return (
+    <div className="relatorio-especial-resumo-por-cliente" style={{ marginBottom: 16 }}>
+      <div style={{ fontWeight: 600, marginBottom: 8, color: '#00c853' }}>
+        {t.relatorioEspecialResumoPorCliente || 'Por cliente'}
+      </div>
+      <table className="relatorio-especial-resumo-equip__tabela">
+        <thead>
+          <tr>
+            <th>{t.cliente || 'Cliente'}</th>
+            <th>{t.relatorioEspecialResumoHorasCliente || t.horasTrabalho || 'Horas'}</th>
+            <th>{t.relatorioEspecialPdfHorasViagem || t.horasViagem || 'Viagem'}</th>
+            <th>KM</th>
+            <th>{t.diarias || 'Diárias'}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {grupos.map((g) => (
+            <tr key={g.key}>
+              <td>
+                {rotuloGrupoFechamentoEspecial(g, {
+                  oficinaLabel: t.relatorioEspecialLocalArmazem,
+                })}
+              </td>
+              <td>
+                <strong>{formatHorasGrupoFechamentoEspecial(g.ht)}</strong>
+              </td>
+              <td>{formatHorasGrupoFechamentoEspecial(g.hida + g.hret)}</td>
+              <td>{g.km}</td>
+              <td>{g.diarias}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 const RASCUNHO_ESPECIAL_KEY = 'nonato-relatorio-especial-rascunho'
@@ -507,6 +556,10 @@ export default function RelatorioEspecialHub({
   const rascunhoOferecidoRef = useRef(false)
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
+  const gruposResumoPorCliente = useMemo(
+    () => calcularTotaisFechamentoEspecialPorCliente(formComTotais),
+    [formComTotais]
+  )
   const relatoriosOrdenados = useMemo(
     () => [...(relatorios || [])].sort((a, b) => String(b.data).localeCompare(String(a.data))),
     [relatorios]
@@ -1336,6 +1389,7 @@ export default function RelatorioEspecialHub({
         <p style={{ fontSize: 13, color: '#ccc' }}>
           {form.numero} · {form.cliente}
         </p>
+        <TabelaResumoPorClienteEspecial grupos={gruposResumoPorCliente} t={t} />
         <div className="relatorio-especial-paineis-stack">
           <BibliotecaHubPainelRecolhivel
             modulo="relatorio-especial"
@@ -3152,6 +3206,7 @@ export default function RelatorioEspecialHub({
           background: 'rgba(0,40,24,0.3)',
         }}
       >
+        <TabelaResumoPorClienteEspecial grupos={gruposResumoPorCliente} t={t} />
         {(form.equipamentos || []).map((eq, i) => {
           const sessoes = sessoesPorEquip[eq.uid] || []
           const total = formComTotais.horasPorEquipamentoResumo?.[eq.uid] || '0:00'

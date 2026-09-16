@@ -14,6 +14,11 @@ import {
   rotuloLocalDiaTrabalhoEspecial,
   sortDiasTrabalhoEspecialCronologicamente,
 } from './calculos'
+import {
+  calcularTotaisFechamentoEspecialPorCliente,
+  formatHorasGrupoFechamentoEspecial,
+  rotuloGrupoFechamentoEspecial,
+} from './fechamentoPorCliente'
 import type { DiaTrabalhoEspecial, RelatorioEspecial } from './tipos'
 import {
   buildPdfDocumentFooterHtml,
@@ -1086,6 +1091,44 @@ function buildResumoCardsHtml(
     .join('')}</div>`
 }
 
+function buildResumoPorClienteHtml(
+  rel: RelatorioEspecial,
+  labels: RelatorioEspecialPdfLabels | undefined
+): string {
+  const grupos = calcularTotaisFechamentoEspecialPorCliente(rel)
+  if (grupos.length === 0) return ''
+  const esc = escapePdfHtml
+  const rows = grupos
+    .map((g) => {
+      const nome = rotuloGrupoFechamentoEspecial(g, {
+        oficinaLabel: L(labels, 'relatorioEspecialLocalArmazem', 'Armazém / oficina'),
+      })
+      return `<tr>
+        <td>${esc(nome)}</td>
+        <td><strong>${esc(formatHorasGrupoFechamentoEspecial(g.ht))}</strong></td>
+        <td>${esc(formatHorasGrupoFechamentoEspecial(g.hida + g.hret))}</td>
+        <td>${esc(String(g.km))}</td>
+        <td>${esc(String(g.diarias))}</td>
+      </tr>`
+    })
+    .join('')
+  return `<div class="re-resumo-por-cliente">
+    <h4 class="re-secao__subtitulo">${esc(L(labels, 'relatorioEspecialResumoPorCliente', 'Por cliente'))}</h4>
+    <table class="re-table">
+      <thead>
+        <tr>
+          <th>${esc(L(labels, 'cliente', 'Cliente'))}</th>
+          <th>${esc(L(labels, 'relatorioEspecialResumoHorasCliente', L(labels, 'horasTrabalho', 'Horas')))}</th>
+          <th>${esc(L(labels, 'relatorioEspecialPdfHorasViagem', L(labels, 'horasViagem', 'Viagem')))}</th>
+          <th>KM</th>
+          <th>${esc(L(labels, 'diarias', 'Diárias'))}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`
+}
+
 function buildResumoViagemHtml(
   diasSemMaquina: DiaSemMaquinaResumoEspecial[],
   labels: RelatorioEspecialPdfLabels | undefined,
@@ -1304,6 +1347,7 @@ export function buildRelatorioEspecialPdfHtml(
 
   const resumoHtml = `<section class="re-secao">
     <h3 class="re-secao__titulo">${esc(L(labels, 'resumo', 'Resumo'))}</h3>
+    ${buildResumoPorClienteHtml(rel, labels)}
     ${buildResumoCardsHtml(rel, totais, labels)}
     ${buildResumoViagemHtml(diasSemMaquinaResumo, labels, dateLocale)}
   </section>`
