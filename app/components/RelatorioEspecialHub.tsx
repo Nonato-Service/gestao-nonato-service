@@ -20,10 +20,8 @@ import {
   resumoHorasTrabalhoDia,
   rotuloLocalDiaTrabalhoEspecial,
   rotuloEquipamentoDiaComClientesEspecial,
-  coletarOpcoesLocalDiaEspecial,
   valorSelectLocalDiaEspecial,
   patchLocalDiaEspecialDeValor,
-  sugerirLocalDiaDeEquipamentoEspecial,
   sortDiasTrabalhoEspecialCronologicamente,
   diaTrabalhoDataChaveOrdenacao,
 } from '../lib/relatorioEspecialCalculos'
@@ -847,11 +845,6 @@ export default function RelatorioEspecialHub({
       clienteIdEfetivo,
       labelOptsCadastro,
     ]
-  )
-
-  const opcoesLocalDiaChips = useMemo(
-    () => coletarOpcoesLocalDiaEspecial(form, t),
-    [form.clienteId, form.cliente, form.equipamentos, t]
   )
 
   const abrirEditar = useCallback(
@@ -2760,6 +2753,34 @@ export default function RelatorioEspecialHub({
                       style={{ ...inputStyle, maxWidth: 220 }}
                       className="ns-datetime-input"
                     />
+                    <label style={{ display: 'block', marginTop: 12 }}>
+                      {t.relatorioEspecialLocalDia || 'Local deste dia'}
+                    </label>
+                    <select
+                      value={valorSelectLocalDiaEspecial(dia)}
+                      onChange={(e) =>
+                        actualizarDia(dia.id, patchLocalDiaEspecialDeValor(e.target.value, clientes))
+                      }
+                      style={{ ...inputStyle, maxWidth: 420 }}
+                    >
+                      <option value="">
+                        {t.relatorioEspecialLocalDiaHerdar || 'Conforme o equipamento'}
+                      </option>
+                      <option value="armazem">
+                        {t.relatorioEspecialLocalArmazem || 'Armazém / oficina'}
+                      </option>
+                      {(clientes || [])
+                        .filter((c) => String(c.id || '').trim())
+                        .map((c) => (
+                          <option key={c.id} value={`c:${c.id}`}>
+                            {c.nomeEmpresa || c.id}
+                          </option>
+                        ))}
+                    </select>
+                    <p style={{ margin: '6px 0 0', fontSize: 12, color: '#888', lineHeight: 1.4 }}>
+                      {t.relatorioEspecialLocalDiaHint ||
+                        'Oficina no armazém ou instalação/visita no cliente. O mesmo equipamento pode ter dias nos dois sítios.'}
+                    </p>
                   </div>
 
                   <div className="relatorio-especial-dia-secao">
@@ -2803,16 +2824,8 @@ export default function RelatorioEspecialHub({
                     </p>
                     {(dia.horasPorEquipamento || []).map((linha, li) => {
                       const linhaCalc = diaCalc.horasPorEquipamento?.[li] || linha
-                      const valorLocal = valorSelectLocalDiaEspecial(dia)
-                      const idsChipCliente = new Set(
-                        opcoesLocalDiaChips
-                          .filter((op) => op.value.startsWith('c:'))
-                          .map((op) => op.value.slice(2))
-                      )
-                      const outroSeleccionado =
-                        valorLocal.startsWith('c:') && !idsChipCliente.has(valorLocal.slice(2))
                       return (
-                        <div key={li} className="relatorio-especial-hora-eq-bloco">
+                        <div key={li} className="relatorio-especial-hora-eq-linha">
                           <div>
                             <label>{t.equipamento || 'Equipamento'}</label>
                             <select
@@ -2833,18 +2846,12 @@ export default function RelatorioEspecialHub({
                                     return
                                   }
                                 }
-                                const eqSel = opcoesSelectEquipamentoDia.find((o) => o.uid === v)?.eq
-                                const sugerido =
-                                  li === 0 && !dia.localTrabalho
-                                    ? sugerirLocalDiaDeEquipamentoEspecial(eqSel, form)
-                                    : null
                                 setForm((prev) => ({
                                   ...prev,
                                   diasTrabalho: prev.diasTrabalho!.map((d) =>
                                     d.id === dia.id
                                       ? atualizarCalculosDiaEspecial({
                                           ...d,
-                                          ...(sugerido || {}),
                                           horasPorEquipamento: (d.horasPorEquipamento || []).map((h, hi) =>
                                             hi === li ? { ...h, equipamentoUid: v } : h
                                           ),
@@ -2863,67 +2870,6 @@ export default function RelatorioEspecialHub({
                               ))}
                             </select>
                           </div>
-                          {li === 0 ? (
-                            <div className="relatorio-especial-local-eq">
-                              <label>
-                                {t.relatorioEspecialLocalOndeEquipamento ||
-                                  t.relatorioEspecialLocalDia ||
-                                  'Local deste dia'}
-                              </label>
-                              <div className="relatorio-especial-local-eq__opcoes" role="group">
-                                {opcoesLocalDiaChips.map((op) => (
-                                  <button
-                                    type="button"
-                                    key={op.value}
-                                    className={
-                                      'relatorio-especial-local-eq__chip' +
-                                      (valorLocal === op.value ? ' is-active' : '')
-                                    }
-                                    onClick={() =>
-                                      actualizarDia(
-                                        dia.id,
-                                        patchLocalDiaEspecialDeValor(op.value, clientes, op.label)
-                                      )
-                                    }
-                                  >
-                                    {op.label}
-                                  </button>
-                                ))}
-                              </div>
-                              <label style={{ display: 'block', marginTop: 10 }}>
-                                {t.relatorioEspecialLocalOutroCliente || 'Outro cliente'}
-                              </label>
-                              <select
-                                value={outroSeleccionado ? valorLocal : ''}
-                                onChange={(e) =>
-                                  actualizarDia(
-                                    dia.id,
-                                    patchLocalDiaEspecialDeValor(e.target.value, clientes)
-                                  )
-                                }
-                                style={{ ...inputStyle, maxWidth: 420 }}
-                              >
-                                <option value="">
-                                  {t.relatorioEspecialLocalDiaHerdar || 'Conforme o equipamento'}
-                                </option>
-                                {(clientes || [])
-                                  .filter((c) => {
-                                    const id = String(c.id || '').trim()
-                                    return id && !idsChipCliente.has(id)
-                                  })
-                                  .map((c) => (
-                                    <option key={c.id} value={`c:${c.id}`}>
-                                      {c.nomeEmpresa || c.id}
-                                    </option>
-                                  ))}
-                              </select>
-                              <p className="relatorio-especial-local-eq__hint">
-                                {t.relatorioEspecialLocalDiaHint ||
-                                  'Oficina no armazém ou instalação/visita no cliente. O mesmo equipamento pode ter dias nos dois sítios.'}
-                              </p>
-                            </div>
-                          ) : null}
-                          <div className="relatorio-especial-hora-eq-linha">
                           <div>
                             <label>{t.inicio || 'Início'}</label>
                             <input
@@ -2995,7 +2941,6 @@ export default function RelatorioEspecialHub({
                           >
                             ✕
                           </button>
-                          </div>
                         </div>
                       )
                     })}

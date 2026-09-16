@@ -2406,7 +2406,6 @@ try {
     hub.includes('relatorioEspecialClienteInstalacao') &&
     hub.includes('clienteInstalacaoId') &&
     hub.includes('relatorioEspecialInstalacaoSemDia') &&
-    hub.includes('relatorio-especial-local-eq') &&
     hub.includes('TabelaResumoPorClienteEspecial') &&
     hub.includes('calcularTotaisFechamentoEspecialPorCliente')
   ) {

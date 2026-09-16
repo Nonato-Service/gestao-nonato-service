@@ -42612,52 +42612,10 @@ html body .relatorio-especial-root .re-dia-linha--fim-semana td {
 
 html body .relatorio-especial-root .relatorio-especial-hora-eq-linha {
   display: grid;
-  grid-template-columns: repeat(3, minmax(100px, 1fr)) auto;
+  grid-template-columns: minmax(140px, 1.4fr) repeat(3, minmax(100px, 1fr)) auto;
   gap: 8px;
   margin-bottom: 8px;
   align-items: end;
-}
-
-html body .relatorio-especial-root .relatorio-especial-hora-eq-bloco {
-  margin-bottom: 14px;
-}
-
-html body .relatorio-especial-root .relatorio-especial-local-eq {
-  margin: 10px 0 12px;
-  padding: 10px 12px;
-  border: 1px solid rgba(0, 255, 0, 0.35);
-  border-radius: 8px;
-  background: rgba(0, 40, 0, 0.35);
-}
-
-html body .relatorio-especial-root .relatorio-especial-local-eq__opcoes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-html body .relatorio-especial-root .relatorio-especial-local-eq__chip {
-  padding: 8px 12px;
-  border: 1px solid #00ff00;
-  border-radius: 6px;
-  background: #1a1a1a;
-  color: #fff;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-html body .relatorio-especial-root .relatorio-especial-local-eq__chip.is-active {
-  background: rgba(0, 255, 0, 0.18);
-  color: #00ff00;
-  font-weight: 700;
-}
-
-html body .relatorio-especial-root .relatorio-especial-local-eq__hint {
-  margin: 8px 0 0;
-  font-size: 12px;
-  color: #888;
-  line-height: 1.4;
 }
 
 html body .relatorio-especial-root .relatorio-especial-resumo-equip__tabela {
