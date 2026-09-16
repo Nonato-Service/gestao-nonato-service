@@ -216,7 +216,9 @@ try {
   if (
     idx.includes('buildItensFechamentoParaExibirFromSalvos') &&
     idx.includes('filtrarOpcoesServicoLinhaFechamento') &&
-    idx.includes('resolverQuantidadeLinhaFechamentoExibir')
+    idx.includes('resolverQuantidadeLinhaFechamentoExibir') &&
+    idx.includes('htmlGruposFechamentoPdf') &&
+    idx.includes('FECHAMENTO_PDF_PRINT_CSS_GRUPOS')
   ) {
     ok('módulo fechamento exporta exibirItens UI')
   } else {
@@ -320,6 +322,15 @@ try {
     ok('NonatoMainApp fecha relatório especial por cliente de trabalho')
   } else {
     fail('NonatoMainApp sem fechamento especial por cliente (agruparItens / extras por bloco)')
+  }
+  if (
+    nma.includes('htmlGruposFechamentoPdf') &&
+    !nma.includes('lastGkPdf') &&
+    !nma.includes('lastGkBib')
+  ) {
+    ok('PDF de fechamento junta horas e extras no mesmo cliente')
+  } else {
+    fail('PDF de fechamento ainda parte o mesmo cliente em blocos separados')
   }
   if (
     nma.includes('setServicoGrupoSelecionadoId(grupoId)') &&

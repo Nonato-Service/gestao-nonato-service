@@ -893,6 +893,8 @@ import {
   isLinhaFechamentoFixaId,
   linhaFechamentoOmiteCobrar,
   agruparItensFechamentoPorCliente,
+  htmlGruposFechamentoPdf,
+  FECHAMENTO_PDF_PRINT_CSS_GRUPOS,
   codFallbackLinhaFechamentoFixa,
   type FechamentoItem,
   type ServicoCadastroFechamentoMin,
@@ -15889,24 +15891,21 @@ export default function Dashboard() {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-    let lastGkBib = ''
-    const rows = itens.map(item => {
-      const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-      const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
-        .toString()
-        .replace(/</g, '&lt;')
-      const desc = (item.descricao || '').replace(/</g, '&lt;')
-      const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-      const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
-      const gk = String(item.grupoKey || '').trim()
-      const gl = String(item.grupoLabel || '').trim()
-      let header = ''
-      if (gk && gl && gk !== lastGkBib) {
-        lastGkBib = gk
-        header = `<tr><td colspan="5" style="padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d">${esc(gl)}</td></tr>`
-      }
-      return `${header}<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
-    }).join('')
+    const rows = htmlGruposFechamentoPdf(itens, {
+      esc,
+      headerCellStyle:
+        'padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d',
+      renderLinha: (item) => {
+        const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+        const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
+          .toString()
+          .replace(/</g, '&lt;')
+        const desc = (item.descricao || '').replace(/</g, '&lt;')
+        const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+        const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
+        return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
+      },
+    })
     const ivPdf = totaisFechamentoLiquidoComIva(
       itens,
       resolveFechamentoIvaOpcoes(relatorio.id, fechamentoIvaPorRelatorioId, relatorio.numero)
@@ -15972,7 +15971,7 @@ export default function Dashboard() {
         : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#0d7a3d">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#0d7a3d">${formatMoneyEUR(totalCobranca)}</td></tr>`
     const tableContent = `<div style="margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
     const rodape = buildPdfDocumentFooterHtml(`${esc(docGeradoEm)} ${dataHoraGerado} · Nonato Service`)
-    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1.5px solid #94a3b8}.fech-pdf-itens th,.fech-pdf-itens td{border:1.5px solid #94a3b8}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;font-size:12px}`
+    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}.fech-pdf-itens{min-width:0;width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 24px;border-radius:8px;overflow:hidden;border:1.5px solid #94a3b8}.fech-pdf-itens th,.fech-pdf-itens td{border:1.5px solid #94a3b8}.fech-pdf-itens th{padding:14px 18px;text-align:left;background:#0d7a3d;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase}.fech-pdf-itens td{padding:12px 14px;font-size:12px}${FECHAMENTO_PDF_PRINT_CSS_GRUPOS}`
     const bodyHtml = `${headerHtml}${infoMetaBib}${tableContent}${rodape}`
     const html = wrapRelatorioServicoPrintDocument({
       title: `${titFechamento} - ${relatorio.numero}`,
@@ -45606,33 +45605,30 @@ A1;Peça exemplo;10`}
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
-          let lastGkPdf = ''
-          const rows = itensVisiveisFechamento.map((item, idx) => {
-            const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-            const cod =
-              ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
-                .toString()
-                .replace(/</g, '&lt;')
-            const desc = (item.descricao || '').replace(/</g, '&lt;')
-            const infoExtra = (item.infoAdicional || '').trim().replace(/</g, '&lt;')
-            const descHtml = infoExtra
-              ? `${desc}<div style="font-size:10px;color:#888;margin-top:4px;font-style:italic">${infoExtra}</div>`
-              : desc
-            const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-            const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
-            const vuLinha =
-              item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
-                ? normalizeServicoValorStored(item.valorUnitario)
-                : item.valorUnitario
-            const gk = String(item.grupoKey || '').trim()
-            const gl = String(item.grupoLabel || '').trim()
-            let header = ''
-            if (gk && gl && gk !== lastGkPdf) {
-              lastGkPdf = gk
-              header = `<tr><td colspan="5" style="padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d">${esc(gl)}</td></tr>`
-            }
-            return `${header}<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(vuLinha)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
-          }).join('')
+          const rows = htmlGruposFechamentoPdf(itensVisiveisFechamento, {
+            esc,
+            headerCellStyle:
+              'padding:10px 14px;border:1.5px solid #94a3b8;background:#ecfdf3;font-size:12px;font-weight:700;color:#14532d',
+            renderLinha: (item) => {
+              const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+              const cod =
+                ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
+                  .toString()
+                  .replace(/</g, '&lt;')
+              const desc = (item.descricao || '').replace(/</g, '&lt;')
+              const infoExtra = (item.infoAdicional || '').trim().replace(/</g, '&lt;')
+              const descHtml = infoExtra
+                ? `${desc}<div style="font-size:10px;color:#888;margin-top:4px;font-style:italic">${infoExtra}</div>`
+                : desc
+              const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+              const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
+              const vuLinha =
+                item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
+                  ? normalizeServicoValorStored(item.valorUnitario)
+                  : item.valorUnitario
+              return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${descHtml}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(vuLinha)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
+            },
+          })
           const titFechamento = (safeT as any)?.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
           const lblImprimir = (safeT as any)?.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
           const lblFechar = safeT?.close || 'Fechar'
@@ -45758,7 +45754,7 @@ A1;Peça exemplo;10`}
             headerHtml = `<div style="margin-bottom:28px;border:2px solid #4a4a4a;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #4a4a4a">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#4a4a4a;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#616161', '#4a4a4a', '#e0e0e0', '#fafafa')}</div>`
           }
           const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:${rowBgEven}}.pdf-tbody tr:nth-child(even){background:${rowBgOdd}}`
-          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0;width:100%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
+          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0;width:100%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}${FECHAMENTO_PDF_PRINT_CSS_GRUPOS}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
           const printWin = window.open('', '_blank')
           if (!printWin) { alert((safeT as any)?.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
           printWin.document.write(html)

@@ -142,7 +142,42 @@ export function agruparItensFechamentoPorCliente(itens: FechamentoItem[]): Grupo
   }
   const grouped = order.filter((k) => k !== UNG).map((k) => map.get(k)!)
   const ung = map.get(UNG)
-  return ung ? [...grouped, ung] : grouped
+  if (!ung) return grouped
+  const restantes: FechamentoItem[] = []
+  for (const item of ung.itens) {
+    const lab = String(item.grupoLabel || '').trim()
+    const dest = lab ? grouped.find((g) => g.grupoLabel === lab) : undefined
+    if (dest) dest.itens.push(item)
+    else restantes.push(item)
+  }
+  if (restantes.length === 0) return grouped
+  return [...grouped, { ...ung, itens: restantes }]
+}
+
+/** CSS de impressão: total só no fim; cabeçalho do cliente não fica órfão no fundo da página. */
+export const FECHAMENTO_PDF_PRINT_CSS_GRUPOS =
+  '@media print{.fech-pdf-itens tfoot{display:table-row-group}tr.fech-pdf-grupo{break-after:avoid;page-break-after:avoid}}'
+
+export type HtmlGruposFechamentoPdfOpts = {
+  esc: (s: string) => string
+  headerCellStyle: string
+  renderLinha: (item: FechamentoItem) => string
+}
+
+/** HTML das linhas do PDF: um bloco por cliente (horas + extras juntos, como a Burie). */
+export function htmlGruposFechamentoPdf(
+  itens: FechamentoItem[],
+  opts: HtmlGruposFechamentoPdfOpts
+): string {
+  return agruparItensFechamentoPorCliente(itens)
+    .map((grupo) => {
+      const gl = String(grupo.grupoLabel || '').trim()
+      const header = gl
+        ? `<tr class="fech-pdf-grupo"><td colspan="5" style="${opts.headerCellStyle}">${opts.esc(gl)}</td></tr>`
+        : ''
+      return header + grupo.itens.map(opts.renderLinha).join('')
+    })
+    .join('')
 }
 
 function servicoElegivelAnexarManualFechamento(s: ServicoCadastroFechamentoMin): boolean {

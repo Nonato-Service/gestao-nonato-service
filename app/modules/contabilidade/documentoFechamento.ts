@@ -1,5 +1,5 @@
 import type { FechamentoItem } from '../fechamento'
-import { linhaFechamentoOmiteCobrar } from '../fechamento'
+import { linhaFechamentoOmiteCobrar, htmlGruposFechamentoPdf, FECHAMENTO_PDF_PRINT_CSS_GRUPOS } from '../fechamento'
 import { formatMoneyEUR } from '../financeiro/money'
 import { CONTAB_PRINT_WINDOW_STYLES } from './estilosPrint'
 import { escAttr, preEsc, valDash } from './escape'
@@ -134,31 +134,24 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
     a.push(emFim)
     return a.join('\n')
   })()
-  const rowsHtml = (() => {
-    let lastGk = ''
-    return itens
-      .map((item) => {
-        const gk = String(item.grupoKey || '').trim()
-        const gl = String(item.grupoLabel || '').trim()
-        let header = ''
-        if (gk && gl && gk !== lastGk) {
-          lastGk = gk
-          header = `<tr><td colspan="5" style="padding:10px 10px 6px;border:1px solid #c8e6c9;background:#e8f5e9;font-weight:700;color:#1b5e20">${escAttr(gl)}</td></tr>`
-        }
-        const cod = escAttr(resolveItemCod(item))
-        const desc = escAttr((item.descricao || '').trim() || '—')
-        const qtd = escAttr(
-          item.tipoCobranca === 'hora'
-            ? `${item.quantidade.toFixed(2)} h`
-            : item.tipoCobranca === 'km'
-              ? `${item.quantidade.toFixed(0)} km`
-              : String(item.quantidade)
-        )
-        const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
-        return `${header}<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
-      })
-      .join('')
-  })()
+  const rowsHtml = htmlGruposFechamentoPdf(itens, {
+    esc: escAttr,
+    headerCellStyle:
+      'padding:10px 10px 6px;border:1px solid #c8e6c9;background:#e8f5e9;font-weight:700;color:#1b5e20',
+    renderLinha: (item) => {
+      const cod = escAttr(resolveItemCod(item))
+      const desc = escAttr((item.descricao || '').trim() || '—')
+      const qtd = escAttr(
+        item.tipoCobranca === 'hora'
+          ? `${item.quantidade.toFixed(2)} h`
+          : item.tipoCobranca === 'km'
+            ? `${item.quantidade.toFixed(0)} km`
+            : String(item.quantidade)
+      )
+      const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
+      return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
+    },
+  })
   const footIvaRows =
     ivContab.incluir && ivContab.iva > 0.0001
       ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${formatMoneyEUR(ivContab.liquido)}</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${formatMoneyEUR(ivContab.iva)}</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${formatMoneyEUR(total)}</td></tr>`
@@ -198,6 +191,6 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light only">
 <title>${escAttr(docTitle)}</title>
-<style>${CONTAB_PRINT_WINDOW_STYLES}</style>
+<style>${CONTAB_PRINT_WINDOW_STYLES}${FECHAMENTO_PDF_PRINT_CSS_GRUPOS}</style>
 </head><body>${dicaBlock}${btns}${preHidden}${headerHtml}${infoRel}${fiscalHtml}${tableHtml}${rodape}</body></html>`
 }

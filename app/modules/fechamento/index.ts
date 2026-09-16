@@ -102,6 +102,7 @@ export type {
   LabelsLinhaFechamentoFixa,
   BuildItensFechamentoParaExibirOpts,
   GrupoItensFechamentoExibir,
+  HtmlGruposFechamentoPdfOpts,
 } from './exibirItens'
 export {
   resolverQuantidadeLinhaFechamentoExibir,
@@ -110,6 +111,8 @@ export {
   codFallbackLinhaFechamentoFixa,
   agruparItensFechamentoPorCliente,
   filtrarOpcoesServicoLinhaFechamento,
+  FECHAMENTO_PDF_PRINT_CSS_GRUPOS,
+  htmlGruposFechamentoPdf,
 } from './exibirItens'
 
 export type { ComprovanteParaFechamentoMin } from './comprovantesMerge'
