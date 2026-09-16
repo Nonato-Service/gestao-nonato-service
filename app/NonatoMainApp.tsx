@@ -13635,7 +13635,7 @@ export default function Dashboard() {
           r.id === relatorioId ? { ...r, servicoConcluido: true } : r
         )
         setRelatoriosEspeciais(especiaisAtualizados)
-        await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisAtualizados, true, true)
+        await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisAtualizados, true, false)
       }
     }
 
@@ -15169,14 +15169,19 @@ export default function Dashboard() {
       }
 
       setRelatoriosEspeciais(listaLimpa)
-      const ok = await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true)
-      if (!ok) {
-        alert(
-          (safeT as any)?.relatorioEspecialErroSalvarServidor ||
-            (safeT as any)?.erroSalvar ||
-            'Não foi possível gravar no servidor. O relatório pode voltar a aparecer noutros aparelhos até sincronizar.'
-        )
-        return false
+      try {
+        // Guardar no aparelho já confirma; o Railway segue em segundo plano
+        // (awaitServer=true bloqueava a UI 45–180s com a lista inteira).
+        await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)
+      } catch (e) {
+        console.warn('[Nonato] Falha local ao guardar relatório especial:', e)
+        try {
+          localStorage.setItem(RELATORIOS_ESPECIAIS_STORAGE_KEY, JSON.stringify(listaLimpa))
+        } catch {
+          setRelatoriosEspeciais(prevSnapshot)
+          alert((safeT as any)?.erroSalvar || 'Erro ao guardar. Tente novamente.')
+          return false
+        }
       }
       return true
     } catch {

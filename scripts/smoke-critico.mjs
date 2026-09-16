@@ -2254,7 +2254,8 @@ try {
     idx.includes('chaveLocalDiaTrabalhoEspecial') &&
     idx.includes('FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM') &&
     idx.includes('rotuloLocalDiaTrabalhoEspecial') &&
-    idx.includes('rotuloEquipamentoDiaComClientesEspecial')
+    idx.includes('rotuloEquipamentoDiaComClientesEspecial') &&
+    idx.includes('coletarOpcoesLocalDiaEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
@@ -2403,7 +2404,8 @@ try {
     hub.includes('relatorioEspecialLocalDia') &&
     hub.includes('relatorioEspecialClienteInstalacao') &&
     hub.includes('clienteInstalacaoId') &&
-    hub.includes('relatorioEspecialInstalacaoSemDia')
+    hub.includes('relatorioEspecialInstalacaoSemDia') &&
+    hub.includes('relatorio-especial-local-eq')
   ) {
     ok('RelatorioEspecialHub: local do dia + cliente de instalação no armazém')
   } else {
@@ -2418,6 +2420,8 @@ try {
       'relatorioEspecialLocalDiaHerdar',
       'relatorioEspecialLocalArmazem',
       'relatorioEspecialLocalDiaHint',
+      'relatorioEspecialLocalOndeEquipamento',
+      'relatorioEspecialLocalOutroCliente',
       'relatorioEspecialInstalacaoSemDia',
     ]
     const missLocal = []
@@ -2429,6 +2433,17 @@ try {
     }
     if (missLocal.length) fail(`i18n local/instalação especial em falta: ${missLocal.join(', ')}`)
     else ok('i18n: local do dia e cliente de instalação nos 6 idiomas')
+  }
+  {
+    const nmaEsp = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+    if (
+      nmaEsp.includes('await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, false)') &&
+      !nmaEsp.includes('await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, listaLimpa, true, true)')
+    ) {
+      ok('guardar relatório especial confirma no aparelho (servidor em segundo plano)')
+    } else {
+      fail('guardar relatório especial ainda espera o servidor (awaitServer=true)')
+    }
   }
   {
     const relEq = fs.readFileSync(path.join(root, 'app/modules/equipamentos/relatorio.ts'), 'utf8')

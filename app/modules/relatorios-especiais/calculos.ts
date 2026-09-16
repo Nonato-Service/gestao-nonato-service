@@ -493,6 +493,117 @@ export function rotuloEquipamentoDiaComClientesEspecial(
   return curto
 }
 
+export type OpcaoLocalDiaEspecial = { value: string; label: string }
+
+type ClienteOpcaoLocalMin = { id?: string; nomeEmpresa?: string }
+
+type EquipamentoLocalDiaMin = {
+  uid?: string
+  equipamentoOrigem?: string
+  clienteExternoId?: string
+  clienteExternoNome?: string
+  clienteInstalacaoId?: string
+  clienteInstalacaoNome?: string
+}
+
+function addClienteOpcaoLocalDia(
+  out: OpcaoLocalDiaEspecial[],
+  seen: Set<string>,
+  id: string | undefined,
+  nome: string | undefined
+): void {
+  const cid = String(id || '').trim()
+  if (!cid || seen.has(cid)) return
+  seen.add(cid)
+  out.push({ value: `c:${cid}`, label: String(nome || '').trim() || cid })
+}
+
+/** Chips do dia: armazém/oficina + cliente do relatório + destinos do equipamento (instalação/externo). */
+export function coletarOpcoesLocalDiaEspecial(
+  form: {
+    clienteId?: string
+    cliente?: string
+    equipamentos?: EquipamentoLocalDiaMin[]
+  },
+  labels?: Record<string, string | undefined> | null
+): OpcaoLocalDiaEspecial[] {
+  const armazemLabel = String(labels?.relatorioEspecialLocalArmazem || '').trim() || 'Armazém / oficina'
+  const out: OpcaoLocalDiaEspecial[] = [{ value: 'armazem', label: armazemLabel }]
+  const seen = new Set<string>()
+  addClienteOpcaoLocalDia(out, seen, form.clienteId, form.cliente)
+  for (const eq of form.equipamentos || []) {
+    if (eq.equipamentoOrigem === 'armazem') {
+      addClienteOpcaoLocalDia(out, seen, eq.clienteInstalacaoId, eq.clienteInstalacaoNome)
+    }
+    if (eq.equipamentoOrigem === 'clientes-externos') {
+      addClienteOpcaoLocalDia(out, seen, eq.clienteExternoId, eq.clienteExternoNome)
+    }
+  }
+  return out
+}
+
+export function valorSelectLocalDiaEspecial(dia: {
+  localTrabalho?: string
+  clienteTrabalhoId?: string
+}): string {
+  if (dia.localTrabalho === 'cliente' && String(dia.clienteTrabalhoId || '').trim()) {
+    return `c:${String(dia.clienteTrabalhoId).trim()}`
+  }
+  if (dia.localTrabalho === 'armazem') return 'armazem'
+  return ''
+}
+
+export function patchLocalDiaEspecialDeValor(
+  value: string,
+  clientes: ClienteOpcaoLocalMin[],
+  nomeFallback?: string
+): {
+  localTrabalho: 'armazem' | 'cliente' | undefined
+  clienteTrabalhoId: string
+  clienteTrabalhoNome: string
+} {
+  const v = String(value || '').trim()
+  if (!v) {
+    return { localTrabalho: undefined, clienteTrabalhoId: '', clienteTrabalhoNome: '' }
+  }
+  if (v === 'armazem') {
+    return { localTrabalho: 'armazem', clienteTrabalhoId: '', clienteTrabalhoNome: '' }
+  }
+  const cid = v.startsWith('c:') ? v.slice(2) : v
+  const found = clientes.find((c) => String(c.id || '').trim() === cid)
+  return {
+    localTrabalho: 'cliente',
+    clienteTrabalhoId: cid,
+    clienteTrabalhoNome: String(found?.nomeEmpresa || nomeFallback || '').trim(),
+  }
+}
+
+export function sugerirLocalDiaDeEquipamentoEspecial(
+  eq: EquipamentoLocalDiaMin | undefined,
+  form: { clienteId?: string; cliente?: string }
+): ReturnType<typeof patchLocalDiaEspecialDeValor> | null {
+  if (!eq) return null
+  if (eq.equipamentoOrigem === 'armazem') {
+    return { localTrabalho: 'armazem', clienteTrabalhoId: '', clienteTrabalhoNome: '' }
+  }
+  if (eq.equipamentoOrigem === 'clientes-externos' && String(eq.clienteExternoId || '').trim()) {
+    return {
+      localTrabalho: 'cliente',
+      clienteTrabalhoId: String(eq.clienteExternoId).trim(),
+      clienteTrabalhoNome: String(eq.clienteExternoNome || '').trim(),
+    }
+  }
+  const pid = String(form.clienteId || '').trim()
+  if (eq.equipamentoOrigem === 'cliente' && pid) {
+    return {
+      localTrabalho: 'cliente',
+      clienteTrabalhoId: pid,
+      clienteTrabalhoNome: String(form.cliente || '').trim(),
+    }
+  }
+  return null
+}
+
 export type SessaoHorasEquipamentoEspecial = {
   equipamentoUid: string
   diaId: string
