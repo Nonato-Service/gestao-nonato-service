@@ -64,7 +64,9 @@ export function buildItensFechamentoParaExibirFromSalvos(
         ...item,
         ...saved,
         id: item.id,
-        quantidade: resolverQuantidadeLinhaFechamentoExibir(saved.quantidade, item.quantidade),
+        quantidade: String(item.grupoKey || '').trim()
+          ? item.quantidade
+          : resolverQuantidadeLinhaFechamentoExibir(saved.quantidade, item.quantidade),
         tipoCobranca: item.tipoCobranca,
         origem: saved.origem ?? item.origem,
         grupoKey: item.grupoKey ?? saved.grupoKey,

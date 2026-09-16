@@ -222,6 +222,14 @@ try {
   } else {
     fail('módulo fechamento sem buildItensFechamentoParaExibirFromSalvos / filtrarOpcoesServicoLinhaFechamento')
   }
+  {
+    const exibirItensSrc = fs.readFileSync(path.join(root, 'app/modules/fechamento/exibirItens.ts'), 'utf8')
+    if (exibirItensSrc.includes("String(item.grupoKey || '').trim()") && exibirItensSrc.includes('item.quantidade')) {
+      ok('fechamento: horas por cliente usam a quantidade actual do relatório')
+    } else {
+      fail('fechamento ainda pode ficar com horas antigas da Ferwood')
+    }
+  }
   if (
     idx.includes('RESUMO_COBRANCA_DECISAO_KEY') &&
     idx.includes('normalizeFechamentoItensOmitidosMap') &&
@@ -2476,6 +2484,7 @@ try {
   {
     const fechCli = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/fechamentoPorCliente.ts'), 'utf8')
     if (
+      fechCli.includes('fundirGrupoPrincipalNaOficinaFechamentoEspecial') &&
       fechCli.includes('tratarPrincipalComoOficina') &&
       fechCli.includes('ensureGrupo') &&
       fechCli.includes('calcularTotaisRelatorioEspecial') &&

@@ -41,6 +41,7 @@ import {
   normalizeRelatorioEspecialPdfSecoes,
   temAlgumaSecaoPdfEspecial,
   calcularTotaisFechamentoEspecialPorCliente,
+  aplicarVinculoClientesRelatorioEspecial,
   rotuloGrupoFechamentoEspecial,
   formatHorasGrupoFechamentoEspecial,
   type RelatorioEspecialPdfSecaoId,
@@ -205,6 +206,25 @@ function TabelaResumoPorClienteEspecial({
               <td>{g.diarias}</td>
             </tr>
           ))}
+          {grupos.length > 1 ? (
+            <tr>
+              <td>
+                <strong>{t.relatorioEspecialPdfTotalGeralLabel || t.relatorioEspecialTotalGeral || 'TOTAL'}</strong>
+              </td>
+              <td>
+                <strong>
+                  {formatHorasGrupoFechamentoEspecial(grupos.reduce((s, g) => s + g.ht, 0))}
+                </strong>
+              </td>
+              <td>
+                {formatHorasGrupoFechamentoEspecial(
+                  grupos.reduce((s, g) => s + g.hida + g.hret, 0)
+                )}
+              </td>
+              <td>{grupos.reduce((s, g) => s + g.km, 0)}</td>
+              <td>{grupos.reduce((s, g) => s + g.diarias, 0)}</td>
+            </tr>
+          ) : null}
         </tbody>
       </table>
     </div>
@@ -555,8 +575,14 @@ export default function RelatorioEspecialHub({
 
   const formComTotais = useMemo(() => aplicarTotaisNoRelatorioEspecial(form), [form])
   const gruposResumoPorCliente = useMemo(
-    () => calcularTotaisFechamentoEspecialPorCliente(formComTotais),
-    [formComTotais]
+    () =>
+      calcularTotaisFechamentoEspecialPorCliente(
+        aplicarVinculoClientesRelatorioEspecial(formComTotais, {
+          clientes,
+          equipamentosArmazem,
+        })
+      ),
+    [formComTotais, clientes, equipamentosArmazem]
   )
   const relatoriosOrdenados = useMemo(
     () => [...(relatorios || [])].sort((a, b) => String(b.data).localeCompare(String(a.data))),

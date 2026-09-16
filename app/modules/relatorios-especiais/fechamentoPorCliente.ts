@@ -189,6 +189,30 @@ function nomeClientePrincipal(r: RelatorioEspecial): string {
   return String(r.cliente || '').trim() || '—'
 }
 
+function fundirGrupoPrincipalNaOficinaFechamentoEspecial(
+  grupos: GrupoFechamentoEspecial[]
+): GrupoFechamentoEspecial[] {
+  const ixA = grupos.findIndex((g) => g.key === FECHAMENTO_ESPECIAL_GRUPO_ARMAZEM)
+  const ixP = grupos.findIndex((g) => g.key === FECHAMENTO_ESPECIAL_GRUPO_PRINCIPAL)
+  if (ixA < 0 || ixP < 0) return grupos
+  const a = grupos[ixA]
+  const p = grupos[ixP]
+  const equipamentos = [...a.equipamentos]
+  for (const e of p.equipamentos) {
+    if (!equipamentos.some((x) => x.uid === e.uid)) equipamentos.push(e)
+  }
+  const merged: GrupoFechamentoEspecial = {
+    ...a,
+    ht: a.ht + p.ht,
+    km: a.km + p.km,
+    diarias: a.diarias + p.diarias,
+    hida: a.hida + p.hida,
+    hret: a.hret + p.hret,
+    equipamentos,
+  }
+  return grupos.filter((_, i) => i !== ixA && i !== ixP).concat(merged)
+}
+
 export function listarGruposClienteFechamentoEspecial(r: RelatorioEspecial): GrupoFechamentoEspecial[] {
   const principalId = String(r.clienteId || '').trim()
   const principalNome = nomeClientePrincipal(r)
@@ -402,7 +426,9 @@ export function calcularTotaisFechamentoEspecialPorCliente(
     alvo.ht = Math.max(0, alvo.ht + diffHt)
   }
 
-  const converted = grupos.map((g) => ({
+  const unidos = fundirGrupoPrincipalNaOficinaFechamentoEspecial(grupos)
+
+  const converted = unidos.map((g) => ({
     ...g,
     ht: Math.round(g.ht) / 60,
     km: roundN(g.km, 2),
