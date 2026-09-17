@@ -113,6 +113,7 @@ export {
   filtrarOpcoesServicoLinhaFechamento,
   FECHAMENTO_PDF_PRINT_CSS_GRUPOS,
   htmlGruposFechamentoPdf,
+  deduplicarOpcoesServicoFechamento,
 } from './exibirItens'
 
 export type { ComprovanteParaFechamentoMin } from './comprovantesMerge'

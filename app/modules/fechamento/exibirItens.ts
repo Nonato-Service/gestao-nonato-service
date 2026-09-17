@@ -180,25 +180,41 @@ export function htmlGruposFechamentoPdf(
     .join('')
 }
 
-function servicoElegivelAnexarManualFechamento(s: ServicoCadastroFechamentoMin): boolean {
-  const cat = String(s?.categoria || '').trim().toLowerCase()
-  if (cat === 'despesa') return true
-  const tipo = String(s?.tipoCobranca || '').trim().toLowerCase()
-  return tipo === 'extras' || tipo === 'unidade' || tipo === 'valor-fixo'
+function chaveDedupOpcaoServicoFechamento(s: ServicoCadastroFechamentoMin): string {
+  const cod = String(s.cod || '').trim().toUpperCase()
+  const nome = String(s.nome || '').trim().toLowerCase()
+  const tipo = String(s.tipoCobranca || '').trim().toLowerCase()
+  const valor = String(s.valor ?? '')
+  if (cod) return `cod:${cod}|${tipo}|${valor}`
+  return `nome:${nome}|${tipo}|${valor}`
 }
 
-function unirOpcoesServicoFechamentoUnicas(
-  a: ServicoCadastroFechamentoMin[],
-  b: ServicoCadastroFechamentoMin[]
+/** Uma opção por código/valor no select (template colado duas vezes ou cópia de outro grupo). */
+export function deduplicarOpcoesServicoFechamento(
+  servicos: ServicoCadastroFechamentoMin[]
 ): ServicoCadastroFechamentoMin[] {
   const seen = new Set<string>()
   const out: ServicoCadastroFechamentoMin[] = []
-  for (const s of [...a, ...b]) {
-    if (!s || typeof s.id !== 'string' || !s.id || seen.has(s.id)) continue
-    seen.add(s.id)
+  for (const s of servicos || []) {
+    if (!s || typeof s.id !== 'string' || !s.id) continue
+    const k = chaveDedupOpcaoServicoFechamento(s)
+    if (seen.has(k)) continue
+    seen.add(k)
     out.push(s)
   }
   return out
+}
+
+function poolOpcoesServicoDoGrupo(
+  servicos: ServicoCadastroFechamentoMin[],
+  grupoId?: string | null
+): ServicoCadastroFechamentoMin[] {
+  const list = Array.isArray(servicos)
+    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
+    : []
+  const gid = String(grupoId || '').trim()
+  if (!gid) return list
+  return list.filter((s) => String(s.grupoId || '').trim() === gid)
 }
 
 /** Opções do select de serviço por linha do fechamento (filtro puro). */
@@ -207,29 +223,27 @@ export function filtrarOpcoesServicoLinhaFechamento(
   servicos: ServicoCadastroFechamentoMin[],
   grupoId?: string | null
 ): ServicoCadastroFechamentoMin[] {
-  const list = Array.isArray(servicos)
-    ? servicos.filter((s): s is ServicoCadastroFechamentoMin => !!s && typeof s === 'object')
-    : []
-  const pool = filtrarServicosCadastroPorGrupo(list, grupoId)
+  const pool = poolOpcoesServicoDoGrupo(servicos, grupoId)
   const txt = (s: ServicoCadastroFechamentoMin) =>
     ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
   const tipo = tipoLinhaFechamentoFixa(item.id)
+  let opts: ServicoCadastroFechamentoMin[]
   if (tipo === 'hida') {
-    return pool.filter(
+    opts = pool.filter(
       (s) => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s)))
     )
-  }
-  if (tipo === 'hret') {
-    return pool.filter(
+  } else if (tipo === 'hret') {
+    opts = pool.filter(
       (s) => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s)))
     )
+  } else if (item.tipoCobranca === 'hora') {
+    opts = pool.filter((s) => s.tipoCobranca === 'hora')
+  } else if (item.tipoCobranca === 'km') {
+    opts = pool.filter((s) => s.tipoCobranca === 'km')
+  } else if (item.tipoCobranca === 'diarias') {
+    opts = pool.filter((s) => s.tipoCobranca === 'diarias')
+  } else {
+    opts = pool
   }
-  if (item.tipoCobranca === 'hora') return pool.filter((s) => s.tipoCobranca === 'hora')
-  if (item.tipoCobranca === 'km') return pool.filter((s) => s.tipoCobranca === 'km')
-  if (item.tipoCobranca === 'diarias') return pool.filter((s) => s.tipoCobranca === 'diarias')
-  /** Linha manual / extras: grupo actual + despesas (unidade, extras, valor-fixo) de qualquer grupo. */
-  return unirOpcoesServicoFechamentoUnicas(
-    pool,
-    list.filter(servicoElegivelAnexarManualFechamento)
-  )
+  return deduplicarOpcoesServicoFechamento(opts)
 }

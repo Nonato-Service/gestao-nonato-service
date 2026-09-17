@@ -218,7 +218,8 @@ try {
     idx.includes('filtrarOpcoesServicoLinhaFechamento') &&
     idx.includes('resolverQuantidadeLinhaFechamentoExibir') &&
     idx.includes('htmlGruposFechamentoPdf') &&
-    idx.includes('FECHAMENTO_PDF_PRINT_CSS_GRUPOS')
+    idx.includes('FECHAMENTO_PDF_PRINT_CSS_GRUPOS') &&
+    idx.includes('deduplicarOpcoesServicoFechamento')
   ) {
     ok('módulo fechamento exporta exibirItens UI')
   } else {
@@ -232,12 +233,13 @@ try {
       fail('fechamento ainda pode ficar com horas antigas da Ferwood')
     }
     if (
-      exibirItensSrc.includes('servicoElegivelAnexarManualFechamento') &&
-      exibirItensSrc.includes('unirOpcoesServicoFechamentoUnicas')
+      exibirItensSrc.includes('deduplicarOpcoesServicoFechamento') &&
+      exibirItensSrc.includes('poolOpcoesServicoDoGrupo') &&
+      !exibirItensSrc.includes('list.filter(servicoElegivelAnexarManualFechamento)')
     ) {
-      ok('fechamento: anexar linha manual junta despesas de qualquer grupo')
+      ok('fechamento: anexar item usa só o grupo de tarifa sem repetidos')
     } else {
-      fail('fechamento ainda esconde itens novos do cadastro no select de despesas')
+      fail('fechamento ainda mistura cadastros de outros grupos no select de itens')
     }
   }
   if (
