@@ -77,6 +77,30 @@ export {
 } from './calculos'
 
 export type {
+  ClienteCadastroDiaEspecial,
+  OpcaoEquipamentoDiaEspecial,
+  ContextoSelectEquipamentoDiaEspecial,
+  ResultadoSelecaoEquipamentoDiaEspecial,
+} from './equipamentosDia'
+export {
+  PREFIXO_OPCAO_CADASTRO_DIA,
+  PREFIXO_OPCAO_ARMAZEM_DIA,
+  encodeOpcaoCadastroDiaEspecial,
+  parseOpcaoCadastroDiaEspecial,
+  encodeOpcaoArmazemDiaEspecial,
+  parseOpcaoArmazemDiaEspecial,
+  resolverClienteIdDoDiaEspecial,
+  origemEquipamentoParaClienteDia,
+  refPertenceAoClienteDiaEspecial,
+  refCobreCadastroClienteDia,
+  encontrarRefCadastroNoRelatorio,
+  aplicarCadastroClienteEmRefRelatorio,
+  aplicarArmazemEmRefRelatorio,
+  opcoesEquipamentoSelectDiaEspecial,
+  aplicarSelecaoEquipamentoDiaEspecial,
+} from './equipamentosDia'
+
+export type {
   FechamentoItemBaseEspecial,
   LabelsFechamentoEspecial,
   RelatorioEspecialFechamentoShape,

@@ -44,6 +44,8 @@ import {
   aplicarVinculoClientesRelatorioEspecial,
   rotuloGrupoFechamentoEspecial,
   formatHorasGrupoFechamentoEspecial,
+  opcoesEquipamentoSelectDiaEspecial,
+  aplicarSelecaoEquipamentoDiaEspecial,
   type RelatorioEspecialPdfSecaoId,
   type RelatorioEspecialPdfSecoes,
   type GrupoFechamentoEspecial,
@@ -837,40 +839,6 @@ export default function RelatorioEspecialHub({
       equipamentosArmazem,
     }),
     [clienteEquipamentos, equipamentosArmazem]
-  )
-
-  const opcoesSelectEquipamentoDia = useMemo(
-    () =>
-      (form.equipamentos || []).map((eq, ei) => {
-        const eqCliEq =
-          eq.equipamentoOrigem === 'clientes-externos'
-            ? equipamentosClienteParaSelectRelatorio(
-                clientes.find((c) => c.id === (eq.clienteExternoId || ''))?.equipamentos
-              )
-            : clienteEquipamentos
-        const eqLabel =
-          prepararEquipamentosRelatorioParaEdicao(
-            [eq],
-            eqCliEq,
-            equipamentosArmazem,
-            { clientePrincipalId: clienteIdEfetivo, clientes }
-          )[0] || eq
-        const curto = labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)
-        const comClientes = rotuloEquipamentoDiaComClientesEspecial(eqLabel, ei, {
-          clientePrincipalNome: form.cliente,
-          labelOpts: labelOptsCadastro,
-        })
-        return { uid: eq.uid, eq, label: comClientes || curto }
-      }),
-    [
-      form.equipamentos,
-      form.cliente,
-      clientes,
-      equipamentosArmazem,
-      clienteEquipamentos,
-      clienteIdEfetivo,
-      labelOptsCadastro,
-    ]
   )
 
   const abrirEditar = useCallback(
@@ -2726,6 +2694,14 @@ export default function RelatorioEspecialHub({
             Boolean(chaveDiariaCard) &&
             diasOrdenados.findIndex((d) => diaContaComoDiariaEspecial(d) === chaveDiariaCard) === diaIdx
           const contaDiariaCard = primeiraOcorrenciaData
+          const opcoesEqDia = opcoesEquipamentoSelectDiaEspecial({
+            dia,
+            equipamentosRelatorio: form.equipamentos || [],
+            clientes,
+            clientePrincipalId: clienteIdEfetivo,
+            clientePrincipalNome: form.cliente,
+            equipamentosArmazem,
+          })
           const resumoHoras = (diaCalc.horasPorEquipamento || [])
             .filter((h) => h.equipamentoUid && h.horasDuracao)
             .map((h) => {
@@ -2850,6 +2826,26 @@ export default function RelatorioEspecialHub({
                     </p>
                     {(dia.horasPorEquipamento || []).map((linha, li) => {
                       const linhaCalc = diaCalc.horasPorEquipamento?.[li] || linha
+                      const uidLinha = String(linha.equipamentoUid || '').trim()
+                      const eqLinha = uidLinha
+                        ? (form.equipamentos || []).find((e) => e.uid === uidLinha)
+                        : undefined
+                      const opcoesLinha =
+                        uidLinha && !opcoesEqDia.some((o) => o.value === uidLinha)
+                          ? [
+                              ...opcoesEqDia,
+                              {
+                                value: uidLinha,
+                                label: eqLinha
+                                  ? labelEquipamentoCurto(
+                                      eqLinha,
+                                      (form.equipamentos || []).indexOf(eqLinha),
+                                      labelOptsCadastro
+                                    )
+                                  : uidLinha,
+                              },
+                            ]
+                          : opcoesEqDia
                       return (
                         <div key={li} className="relatorio-especial-hora-eq-linha">
                           <div>
@@ -2858,13 +2854,37 @@ export default function RelatorioEspecialHub({
                               value={linha.equipamentoUid}
                               onChange={(e) => {
                                 const v = e.target.value
-                                if (v) {
+                                const resolved = aplicarSelecaoEquipamentoDiaEspecial(
+                                  v,
+                                  form.equipamentos || [],
+                                  {
+                                    clientes,
+                                    clientePrincipalId: clienteIdEfetivo,
+                                    equipamentosArmazem,
+                                    maxEquipamentos: MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES,
+                                    criarRef: (origem) => criarEquipamentoRelatorioVazio(origem),
+                                  }
+                                )
+                                if (!resolved.ok) {
+                                  if (resolved.motivo === 'max') {
+                                    alert(
+                                      t.relatorioEspecialMaxEquipamentosMes ||
+                                        `Máximo ${MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_MES} equipamentos por relatório (mês).`
+                                    )
+                                  }
+                                  return
+                                }
+                                const uidNovo = resolved.equipamentoUid
+                                if (uidNovo) {
                                   const uidsAtuais = new Set(
                                     (dia.horasPorEquipamento || [])
                                       .map((h, hi) => (hi === li ? '' : (h.equipamentoUid || '').trim()))
                                       .filter(Boolean)
                                   )
-                                  if (!uidsAtuais.has(v) && uidsAtuais.size >= MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA) {
+                                  if (
+                                    !uidsAtuais.has(uidNovo) &&
+                                    uidsAtuais.size >= MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA
+                                  ) {
                                     alert(
                                       t.relatorioEspecialMaxEquipamentosDia ||
                                         `Máximo ${MAX_EQUIPAMENTOS_RELATORIO_ESPECIAL_DIA} equipamentos diferentes por dia.`
@@ -2874,12 +2894,13 @@ export default function RelatorioEspecialHub({
                                 }
                                 setForm((prev) => ({
                                   ...prev,
+                                  equipamentos: resolved.equipamentos,
                                   diasTrabalho: prev.diasTrabalho!.map((d) =>
                                     d.id === dia.id
                                       ? atualizarCalculosDiaEspecial({
                                           ...d,
                                           horasPorEquipamento: (d.horasPorEquipamento || []).map((h, hi) =>
-                                            hi === li ? { ...h, equipamentoUid: v } : h
+                                            hi === li ? { ...h, equipamentoUid: uidNovo } : h
                                           ),
                                         })
                                       : d
@@ -2889,8 +2910,8 @@ export default function RelatorioEspecialHub({
                               style={inputStyle}
                             >
                               <option value="">—</option>
-                              {opcoesSelectEquipamentoDia.map((op) => (
-                                <option key={op.uid} value={op.uid}>
+                              {opcoesLinha.map((op) => (
+                                <option key={op.value} value={op.value}>
                                   {op.label}
                                 </option>
                               ))}

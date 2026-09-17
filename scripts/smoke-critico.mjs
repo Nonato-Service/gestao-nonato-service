@@ -2296,6 +2296,8 @@ try {
     idx.includes('rotuloLocalDiaTrabalhoEspecial') &&
     idx.includes('rotuloEquipamentoDiaComClientesEspecial') &&
     idx.includes('coletarOpcoesLocalDiaEspecial') &&
+    idx.includes('opcoesEquipamentoSelectDiaEspecial') &&
+    idx.includes('aplicarSelecaoEquipamentoDiaEspecial') &&
     idx.includes('formatHorasGrupoFechamentoEspecial')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
@@ -2303,6 +2305,31 @@ try {
     fail('módulo relatorios-especiais incompleto (index.ts)')
   }
   const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
+  {
+    const eqDia = exists('app/modules/relatorios-especiais/equipamentosDia.ts')
+      ? fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/equipamentosDia.ts'), 'utf8')
+      : ''
+    if (
+      eqDia.includes('opcoesEquipamentoSelectDiaEspecial') &&
+      eqDia.includes('equipamentosClienteParaSelectRelatorio') &&
+      eqDia.includes('PREFIXO_OPCAO_CADASTRO_DIA') &&
+      !eqDia.includes('Date.now()') &&
+      !eqDia.includes('Math.random')
+    ) {
+      ok('relatório especial: select do dia usa cadastro do cliente do local')
+    } else {
+      fail('select do dia do relatório especial ainda não lê o cadastro do cliente')
+    }
+    if (
+      hub.includes('opcoesEquipamentoSelectDiaEspecial') &&
+      hub.includes('aplicarSelecaoEquipamentoDiaEspecial') &&
+      !hub.includes('opcoesSelectEquipamentoDia')
+    ) {
+      ok('hub especial: horas do dia ligadas ao cadastro do local')
+    } else {
+      fail('hub especial ainda lista só equipamentos já no relatório')
+    }
+  }
   const reTipos = fs.readFileSync(path.join(root, 'app/modules/relatorios-especiais/tipos.ts'), 'utf8')
   const libReTypes = exists('app/lib/relatorioEspecialTypes.ts')
     ? fs.readFileSync(path.join(root, 'app/lib/relatorioEspecialTypes.ts'), 'utf8')
@@ -2435,7 +2462,8 @@ try {
     hub.includes('prepararEquipamentosRelatorioParaEdicao') &&
     hub.includes('relatorioEspecialHoraTrabalhada') &&
     hub.includes('horasPorEquipamento') &&
-    hub.includes('labelEquipamentoCurto(eqLabel, ei, labelOptsCadastro)')
+    hub.includes('opcoesEquipamentoSelectDiaEspecial') &&
+    hub.includes('aplicarSelecaoEquipamentoDiaEspecial')
   ) {
     ok('RelatorioEspecialHub: select Hora trabalhada enriquece série do cadastro')
   } else {
