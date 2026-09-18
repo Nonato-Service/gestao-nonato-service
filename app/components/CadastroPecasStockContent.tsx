@@ -231,118 +231,251 @@ export function CadastroPecasStockContent({
     reader.readAsDataURL(file)
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 12px',
-    background: '#1a1a1a',
-    color: '#fff',
-    border: '1px solid rgba(0, 200, 83, 0.35)',
-    borderRadius: 8,
-    fontSize: 14,
-    boxSizing: 'border-box',
-  }
   const tabClass = (id: AbaStock) =>
-    'cadastro-valores-v2__tab' + (aba === id ? ' cadastro-valores-v2__tab--active' : '')
+    id === 'categorias'
+      ? `biblioteca-hub-tab biblioteca-hub-tab--purple${aba === id ? ' biblioteca-hub-tab--active' : ''}`
+      : `biblioteca-hub-tab${aba === id ? ' biblioteca-hub-tab--active' : ''}`
+
+  const pecasComFoto = pecas.filter((p) => Boolean(String(p.imagem || '').trim())).length
+  const pecasSemFoto = pecas.length - pecasComFoto
 
   return (
-    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
-      <div className="cadastro-valores-v2__hero">
-        <div className="cadastro-valores-v2__hero-row">
-          <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>{logoSlot}</div>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 className="cadastro-valores-v2__hero-title">
-              {tr(safeT, 'cadastroPecasStockTitle', 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK')}
-            </h1>
-            <p className="cadastro-valores-v2__hero-meta">
-              {pecas.length} {tr(safeT, 'quantidadePecas', 'peça(s)')} · {categorias.length}{' '}
-              {tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
-            </p>
-            <p className="cadastro-valores-v2__hero-meta" style={{ marginTop: 6 }}>
-              {tr(
-                safeT,
-                'cadastroPecasStockHint',
-                'Só cadastro manual das peças que tem em stock. Sem importação. A biblioteca continua no outro botão.'
-              )}
-            </p>
+    <div className="tab-content-wrapper tab-glass-root biblioteca-pecas-hub ns-ui-v2" style={{ overflow: 'visible' }}>
+      <div className="biblioteca-pecas-hub__hero-ring">
+        <div className="tab-glass-hero tab-glass-hero--compact biblioteca-pecas-hub__hero">
+          <div className="biblioteca-pecas-hub__hero-top">
+            <div className="biblioteca-pecas-hub__hero-brand">
+              <div className="biblioteca-pecas-hub__hero-logo" aria-hidden="true">
+                {logoSlot}
+              </div>
+              <div className="biblioteca-pecas-hub__hero-head">
+                <p className="biblioteca-pecas-hub__eyebrow biblioteca-pecas-hub__hero-eyebrow">
+                  {tr(safeT, 'cadastroPecasStockDesc', 'Peças existentes no meu stock')}
+                </p>
+                <h1 className="biblioteca-pecas-hub__hero-title">
+                  {tr(safeT, 'cadastroPecasStockTitle', 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK')}
+                </h1>
+                <p className="biblioteca-pecas-hub__hero-tagline">
+                  {tr(
+                    safeT,
+                    'cadastroPecasStockHint',
+                    'Só cadastro manual das peças que tem em stock. A biblioteca continua no outro botão.'
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="biblioteca-pecas-hub__hero-actions">
+              <button
+                type="button"
+                className="biblioteca-btn--green"
+                onClick={() => {
+                  setAba('cadastro')
+                  abrirNova()
+                }}
+              >
+                {tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
+              </button>
+              <button
+                type="button"
+                className="biblioteca-btn--purple"
+                onClick={() => setAba('categorias')}
+              >
+                {tr(safeT, 'gerenciarCategorias', 'Gerenciar Categorias')}
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="biblioteca-pecas-hub__hero-kpis"
+            aria-label={tr(safeT, 'bibliotecaVisaoGeral', 'Visão geral')}
+          >
+            <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--pecas">
+              <span className="biblioteca-pecas-hub__kpi-label">
+                {tr(safeT, 'quantidadePecas', 'Peças no catálogo')}
+              </span>
+              <span className="biblioteca-pecas-hub__kpi-value">{pecas.length}</span>
+            </div>
+            <div className="biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--cats">
+              <span className="biblioteca-pecas-hub__kpi-label">
+                {tr(safeT, 'quantidadeCategorias', 'Categorias')}
+              </span>
+              <span className="biblioteca-pecas-hub__kpi-value">{categorias.length}</span>
+            </div>
+            <div
+              className={`biblioteca-pecas-hub__kpi-card biblioteca-pecas-hub__kpi-card--foto${pecasSemFoto > 0 ? ' biblioteca-pecas-hub__kpi-card--warn' : ''}`}
+            >
+              <span className="biblioteca-pecas-hub__kpi-label">
+                {pecasSemFoto > 0
+                  ? tr(safeT, 'bibliotecaHeroKpiSemFoto', 'Sem foto')
+                  : tr(safeT, 'bibliotecaHeroKpiComFoto', 'Com foto')}
+              </span>
+              <span className="biblioteca-pecas-hub__kpi-value">
+                {pecasSemFoto > 0 ? pecasSemFoto : pecasComFoto}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="tab-nav-desktop cadastro-valores-v2__tabs">
-        <button type="button" className={tabClass('cadastro')} onClick={() => setAba('cadastro')}>
-          {tr(safeT, 'cadastroPecas', 'Cadastro de Peças')}
-        </button>
-        <button type="button" className={tabClass('categorias')} onClick={() => setAba('categorias')}>
-          {tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
-        </button>
+      <div className="biblioteca-hub-nav biblioteca-hub-nav--v2">
+        <div
+          role="tablist"
+          className="biblioteca-hub-tablist biblioteca-hub-tablist--primary"
+          aria-label={tr(safeT, 'cadastroPecasStockTitle', 'Cadastro de peças do stock')}
+        >
+          <button
+            type="button"
+            role="tab"
+            className={tabClass('cadastro')}
+            aria-selected={aba === 'cadastro'}
+            title={tr(safeT, 'cadastroPecas', 'Cadastro de Peças')}
+            onClick={() => setAba('cadastro')}
+          >
+            <span className="biblioteca-hub-tab__inner">
+              <span className="biblioteca-hub-tab__icon" aria-hidden>
+                📝
+              </span>
+              <span className="biblioteca-hub-tab__label">{tr(safeT, 'cadastroPecas', 'Cadastro de Peças')}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={tabClass('categorias')}
+            aria-selected={aba === 'categorias'}
+            title={tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
+            onClick={() => setAba('categorias')}
+          >
+            <span className="biblioteca-hub-tab__inner">
+              <span className="biblioteca-hub-tab__icon" aria-hidden>
+                📁
+              </span>
+              <span className="biblioteca-hub-tab__label">
+                {tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
+              </span>
+            </span>
+          </button>
+        </div>
       </div>
 
       {aba === 'cadastro' ? (
         <>
-          <div className="cadastro-valores-v2__grupos-bar-head" style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button type="button" className="btn-primary" onClick={abrirNova}>
-              {tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
-            </button>
+          <p
+            style={{
+              margin: '0 0 16px',
+              fontSize: '13px',
+              color: 'rgba(190, 255, 210, 0.95)',
+              lineHeight: 1.55,
+            }}
+          >
+            {tr(
+              safeT,
+              'cadastroPecasStockHint',
+              'Cadastre ou edite aqui as peças que tem em stock. A biblioteca continua no outro botão.'
+            )}
+          </p>
+
+          <button type="button" className="btn-primary" onClick={abrirNova} style={{ marginBottom: 20 }}>
+            {tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
+          </button>
+
+          <div className="biblioteca-pecas-form__field" style={{ maxWidth: 420, marginBottom: 18 }}>
+            <label className="biblioteca-pecas-form__label" htmlFor="stock-pecas-busca">
+              {tr(safeT, 'cadastroPecasStockBusca', 'Procurar peça, código ou categoria')}
+            </label>
             <input
+              id="stock-pecas-busca"
               type="search"
+              className="biblioteca-pecas-form__input"
               value={busca}
               onChange={(e) => {
                 setBusca(e.target.value)
                 setListaLimite(LISTA_UI_LOTE)
               }}
               placeholder={tr(safeT, 'cadastroPecasStockBusca', 'Procurar peça, código ou categoria')}
-              style={{ ...inputStyle, maxWidth: 360 }}
             />
           </div>
 
           {showForm ? (
-            <div className="biblioteca-pecas-form" style={{ marginBottom: 20, padding: 18, background: '#2a2a2a', border: '1px solid #00ff00', borderRadius: 12 }}>
-              <h3 style={{ margin: '0 0 14px', color: '#00ff00' }}>
+            <div className="biblioteca-pecas-form">
+              <h3 className="biblioteca-pecas-form__title">
                 {editing
                   ? tr(safeT, 'editPecaBiblioteca', 'Editar Peça')
                   : tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
               </h3>
-              {erro ? <p style={{ color: '#ff6b6b', margin: '0 0 12px' }}>{erro}</p> : null}
+              {erro ? (
+                <p style={{ color: '#ff9a9a', margin: '0 0 12px', fontSize: 13 }}>{erro}</p>
+              ) : null}
 
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
-                <label className="biblioteca-pecas-form__label">{tr(safeT, 'imagemPecaBiblioteca', 'Imagem')}</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onFoto(e.target.files?.[0])}
-                  style={{ display: 'block', margin: '8px 0', color: '#ccc' }}
-                />
-                {form.imagem ? (
-                  <div>
-                    <img src={form.imagem} alt="" style={{ maxHeight: 120, borderRadius: 8, display: 'block', marginBottom: 8 }} />
-                    <button type="button" className="btn-danger" onClick={() => setForm((p) => ({ ...p, imagem: '' }))}>
-                      {tr(safeT, 'removeEquipamentoPhoto', 'Remover Imagem')}
-                    </button>
+              <label
+                className="file-upload-label biblioteca-pecas-form__label"
+                htmlFor="peca-stock-image-upload"
+                style={{ marginBottom: 10 }}
+              >
+                {tr(safeT, 'imagemPecaBiblioteca', 'Imagem da Peça')}
+              </label>
+              <input
+                id="peca-stock-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => onFoto(e.target.files?.[0])}
+                style={{ display: 'none' }}
+              />
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => document.getElementById('peca-stock-image-upload')?.click()}
+                style={{ marginBottom: 10, padding: '8px 15px', fontSize: 13 }}
+              >
+                {tr(safeT, 'selectPhoto', 'Selecionar Foto')}
+              </button>
+              {form.imagem ? (
+                <div className="biblioteca-pecas-form__preview-wrap">
+                  <div className="biblioteca-pecas-form__preview-frame">
+                    <img
+                      src={form.imagem}
+                      alt={tr(safeT, 'imagemPecaBiblioteca', 'Imagem da Peça')}
+                      style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }}
+                    />
                   </div>
-                ) : null}
-              </div>
+                  <button
+                    type="button"
+                    className="btn-danger"
+                    onClick={() => setForm((p) => ({ ...p, imagem: '' }))}
+                    style={{ display: 'block', margin: 'auto', padding: '5px 10px', fontSize: 12 }}
+                  >
+                    {tr(safeT, 'removeEquipamentoPhoto', 'Remover Imagem')}
+                  </button>
+                </div>
+              ) : null}
 
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
+              <div className="biblioteca-pecas-form__field">
                 <label className="biblioteca-pecas-form__label">
-                  {tr(safeT, 'nomePecaBiblioteca', 'Nome')} *
+                  {tr(safeT, 'nomePecaBiblioteca', 'Nome')}{' '}
+                  <span className="biblioteca-pecas-form__required">*</span>
                 </label>
                 <input
-                  style={inputStyle}
+                  type="text"
+                  className="biblioteca-pecas-form__input"
+                  placeholder={tr(safeT, 'nomePecaBiblioteca', 'Nome')}
                   value={form.nome}
                   onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
                 />
               </div>
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
+              <div className="biblioteca-pecas-form__field">
                 <label className="biblioteca-pecas-form__label">
-                  {tr(safeT, 'codigoPecaBiblioteca', 'Código')} *
+                  {tr(safeT, 'codigoPecaBiblioteca', 'Código')}{' '}
+                  <span className="biblioteca-pecas-form__required">*</span>
                 </label>
                 <input
-                  style={inputStyle}
+                  type="text"
+                  className="biblioteca-pecas-form__input"
+                  placeholder={tr(safeT, 'codigoPecaBiblioteca', 'Código')}
                   value={form.codigo}
                   onChange={(e) => setForm((p) => ({ ...p, codigo: e.target.value }))}
                 />
               </div>
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
+              <div className="biblioteca-pecas-form__field">
                 <label className="biblioteca-pecas-form__label">
                   {tr(safeT, 'cadastroPecasStockQtd', 'Quantidade em stock')}
                 </label>
@@ -350,35 +483,43 @@ export function CadastroPecasStockContent({
                   type="number"
                   min="0"
                   step="1"
-                  style={inputStyle}
+                  className="biblioteca-pecas-form__input"
                   value={qtdTexto}
                   onChange={(e) => setQtdTexto(e.target.value)}
                 />
               </div>
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
-                <label className="biblioteca-pecas-form__label">{tr(safeT, 'precoPecaBiblioteca', 'Preço (€)')}</label>
+              <div className="biblioteca-pecas-form__field">
+                <label className="biblioteca-pecas-form__label">
+                  {tr(safeT, 'precoPecaBiblioteca', 'Preço (€)')}
+                </label>
                 <input
                   type="number"
                   step="0.01"
-                  style={inputStyle}
+                  className="biblioteca-pecas-form__input"
+                  placeholder={tr(safeT, 'precoPecaBiblioteca', 'Preço (€)')}
                   value={form.preco || ''}
                   onChange={(e) => setForm((p) => ({ ...p, preco: e.target.value }))}
                 />
               </div>
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
-                <label className="biblioteca-pecas-form__label">{tr(safeT, 'descricaoPecaBiblioteca', 'Descrição')}</label>
+              <div className="biblioteca-pecas-form__field">
+                <label className="biblioteca-pecas-form__label">
+                  {tr(safeT, 'descricaoPecaBiblioteca', 'Descrição')}
+                </label>
                 <AssistTextarea
                   className="biblioteca-pecas-form__textarea"
+                  placeholder={tr(safeT, 'descricaoPecaBiblioteca', 'Descrição')}
                   value={form.descricao ?? ''}
                   onValueChange={(v) => setForm((p) => ({ ...p, descricao: v }))}
                   rows={4}
-                  style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }}
+                  style={{ resize: 'vertical' }}
                 />
               </div>
-              <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
-                <label className="biblioteca-pecas-form__label">{tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}</label>
+              <div className="biblioteca-pecas-form__field">
+                <label className="biblioteca-pecas-form__label">
+                  {tr(safeT, 'categoriaPecaBiblioteca', 'Grupo')}
+                </label>
                 <select
-                  style={inputStyle}
+                  className="biblioteca-pecas-form__input"
                   value={form.categoriaId || ''}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, categoriaId: e.target.value, subcategoriaId: '', subcategoria: '' }))
@@ -393,12 +534,12 @@ export function CadastroPecasStockContent({
                 </select>
               </div>
               {form.categoriaId ? (
-                <div className="biblioteca-pecas-form__field" style={{ marginBottom: 12 }}>
+                <div className="biblioteca-pecas-form__field">
                   <label className="biblioteca-pecas-form__label">
-                    {tr(safeT, 'cadastroPecasStockNovaSub', 'Subcategoria')}
+                    {tr(safeT, 'subcategoriaPecaBiblioteca', 'Subcategoria')}
                   </label>
                   <select
-                    style={inputStyle}
+                    className="biblioteca-pecas-form__input"
                     value={form.subcategoriaId || ''}
                     onChange={(e) => setForm((p) => ({ ...p, subcategoriaId: e.target.value }))}
                   >
@@ -412,11 +553,15 @@ export function CadastroPecasStockContent({
                 </div>
               ) : null}
 
-              <div className="cadastro-valores-v2__form-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button type="button" className="btn-primary" onClick={() => void guardar()}>
-                  {tr(safeT, 'cadastroPecasStockGuardar', 'Guardar peça')}
+              <div className="biblioteca-pecas-form__actions">
+                <button
+                  type="button"
+                  className="btn-primary biblioteca-pecas-form__save-btn"
+                  onClick={() => void guardar()}
+                >
+                  {tr(safeT, 'save', 'Salvar')}
                 </button>
-                <button type="button" className="btn-primary" onClick={fecharForm}>
+                <button type="button" className="btn-secondary" onClick={fecharForm}>
                   {tr(safeT, 'cancel', 'Cancelar')}
                 </button>
               </div>
@@ -424,60 +569,94 @@ export function CadastroPecasStockContent({
           ) : null}
 
           {visiveis.length === 0 ? (
-            <p style={{ color: '#888' }}>
+            <p className="biblioteca-pecas-hub__grupos-empty">
               {tr(safeT, 'cadastroPecasStockVazio', 'Ainda não há peças neste stock.')}
             </p>
           ) : (
-            <div style={{ display: 'grid', gap: 10 }}>
-              {visiveis.map((peca) => {
-                const cat = categorias.find((c) => c.id === peca.categoriaId)?.nome || peca.categoria || ''
-                return (
-                  <div
-                    key={peca.id}
-                    style={{
-                      background: '#2a2a2a',
-                      border: '1px solid #00ff00',
-                      borderRadius: 10,
-                      padding: 12,
-                      display: 'flex',
-                      gap: 12,
-                      alignItems: 'center',
-                    }}
-                  >
-                    {peca.imagem ? (
-                      <img src={peca.imagem} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8 }} />
-                    ) : (
-                      <div
-                        style={{
-                          width: 56,
-                          height: 56,
-                          borderRadius: 8,
-                          background: '#1a1a1a',
-                          border: '1px solid #444',
-                        }}
-                      />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: '#fff', fontWeight: 700 }}>{peca.nome}</div>
-                      <div style={{ color: '#9f9', fontSize: 13 }}>{peca.codigo}</div>
-                      <div style={{ color: '#aaa', fontSize: 12 }}>
-                        {cat}
-                        {peca.quantidade != null ? ` · ${tr(safeT, 'cadastroPecasStockQtd', 'Qtd.')}: ${peca.quantidade}` : ''}
-                      </div>
-                    </div>
-                    <div className="cadastro-valores-v2__form-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                      <button type="button" className="btn-primary cadastro-valores-v2__btn-sm" onClick={() => abrirEditar(peca)}>
-                        {tr(safeT, 'cadastroPecasStockEditar', 'Editar')}
-                      </button>
-                      <button type="button" className="btn-danger cadastro-valores-v2__btn-sm" onClick={() => void apagar(peca)}>
-                        {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="biblioteca-pecas-hub__catalog-table-wrap">
+              <table className="biblioteca-pecas-hub__catalog-table" style={{ minWidth: 760 }}>
+                <thead>
+                  <tr>
+                    <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--thumb">
+                      {tr(safeT, 'fotoColunaBiblioteca', 'Foto')}
+                    </th>
+                    <th className="biblioteca-pecas-hub__catalog-th">{tr(safeT, 'nome', 'Nome')}</th>
+                    <th className="biblioteca-pecas-hub__catalog-th">
+                      {tr(safeT, 'codigoPecaBiblioteca', 'Código')}
+                    </th>
+                    <th className="biblioteca-pecas-hub__catalog-th">
+                      {tr(safeT, 'categoriaPecaBiblioteca', 'Grupo')}
+                    </th>
+                    <th className="biblioteca-pecas-hub__catalog-th">
+                      {tr(safeT, 'cadastroPecasStockQtd', 'Qtd.')}
+                    </th>
+                    <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right">
+                      {tr(safeT, 'preco', 'Preço')}
+                    </th>
+                    <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {visiveis.map((peca, idx) => {
+                    const cat = categorias.find((c) => c.id === peca.categoriaId)?.nome || peca.categoria || ''
+                    const temFoto = Boolean(String(peca.imagem || '').trim())
+                    return (
+                      <tr
+                        key={peca.id}
+                        className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}`}
+                      >
+                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb">
+                          {temFoto ? (
+                            <img
+                              src={peca.imagem}
+                              alt=""
+                              className="biblioteca-pecas-hub__catalog-img"
+                            />
+                          ) : (
+                            <span className="biblioteca-pecas-hub__catalog-img biblioteca-pecas-hub__catalog-img--padrao" />
+                          )}
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--name">
+                          {peca.nome}
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td">{peca.codigo}</td>
+                        <td className="biblioteca-pecas-hub__catalog-td">{cat || '—'}</td>
+                        <td className="biblioteca-pecas-hub__catalog-td">
+                          {peca.quantidade != null ? peca.quantidade : '—'}
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price">
+                          {peca.preco || '—'}
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--actions">
+                          <div className="biblioteca-pecas-hub__catalog-actions">
+                            <button
+                              type="button"
+                              className="btn-primary biblioteca-pecas-hub__catalog-btn"
+                              onClick={() => abrirEditar(peca)}
+                            >
+                              {tr(safeT, 'cadastroPecasStockEditar', 'Editar')}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-danger biblioteca-pecas-hub__catalog-btn"
+                              onClick={() => void apagar(peca)}
+                            >
+                              {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
               {filtradas.length > visiveis.length ? (
-                <button type="button" className="btn-primary" onClick={() => setListaLimite((n) => n + LISTA_UI_LOTE)}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ margin: 12 }}
+                  onClick={() => setListaLimite((n) => n + LISTA_UI_LOTE)}
+                >
                   {tr(safeT, 'mostrarMais', 'Mostrar mais')} ({filtradas.length - visiveis.length})
                 </button>
               ) : null}
@@ -485,34 +664,68 @@ export function CadastroPecasStockContent({
           )}
         </>
       ) : (
-        <div style={{ display: 'grid', gap: 18 }}>
-          <div style={{ background: '#2a2a2a', border: '1px solid #00ff00', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ margin: '0 0 10px', color: '#00ff00' }}>
-              {tr(safeT, 'cadastroPecasStockNovaCategoria', 'Nova categoria')}
-            </h3>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <input style={{ ...inputStyle, maxWidth: 320 }} value={novaCat} onChange={(e) => setNovaCat(e.target.value)} />
-              <button type="button" className="btn-primary" onClick={() => void addCategoria()}>
-                {tr(safeT, 'cadastroPecasStockNovaCategoria', 'Nova categoria')}
-              </button>
-            </div>
-            <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
-              {categorias.map((c) => (
-                <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#fff' }}>
-                  <span>{c.nome}</span>
-                  <button type="button" className="btn-danger cadastro-valores-v2__btn-sm" onClick={() => void apagarCategoria(c.id)}>
-                    {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
-                  </button>
-                </div>
-              ))}
+        <div className="biblioteca-pecas-hub__grupos-panel">
+          <div className="biblioteca-pecas-hub__grupos-header">
+            <div>
+              <h3 className="biblioteca-pecas-hub__grupos-title">
+                {tr(safeT, 'gerenciarCategorias', 'Gerenciar Categorias e Subcategorias')}
+              </h3>
+              <p className="biblioteca-pecas-hub__grupos-meta">
+                {categorias.length} {tr(safeT, 'quantidadeCategorias', 'Categorias')} · {subcategorias.length}{' '}
+                {tr(safeT, 'quantidadeSubcategorias', 'Subcategorias')}
+              </p>
             </div>
           </div>
-          <div style={{ background: '#2a2a2a', border: '1px solid #00ff00', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ margin: '0 0 10px', color: '#00ff00' }}>
+
+          <div className="biblioteca-pecas-hub__grupo-card">
+            <h4 className="biblioteca-pecas-form__title">
+              {tr(safeT, 'cadastroPecasStockNovaCategoria', 'Nova categoria')}
+            </h4>
+            <div className="biblioteca-pecas-form__field" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <input
+                className="biblioteca-pecas-form__input"
+                style={{ maxWidth: 320 }}
+                value={novaCat}
+                onChange={(e) => setNovaCat(e.target.value)}
+                placeholder={tr(safeT, 'nomeCategoria', 'Nome da categoria')}
+              />
+              <button type="button" className="btn-primary" onClick={() => void addCategoria()}>
+                + {tr(safeT, 'novaCategoria', 'Nova Categoria')}
+              </button>
+            </div>
+            {categorias.length === 0 ? (
+              <div className="biblioteca-pecas-hub__grupos-empty">
+                {tr(safeT, 'nenhumaCategoria', 'Nenhuma categoria cadastrada.')}
+              </div>
+            ) : (
+              <div className="biblioteca-pecas-hub__grupo-list">
+                {categorias.map((c, idx) => (
+                  <div
+                    key={c.id}
+                    className={`biblioteca-pecas-hub__grupo-card${idx % 2 === 0 ? ' biblioteca-pecas-hub__grupo-card--a' : ' biblioteca-pecas-hub__grupo-card--b'}`}
+                    style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}
+                  >
+                    <span>{c.nome}</span>
+                    <button type="button" className="btn-danger" onClick={() => void apagarCategoria(c.id)}>
+                      {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="biblioteca-pecas-hub__grupo-card" style={{ marginTop: 16 }}>
+            <h4 className="biblioteca-pecas-form__title">
               {tr(safeT, 'cadastroPecasStockNovaSub', 'Nova subcategoria')}
-            </h3>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <select style={{ ...inputStyle, maxWidth: 220 }} value={catSubId} onChange={(e) => setCatSubId(e.target.value)}>
+            </h4>
+            <div className="biblioteca-pecas-form__field" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <select
+                className="biblioteca-pecas-form__input"
+                style={{ maxWidth: 220 }}
+                value={catSubId}
+                onChange={(e) => setCatSubId(e.target.value)}
+              >
                 <option value="">{tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}</option>
                 {categorias.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -520,14 +733,20 @@ export function CadastroPecasStockContent({
                   </option>
                 ))}
               </select>
-              <input style={{ ...inputStyle, maxWidth: 280 }} value={novaSub} onChange={(e) => setNovaSub(e.target.value)} />
+              <input
+                className="biblioteca-pecas-form__input"
+                style={{ maxWidth: 280 }}
+                value={novaSub}
+                onChange={(e) => setNovaSub(e.target.value)}
+                placeholder={tr(safeT, 'nomeSubcategoria', 'Nome da subcategoria')}
+              />
               <button type="button" className="btn-primary" onClick={() => void addSub()}>
-                {tr(safeT, 'cadastroPecasStockNovaSub', 'Nova subcategoria')}
+                + {tr(safeT, 'novaSubcategoria', 'Nova subcategoria')}
               </button>
             </div>
-            <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
+            <div className="biblioteca-pecas-hub__grupo-list" style={{ marginTop: 12 }}>
               {subcategorias.map((s) => (
-                <div key={s.id} style={{ color: '#ccc', fontSize: 13 }}>
+                <div key={s.id} className="biblioteca-pecas-hub__grupos-meta">
                   {categorias.find((c) => c.id === s.categoriaId)?.nome || '—'} → {s.nome}
                 </div>
               ))}
