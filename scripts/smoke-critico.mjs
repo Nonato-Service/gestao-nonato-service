@@ -1210,6 +1210,8 @@ try {
   const mergeStock = fs.readFileSync(path.join(root, 'app/modules/sidebar/merge.ts'), 'utf8')
   if (
     stockSrc.includes('PECAS_STOCK_STORAGE_KEY') &&
+    stockSrc.includes("aba === 'biblioteca'") &&
+    stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
     stockKeys.includes('nonato-pecas-stock') &&

@@ -7,10 +7,14 @@ import {
   isCategoriaPecaFormValid,
   isPecaBibliotecaFormValid,
   isSubcategoriaPecaFormValid,
+  pecaBibliotecaSrcCapaDisplay,
+  pecaBibliotecaTemCapaOuFotoVisivel,
   type CategoriaPeca,
   type PecaBiblioteca,
   type SubcategoriaPeca,
 } from '../modules/biblioteca'
+import { BibliotecaPecasGaleriaCategorias } from './BibliotecaPecasGaleriaCategorias'
+import { BibliotecaPrecoOlhoToggle } from './BibliotecaPrecoOlhoToggle'
 import {
   PECAS_STOCK_STORAGE_KEY,
   CATEGORIAS_PECAS_STOCK_STORAGE_KEY,
@@ -34,7 +38,7 @@ type Props = {
   loadData: (key: string) => Promise<unknown>
 }
 
-type AbaStock = 'cadastro' | 'categorias'
+type AbaStock = 'cadastro' | 'biblioteca' | 'categorias'
 
 function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : []
@@ -69,6 +73,9 @@ export function CadastroPecasStockContent({
   const [novaSub, setNovaSub] = useState('')
   const [catSubId, setCatSubId] = useState('')
   const [listaLimite, setListaLimite] = useState(LISTA_UI_LOTE)
+  const [galeriaCategoriaId, setGaleriaCategoriaId] = useState<string | null>(null)
+  const [buscaGaleria, setBuscaGaleria] = useState('')
+  const [mostrarPrecos, setMostrarPrecos] = useState(false)
 
   const persistPecas = useCallback(
     async (next: PecaBiblioteca[]) => {
@@ -341,6 +348,24 @@ export function CadastroPecasStockContent({
           <button
             type="button"
             role="tab"
+            className={tabClass('biblioteca')}
+            aria-selected={aba === 'biblioteca'}
+            title={tr(safeT, 'bibliotecaPecas', 'Biblioteca')}
+            onClick={() => {
+              setGaleriaCategoriaId(null)
+              setAba('biblioteca')
+            }}
+          >
+            <span className="biblioteca-hub-tab__inner">
+              <span className="biblioteca-hub-tab__icon" aria-hidden>
+                📚
+              </span>
+              <span className="biblioteca-hub-tab__label">{tr(safeT, 'bibliotecaPecas', 'Biblioteca')}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            role="tab"
             className={tabClass('categorias')}
             aria-selected={aba === 'categorias'}
             title={tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
@@ -370,8 +395,8 @@ export function CadastroPecasStockContent({
           >
             {tr(
               safeT,
-              'cadastroPecasStockHint',
-              'Cadastre ou edite aqui as peças que tem em stock. A biblioteca continua no outro botão.'
+              'bibliotecaCadastroSomenteHint',
+              'Cadastre ou edite peças aqui. Consulte o catálogo visual na aba Biblioteca.'
             )}
           </p>
 
@@ -662,6 +687,88 @@ export function CadastroPecasStockContent({
               ) : null}
             </div>
           )}
+        </>
+      ) : aba === 'biblioteca' ? (
+        <>
+          <p
+            style={{
+              margin: '0 0 16px',
+              fontSize: '13px',
+              color: 'rgba(190, 255, 210, 0.95)',
+              lineHeight: 1.55,
+            }}
+          >
+            {tr(
+              safeT,
+              'cadastroPecasStockBibliotecaHint',
+              'Vista só por categoria (consulta). Para gravar ou editar peças, use a aba Cadastro de Peças.'
+            )}
+          </p>
+          <div className="biblioteca-preco-olho-bar" role="region" aria-label={tr(safeT, 'preco', 'Preço')}>
+            <BibliotecaPrecoOlhoToggle
+              ativo={mostrarPrecos}
+              onToggle={() => setMostrarPrecos((v) => !v)}
+              labelMostrar={tr(safeT, 'bibliotecaVerPrecos', 'Ver preços')}
+              labelOcultar={tr(safeT, 'bibliotecaOcultarPrecos', 'Ocultar preços')}
+            />
+            <span className="biblioteca-preco-olho-bar__hint">
+              {tr(
+                safeT,
+                'bibliotecaPrecoOlhoHintCurto',
+                'Clique no olho para mostrar ou ocultar preços (€). Só peças com preço guardado.'
+              )}
+            </span>
+          </div>
+          <BibliotecaPecasGaleriaCategorias
+            categorias={categorias}
+            pecasCatalogo={pecas}
+            categoriaSelecionadaId={galeriaCategoriaId}
+            onSelecionarCategoria={setGaleriaCategoriaId}
+            onVoltarCategorias={() => setGaleriaCategoriaId(null)}
+            srcImagem={(input) => pecaBibliotecaSrcCapaDisplay(input)}
+            temImagemPropria={pecaBibliotecaTemCapaOuFotoVisivel}
+            buscaCodigo={buscaGaleria}
+            onBuscaCodigoChange={(value) => {
+              setBuscaGaleria(value)
+              if (value.trim()) setGaleriaCategoriaId(null)
+            }}
+            mostrarPrecos={mostrarPrecos}
+            t={{
+              titulo: tr(safeT, 'bibliotecaGaleriaCategoriasTitulo', 'Categorias'),
+              descricao: tr(
+                safeT,
+                'bibliotecaGaleriaCategoriasDesc',
+                'Escolha uma categoria para ver todas as imagens das peças.'
+              ),
+              voltar: tr(safeT, 'bibliotecaGaleriaVoltarCategorias', 'Voltar às categorias'),
+              pecasCount: tr(safeT, 'bibliotecaGaleriaPecasNaCategoria', '{n} peça(s)'),
+              semImagem: tr(safeT, 'bibliotecaGaleriaSemImagemCategoria', 'Sem imagem'),
+              cliqueAbrir: tr(safeT, 'bibliotecaGaleriaCliqueCategoria', 'Abrir categoria'),
+              codigo: tr(safeT, 'codigoPecaBiblioteca', 'Código'),
+              semPecasCategoria: tr(safeT, 'bibliotecaGaleriaSemPecasCategoria', 'Nenhuma peça nesta categoria.'),
+              buscarCodigoOuNome: tr(safeT, 'bibliotecaBuscarCodigoOuNome', 'Buscar por código ou nome'),
+              buscarPorCodigo: tr(safeT, 'bibliotecaGaleriaBuscaTitulo', 'Buscar por código'),
+              buscarPorNome: tr(safeT, 'bibliotecaBuscarPorNome', 'Buscar por nome'),
+              buscaModoCodigo: tr(safeT, 'bibliotecaBuscaModoCodigo', 'Código'),
+              buscaModoNome: tr(safeT, 'bibliotecaBuscaModoNome', 'Nome'),
+              buscarPlaceholderNome: tr(safeT, 'bibliotecaBuscaNomePlaceholder', 'Nome da peça…'),
+              buscaHint: tr(safeT, 'bibliotecaGaleriaBuscaHint', 'Procure por código ou nome.'),
+              buscarPlaceholderCodigoOuNome: tr(
+                safeT,
+                'bibliotecaBuscaCodigoOuNomePlaceholder',
+                'Código ou nome da peça…'
+              ),
+              buscarPlaceholder: tr(safeT, 'codigoPecaBibliotecaPlaceholder', 'Código'),
+              buscaResultados: tr(safeT, 'bibliotecaBuscaCodigoResultados', '{n} resultado(s)'),
+              buscaResultadosNome: tr(safeT, 'bibliotecaBuscaResultadosNome', '{n} resultado(s)'),
+              buscaVazio: tr(safeT, 'bibliotecaBuscaCodigoVazio', 'Nenhuma peça encontrada.'),
+              buscaVazioNome: tr(safeT, 'bibliotecaBuscaVazioNome', 'Nenhuma peça encontrada.'),
+              buscaLimite: tr(safeT, 'bibliotecaBuscaLimite', 'A mostrar os primeiros resultados.'),
+              carregarMais: tr(safeT, 'bibliotecaCarregarMais', 'Mostrar mais ({restantes} restantes)'),
+              limparBusca: tr(safeT, 'limparFiltros', 'Limpar busca'),
+              preco: tr(safeT, 'preco', 'Preço'),
+            }}
+          />
         </>
       ) : (
         <div className="biblioteca-pecas-hub__grupos-panel">
