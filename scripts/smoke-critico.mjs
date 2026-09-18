@@ -1099,6 +1099,23 @@ try {
   fail(`módulo clientes: ${e.message}`)
 }
 
+{
+  const bootSrc = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  const nmaBoot = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    bootSrc.includes('preferServer?: boolean') &&
+    bootSrc.includes("source: 'local'") &&
+    bootSrc.includes('localFirst') &&
+    nmaBoot.includes('preferServer: true') &&
+    nmaBoot.includes('skipDemoBootstrapFast') &&
+    nmaBoot.includes("bootLoad.source !== 'local'")
+  ) {
+    ok('arranque: dados locais primeiro (servidor em segundo plano, biblioteca intacta)')
+  } else {
+    fail('arranque ainda espera o bundle completo do servidor antes de pintar')
+  }
+}
+
 // 3d) Módulo financeiro (3.º corte + 11.º: período/IVA + 18.º: fluxo tipos/mutações)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')

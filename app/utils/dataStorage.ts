@@ -2267,11 +2267,14 @@ export async function saveOfflineServerSnapshot(data: Record<string, any>): Prom
 }
 
 /**
- * Carga inicial inteligente: offline → imediato com dados locais;
- * online → tenta servidor uma vez; se falhar, usa cache local/snapshot.
+ * Carga inicial inteligente:
+ * - aparelho já tem cópia → usa local de imediato (o pull silencioso actualiza depois);
+ * - aparelho vazio ou `preferServer` → espera o servidor (timeout bootstrap);
+ * - offline → cache local/snapshot.
  */
 export async function loadAllForBootstrap(
-  prefetched?: Record<string, any> | null
+  prefetched?: Record<string, any> | null,
+  opts?: { preferServer?: boolean }
 ): Promise<LoadAllFromServerResult> {
   if (prefetched && Object.keys(prefetched).length > 0) {
     void saveOfflineServerSnapshot(prefetched)
@@ -2285,6 +2288,14 @@ export async function loadAllForBootstrap(
       data: local,
       ok: false,
       source: Object.keys(local).length > 0 ? 'local' : 'snapshot',
+    }
+  }
+
+  const preferServer = opts?.preferServer === true
+  if (!preferServer) {
+    const localFirst = await loadAllFromLocalCache()
+    if (Object.keys(localFirst).length > 0) {
+      return { data: localFirst, ok: true, source: 'local' }
     }
   }
 

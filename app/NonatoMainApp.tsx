@@ -6846,14 +6846,24 @@ export default function Dashboard() {
       }
       if (typeof window !== 'undefined') {
         try {
-          let skipDemoBootstrap = false
+          const cachedBootUser = loadLastAuthUser()
+          const cachedBootId = String(cachedBootUser?.id || '').trim()
+          const skipDemoBootstrapFast =
+            Boolean(cachedBootId) &&
+            cachedBootId !== 'demo-visitor' &&
+            cachedBootId !== 'demo-guest'
+          let skipDemoBootstrap = skipDemoBootstrapFast
+          if (!skipDemoBootstrapFast) {
           const authBoot = await fetch('/api/auth/status', {
             credentials: 'include',
             cache: 'no-store',
             signal: AbortSignal.timeout(4000),
           }).catch(() => null)
           if (authBoot?.ok) {
-            const authData = (await authBoot.json()) as { authenticated?: boolean; user?: { id?: string } }
+            const authData = (await authBoot.json()) as {
+              authenticated?: boolean
+              user?: { id?: string; isDemoGuest?: boolean }
+            }
             if (authData.authenticated && authData.user?.id && !authData.user.isDemoGuest && authData.user.id !== 'demo-visitor') {
               skipDemoBootstrap = true
               document.cookie = 'nonato_demo=; path=/; max-age=0'
@@ -6864,6 +6874,7 @@ export default function Dashboard() {
               document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
               void fetch('/api/demo/clear', { credentials: 'include' }).catch(() => {})
             }
+          }
           }
           if (!skipDemoBootstrap) {
             const demoRes = await fetch('/api/demo/status', {
@@ -6886,7 +6897,7 @@ export default function Dashboard() {
               } else {
                 const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
                 if (demoSt.isDemo && !demoSt.expired) {
-                  const preDemo = await loadAllForBootstrap()
+                  const preDemo = await loadAllForBootstrap(null, { preferServer: true })
                   if (preDemo.ok && !serverCadastroBundleIsEmpty(preDemo.data as Record<string, unknown>)) {
                     await backupCriticalCadastroToIdb()
                     await wipeLocalNonatoForBootstrap(true)
@@ -6898,7 +6909,7 @@ export default function Dashboard() {
                     )
                   }
                 } else if (postDemoWipe && !demoSt.isDemo && !demoSt.guestLock) {
-                  const prePostDemo = await loadAllForBootstrap()
+                  const prePostDemo = await loadAllForBootstrap(null, { preferServer: true })
                   if (prePostDemo.ok && !serverCadastroBundleIsEmpty(prePostDemo.data as Record<string, unknown>)) {
                     await backupCriticalCadastroToIdb()
                     await wipeLocalNonatoForBootstrap(true)
@@ -6934,7 +6945,7 @@ export default function Dashboard() {
               /* ignorar */
             }
             // Qualquer aparelho: só apagar local depois de ler o servidor com sucesso (evita dashboard a zeros).
-            const pre = await loadAllForBootstrap()
+            const pre = await loadAllForBootstrap(null, { preferServer: true })
             if (pre.ok) {
               const backupCadastroAntesFullPull: Record<string, string> = {}
               for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
@@ -7071,6 +7082,8 @@ export default function Dashboard() {
         /** Sincronização automática: fundir sempre com o servidor (sem modal bloqueante). */
         const deferServerMerge = false
         if (
+          bootLoad.source !== 'local' &&
+          bootLoad.source !== 'snapshot' &&
           syncSt !== null &&
           serverRevision > lastAccepted &&
           hasMeaningfulLocalData() &&
@@ -10471,11 +10484,12 @@ export default function Dashboard() {
        * Alinhamos com a revisão atual do servidor no fim da carga quando não há conflito pendente.
        */
       await reportBoot(92)
-      const stFinal = await fetchSyncStatus()
-      if (stFinal !== null) {
-        const cur = getLastAcceptedRevision()
-        setLastAcceptedRevision(Math.max(cur, stFinal.revision))
-      }
+      void fetchSyncStatus().then((stFinal) => {
+        if (stFinal !== null) {
+          const cur = getLastAcceptedRevision()
+          setLastAcceptedRevision(Math.max(cur, stFinal.revision))
+        }
+      })
       setSyncPendingRemote(null)
       setSyncDecisionModalOpen(false)
       setSyncAutoSyncFailed(false)
