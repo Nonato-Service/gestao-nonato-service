@@ -11,7 +11,7 @@ echo.
 echo  Vai criar na Area de Trabalho:
 echo    NONATO SERVICE - Gestao.lnk
 echo.
-echo  Abre o programa em janela propria (como app).
+echo  Abre o lancador /acesso (sempre a versao nova).
 echo  Login: UTILIZADOR + SENHA obrigatorios.
 echo.
 

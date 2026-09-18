@@ -69113,27 +69113,30 @@ A1;Peça exemplo;10`}
               </button>
               )}
 
-              {/* Instalar a app (PWA) — barra lateral em vez de botão flutuante */}
-              {!isDemoMode && installPrompt?.canShow ? (
+              {/* Acesso neste aparelho — atalho que sobrevive às actualizações (PC/tablet/telefone) */}
+              {!isDemoMode && installPrompt?.canShowAcesso ? (
                 <button
                   type="button"
                   className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
-                  onClick={() => installPrompt.openInstallModal()}
+                  data-sidebar-nav-action="open-acesso-aparelho"
+                  onClick={() => installPrompt.openAcessoModal()}
                 >
                   <span className="sidebar-empresa-entry-row">
                     <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                      📲
+                      🔗
                     </span>
                     <span className="sidebar-empresa-entry-text">
-                      <span className="sidebar-empresa-entry-title">{installPrompt.installLabel}</span>
+                      <span className="sidebar-empresa-entry-title">
+                        {(safeT as any)?.acessoAparelhoBtn || installPrompt.acessoLabel}
+                      </span>
                     </span>
                   </span>
                   <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
                     ›
                   </span>
-                  {installPrompt.installDesc.trim() ? (
+                  {(String((safeT as any)?.acessoAparelhoDesc || installPrompt.acessoDesc || '')).trim() ? (
                     <span className="sidebar-tip-bubble" role="tooltip">
-                      {installPrompt.installDesc}
+                      {(safeT as any)?.acessoAparelhoDesc || installPrompt.acessoDesc}
                     </span>
                   ) : null}
                 </button>

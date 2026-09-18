@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v474'
+const CACHE_NAME = 'nonato-pwa-v475'
 
 const PRECACHE_ASSETS = [
   '/',
@@ -116,6 +116,16 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) return
   if (url.pathname.startsWith('/biblia-app')) return
   if (url.pathname.startsWith('/campo-app')) return
+
+  // Lançador de acesso: nunca cachear — o atalho do PC/tablet/telefone deve ir sempre à versão nova
+  if (url.pathname === '/acesso' || url.pathname === '/acesso.html') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => {
+        return new Response(OFFLINE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+      })
+    )
+    return
+  }
 
   const isNavigate = event.request.mode === 'navigate'
 

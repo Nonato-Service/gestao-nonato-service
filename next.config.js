@@ -19,12 +19,21 @@ const nextConfig = {
       // Bíblia no telemóvel: /biblia-app abre o index (evita timeout no telefone)
       { source: '/biblia-app', destination: '/biblia-app/index.html' },
       { source: '/campo-app', destination: '/campo-app/index.html' },
+      { source: '/acesso', destination: '/acesso.html' },
     ]
   },
   async headers() {
     return [
       {
         source: '/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
+      },
+      {
+        source: '/acesso',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
+      },
+      {
+        source: '/acesso.html',
         headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
       {

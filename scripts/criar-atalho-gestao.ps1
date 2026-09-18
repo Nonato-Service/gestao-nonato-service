@@ -3,10 +3,10 @@ $ErrorActionPreference = 'Stop'
 $proj = Split-Path $PSScriptRoot -Parent
 $desktop = [Environment]::GetFolderPath('Desktop')
 $urlFile = Join-Path $proj 'gestao-url.txt'
-$url = 'https://gest-o-nonato-gestao.up.railway.app/'
+$url = 'https://gest-o-nonato-gestao.up.railway.app/acesso'
 if (Test-Path $urlFile) {
   $line = (Get-Content $urlFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
-  if ($line -match '^https?://') { $url = $line.TrimEnd('/') + '/' }
+  if ($line -match '^https?://') { $url = $line.TrimEnd('/') + '/acesso' }
 }
 
 $launcher = Join-Path $proj 'ABRIR-NONATO-GESTAO.bat'

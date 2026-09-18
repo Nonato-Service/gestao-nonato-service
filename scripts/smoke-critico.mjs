@@ -68,10 +68,11 @@ const critical = [
   'app/modules/pre-check/index.ts',
   'app/modules/pagamentos-contador/index.ts',
   'app/modules/registro-despesas/index.ts',
-  'app/modules/ui/index.ts',
-  'pwa-version.json',
-  'public/sw.js',
-  'app/lib/pwaVersion.ts',
+    'app/modules/ui/index.ts',
+    'pwa-version.json',
+    'public/sw.js',
+    'public/acesso.html',
+    'app/lib/pwaVersion.ts',
 ]
 for (const f of critical) {
   if (exists(f)) ok(`existe ${f}`)
@@ -1113,6 +1114,51 @@ try {
     ok('arranque: dados locais primeiro (servidor em segundo plano, biblioteca intacta)')
   } else {
     fail('arranque ainda espera o bundle completo do servidor antes de pintar')
+  }
+}
+
+{
+  const acessoHtml = exists('public/acesso.html')
+    ? fs.readFileSync(path.join(root, 'public/acesso.html'), 'utf8')
+    : ''
+  const swAcesso = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8')
+  const nextCfg = fs.readFileSync(path.join(root, 'next.config.js'), 'utf8')
+  const atalho = fs.readFileSync(path.join(root, 'scripts/criar-atalho-gestao.ps1'), 'utf8')
+  const installSrc = fs.readFileSync(path.join(root, 'app/components/InstallPrompt.tsx'), 'utf8')
+  const nmaAcesso = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    acessoHtml.includes('data-ns-acesso="1"') &&
+    acessoHtml.includes('data-ns-acesso-enter') &&
+    acessoHtml.includes('ENTRAR NO SISTEMA')
+  ) {
+    ok('página /acesso.html — lançador de acesso')
+  } else {
+    fail('public/acesso.html em falta ou incompleto')
+  }
+  if (swAcesso.includes("url.pathname === '/acesso'") && swAcesso.includes("cache: 'no-store'")) {
+    ok('SW: /acesso sem cache (sempre versão nova)')
+  } else {
+    fail('sw.js não trata /acesso como network-only')
+  }
+  if (nextCfg.includes("source: '/acesso'") && nextCfg.includes("destination: '/acesso.html'")) {
+    ok('rewrite /acesso → /acesso.html')
+  } else {
+    fail('next.config.js sem rewrite /acesso')
+  }
+  if (atalho.includes('/acesso')) {
+    ok('atalho do PC aponta para /acesso')
+  } else {
+    fail('criar-atalho-gestao.ps1 ainda aponta só para /')
+  }
+  if (
+    installSrc.includes('openAcessoModal') &&
+    installSrc.includes('canShowAcesso') &&
+    nmaAcesso.includes('openAcessoModal') &&
+    nmaAcesso.includes('acessoAparelhoBtn')
+  ) {
+    ok('botão Acesso neste aparelho (sidebar + modal)')
+  } else {
+    fail('botão de acesso não está na sidebar/modal')
   }
 }
 
@@ -7990,6 +8036,7 @@ try {
     'app/components/OrcamentoPecasEspeciaisContent.tsx',
     'app/components/ClienteEquipamentoHistoricoPanel.tsx',
     'app/components/RegistroDespesasContent.tsx',
+    'app/components/InstallPrompt.tsx',
   ]) {
     const extraSrc = fs.readFileSync(path.join(root, rel), 'utf8')
     const extraParsed = tsExtra.transpileModule(extraSrc, {

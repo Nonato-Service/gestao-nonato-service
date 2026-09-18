@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#00c853" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NONATO SERVICE" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>NONATO SERVICE — Acesso</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: #000; color: #fff; font-family: "Segoe UI", system-ui, sans-serif; }
+    body { display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
+    .card {
+      width: 100%; max-width: 440px; background: #2a2a2a; border: 2px solid #00ff00;
+      border-radius: 16px; padding: 28px 22px 22px; text-align: center;
+    }
+    .logo { width: 72px; height: 72px; object-fit: contain; margin: 0 auto 12px; display: block; }
+    h1 { margin: 0 0 6px; color: #00ff00; font-size: 22px; letter-spacing: .04em; }
+    .sub { color: #bbb; font-size: 14px; line-height: 1.5; margin: 0 0 20px; }
+    .btn {
+      display: block; width: 100%; padding: 16px 14px; margin: 0 0 10px; border-radius: 10px;
+      font-weight: 700; font-size: 17px; cursor: pointer; border: 2px solid #00ff00;
+    }
+    .btn-main { background: #00aa00; color: #fff; }
+    .btn-main:active { background: #008800; }
+    .btn-sec { background: transparent; color: #00ff00; }
+    .hint { color: #888; font-size: 12px; line-height: 1.45; margin: 14px 0 0; text-align: left; }
+    .ok { color: #00c853; font-size: 13px; min-height: 18px; margin: 4px 0 8px; }
+    .langs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 16px; }
+    .langs button {
+      background: #1a1a1a; color: #ccc; border: 1px solid #444; border-radius: 8px;
+      padding: 6px 8px; font-size: 12px; cursor: pointer;
+    }
+    .langs button[aria-current="true"] { border-color: #00ff00; color: #00ff00; }
+  </style>
+</head>
+<body data-ns-acesso="1">
+  <main class="card">
+    <img class="logo" src="/brand/nonato-logo-original.png" alt="Nonato Service" onerror="this.style.display='none'" />
+    <h1>NONATO SERVICE</h1>
+    <div class="langs" id="langs" role="group"></div>
+    <p class="sub" id="desc"></p>
+    <button type="button" class="btn btn-main" id="enter" data-ns-acesso-enter="1"></button>
+    <button type="button" class="btn btn-sec" id="install" hidden></button>
+    <button type="button" class="btn btn-sec" id="copy"></button>
+    <button type="button" class="btn btn-sec" id="shortcut"></button>
+    <p class="ok" id="status" aria-live="polite"></p>
+    <p class="hint" id="hint"></p>
+  </main>
+  <script>
+    (function () {
+      var T = {
+        'pt-BR': {
+          desc: 'Botão de acesso que continua a funcionar depois das actualizações. Use no PC, notebook, tablet e telefone.',
+          enter: 'ENTRAR NO SISTEMA',
+          install: 'Instalar neste aparelho',
+          copy: 'Copiar ligação de acesso',
+          copied: 'Ligação copiada. Cole nos favoritos ou envie para outro aparelho.',
+          shortcut: 'Guardar atalho para o computador (.url)',
+          saved: 'Atalho descarregado. Abra-o na Área de Trabalho.',
+          hint: 'Telefone/tablet: use Instalar ou o menu do browser → Adicionar ao ecrã inicial. iPhone: Safari → Partilhar → Adicionar ao Ecrã Inicial. Este endereço (/acesso) não fica preso a uma versão antiga.',
+          shareFail: 'Não foi possível copiar. Segure o endereço na barra do browser e copie.'
+        },
+        es: {
+          desc: 'Botón de acceso que sigue funcionando después de las actualizaciones. Úsalo en PC, portátil, tablet y teléfono.',
+          enter: 'ENTRAR AL SISTEMA',
+          install: 'Instalar en este dispositivo',
+          copy: 'Copiar enlace de acceso',
+          copied: 'Enlace copiado. Guárdalo en favoritos o envíalo a otro dispositivo.',
+          shortcut: 'Guardar acceso directo para el ordenador (.url)',
+          saved: 'Acceso descargado. Ábrelo en el escritorio.',
+          hint: 'Teléfono/tablet: Instalar o menú del navegador → Añadir a la pantalla de inicio. iPhone: Safari → Compartir → Añadir a pantalla de inicio. Esta dirección (/acesso) no se queda en una versión antigua.',
+          shareFail: 'No se pudo copiar. Mantén la dirección en la barra del navegador y copia.'
+        },
+        fr: {
+          desc: 'Bouton d’accès qui continue de fonctionner après les mises à jour. PC, portable, tablette et téléphone.',
+          enter: 'ENTRER DANS LE SYSTÈME',
+          install: 'Installer sur cet appareil',
+          copy: 'Copier le lien d’accès',
+          copied: 'Lien copié. Enregistrez-le en favori ou envoyez-le à un autre appareil.',
+          shortcut: 'Enregistrer le raccourci ordinateur (.url)',
+          saved: 'Raccourci téléchargé. Ouvrez-le sur le bureau.',
+          hint: 'Téléphone/tablette : Installer ou menu du navigateur → Ajouter à l’écran d’accueil. iPhone : Safari → Partager → Sur l’écran d’accueil. Cette adresse (/acesso) n’est pas bloquée sur une ancienne version.',
+          shareFail: 'Impossible de copier. Maintenez l’adresse dans la barre du navigateur et copiez.'
+        },
+        it: {
+          desc: 'Pulsante di accesso che continua a funzionare dopo gli aggiornamenti. PC, notebook, tablet e telefono.',
+          enter: 'ENTRA NEL SISTEMA',
+          install: 'Installa su questo dispositivo',
+          copy: 'Copia il collegamento di accesso',
+          copied: 'Collegamento copiato. Salvalo nei preferiti o invialo a un altro dispositivo.',
+          shortcut: 'Salva collegamento per il computer (.url)',
+          saved: 'Collegamento scaricato. Aprilo sul desktop.',
+          hint: 'Telefono/tablet: Installa o menu del browser → Aggiungi a Home. iPhone: Safari → Condividi → Aggiungi a Home. Questo indirizzo (/acesso) non resta bloccato su una versione vecchia.',
+          shareFail: 'Impossibile copiare. Tieni premuto l’indirizzo nella barra del browser e copia.'
+        },
+        de: {
+          desc: 'Zugriffsschaltfläche, die nach Updates weiter funktioniert. PC, Notebook, Tablet und Telefon.',
+          enter: 'SYSTEM ÖFFNEN',
+          install: 'Auf diesem Gerät installieren',
+          copy: 'Zugriffslink kopieren',
+          copied: 'Link kopiert. Als Lesezeichen speichern oder an ein anderes Gerät senden.',
+          shortcut: 'Desktop-Verknüpfung speichern (.url)',
+          saved: 'Verknüpfung heruntergeladen. Auf dem Desktop öffnen.',
+          hint: 'Telefon/Tablet: Installieren oder Browser-Menü → Zum Startbildschirm. iPhone: Safari → Teilen → Zum Home-Bildschirm. Diese Adresse (/acesso) bleibt nicht auf einer alten Version.',
+          shareFail: 'Kopieren nicht möglich. Adresse in der Browserleiste gedrückt halten und kopieren.'
+        },
+        en: {
+          desc: 'Access button that keeps working after updates. Use it on PC, laptop, tablet and phone.',
+          enter: 'ENTER THE SYSTEM',
+          install: 'Install on this device',
+          copy: 'Copy access link',
+          copied: 'Link copied. Save it as a bookmark or send it to another device.',
+          shortcut: 'Save computer shortcut (.url)',
+          saved: 'Shortcut downloaded. Open it from the desktop.',
+          hint: 'Phone/tablet: Install or browser menu → Add to Home Screen. iPhone: Safari → Share → Add to Home Screen. This address (/acesso) is not stuck on an old version.',
+          shareFail: 'Could not copy. Long-press the address in the browser bar and copy.'
+        }
+      }
+      var LANGS = [
+        { id: 'pt-BR', label: 'PT' },
+        { id: 'es', label: 'ES' },
+        { id: 'fr', label: 'FR' },
+        { id: 'it', label: 'IT' },
+        { id: 'de', label: 'DE' },
+        { id: 'en', label: 'EN' }
+      ]
+      function detect() {
+        try {
+          var stored = localStorage.getItem('nonato-language')
+          if (stored && T[stored]) return stored
+        } catch (e) {}
+        var n = (navigator.language || 'pt-BR').toLowerCase()
+        if (n.indexOf('pt') === 0) return 'pt-BR'
+        if (n.indexOf('es') === 0) return 'es'
+        if (n.indexOf('fr') === 0) return 'fr'
+        if (n.indexOf('it') === 0) return 'it'
+        if (n.indexOf('de') === 0) return 'de'
+        return 'en'
+      }
+      var lang = detect()
+      var deferred = null
+      function acessoUrl() {
+        return location.origin + '/acesso'
+      }
+      function apply() {
+        var t = T[lang] || T['pt-BR']
+        document.documentElement.lang = lang
+        document.getElementById('desc').textContent = t.desc
+        document.getElementById('enter').textContent = t.enter
+        document.getElementById('install').textContent = t.install
+        document.getElementById('copy').textContent = t.copy
+        document.getElementById('shortcut').textContent = t.shortcut
+        document.getElementById('hint').textContent = t.hint
+        var box = document.getElementById('langs')
+        box.innerHTML = ''
+        LANGS.forEach(function (item) {
+          var b = document.createElement('button')
+          b.type = 'button'
+          b.textContent = item.label
+          if (item.id === lang) b.setAttribute('aria-current', 'true')
+          b.onclick = function () {
+            lang = item.id
+            try { localStorage.setItem('nonato-language', lang) } catch (e) {}
+            apply()
+          }
+          box.appendChild(b)
+        })
+      }
+      apply()
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault()
+        deferred = e
+        document.getElementById('install').hidden = false
+      })
+      document.getElementById('install').onclick = function () {
+        if (!deferred) return
+        deferred.prompt()
+        deferred.userChoice.finally(function () { deferred = null; document.getElementById('install').hidden = true })
+      }
+      function goApp() {
+        var target = location.origin + '/'
+        function leave() { location.replace(target) }
+        if (!('serviceWorker' in navigator)) { leave(); return }
+        var left = false
+        function once() { if (left) return; left = true; leave() }
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          var waiting = null
+          regs.forEach(function (r) {
+            try { r.update() } catch (e) {}
+            if (r.waiting) waiting = r
+          })
+          if (waiting && waiting.waiting) {
+            navigator.serviceWorker.addEventListener('controllerchange', once)
+            waiting.waiting.postMessage({ type: 'SKIP_WAITING' })
+            setTimeout(once, 1200)
+            return
+          }
+          once()
+        }).catch(once)
+        setTimeout(once, 2500)
+      }
+      document.getElementById('enter').onclick = goApp
+      document.getElementById('copy').onclick = function () {
+        var t = T[lang] || T['pt-BR']
+        var url = acessoUrl()
+        function ok() { document.getElementById('status').textContent = t.copied }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(ok).catch(function () {
+            document.getElementById('status').textContent = t.shareFail
+          })
+          return
+        }
+        document.getElementById('status').textContent = t.shareFail
+      }
+      document.getElementById('shortcut').onclick = function () {
+        var t = T[lang] || T['pt-BR']
+        var body = '[InternetShortcut]\r\nURL=' + acessoUrl() + '\r\n'
+        var blob = new Blob([body], { type: 'application/internet-shortcut' })
+        var a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = 'NONATO SERVICE.url'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        document.getElementById('status').textContent = t.saved
+      }
+    })()
+  </script>
+</body>
+</html>
