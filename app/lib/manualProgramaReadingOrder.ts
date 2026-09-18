@@ -50,6 +50,7 @@ export const MANUAL_READING_SECTIONS: ManualReadingSectionDef[] = [
     pageIds: [
       'solicitacao-servico-tecnico-default',
       'relatorio-servico-default',
+      'relatorio-especial-default',
       'biblioteca-relatorios-default',
       'protocolos-servico-default',
       'agenda-default',

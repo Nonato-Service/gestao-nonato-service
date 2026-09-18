@@ -2598,6 +2598,37 @@ try {
   fail(`módulo relatorios-especiais: ${e.message}`)
 }
 
+{
+  const manualHtml = exists('public/MANUAL-USO-NONATO-SERVICE.html')
+    ? fs.readFileSync(path.join(root, 'public/MANUAL-USO-NONATO-SERVICE.html'), 'utf8')
+    : ''
+  const gestorRoute = exists('app/api/pdf/manual-gestor/route.ts')
+    ? fs.readFileSync(path.join(root, 'app/api/pdf/manual-gestor/route.ts'), 'utf8')
+    : ''
+  const shotPages = exists('scripts/lib/manualScreenshotPages.mjs')
+    ? fs.readFileSync(path.join(root, 'scripts/lib/manualScreenshotPages.mjs'), 'utf8')
+    : ''
+  const ptHelp = exists('app/i18n/messages/pt-BR.json')
+    ? fs.readFileSync(path.join(root, 'app/i18n/messages/pt-BR.json'), 'utf8')
+    : ''
+  const reading = exists('app/lib/manualProgramaReadingOrder.ts')
+    ? fs.readFileSync(path.join(root, 'app/lib/manualProgramaReadingOrder.ts'), 'utf8')
+    : ''
+  if (
+    manualHtml.includes('/manual/assets/pt-BR/clientes-default/01.png') &&
+    manualHtml.includes('/manual/assets/pt-BR/relatorio-servico-default/01.png') &&
+    manualHtml.includes('Local deste dia') &&
+    gestorRoute.includes('MANUAL-USO-NONATO-SERVICE.html') &&
+    shotPages.includes('app/modules/sidebar/menuPermissions.ts') &&
+    ptHelp.includes('helpRelatorioEspecial') &&
+    reading.includes('relatorio-especial-default')
+  ) {
+    ok('manual de uso com capturas reais do programa + Relatórios Especiais')
+  } else {
+    fail('manual de uso desactualizado ou sem capturas reais')
+  }
+}
+
 // 3h) Módulo comprovantes (7.º corte modularização)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/comprovantes/index.ts'), 'utf8')

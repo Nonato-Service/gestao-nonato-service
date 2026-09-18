@@ -14,6 +14,13 @@ Gerar / actualizar capturas
 ---------------------------
   npm run manual:capture-screenshots
 
+O HTML imprimível (mesmo conteúdo do «Manual do gestor») está em:
+
+  /MANUAL-USO-NONATO-SERVICE.html
+  /api/pdf/manual-gestor
+
+Usa as capturas reais em public/manual/assets/pt-BR/{pageId}/01.png
+
 Variáveis úteis:
   MANUAL_LOCALES=pt-BR,es,en
   MANUAL_CAPTURE_PASSWORD=sua_senha

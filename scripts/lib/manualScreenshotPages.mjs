@@ -27,7 +27,7 @@ const SKIP_ACTIONS = new Set(['open-manual-programa'])
 
 /** Lê SIDEBAR_MENU_MODULES de sidebarMenuPermissions.ts (sem compilar TS). */
 export function loadManualScreenshotPages() {
-  const src = fs.readFileSync(path.join(ROOT, 'app/lib/sidebarMenuPermissions.ts'), 'utf8')
+  const src = fs.readFileSync(path.join(ROOT, 'app/modules/sidebar/menuPermissions.ts'), 'utf8')
   const pages = [
     {
       id: 'dashboard',
