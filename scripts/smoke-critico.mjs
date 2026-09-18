@@ -1179,10 +1179,15 @@ try {
   } else {
     fail('criar-atalho-gestao.ps1 sem atalho de ecrã inteiro')
   }
-  if (installSrc.includes('toggleFullscreen') && nmaAcesso.includes('toggle-ecra-inteiro')) {
-    ok('botão Ocupar toda a tela (sidebar + modal)')
+  if (
+    installSrc.includes('toggleFullscreen') &&
+    nmaAcesso.includes('toggle-ecra-inteiro') &&
+    nmaAcesso.includes('sidebar-extra-lang-cluster') &&
+    !installSrc.includes('data-ns-fullscreen-fab')
+  ) {
+    ok('botão Ocupar toda a tela na barra lateral (sem ocupar a área de trabalho)')
   } else {
-    fail('opção de ecrã inteiro em falta na app')
+    fail('opção de ecrã inteiro em falta na barra lateral ou ainda há botão flutuante')
   }
   if (
     installSrc.includes('openAcessoModal') &&

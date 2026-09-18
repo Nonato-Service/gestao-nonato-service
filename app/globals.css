@@ -2052,6 +2052,10 @@ body {
 }
 
 /* Painel de idioma dentro de Extras */
+.sidebar-extra-lang-cluster [data-sidebar-nav-action='toggle-ecra-inteiro'] {
+  width: 100%;
+  margin: 0;
+}
 .sidebar-extra-lang-wrap {
   margin-bottom: 12px;
   padding: 12px;

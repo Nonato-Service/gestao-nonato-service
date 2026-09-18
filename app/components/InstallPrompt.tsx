@@ -509,33 +509,6 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
   return (
     <InstallPromptContext.Provider value={contextValue}>
       {children}
-      {!showCard ? (
-      <button
-        type="button"
-        data-ns-print-hide="1"
-        data-ns-fullscreen-fab="1"
-        onClick={toggleFullscreen}
-        aria-label={isFullscreen ? t.fullscreenExit : t.fullscreenEnter}
-        title={t.fullscreenHint}
-        style={{
-          position: 'fixed',
-          right: 12,
-          bottom: 16,
-          zIndex: 80,
-          background: '#2a2a2a',
-          color: '#00ff00',
-          border: '2px solid #00ff00',
-          borderRadius: 10,
-          padding: '10px 12px',
-          fontWeight: 700,
-          fontSize: 13,
-          cursor: 'pointer',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
-        }}
-      >
-        {isFullscreen ? `⛶ ${t.fullscreenExit}` : `⛶ ${t.fullscreenEnter}`}
-      </button>
-      ) : null}
       {showCard && (
         <div data-ns-print-hide="1">
           <div

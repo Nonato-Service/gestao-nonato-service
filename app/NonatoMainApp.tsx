@@ -69018,6 +69018,32 @@ A1;Peça exemplo;10`}
               ))}
             </select>
           </div>
+          {!isDemoMode && installPrompt?.toggleFullscreen ? (
+            <button
+              type="button"
+              className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
+              data-sidebar-nav-action="toggle-ecra-inteiro"
+              onClick={() => installPrompt.toggleFullscreen()}
+            >
+              <span className="sidebar-empresa-entry-row">
+                <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                  ⛶
+                </span>
+                <span className="sidebar-empresa-entry-text">
+                  <span className="sidebar-empresa-entry-title">
+                    {(installPrompt.isFullscreen
+                      ? (safeT as any)?.ecraInteiroSair
+                      : (safeT as any)?.ecraInteiroBtn) || installPrompt.fullscreenLabel}
+                  </span>
+                </span>
+              </span>
+              {(String((safeT as any)?.ecraInteiroHint || installPrompt.fullscreenHint || '')).trim() ? (
+                <span className="sidebar-tip-bubble" role="tooltip">
+                  {(safeT as any)?.ecraInteiroHint || installPrompt.fullscreenHint}
+                </span>
+              ) : null}
+            </button>
+          ) : null}
         </div>
         {canAccessAction('open-extra') && (
         <div className="sidebar-nav-cluster" data-sidebar-zone="sistema">
@@ -69137,36 +69163,6 @@ A1;Peça exemplo;10`}
                   {(String((safeT as any)?.acessoAparelhoDesc || installPrompt.acessoDesc || '')).trim() ? (
                     <span className="sidebar-tip-bubble" role="tooltip">
                       {(safeT as any)?.acessoAparelhoDesc || installPrompt.acessoDesc}
-                    </span>
-                  ) : null}
-                </button>
-              ) : null}
-
-              {!isDemoMode && installPrompt?.toggleFullscreen ? (
-                <button
-                  type="button"
-                  className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
-                  data-sidebar-nav-action="toggle-ecra-inteiro"
-                  onClick={() => installPrompt.toggleFullscreen()}
-                >
-                  <span className="sidebar-empresa-entry-row">
-                    <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
-                      ⛶
-                    </span>
-                    <span className="sidebar-empresa-entry-text">
-                      <span className="sidebar-empresa-entry-title">
-                        {(installPrompt.isFullscreen
-                          ? (safeT as any)?.ecraInteiroSair
-                          : (safeT as any)?.ecraInteiroBtn) || installPrompt.fullscreenLabel}
-                      </span>
-                    </span>
-                  </span>
-                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                    ›
-                  </span>
-                  {(String((safeT as any)?.ecraInteiroHint || installPrompt.fullscreenHint || '')).trim() ? (
-                    <span className="sidebar-tip-bubble" role="tooltip">
-                      {(safeT as any)?.ecraInteiroHint || installPrompt.fullscreenHint}
                     </span>
                   ) : null}
                 </button>

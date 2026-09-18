@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v478'
+const CACHE_NAME = 'nonato-pwa-v479'
 
 const PRECACHE_ASSETS = [
   '/',
