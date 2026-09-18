@@ -34,7 +34,8 @@
     .btn-main:active { background: #008800; }
     .btn-sec { background: transparent; color: #00ff00; }
     .hint { color: #888; font-size: 12px; line-height: 1.45; margin: 14px 0 0; text-align: left; }
-    .ok { color: #00c853; font-size: 13px; min-height: 18px; margin: 4px 0 8px; }
+    .ok { color: #00c853; font-size: 14px; min-height: 18px; margin: 8px 0; font-weight: 600; word-break: break-all; }
+    [hidden] { display: none !important; }
     .langs { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 0 0 16px; }
     .langs button {
       background: #1a1a1a; color: #ccc; border: 1px solid #444; border-radius: 8px;
@@ -50,7 +51,8 @@
     <div class="langs" id="langs" role="group"></div>
     <p class="sub" id="desc"></p>
     <button type="button" class="btn btn-main" id="enter" data-ns-acesso-enter="1"></button>
-    <button type="button" class="btn btn-sec" id="install" hidden></button>
+    <button type="button" class="btn btn-sec" id="full" data-ns-acesso-full="1"></button>
+    <button type="button" class="btn btn-sec" id="install"></button>
     <button type="button" class="btn btn-sec" id="copy"></button>
     <button type="button" class="btn btn-sec" id="shortcut"></button>
     <p class="ok" id="status" aria-live="polite"></p>
@@ -62,68 +64,80 @@
         'pt-BR': {
           desc: 'Botão de acesso que continua a funcionar depois das actualizações. Use no PC, notebook, tablet e telefone.',
           enter: 'ENTRAR NO SISTEMA',
+          full: 'OCUPAR TODA A TELA',
           install: 'Instalar neste aparelho',
           copy: 'Copiar ligação de acesso',
           copied: 'Ligação copiada. Cole nos favoritos ou envie para outro aparelho.',
-          shortcut: 'Guardar atalho para o computador (.url)',
-          saved: 'Atalho descarregado. Abra-o na Área de Trabalho.',
-          hint: 'Telefone/tablet: use Instalar ou o menu do browser → Adicionar ao ecrã inicial. iPhone: Safari → Partilhar → Adicionar ao Ecrã Inicial. Este endereço (/acesso) não fica preso a uma versão antiga.',
-          shareFail: 'Não foi possível copiar. Segure o endereço na barra do browser e copie.'
+          shortcut: 'Guardar atalho do computador (Edge)',
+          saved: 'Atalho guardado. Abre no Edge, não no Firefox. Se o antigo ainda abrir o Firefox, apague-o e use este.',
+          hint: 'No computador abre no Edge (janela de app), não no Firefox. «Ocupar toda a tela» usa o ecrã completo (Esc para sair). Telefone/tablet: Instalar ou Adicionar ao ecrã inicial. iPhone: Safari → Partilhar → Adicionar ao Ecrã Inicial.',
+          shareFail: 'Não foi possível copiar. Segure o endereço na barra do browser e copie.',
+          installHelp: 'Este browser não abre o instalador sozinho. No Edge: menu ⋯ → Aplicações → Instalar este site como uma aplicação. No telefone: menu → Adicionar ao ecrã inicial. No PC use também «Guardar atalho».'
         },
         es: {
           desc: 'Botón de acceso que sigue funcionando después de las actualizaciones. Úsalo en PC, portátil, tablet y teléfono.',
           enter: 'ENTRAR AL SISTEMA',
+          full: 'OCUPAR TODA LA PANTALLA',
           install: 'Instalar en este dispositivo',
           copy: 'Copiar enlace de acceso',
           copied: 'Enlace copiado. Guárdalo en favoritos o envíalo a otro dispositivo.',
-          shortcut: 'Guardar acceso directo para el ordenador (.url)',
-          saved: 'Acceso descargado. Ábrelo en el escritorio.',
-          hint: 'Teléfono/tablet: Instalar o menú del navegador → Añadir a la pantalla de inicio. iPhone: Safari → Compartir → Añadir a pantalla de inicio. Esta dirección (/acesso) no se queda en una versión antigua.',
-          shareFail: 'No se pudo copiar. Mantén la dirección en la barra del navegador y copia.'
+          shortcut: 'Guardar acceso directo del ordenador (Edge)',
+          saved: 'Acceso guardado. Abre en Edge, no en Firefox. Si el antiguo aún abre Firefox, bórralo y usa este.',
+          hint: 'En el ordenador abre en Edge (ventana de app), no en Firefox. «Ocupar toda la pantalla» usa la pantalla completa (Esc para salir). Teléfono/tablet: Instalar o Añadir a la pantalla de inicio. iPhone: Safari → Compartir → Añadir a pantalla de inicio.',
+          shareFail: 'No se pudo copiar. Mantén la dirección en la barra del navegador y copia.',
+          installHelp: 'Este navegador no abre el instalador solo. En Edge: menú ⋯ → Aplicaciones → Instalar este sitio como una aplicación. En el teléfono: menú → Añadir a la pantalla de inicio. En el PC use también «Guardar acceso».'
         },
         fr: {
           desc: 'Bouton d’accès qui continue de fonctionner après les mises à jour. PC, portable, tablette et téléphone.',
           enter: 'ENTRER DANS LE SYSTÈME',
+          full: 'OCCUPER TOUT L’ÉCRAN',
           install: 'Installer sur cet appareil',
           copy: 'Copier le lien d’accès',
           copied: 'Lien copié. Enregistrez-le en favori ou envoyez-le à un autre appareil.',
-          shortcut: 'Enregistrer le raccourci ordinateur (.url)',
-          saved: 'Raccourci téléchargé. Ouvrez-le sur le bureau.',
-          hint: 'Téléphone/tablette : Installer ou menu du navigateur → Ajouter à l’écran d’accueil. iPhone : Safari → Partager → Sur l’écran d’accueil. Cette adresse (/acesso) n’est pas bloquée sur une ancienne version.',
-          shareFail: 'Impossible de copier. Maintenez l’adresse dans la barre du navigateur et copiez.'
+          shortcut: 'Enregistrer le raccourci ordinateur (Edge)',
+          saved: 'Raccourci enregistré. S’ouvre dans Edge, pas dans Firefox. Si l’ancien ouvre encore Firefox, supprimez-le et utilisez celui-ci.',
+          hint: 'Sur ordinateur, s’ouvre dans Edge (fenêtre d’app), pas dans Firefox. « Occuper tout l’écran » (Échap pour quitter). Téléphone/tablette : Installer ou Ajouter à l’écran d’accueil. iPhone : Safari → Partager → Sur l’écran d’accueil.',
+          shareFail: 'Impossible de copier. Maintenez l’adresse dans la barre du navigateur et copiez.',
+          installHelp: 'Ce navigateur n’ouvre pas l’installateur tout seul. Dans Edge : menu ⋯ → Applications → Installer ce site en tant qu’application. Sur téléphone : menu → Ajouter à l’écran d’accueil. Sur PC, utilisez aussi « Enregistrer le raccourci ».'
         },
         it: {
           desc: 'Pulsante di accesso che continua a funzionare dopo gli aggiornamenti. PC, notebook, tablet e telefono.',
           enter: 'ENTRA NEL SISTEMA',
+          full: 'OCCUPA TUTTO LO SCHERMO',
           install: 'Installa su questo dispositivo',
           copy: 'Copia il collegamento di accesso',
           copied: 'Collegamento copiato. Salvalo nei preferiti o invialo a un altro dispositivo.',
-          shortcut: 'Salva collegamento per il computer (.url)',
-          saved: 'Collegamento scaricato. Aprilo sul desktop.',
-          hint: 'Telefono/tablet: Installa o menu del browser → Aggiungi a Home. iPhone: Safari → Condividi → Aggiungi a Home. Questo indirizzo (/acesso) non resta bloccato su una versione vecchia.',
-          shareFail: 'Impossibile copiare. Tieni premuto l’indirizzo nella barra del browser e copia.'
+          shortcut: 'Salva collegamento per il computer (Edge)',
+          saved: 'Collegamento salvato. Si apre in Edge, non in Firefox. Se il vecchio apre ancora Firefox, eliminalo e usa questo.',
+          hint: 'Sul computer si apre in Edge (finestra app), non in Firefox. «Occupa tutto lo schermo» (Esc per uscire). Telefono/tablet: Installa o Aggiungi a Home. iPhone: Safari → Condividi → Aggiungi a Home.',
+          shareFail: 'Impossibile copiare. Tieni premuto l’indirizzo nella barra del browser e copia.',
+          installHelp: 'Questo browser non apre da solo l’installazione. In Edge: menu ⋯ → App → Installa questo sito come app. Sul telefono: menu → Aggiungi a Home. Sul PC usa anche «Salva collegamento».'
         },
         de: {
           desc: 'Zugriffsschaltfläche, die nach Updates weiter funktioniert. PC, Notebook, Tablet und Telefon.',
           enter: 'SYSTEM ÖFFNEN',
+          full: 'GANZEN BILDSCHIRM NUTZEN',
           install: 'Auf diesem Gerät installieren',
           copy: 'Zugriffslink kopieren',
           copied: 'Link kopiert. Als Lesezeichen speichern oder an ein anderes Gerät senden.',
-          shortcut: 'Desktop-Verknüpfung speichern (.url)',
-          saved: 'Verknüpfung heruntergeladen. Auf dem Desktop öffnen.',
-          hint: 'Telefon/Tablet: Installieren oder Browser-Menü → Zum Startbildschirm. iPhone: Safari → Teilen → Zum Home-Bildschirm. Diese Adresse (/acesso) bleibt nicht auf einer alten Version.',
-          shareFail: 'Kopieren nicht möglich. Adresse in der Browserleiste gedrückt halten und kopieren.'
+          shortcut: 'Desktop-Verknüpfung speichern (Edge)',
+          saved: 'Verknüpfung gespeichert. Öffnet Edge, nicht Firefox. Wenn die alte noch Firefox öffnet, löschen und diese verwenden.',
+          hint: 'Am Computer öffnet sich Edge (App-Fenster), nicht Firefox. «Ganzen Bildschirm nutzen» (Esc zum Beenden). Telefon/Tablet: Installieren oder Zum Startbildschirm. iPhone: Safari → Teilen → Zum Home-Bildschirm.',
+          shareFail: 'Kopieren nicht möglich. Adresse in der Browserleiste gedrückt halten und kopieren.',
+          installHelp: 'Dieser Browser öffnet den Installer nicht von selbst. In Edge: Menü ⋯ → Apps → Diese Website als App installieren. Am Telefon: Menü → Zum Startbildschirm. Am PC auch «Desktop-Verknüpfung speichern» nutzen.'
         },
         en: {
           desc: 'Access button that keeps working after updates. Use it on PC, laptop, tablet and phone.',
           enter: 'ENTER THE SYSTEM',
+          full: 'FILL THE WHOLE SCREEN',
           install: 'Install on this device',
           copy: 'Copy access link',
           copied: 'Link copied. Save it as a bookmark or send it to another device.',
-          shortcut: 'Save computer shortcut (.url)',
-          saved: 'Shortcut downloaded. Open it from the desktop.',
-          hint: 'Phone/tablet: Install or browser menu → Add to Home Screen. iPhone: Safari → Share → Add to Home Screen. This address (/acesso) is not stuck on an old version.',
-          shareFail: 'Could not copy. Long-press the address in the browser bar and copy.'
+          shortcut: 'Save computer shortcut (Edge)',
+          saved: 'Shortcut saved. It opens in Edge, not Firefox. If the old one still opens Firefox, delete it and use this one.',
+          hint: 'On a computer it opens in Edge (app window), not Firefox. “Fill the whole screen” uses fullscreen (Esc to exit). Phone/tablet: Install or Add to Home Screen. iPhone: Safari → Share → Add to Home Screen.',
+          shareFail: 'Could not copy. Long-press the address in the browser bar and copy.',
+          installHelp: 'This browser does not open the installer by itself. In Edge: menu ⋯ → Apps → Install this site as an app. On the phone: menu → Add to Home Screen. On a PC also use “Save shortcut”.'
         }
       }
       var LANGS = [
@@ -152,11 +166,56 @@
       function acessoUrl() {
         return location.origin + '/acesso'
       }
+      function isWindows() {
+        return /Windows/i.test(navigator.userAgent || '') || navigator.platform === 'Win32'
+      }
+      function isFirefox() {
+        return /Firefox/i.test(navigator.userAgent || '')
+      }
+      function isStandalone() {
+        return (
+          (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+          navigator.standalone === true
+        )
+      }
+      function fallbackCopy(url) {
+        try {
+          var ta = document.createElement('textarea')
+          ta.value = url
+          ta.setAttribute('readonly', '')
+          ta.style.position = 'fixed'
+          ta.style.top = '0'
+          ta.style.left = '0'
+          ta.style.opacity = '0'
+          document.body.appendChild(ta)
+          ta.focus()
+          ta.select()
+          ta.setSelectionRange(0, url.length)
+          var done = document.execCommand('copy')
+          ta.remove()
+          return !!done
+        } catch (e) {
+          return false
+        }
+      }
+      function copyAccessLink(ok, fail) {
+        var url = acessoUrl()
+        function tryFallback() {
+          if (fallbackCopy(url)) ok()
+          else fail(url)
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(ok).catch(tryFallback)
+          return
+        }
+        tryFallback()
+      }
       function apply() {
         var t = T[lang] || T['pt-BR']
         document.documentElement.lang = lang
         document.getElementById('desc').textContent = t.desc
         document.getElementById('enter').textContent = t.enter
+        document.getElementById('full').textContent = t.full
         document.getElementById('install').textContent = t.install
         document.getElementById('copy').textContent = t.copy
         document.getElementById('shortcut').textContent = t.shortcut
@@ -177,18 +236,35 @@
         })
       }
       apply()
+      if (isStandalone()) document.getElementById('install').hidden = true
       window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault()
         deferred = e
         document.getElementById('install').hidden = false
       })
       document.getElementById('install').onclick = function () {
-        if (!deferred) return
-        deferred.prompt()
-        deferred.userChoice.finally(function () { deferred = null; document.getElementById('install').hidden = true })
+        var t = T[lang] || T['pt-BR']
+        var status = document.getElementById('status')
+        if (deferred && typeof deferred.prompt === 'function') {
+          deferred.prompt()
+          if (deferred.userChoice && deferred.userChoice.finally) {
+            deferred.userChoice.finally(function () { deferred = null })
+          } else {
+            deferred = null
+          }
+          return
+        }
+        status.textContent = t.installHelp
+      }
+      function openInEdge(url) {
+        window.location.href = 'microsoft-edge:' + url
       }
       function goApp() {
         var target = location.origin + '/'
+        if (isWindows() && isFirefox() && !isStandalone()) {
+          openInEdge(target)
+          return
+        }
         function leave() { location.replace(target) }
         if (!('serviceWorker' in navigator)) { leave(); return }
         var left = false
@@ -209,22 +285,33 @@
         }).catch(once)
         setTimeout(once, 2500)
       }
+      function requestFullscreenSafe() {
+        var el = document.documentElement
+        try { localStorage.setItem('nonato-prefer-fullscreen', '1') } catch (e) {}
+        try { sessionStorage.setItem('nonato-want-fs', '1') } catch (e) {}
+        var req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen
+        if (!req) return Promise.resolve()
+        try {
+          return Promise.resolve(req.call(el)).catch(function () {})
+        } catch (e) {
+          return Promise.resolve()
+        }
+      }
       document.getElementById('enter').onclick = goApp
+      document.getElementById('full').onclick = function () {
+        requestFullscreenSafe().then(function () { goApp() })
+      }
       document.getElementById('copy').onclick = function () {
         var t = T[lang] || T['pt-BR']
-        var url = acessoUrl()
-        function ok() { document.getElementById('status').textContent = t.copied }
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(ok).catch(function () {
-            document.getElementById('status').textContent = t.shareFail
-          })
-          return
-        }
-        document.getElementById('status').textContent = t.shareFail
+        copyAccessLink(
+          function () { document.getElementById('status').textContent = t.copied },
+          function (url) { document.getElementById('status').textContent = t.shareFail + ' ' + url }
+        )
       }
       document.getElementById('shortcut').onclick = function () {
         var t = T[lang] || T['pt-BR']
-        var body = '[InternetShortcut]\r\nURL=' + acessoUrl() + '\r\n'
+        var target = isWindows() ? ('microsoft-edge:' + acessoUrl()) : acessoUrl()
+        var body = '[InternetShortcut]\r\nURL=' + target + '\r\n'
         var blob = new Blob([body], { type: 'application/internet-shortcut' })
         var a = document.createElement('a')
         a.href = URL.createObjectURL(blob)

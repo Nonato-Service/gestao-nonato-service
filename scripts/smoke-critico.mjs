@@ -1150,6 +1150,40 @@ try {
   } else {
     fail('criar-atalho-gestao.ps1 ainda aponta só para /')
   }
+  if (atalho.includes('LOCALAPPDATA') && atalho.includes('microsoft-edge:')) {
+    ok('atalho do PC abre Edge/Chrome, não o Firefox')
+  } else {
+    fail('atalho do PC ainda pode cair no browser predefinido (Firefox)')
+  }
+  if (acessoHtml.includes('microsoft-edge:')) {
+    ok('página /acesso abre no Edge a partir do Firefox no Windows')
+  } else {
+    fail('acesso.html não força Edge no Windows')
+  }
+  if (acessoHtml.includes('data-ns-acesso-full') && acessoHtml.includes('requestFullscreen')) {
+    ok('página /acesso tem opção de ecrã inteiro')
+  } else {
+    fail('acesso.html sem botão de ecrã inteiro')
+  }
+  if (
+    acessoHtml.includes('installHelp') &&
+    acessoHtml.includes('execCommand') &&
+    acessoHtml.includes('copyAccessLink')
+  ) {
+    ok('página /acesso: Instalar e Copiar com fallback (não ficam mudos)')
+  } else {
+    fail('acesso.html: Instalar/Copiar ainda podem não fazer nada')
+  }
+  if (atalho.includes('start-fullscreen') && atalho.includes('Ecra inteiro')) {
+    ok('atalho do PC inclui ecrã inteiro')
+  } else {
+    fail('criar-atalho-gestao.ps1 sem atalho de ecrã inteiro')
+  }
+  if (installSrc.includes('toggleFullscreen') && nmaAcesso.includes('toggle-ecra-inteiro')) {
+    ok('botão Ocupar toda a tela (sidebar + modal)')
+  } else {
+    fail('opção de ecrã inteiro em falta na app')
+  }
   if (
     installSrc.includes('openAcessoModal') &&
     installSrc.includes('canShowAcesso') &&

@@ -28,6 +28,9 @@ const texts: Record<
     atalhoGuardado: string
     jaInstalado: string
     copyFail: string
+    fullscreenEnter: string
+    fullscreenExit: string
+    fullscreenHint: string
   }
 > = {
   pt: {
@@ -38,7 +41,7 @@ const texts: Record<
     iosHint: 'No iPhone/iPad: Safari → Partilhar (□↑) → "Adicionar ao Ecrã Inicial"',
     iosSafariHint: 'No iPhone/iPad, use o Safari para adicionar à tela inicial e ter a melhor compatibilidade.',
     androidHint: 'No Android: Firefox ou Chrome → Menu (⋮) → "Instalar app" ou "Adicionar ao ecrã inicial"',
-    desktopHint: 'No computador: Firefox, Chrome ou Edge → menu (⋮) → "Instalar" ou "Guardar como"',
+    desktopHint: 'No computador o atalho abre no Edge (janela de app), não no Firefox. Também pode instalar pelo menu do Edge ou Chrome.',
     later: 'Agora não',
     close: 'Fechar',
     acessoTitle: 'Acesso neste aparelho',
@@ -48,10 +51,13 @@ const texts: Record<
     abrirSistema: 'Abrir o sistema',
     copiarLigacao: 'Copiar ligação de acesso',
     copiado: 'Ligação copiada. Cole nos favoritos ou envie para outro aparelho.',
-    atalhoPc: 'Guardar atalho do computador (.url)',
-    atalhoGuardado: 'Atalho descarregado. Abra-o na Área de Trabalho.',
+    atalhoPc: 'Guardar atalho do computador (Edge)',
+    atalhoGuardado: 'Atalho guardado. Abre no Edge, não no Firefox. Se o antigo ainda abrir o Firefox, apague-o e use este.',
     jaInstalado: 'Já está instalado neste aparelho.',
     copyFail: 'Não foi possível copiar. Segure o endereço na barra do browser.',
+    fullscreenEnter: 'Ocupar toda a tela',
+    fullscreenExit: 'Sair do ecrã inteiro',
+    fullscreenHint: 'O sistema usa o ecrã completo. Prima Esc ou este botão para sair.',
   },
   en: {
     installApp: 'Install the app',
@@ -61,7 +67,7 @@ const texts: Record<
     iosHint: 'On iPhone/iPad: Safari → Share (□↑) → "Add to Home Screen"',
     iosSafariHint: 'On iPhone/iPad, use Safari to add it to the home screen and get the best compatibility.',
     androidHint: 'On Android: Firefox or Chrome → Menu (⋮) → "Install app" or "Add to home screen"',
-    desktopHint: 'On computer: Firefox, Chrome or Edge → menu (⋮) → "Install" or "Save as"',
+    desktopHint: 'On a computer the shortcut opens in Edge (app window), not Firefox. You can also install from the Edge or Chrome menu.',
     later: 'Not now',
     close: 'Close',
     acessoTitle: 'Access on this device',
@@ -71,10 +77,13 @@ const texts: Record<
     abrirSistema: 'Open the system',
     copiarLigacao: 'Copy access link',
     copiado: 'Link copied. Save it as a bookmark or send it to another device.',
-    atalhoPc: 'Save computer shortcut (.url)',
-    atalhoGuardado: 'Shortcut downloaded. Open it from the desktop.',
+    atalhoPc: 'Save computer shortcut (Edge)',
+    atalhoGuardado: 'Shortcut saved. It opens in Edge, not Firefox. If the old one still opens Firefox, delete it and use this one.',
     jaInstalado: 'Already installed on this device.',
     copyFail: 'Could not copy. Long-press the address in the browser bar.',
+    fullscreenEnter: 'Fill the whole screen',
+    fullscreenExit: 'Exit full screen',
+    fullscreenHint: 'The app uses the whole screen. Press Esc or this button to exit.',
   },
   es: {
     installApp: 'Instalar la app',
@@ -84,7 +93,7 @@ const texts: Record<
     iosHint: 'En iPhone/iPad: Safari → Compartir (□↑) → "Añadir a la pantalla de inicio"',
     iosSafariHint: 'En iPhone/iPad, usa Safari para añadirla a la pantalla de inicio y tener la mejor compatibilidad.',
     androidHint: 'En Android: Firefox o Chrome → Menú (⋮) → "Instalar aplicación" o "Añadir a la pantalla de inicio"',
-    desktopHint: 'En ordenador: Firefox, Chrome o Edge → menú (⋮) → "Instalar" o "Guardar como"',
+    desktopHint: 'En el ordenador el acceso abre en Edge (ventana de app), no en Firefox. También puede instalarlo desde el menú de Edge o Chrome.',
     later: 'Ahora no',
     close: 'Cerrar',
     acessoTitle: 'Acceso en este dispositivo',
@@ -94,10 +103,13 @@ const texts: Record<
     abrirSistema: 'Abrir el sistema',
     copiarLigacao: 'Copiar enlace de acceso',
     copiado: 'Enlace copiado. Guárdalo en favoritos o envíalo a otro dispositivo.',
-    atalhoPc: 'Guardar acceso directo del ordenador (.url)',
-    atalhoGuardado: 'Acceso descargado. Ábrelo en el escritorio.',
+    atalhoPc: 'Guardar acceso directo del ordenador (Edge)',
+    atalhoGuardado: 'Acceso guardado. Abre en Edge, no en Firefox. Si el antiguo aún abre Firefox, bórralo y usa este.',
     jaInstalado: 'Ya está instalado en este dispositivo.',
     copyFail: 'No se pudo copiar. Mantén la dirección en la barra del navegador.',
+    fullscreenEnter: 'Ocupar toda la pantalla',
+    fullscreenExit: 'Salir de pantalla completa',
+    fullscreenHint: 'El sistema usa la pantalla completa. Pulse Esc o este botón para salir.',
   },
   fr: {
     installApp: "Installer l'app",
@@ -108,7 +120,7 @@ const texts: Record<
     iosSafariHint:
       "Sur iPhone/iPad, utilisez Safari pour l'ajouter à l'écran d'accueil et obtenir la meilleure compatibilité.",
     androidHint: 'Sur Android : Firefox ou Chrome → Menu (⋮) → "Installer l\'application"',
-    desktopHint: 'Sur ordinateur : Firefox, Chrome ou Edge → menu (⋮) → "Installer"',
+    desktopHint: 'Sur ordinateur, le raccourci s’ouvre dans Edge (fenêtre d’app), pas dans Firefox. Vous pouvez aussi installer depuis le menu Edge ou Chrome.',
     later: 'Plus tard',
     close: 'Fermer',
     acessoTitle: 'Accès sur cet appareil',
@@ -118,10 +130,13 @@ const texts: Record<
     abrirSistema: 'Ouvrir le système',
     copiarLigacao: 'Copier le lien d’accès',
     copiado: 'Lien copié. Enregistrez-le en favori ou envoyez-le à un autre appareil.',
-    atalhoPc: 'Enregistrer le raccourci ordinateur (.url)',
-    atalhoGuardado: 'Raccourci téléchargé. Ouvrez-le sur le bureau.',
+    atalhoPc: 'Enregistrer le raccourci ordinateur (Edge)',
+    atalhoGuardado: 'Raccourci enregistré. S’ouvre dans Edge, pas dans Firefox. Si l’ancien ouvre encore Firefox, supprimez-le et utilisez celui-ci.',
     jaInstalado: 'Déjà installé sur cet appareil.',
     copyFail: 'Impossible de copier. Maintenez l’adresse dans la barre du navigateur.',
+    fullscreenEnter: 'Occuper tout l’écran',
+    fullscreenExit: 'Quitter le plein écran',
+    fullscreenHint: 'L’application utilise tout l’écran. Échap ou ce bouton pour quitter.',
   },
   it: {
     installApp: "Installa l'app",
@@ -131,7 +146,7 @@ const texts: Record<
     iosHint: 'Su iPhone/iPad: Safari → Condividi (□↑) → "Aggiungi a Home"',
     iosSafariHint: 'Su iPhone/iPad, usa Safari per aggiungerla alla schermata Home e avere la migliore compatibilità.',
     androidHint: 'Su Android: Firefox o Chrome → Menu (⋮) → "Installa app"',
-    desktopHint: 'Su computer: Firefox, Chrome o Edge → menu (⋮) → "Installa"',
+    desktopHint: 'Sul computer il collegamento si apre in Edge (finestra app), non in Firefox. Puoi anche installare dal menu di Edge o Chrome.',
     later: 'Ora no',
     close: 'Chiudi',
     acessoTitle: 'Accesso su questo dispositivo',
@@ -141,10 +156,13 @@ const texts: Record<
     abrirSistema: 'Apri il sistema',
     copiarLigacao: 'Copia il collegamento di accesso',
     copiado: 'Collegamento copiato. Salvalo nei preferiti o invialo a un altro dispositivo.',
-    atalhoPc: 'Salva collegamento per il computer (.url)',
-    atalhoGuardado: 'Collegamento scaricato. Aprilo sul desktop.',
+    atalhoPc: 'Salva collegamento per il computer (Edge)',
+    atalhoGuardado: 'Collegamento salvato. Si apre in Edge, non in Firefox. Se il vecchio apre ancora Firefox, eliminalo e usa questo.',
     jaInstalado: 'Già installato su questo dispositivo.',
     copyFail: 'Impossibile copiare. Tieni premuto l’indirizzo nella barra del browser.',
+    fullscreenEnter: 'Occupa tutto lo schermo',
+    fullscreenExit: 'Esci da schermo intero',
+    fullscreenHint: 'Il sistema usa tutto lo schermo. Esc o questo pulsante per uscire.',
   },
   de: {
     installApp: 'App installieren',
@@ -155,7 +173,7 @@ const texts: Record<
     iosSafariHint:
       'Auf iPhone/iPad Safari verwenden, um die App zum Startbildschirm hinzuzufügen und die beste Kompatibilität zu erhalten.',
     androidHint: 'Auf Android: Firefox oder Chrome → Menü (⋮) → "App installieren"',
-    desktopHint: 'Am Computer: Firefox, Chrome oder Edge → Menü (⋮) → "Installieren"',
+    desktopHint: 'Am Computer öffnet die Verknüpfung Edge (App-Fenster), nicht Firefox. Installation auch über das Edge- oder Chrome-Menü möglich.',
     later: 'Später',
     close: 'Schließen',
     acessoTitle: 'Zugriff auf diesem Gerät',
@@ -165,10 +183,13 @@ const texts: Record<
     abrirSistema: 'System öffnen',
     copiarLigacao: 'Zugriffslink kopieren',
     copiado: 'Link kopiert. Als Lesezeichen speichern oder an ein anderes Gerät senden.',
-    atalhoPc: 'Desktop-Verknüpfung speichern (.url)',
-    atalhoGuardado: 'Verknüpfung heruntergeladen. Auf dem Desktop öffnen.',
+    atalhoPc: 'Desktop-Verknüpfung speichern (Edge)',
+    atalhoGuardado: 'Verknüpfung gespeichert. Öffnet Edge, nicht Firefox. Wenn die alte noch Firefox öffnet, löschen und diese verwenden.',
     jaInstalado: 'Bereits auf diesem Gerät installiert.',
     copyFail: 'Kopieren nicht möglich. Adresse in der Browserleiste gedrückt halten.',
+    fullscreenEnter: 'Ganzen Bildschirm nutzen',
+    fullscreenExit: 'Vollbild beenden',
+    fullscreenHint: 'Die App nutzt den ganzen Bildschirm. Esc oder diese Schaltfläche zum Beenden.',
   },
 }
 
@@ -199,6 +220,16 @@ function acessoUrl(): string {
   return `${window.location.origin}/acesso`
 }
 
+function isWindowsClient(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Windows/i.test(navigator.userAgent || '') || navigator.platform === 'Win32'
+}
+
+function isFirefoxClient(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Firefox/i.test(navigator.userAgent || '')
+}
+
 type InstallPromptContextValue = {
   canShow: boolean
   canShowAcesso: boolean
@@ -208,6 +239,10 @@ type InstallPromptContextValue = {
   installDesc: string
   acessoLabel: string
   acessoDesc: string
+  isFullscreen: boolean
+  toggleFullscreen: () => void
+  fullscreenLabel: string
+  fullscreenHint: string
 }
 
 const InstallPromptContext = createContext<InstallPromptContextValue | null>(null)
@@ -253,6 +288,7 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
   const [isSafari, setIsSafari] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
   const [langTick, setLangTick] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const mounted = useRef(false)
 
   useEffect(() => {
@@ -307,12 +343,21 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
       setDeferredPrompt(e)
     }
     const onOpenAcesso = () => setShowCard(true)
+    const syncFs = () => {
+      const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement
+      setIsFullscreen(Boolean(fsEl))
+    }
+    syncFs()
+    document.addEventListener('fullscreenchange', syncFs)
+    document.addEventListener('webkitfullscreenchange', syncFs)
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
     window.addEventListener('nonato-open-acesso', onOpenAcesso)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstall)
       window.removeEventListener('nonato-open-acesso', onOpenAcesso)
+      document.removeEventListener('fullscreenchange', syncFs)
+      document.removeEventListener('webkitfullscreenchange', syncFs)
       mounted.current = false
     }
   }, [])
@@ -347,16 +392,38 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
 
   const handleCopy = async () => {
     const url = acessoUrl()
+    const ok = () => setStatusMsg(t.copiado)
+    const fail = () => setStatusMsg(`${t.copyFail} ${url}`)
     try {
-      await navigator.clipboard.writeText(url)
-      setStatusMsg(t.copiado)
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        ok()
+        return
+      }
     } catch {
-      setStatusMsg(t.copyFail)
+      /* fallback abaixo */
+    }
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.left = '-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      const done = document.execCommand('copy')
+      ta.remove()
+      if (done) ok()
+      else fail()
+    } catch {
+      fail()
     }
   }
 
   const handleShortcut = () => {
-    const body = `[InternetShortcut]\r\nURL=${acessoUrl()}\r\n`
+    const url = acessoUrl()
+    const target = isWindowsClient() ? `microsoft-edge:${url}` : url
+    const body = `[InternetShortcut]\r\nURL=${target}\r\n`
     const blob = new Blob([body], { type: 'application/internet-shortcut' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -369,8 +436,44 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
 
   const handleOpenApp = () => {
     setShowCard(false)
-    if (typeof window !== 'undefined') window.location.assign('/')
+    if (typeof window === 'undefined') return
+    const target = `${window.location.origin}/`
+    if (isWindowsClient() && isFirefoxClient()) {
+      window.location.href = `microsoft-edge:${target}`
+      return
+    }
+    window.location.assign('/')
   }
+
+  const toggleFullscreen = useCallback(() => {
+    if (typeof document === 'undefined') return
+    const el = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => void
+      msRequestFullscreen?: () => void
+    }
+    const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement
+    try {
+      if (fsEl) {
+        const exit = document.exitFullscreen || (document as any).webkitExitFullscreen
+        if (exit) void Promise.resolve(exit.call(document)).catch(() => {})
+        try {
+          localStorage.setItem('nonato-prefer-fullscreen', '0')
+        } catch {
+          /* ignore */
+        }
+        return
+      }
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen
+      if (req) void Promise.resolve(req.call(el)).catch(() => {})
+      try {
+        localStorage.setItem('nonato-prefer-fullscreen', '1')
+      } catch {
+        /* ignore */
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const contextValue = useMemo<InstallPromptContextValue>(
     () => ({
@@ -382,13 +485,57 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
       installDesc: t.installDesc,
       acessoLabel: t.acessoLabel,
       acessoDesc: t.acessoDesc,
+      isFullscreen,
+      toggleFullscreen,
+      fullscreenLabel: isFullscreen ? t.fullscreenExit : t.fullscreenEnter,
+      fullscreenHint: t.fullscreenHint,
     }),
-    [visible, openInstallModal, openAcessoModal, t.installApp, t.installDesc, t.acessoLabel, t.acessoDesc]
+    [
+      visible,
+      openInstallModal,
+      openAcessoModal,
+      t.installApp,
+      t.installDesc,
+      t.acessoLabel,
+      t.acessoDesc,
+      isFullscreen,
+      toggleFullscreen,
+      t.fullscreenExit,
+      t.fullscreenEnter,
+      t.fullscreenHint,
+    ]
   )
 
   return (
     <InstallPromptContext.Provider value={contextValue}>
       {children}
+      {!showCard ? (
+      <button
+        type="button"
+        data-ns-print-hide="1"
+        data-ns-fullscreen-fab="1"
+        onClick={toggleFullscreen}
+        aria-label={isFullscreen ? t.fullscreenExit : t.fullscreenEnter}
+        title={t.fullscreenHint}
+        style={{
+          position: 'fixed',
+          right: 12,
+          bottom: 16,
+          zIndex: 80,
+          background: '#2a2a2a',
+          color: '#00ff00',
+          border: '2px solid #00ff00',
+          borderRadius: 10,
+          padding: '10px 12px',
+          fontWeight: 700,
+          fontSize: 13,
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.45)',
+        }}
+      >
+        {isFullscreen ? `⛶ ${t.fullscreenExit}` : `⛶ ${t.fullscreenEnter}`}
+      </button>
+      ) : null}
       {showCard && (
         <div data-ns-print-hide="1">
           <div
@@ -437,6 +584,9 @@ export function InstallPromptProvider({ children }: { children: ReactNode }) {
 
               <button type="button" onClick={handleOpenApp} style={btnMain}>
                 {t.abrirSistema}
+              </button>
+              <button type="button" onClick={toggleFullscreen} style={btnSec}>
+                {isFullscreen ? t.fullscreenExit : t.fullscreenEnter}
               </button>
 
               {deferredPrompt ? (
