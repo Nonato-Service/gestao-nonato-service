@@ -78,6 +78,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     icon: '📚',
     items: [
       { buttonId: 'biblioteca-pecas-default', action: 'open-biblioteca-pecas', labelKey: 'cadastroPecasBibliotecaTitle', fallbackLabel: 'Biblioteca de peças', legacyKey: 'bibliotecaPecas' },
+      { buttonId: 'cadastro-pecas-stock-default', action: 'open-cadastro-pecas-stock', labelKey: 'cadastroPecasStockTitle', fallbackLabel: 'Cadastro de peças existentes no stock', legacyKey: 'bibliotecaPecas' },
       { buttonId: 'importacao-pecas-default', action: 'open-importacao-pecas', labelKey: 'importacaoPecas', fallbackLabel: 'Importação de peças', legacyKey: 'bibliotecaPecas' },
     ],
   },

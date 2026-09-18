@@ -223,6 +223,12 @@ export {
 
 export type { PecasBackupPayload, ParsedPecasBackup, ApplyPecasBackupMode } from './pecasBackup'
 export {
+  PECAS_STOCK_STORAGE_KEY,
+  CATEGORIAS_PECAS_STOCK_STORAGE_KEY,
+  SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
+} from './stockKeys'
+
+export {
   PECAS_BIBLIOTECA_STORAGE_KEY,
   CATEGORIAS_PECAS_STORAGE_KEY,
   SUBCATEGORIAS_PECAS_STORAGE_KEY,

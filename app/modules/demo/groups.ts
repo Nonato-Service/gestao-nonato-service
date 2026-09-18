@@ -32,6 +32,7 @@ export const DEMO_PRESET_CARDS: DemoPresetCard[] = [
 export function getDemoModuleGroupId(action: string): DemoModuleGroupId {
   const CLIENTES = new Set([
     'open-clientes', 'open-fornecedores', 'open-relatorio-servico', 'open-biblioteca-pecas',
+    'open-cadastro-pecas-stock',
     'open-importacao-pecas', 'open-pecas-substituicao', 'open-solicitacao-servico-tecnico',
     'open-agenda', 'open-biblioteca-relatorios', 'open-biblioteca-hub', 'open-orcamentos-avulso',
     'open-pedido-orcamentos-avulso', 'open-relatorios-excluidos-clientes', 'open-quick-biblioteca-pecas',

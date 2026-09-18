@@ -397,6 +397,7 @@ const TAB_ICONS: Record<string, IconComp> = {
   'pagamentos-contador': IconScrollText,
   equipamentos: IconWrench,
   'biblioteca-pecas': IconPackage,
+  'cadastro-pecas-stock': IconPackage,
   agenda: IconCalendar,
   checklist: IconListChecks,
   'pre-checklist': IconListChecks,

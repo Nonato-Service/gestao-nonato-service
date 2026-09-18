@@ -336,6 +336,14 @@ export const SIDEBAR_BUTTON_CATALOG: SidebarButtonMerge[] = [
     group: 'pecas-biblioteca',
   },
   {
+    id: 'cadastro-pecas-stock-default',
+    name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+    action: 'open-cadastro-pecas-stock',
+    order: 7.25,
+    translationKey: 'cadastroPecasStockTitle',
+    group: 'pecas-biblioteca',
+  },
+  {
     id: 'solicitacao-servico-tecnico-default',
     name: 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
     action: 'open-solicitacao-servico-tecnico',

@@ -25,7 +25,7 @@ export function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
     return 'documentacao-relatorios'
   }
 
-  if (buttonId === 'biblioteca-pecas-default') {
+  if (buttonId === 'biblioteca-pecas-default' || buttonId === 'cadastro-pecas-stock-default') {
     return 'pecas-biblioteca'
   }
 

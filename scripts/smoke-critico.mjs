@@ -1201,6 +1201,30 @@ try {
   }
 }
 
+try {
+  const stockSrc = exists('app/components/CadastroPecasStockContent.tsx')
+    ? fs.readFileSync(path.join(root, 'app/components/CadastroPecasStockContent.tsx'), 'utf8')
+    : ''
+  const stockKeys = fs.readFileSync(path.join(root, 'app/lib/criticalCadastroKeys.ts'), 'utf8')
+  const nmaStock = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const mergeStock = fs.readFileSync(path.join(root, 'app/modules/sidebar/merge.ts'), 'utf8')
+  if (
+    stockSrc.includes('PECAS_STOCK_STORAGE_KEY') &&
+    !stockSrc.includes('importacao') &&
+    !stockSrc.includes('beforeinstallprompt') &&
+    stockKeys.includes('nonato-pecas-stock') &&
+    nmaStock.includes('open-cadastro-pecas-stock') &&
+    nmaStock.includes('CadastroPecasStockContent') &&
+    mergeStock.includes('cadastro-pecas-stock-default')
+  ) {
+    ok('cadastro de peças do stock (sem importação, dados isolados)')
+  } else {
+    fail('cadastro de peças do stock incompleto ou ainda com importação')
+  }
+} catch (e) {
+  fail(`cadastro de peças do stock: ${e && e.message ? e.message : e}`)
+}
+
 // 3d) Módulo financeiro (3.º corte + 11.º: período/IVA + 18.º: fluxo tipos/mutações)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')
@@ -8060,6 +8084,7 @@ try {
     'app/components/ClienteOrcamentosFichaSection.tsx',
     'app/components/ClienteEquipamentoOrcamentosPanel.tsx',
     'app/components/CadastroServicosContent.tsx',
+    'app/components/CadastroPecasStockContent.tsx',
     'app/components/FamiliasGruposChecklistContent.tsx',
     'app/components/ManuaisInformacoesContent.tsx',
     'app/components/admin/AdminUsersSection.tsx',

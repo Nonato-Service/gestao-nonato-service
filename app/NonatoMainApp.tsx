@@ -957,6 +957,7 @@ import { RelatorioCobrancaAcoes } from './components/RelatorioCobrancaAcoes'
 import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
+import { CadastroPecasStockContent } from './components/CadastroPecasStockContent'
 import { ClienteCadastroForm } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
@@ -2576,6 +2577,7 @@ export default function Dashboard() {
       'relatorio-especial': 'open-relatorio-especial',
       'pecas-substituicao': 'open-pecas-substituicao',
       'biblioteca-pecas': 'open-biblioteca-pecas',
+      'cadastro-pecas-stock': 'open-cadastro-pecas-stock',
       'importacao-pecas': 'open-importacao-pecas',
       'solicitacao-servico-tecnico': 'open-solicitacao-servico-tecnico',
       agenda: 'open-agenda',
@@ -4306,6 +4308,7 @@ export default function Dashboard() {
       { action: 'open-fornecedores', label: 'Fornecedores' },
       { action: 'open-relatorio-servico', label: 'Relatório de Serviço' },
       { action: 'open-biblioteca-pecas', label: 'Biblioteca de Peças' },
+      { action: 'open-cadastro-pecas-stock', label: 'Cadastro de peças no stock' },
       { action: 'open-importacao-pecas', label: 'Importação de Peças' },
       { action: 'open-agenda', label: 'Agenda' },
       { action: 'open-checklist-hub', label: 'Hub do Checklist' },
@@ -4339,6 +4342,7 @@ export default function Dashboard() {
       'open-fornecedores',
       'open-relatorio-servico',
       'open-biblioteca-pecas',
+      'open-cadastro-pecas-stock',
       'open-importacao-pecas',
       'open-pecas-substituicao',
       'open-solicitacao-servico-tecnico',
@@ -8879,6 +8883,7 @@ export default function Dashboard() {
           'relatorio-servico-default': { translationKey: 'relatorioServicoTitle', group: 'documentacao-relatorios' },
           'relatorio-especial-default': { translationKey: 'relatorioEspecialTitle', group: 'documentacao-relatorios' },
           'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'pecas-biblioteca' },
+          'cadastro-pecas-stock-default': { translationKey: 'cadastroPecasStockTitle', group: 'pecas-biblioteca' },
           'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'empresa-institucional' },
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
           'diario-pedidos-dia-default': { translationKey: 'diarioPedidosTitle', group: 'gestao-tecnica' },
@@ -8969,6 +8974,7 @@ export default function Dashboard() {
                                b.id === 'relatorio-servico-default' ? 'open-relatorio-servico' :
                                b.id === 'relatorio-especial-default' ? 'open-relatorio-especial' :
                                b.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' :
+                               b.id === 'cadastro-pecas-stock-default' ? 'open-cadastro-pecas-stock' :
                                b.id === 'solicitacao-servico-tecnico-default' ? 'open-solicitacao-servico-tecnico' :
                                b.id === 'agenda-default' ? 'open-agenda' :
                                b.id === 'diario-pedidos-dia-default' ? 'open-diario-pedidos-dia' :
@@ -9036,7 +9042,7 @@ export default function Dashboard() {
         'fechamento-relatorios-servicos-default',
       ]
 
-      const pecasBibliotecaButtonIds = ['biblioteca-pecas-default']
+      const pecasBibliotecaButtonIds = ['biblioteca-pecas-default', 'cadastro-pecas-stock-default']
 
       const empresaInstitucionalButtonIds = [
         'cadastro-nonato-service-default',
@@ -9069,6 +9075,7 @@ export default function Dashboard() {
 
       const pecasBibliotecaTranslationKeys: { [key: string]: string } = {
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
+        'cadastro-pecas-stock-default': 'cadastroPecasStockTitle',
       }
       
       const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
@@ -9296,6 +9303,7 @@ export default function Dashboard() {
       const hasFornecedores = buttons.some((b: SidebarButton) => b.id === 'fornecedores-default')
       const hasRelatorioServico = buttons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
       const hasBibliotecaPecas = buttons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasCadastroPecasStock = buttons.some((b: SidebarButton) => b.id === 'cadastro-pecas-stock-default')
       const hasSolicitacaoServicoTecnico = buttons.some((b: SidebarButton) => b.id === 'solicitacao-servico-tecnico-default')
       const hasAgenda = buttons.some((b: SidebarButton) => b.id === 'agenda-default')
       const hasDiarioPedidosDia = buttons.some((b: SidebarButton) => b.id === 'diario-pedidos-dia-default')
@@ -9746,6 +9754,17 @@ export default function Dashboard() {
           group: 'pecas-biblioteca'
         }
         buttons.push(bibliotecaPecasButton)
+      }
+
+      if (!hasCadastroPecasStock) {
+        buttons.push({
+          id: 'cadastro-pecas-stock-default',
+          name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+          action: 'open-cadastro-pecas-stock',
+          order: buttons.length,
+          translationKey: 'cadastroPecasStockTitle',
+          group: 'pecas-biblioteca',
+        })
       }
 
       if (!hasSolicitacaoServicoTecnico) {
@@ -10218,6 +10237,7 @@ export default function Dashboard() {
       const hasClientesAfter = filteredButtons.some((b: SidebarButton) => b.id === 'clientes-default')
       const hasRelatorioServicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
       const hasBibliotecaPecasAfter = filteredButtons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasCadastroPecasStockAfter = filteredButtons.some((b: SidebarButton) => b.id === 'cadastro-pecas-stock-default')
       const hasSolicitacaoServicoTecnicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'solicitacao-servico-tecnico-default')
       const hasAgendaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'agenda-default')
       const hasDiarioPedidosDiaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'diario-pedidos-dia-default')
@@ -10354,6 +10374,16 @@ export default function Dashboard() {
           order: filteredButtons.length,
           translationKey: 'cadastroPecasBibliotecaTitle',
           group: 'gestao-tecnica'
+        })
+      }
+      if (!hasCadastroPecasStockAfter) {
+        filteredButtons.push({
+          id: 'cadastro-pecas-stock-default',
+          name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+          action: 'open-cadastro-pecas-stock',
+          order: filteredButtons.length,
+          translationKey: 'cadastroPecasStockTitle',
+          group: 'pecas-biblioteca',
         })
       }
       if (!hasSolicitacaoServicoTecnicoAfter) {
@@ -11146,6 +11176,8 @@ export default function Dashboard() {
         return safeT?.bibliotecaRelatoriosTitle || button.name || ''
       } else if (button.id === 'biblioteca-pecas-default') {
         return safeT?.cadastroPecasBibliotecaTitle || button.name || ''
+      } else if (button.id === 'cadastro-pecas-stock-default') {
+        return (safeT as any)?.cadastroPecasStockTitle || button.name || ''
       } else if (button.id === 'relatorios-excluidos-clientes-default') {
         return (safeT as any)?.relatoriosExcluidosClientesTitle || button.name || ''
       } else if (button.id === 'solicitacao-servico-tecnico-default') {
@@ -23009,6 +23041,7 @@ export default function Dashboard() {
     'open-relatorio-especial': 'relatorioServico',
     'open-biblioteca-relatorios': 'relatorioServico',
     'open-biblioteca-pecas': 'bibliotecaPecas',
+    'open-cadastro-pecas-stock': 'bibliotecaPecas',
     'open-importacao-pecas': 'bibliotecaPecas',
     'open-pecas-substituicao': 'bibliotecaPecas',
     'open-solicitacao-servico-tecnico': 'agenda',
@@ -23611,6 +23644,8 @@ export default function Dashboard() {
       setBibliotecaAgruparPorCategoria(false)
       setVisualizacaoBiblioteca('grid')
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
+    } else if (action === 'open-cadastro-pecas-stock') {
+      openTab('cadastro-pecas-stock', getTabTitle('cadastro-pecas-stock'))
     } else if (action === 'open-biblioteca-pecas') {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-importacao-pecas') {
@@ -35997,6 +36032,19 @@ export default function Dashboard() {
 
       case 'pecas-substituicao':
         return renderTabContent({ ...tab, type: 'biblioteca-pecas' })
+
+      case 'cadastro-pecas-stock':
+        return (
+          <CadastroPecasStockContent
+            safeT={safeT as Record<string, string | undefined>}
+            activeTabId={activeTabId || undefined}
+            closeTab={closeTab}
+            voltarPaginaInicial={voltarPaginaInicial}
+            logoSlot={<LogoComponent size="small" />}
+            saveData={saveData}
+            loadData={loadData}
+          />
+        )
       
       case 'biblioteca-pecas': {
         const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
@@ -68321,6 +68369,43 @@ A1;Peça exemplo;10`}
                             {bibSub?.trim() ? (
                               <span className="sidebar-tip-bubble" role="tooltip">
                                 {bibSub}
+                              </span>
+                            ) : null}
+                          </button>
+                        )
+                      }
+                      if (button.id === 'cadastro-pecas-stock-default') {
+                        const isSelected = selectedSidebarButton === 'open-cadastro-pecas-stock'
+                        const stockSub = resolveActionCardDescription(
+                          trCardDesc,
+                          'cadastro-pecas-stock-default',
+                          'open-cadastro-pecas-stock',
+                          pickTrChain(trCardDesc, ['cadastroPecasStockDesc'])
+                        )
+                        return (
+                          <button
+                            key={button.id}
+                            type="button"
+                            className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                              isSelected ? ' sidebar-action-btn-active' : ''
+                            }`}
+                            onClick={() => handleButtonClick('open-cadastro-pecas-stock')}
+                          >
+                            {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                            <span className="sidebar-empresa-entry-row">
+                              <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                                📦
+                              </span>
+                              <span className="sidebar-empresa-entry-text">
+                                <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                              </span>
+                            </span>
+                            <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                              ›
+                            </span>
+                            {stockSub?.trim() ? (
+                              <span className="sidebar-tip-bubble" role="tooltip">
+                                {stockSub}
                               </span>
                             ) : null}
                           </button>

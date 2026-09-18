@@ -67,6 +67,7 @@ export const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'relatorio-servico-default': 'relatorioServicoTitle',
   'relatorio-especial-default': 'relatorioEspecialTitle',
   'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
+  'cadastro-pecas-stock-default': 'cadastroPecasStockTitle',
   'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
   'agenda-default': 'agendaTitle',
   'diario-pedidos-dia-default': 'diarioPedidosTitle',

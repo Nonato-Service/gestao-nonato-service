@@ -11,6 +11,7 @@ export const TAB_MODULE_INTRO_KEYS: Partial<Record<TabType, readonly string[]>> 
   fornecedores: ['fornecedoresSubtitle'],
   'relatorio-servico': ['relatorioServicoSubtitle'],
   'biblioteca-pecas': ['quickAccessBibliotecaPecasDesc'],
+  'cadastro-pecas-stock': ['cadastroPecasStockDesc'],
   'solicitacao-servico-tecnico': ['solicitacaoServicoTecnicoSubtitle'],
   desmontados: ['desmontadosSubtitle'],
   'cadastro-servicos': ['cadastroServicosSubtitle'],

@@ -40,6 +40,7 @@ export type TabType =
   | 'relatorio-especial'
   | 'pecas-substituicao'
   | 'biblioteca-pecas'
+  | 'cadastro-pecas-stock'
   | 'importacao-pecas'
   | 'solicitacao-servico-tecnico'
   | 'agenda'
