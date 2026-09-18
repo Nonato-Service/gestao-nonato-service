@@ -51,9 +51,6 @@ function codigoNorm(v: string): string {
 
 export function CadastroPecasStockContent({
   safeT,
-  activeTabId,
-  closeTab,
-  voltarPaginaInicial,
   logoSlot,
   saveData,
   loadData,
@@ -239,48 +236,28 @@ export function CadastroPecasStockContent({
     padding: '10px 12px',
     background: '#1a1a1a',
     color: '#fff',
-    border: '1px solid #00ff00',
+    border: '1px solid rgba(0, 200, 83, 0.35)',
     borderRadius: 8,
     fontSize: 14,
     boxSizing: 'border-box',
   }
-  const btnGreen: React.CSSProperties = {
-    padding: '10px 16px',
-    background: '#00aa00',
-    color: '#fff',
-    border: '2px solid #00ff00',
-    borderRadius: 8,
-    fontWeight: 700,
-    cursor: 'pointer',
-  }
-  const btnSec: React.CSSProperties = {
-    padding: '10px 16px',
-    background: 'transparent',
-    color: '#00ff00',
-    border: '2px solid #00ff00',
-    borderRadius: 8,
-    fontWeight: 700,
-    cursor: 'pointer',
-  }
+  const tabClass = (id: AbaStock) =>
+    'cadastro-valores-v2__tab' + (aba === id ? ' cadastro-valores-v2__tab--active' : '')
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}>
-      <div
-        style={{
-          marginBottom: 20,
-          padding: 20,
-          background: '#2a2a2a',
-          border: '2px solid #00ff00',
-          borderRadius: 16,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>{logoSlot}</div>
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <h1 style={{ margin: 0, color: '#00ff00', fontSize: 20, letterSpacing: '0.04em' }}>
+    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
+      <div className="cadastro-valores-v2__hero">
+        <div className="cadastro-valores-v2__hero-row">
+          <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>{logoSlot}</div>
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <h1 className="cadastro-valores-v2__hero-title">
               {tr(safeT, 'cadastroPecasStockTitle', 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK')}
             </h1>
-            <p style={{ margin: '6px 0 0', color: '#bbb', fontSize: 13, lineHeight: 1.45 }}>
+            <p className="cadastro-valores-v2__hero-meta">
+              {pecas.length} {tr(safeT, 'quantidadePecas', 'peça(s)')} · {categorias.length}{' '}
+              {tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
+            </p>
+            <p className="cadastro-valores-v2__hero-meta" style={{ marginTop: 6 }}>
               {tr(
                 safeT,
                 'cadastroPecasStockHint',
@@ -288,38 +265,22 @@ export function CadastroPecasStockContent({
               )}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" style={btnSec} onClick={() => closeTab(activeTabId || '')}>
-              {tr(safeT, 'voltar', 'Voltar')}
-            </button>
-            <button type="button" style={btnGreen} onClick={voltarPaginaInicial}>
-              {tr(safeT, 'paginaInicial', 'Página Inicial')}
-            </button>
-          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          style={aba === 'cadastro' ? btnGreen : btnSec}
-          onClick={() => setAba('cadastro')}
-        >
+      <div className="tab-nav-desktop cadastro-valores-v2__tabs">
+        <button type="button" className={tabClass('cadastro')} onClick={() => setAba('cadastro')}>
           {tr(safeT, 'cadastroPecas', 'Cadastro de Peças')}
         </button>
-        <button
-          type="button"
-          style={aba === 'categorias' ? btnGreen : btnSec}
-          onClick={() => setAba('categorias')}
-        >
+        <button type="button" className={tabClass('categorias')} onClick={() => setAba('categorias')}>
           {tr(safeT, 'cadastroPecasStockCategorias', 'Categorias')}
         </button>
       </div>
 
       {aba === 'cadastro' ? (
         <>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-            <button type="button" className="btn-primary" style={btnGreen} onClick={abrirNova}>
+          <div className="cadastro-valores-v2__grupos-bar-head" style={{ display: 'flex', gap: 12, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button type="button" className="btn-primary" onClick={abrirNova}>
               {tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
             </button>
             <input
@@ -451,11 +412,11 @@ export function CadastroPecasStockContent({
                 </div>
               ) : null}
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" style={btnGreen} onClick={() => void guardar()}>
+              <div className="cadastro-valores-v2__form-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button type="button" className="btn-primary" onClick={() => void guardar()}>
                   {tr(safeT, 'cadastroPecasStockGuardar', 'Guardar peça')}
                 </button>
-                <button type="button" style={btnSec} onClick={fecharForm}>
+                <button type="button" className="btn-primary" onClick={fecharForm}>
                   {tr(safeT, 'cancel', 'Cancelar')}
                 </button>
               </div>
@@ -504,17 +465,19 @@ export function CadastroPecasStockContent({
                         {peca.quantidade != null ? ` · ${tr(safeT, 'cadastroPecasStockQtd', 'Qtd.')}: ${peca.quantidade}` : ''}
                       </div>
                     </div>
-                    <button type="button" style={btnSec} onClick={() => abrirEditar(peca)}>
-                      {tr(safeT, 'cadastroPecasStockEditar', 'Editar')}
-                    </button>
-                    <button type="button" className="btn-danger" onClick={() => void apagar(peca)}>
-                      {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
-                    </button>
+                    <div className="cadastro-valores-v2__form-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                      <button type="button" className="btn-primary cadastro-valores-v2__btn-sm" onClick={() => abrirEditar(peca)}>
+                        {tr(safeT, 'cadastroPecasStockEditar', 'Editar')}
+                      </button>
+                      <button type="button" className="btn-danger cadastro-valores-v2__btn-sm" onClick={() => void apagar(peca)}>
+                        {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
+                      </button>
+                    </div>
                   </div>
                 )
               })}
               {filtradas.length > visiveis.length ? (
-                <button type="button" style={btnSec} onClick={() => setListaLimite((n) => n + LISTA_UI_LOTE)}>
+                <button type="button" className="btn-primary" onClick={() => setListaLimite((n) => n + LISTA_UI_LOTE)}>
                   {tr(safeT, 'mostrarMais', 'Mostrar mais')} ({filtradas.length - visiveis.length})
                 </button>
               ) : null}
@@ -529,7 +492,7 @@ export function CadastroPecasStockContent({
             </h3>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input style={{ ...inputStyle, maxWidth: 320 }} value={novaCat} onChange={(e) => setNovaCat(e.target.value)} />
-              <button type="button" style={btnGreen} onClick={() => void addCategoria()}>
+              <button type="button" className="btn-primary" onClick={() => void addCategoria()}>
                 {tr(safeT, 'cadastroPecasStockNovaCategoria', 'Nova categoria')}
               </button>
             </div>
@@ -537,7 +500,7 @@ export function CadastroPecasStockContent({
               {categorias.map((c) => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, color: '#fff' }}>
                   <span>{c.nome}</span>
-                  <button type="button" className="btn-danger" onClick={() => void apagarCategoria(c.id)}>
+                  <button type="button" className="btn-danger cadastro-valores-v2__btn-sm" onClick={() => void apagarCategoria(c.id)}>
                     {tr(safeT, 'cadastroPecasStockApagar', 'Apagar')}
                   </button>
                 </div>
@@ -558,7 +521,7 @@ export function CadastroPecasStockContent({
                 ))}
               </select>
               <input style={{ ...inputStyle, maxWidth: 280 }} value={novaSub} onChange={(e) => setNovaSub(e.target.value)} />
-              <button type="button" style={btnGreen} onClick={() => void addSub()}>
+              <button type="button" className="btn-primary" onClick={() => void addSub()}>
                 {tr(safeT, 'cadastroPecasStockNovaSub', 'Nova subcategoria')}
               </button>
             </div>
