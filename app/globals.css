@@ -2155,21 +2155,43 @@ body {
     transform 0.22s ease;
 }
 .sidebar-nav-cluster[data-sidebar-zone='operacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-operacao);
   border-left: 2px solid rgba(0, 200, 83, 0.35);
 }
 .sidebar-nav-cluster[data-sidebar-zone='comercial'] {
+  --sidebar-sep-accent: var(--sidebar-zone-comercial);
   border-left: 2px solid rgba(56, 189, 248, 0.32);
 }
+.sidebar-nav-cluster[data-sidebar-zone='pagamentos'] {
+  --sidebar-sep-accent: #2dd4bf;
+  border-left: 2px solid rgba(45, 212, 191, 0.35);
+}
 .sidebar-nav-cluster[data-sidebar-zone='documentacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-documentacao);
   border-left: 2px solid rgba(167, 139, 250, 0.32);
 }
 .sidebar-nav-cluster[data-sidebar-zone='comunicacao'] {
+  --sidebar-sep-accent: var(--sidebar-zone-comunicacao);
   border-left: 2px solid rgba(244, 114, 182, 0.32);
 }
+.sidebar-nav-cluster[data-sidebar-zone='pecas-armazem'] {
+  --sidebar-sep-accent: #60a5fa;
+  border-left: 2px solid rgba(96, 165, 250, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='industrial'] {
+  --sidebar-sep-accent: #fb923c;
+  border-left: 2px solid rgba(251, 146, 60, 0.32);
+}
+.sidebar-nav-cluster[data-sidebar-zone='checklist'] {
+  --sidebar-sep-accent: #34d399;
+  border-left: 2px solid rgba(52, 211, 153, 0.32);
+}
 .sidebar-nav-cluster[data-sidebar-zone='institucional'] {
+  --sidebar-sep-accent: var(--sidebar-zone-institucional);
   border-left: 2px solid rgba(251, 191, 36, 0.35);
 }
 .sidebar-nav-cluster[data-sidebar-zone='sistema'] {
+  --sidebar-sep-accent: var(--sidebar-zone-sistema);
   border-left: 2px solid rgba(251, 113, 133, 0.32);
 }
 
@@ -3230,25 +3252,70 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
     transform 0.18s ease;
 }
 
+@keyframes sidebar-principal-beacon {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: scale(0.78);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 8px color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 80%, transparent),
+      0 0 16px color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 35%, transparent);
+  }
+}
+
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected) {
-  background: var(--sidebar-inactive-bg) !important;
-  color: var(--sidebar-text-dim) !important;
-  border: 1px solid var(--sidebar-inactive-border) !important;
-  border-left: 3px solid rgba(0, 200, 83, 0.62) !important;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 18%, #141414) 0%,
+      #1b1b1b 46%,
+      #171717 100%
+    ) !important;
+  color: #f7f7f7 !important;
+  border: 1px solid color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 26%, #333) !important;
+  border-left: 4px solid var(--sidebar-sep-accent, #00c853) !important;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.03) inset,
-    0 2px 10px rgba(0, 0, 0, 0.22) !important;
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 3px 14px rgba(0, 0, 0, 0.28) !important;
+  padding-left: 26px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.sidebar button.sidebar-group-header::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--sidebar-sep-accent, #00c853);
+  pointer-events: none;
+  animation: sidebar-principal-beacon 2.3s ease-in-out infinite;
 }
 
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected):hover {
-  background: rgba(28, 36, 32, 0.95) !important;
-  border-color: rgba(0, 200, 80, 0.35) !important;
-  border-left-color: var(--sidebar-accent) !important;
-  color: var(--sidebar-text) !important;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 26%, #161616) 0%,
+      #1d1d1d 50%,
+      #181818 100%
+    ) !important;
+  border-color: color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 42%, #3a3a3a) !important;
+  border-left-color: var(--sidebar-sep-accent, #00c853) !important;
+  color: #ffffff !important;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
     0 4px 16px rgba(0, 0, 0, 0.28),
-    0 0 20px rgba(0, 200, 83, 0.1) !important;
+    0 0 20px color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 16%, transparent) !important;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -3263,8 +3330,10 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
 }
 
 .sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
-  border-left-color: rgba(251, 113, 133, 0.55) !important;
+  --sidebar-sep-accent: #fb7185;
+  border-left-color: rgba(251, 113, 133, 0.7) !important;
   background: linear-gradient(165deg, rgba(48, 28, 32, 0.55) 0%, rgba(22, 18, 19, 0.98) 100%) !important;
+  padding-left: 26px !important;
 }
 
 .sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected):hover {
@@ -3678,9 +3747,31 @@ svg.ns-vivid-icon.assist-field-glyph {
   }
 }
 
+.sidebar button.sidebar-group-header.sidebar-group-btn-selected {
+  isolation: isolate;
+  animation: none !important;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 28%, #121212) 0%,
+      #191919 52%,
+      #151515 100%
+    ) !important;
+  border: 1px solid color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 48%, #3a3a3a) !important;
+  border-left: 4px solid var(--sidebar-sep-accent, #00c853) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 22%, transparent),
+    0 0 22px color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 16%, transparent) !important;
+  text-shadow: none !important;
+  transform: none !important;
+  padding-left: 26px !important;
+}
+
 /* Grupo selecionado — anel branco animado (igual Ajuda F1); fundo/cor como cabeçalho inativo */
-.sidebar .sidebar-group-btn-selected,
-.sidebar-group-btn-selected {
+.sidebar .sidebar-group-btn-selected:not(.sidebar-group-header),
+.sidebar-group-btn-selected:not(.sidebar-group-header) {
   isolation: isolate;
   border: 2px solid transparent !important;
   border-left: 2px solid transparent !important;
@@ -3710,27 +3801,17 @@ svg.ns-vivid-icon.assist-field-glyph {
 }
 
 .sidebar .btn-administrador.sidebar-group-btn-selected {
-  background:
-    linear-gradient(165deg, rgba(48, 28, 32, 0.55) 0%, rgba(22, 18, 19, 0.98) 100%) padding-box,
-    conic-gradient(
-      from var(--help-f1-ring-angle),
-      rgba(255, 255, 255, 0.2) 0deg,
-      rgba(255, 255, 255, 0.2) 282deg,
-      rgba(255, 255, 255, 0.55) 308deg,
-      rgba(255, 255, 255, 1) 328deg,
-      rgba(255, 255, 255, 0.55) 352deg,
-      rgba(255, 255, 255, 0.2) 360deg
-    ) border-box !important;
-  background-clip: padding-box, border-box;
-  background-origin: border-box;
-  border: 2px solid transparent !important;
-  border-left: 2px solid transparent !important;
+  --sidebar-sep-accent: #fb7185;
+  background: linear-gradient(165deg, rgba(72, 32, 40, 0.72) 0%, rgba(22, 18, 19, 0.98) 100%) !important;
+  border: 1px solid rgba(251, 113, 133, 0.45) !important;
+  border-left: 4px solid #fb7185 !important;
   color: #fff !important;
   text-shadow: none !important;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 0 20px rgba(255, 255, 255, 0.16) !important;
-  animation: main-help-f1-ring-angle 2.6s linear infinite;
+    0 0 0 1px rgba(251, 113, 133, 0.2),
+    0 0 20px rgba(251, 113, 133, 0.16) !important;
+  animation: none !important;
+  padding-left: 26px !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3743,6 +3824,11 @@ svg.ns-vivid-icon.assist-field-glyph {
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.18),
       0 0 22px rgba(255, 255, 255, 0.2) !important;
+  }
+  .sidebar button.sidebar-group-header::after {
+    animation: none;
+    opacity: 0.85;
+    transform: none;
   }
 }
 
@@ -10524,6 +10610,13 @@ button.clientes-alfa-letra--toggle:hover {
   animation: ui-expand-chevron-glow-box 1.85s ease-in-out infinite;
 }
 
+.sidebar .sidebar-nav-chevron--entry,
+.sidebar .sidebar-action-btn.sidebar-action-btn--row .sidebar-nav-chevron {
+  color: #fff;
+  animation: ui-expand-chevron-glow 1.85s ease-in-out infinite;
+  will-change: opacity, filter, text-shadow;
+}
+
 .sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry)::before {
   border-left-color: #fff;
 }
@@ -10564,6 +10657,8 @@ button.clientes-alfa-letra--toggle:hover {
   .fg-checklist-pro__expand,
   .manuais-pro__expand,
   .sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry),
+  .sidebar .sidebar-nav-chevron--entry,
+  .sidebar .sidebar-action-btn.sidebar-action-btn--row .sidebar-nav-chevron,
   .ns-hub-card-icon--chevron {
     animation: none;
     opacity: 0.95;
@@ -52576,9 +52671,15 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
 }
 
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected) {
-  background: #2a2a2a !important;
-  border-color: #3f3f3f !important;
-  color: rgba(244, 244, 244, 0.9) !important;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 18%, #141414) 0%,
+      #1b1b1b 46%,
+      #171717 100%
+    ) !important;
+  border-color: color-mix(in srgb, var(--sidebar-sep-accent, #00c853) 26%, #333) !important;
+  color: #f7f7f7 !important;
 }
 
 .sidebar .sidebar-action-buttons {
