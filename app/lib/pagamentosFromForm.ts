@@ -5,6 +5,7 @@ import {
   createAnexoPagamentoFromForm as createAnexoPagamentoFromFormPure,
   createEmpresaRecebedoraFromForm as createEmpresaRecebedoraFromFormPure,
   createPagamentoSaidaFromForm as createPagamentoSaidaFromFormPure,
+  marcarEmpresaRecebedoraApagada as marcarEmpresaRecebedoraApagadaPure,
   marcarPagamentoSaidaComoPago as marcarPagamentoSaidaComoPagoPure,
   updateEmpresaRecebedoraFromForm as updateEmpresaRecebedoraFromFormPure,
   updatePagamentoSaidaFromForm as updatePagamentoSaidaFromFormPure,
@@ -77,4 +78,8 @@ export function createAnexoPagamentoFromForm(
 
 export function marcarPagamentoSaidaComoPago(existing: PagamentoSaida): PagamentoSaida {
   return marcarPagamentoSaidaComoPagoPure(existing, { nowMs: Date.now() })
+}
+
+export function marcarEmpresaRecebedoraApagada(existing: EmpresaRecebedora): EmpresaRecebedora {
+  return marcarEmpresaRecebedoraApagadaPure(existing, { nowMs: Date.now() })
 }

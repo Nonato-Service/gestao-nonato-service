@@ -19,6 +19,7 @@ import {
   pagamentoPodeSerPago,
   agruparPagamentosPorMes,
   asListaPagamentos,
+  buildPagamentosPdfHtml,
   formatarDataPagamentoVisivel,
   mergePagamentosPorId,
   mesesDisponiveisPagamentos,
@@ -39,10 +40,12 @@ import {
   emptyPagamentoSaidaForm,
   ensureEmpresasOficiaisPagamentos,
   pagamentoFormDaInstituicao,
+  marcarEmpresaRecebedoraApagada,
   marcarPagamentoSaidaComoPago,
   updateEmpresaRecebedoraFromForm,
   updatePagamentoSaidaFromForm,
 } from '../lib/pagamentosFromForm'
+import { abrirPdfPagamentos } from '../lib/pagamentosPdf'
 
 const MAX_ANEXO_BYTES = 8 * 1024 * 1024
 
@@ -105,6 +108,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   const [erro, setErro] = useState('')
   const [okMsg, setOkMsg] = useState('')
   const [mesFiltro, setMesFiltro] = useState('todos')
+  const [selecionados, setSelecionados] = useState<Record<string, boolean>>({})
   const anexoAPagarRef = useRef<HTMLInputElement>(null)
   const anexoPagoRef = useRef<HTMLInputElement>(null)
   const empresasRef = useRef<EmpresaRecebedora[]>([])
@@ -187,19 +191,21 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   }
 
   const apagarEmpresa = async (e: EmpresaRecebedora) => {
-    if (isEmpresaRecebedoraOficial(e.id)) {
-      setErro(tr(safeT, 'pagamentosEmpresaOficialBloqueada', 'Este destino oficial não pode ser apagado'))
-      return
-    }
     const ok = window.confirm(tr(safeT, 'pagamentosInstituicaoConfirmApagar', 'Apagar esta instituição?'))
     if (!ok) return
-    await persistEmpresas(empresas.filter((x) => x.id !== e.id))
+    if (isEmpresaRecebedoraOficial(e.id)) {
+      const hidden = marcarEmpresaRecebedoraApagada(e)
+      await persistEmpresas(empresas.map((x) => (x.id === hidden.id ? hidden : x)))
+    } else {
+      await persistEmpresas(empresas.filter((x) => x.id !== e.id))
+    }
     if (editingEmpresa?.id === e.id) {
       setEditingEmpresa(null)
       setEmpresaForm(emptyEmpresaRecebedoraForm())
     }
     if (instituicaoId === e.id) {
       setInstituicaoId('')
+      setSelecionados({})
       setVista('instituicoes')
     }
   }
@@ -318,6 +324,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     const ok = window.confirm(tr(safeT, 'pagamentosConfirmApagar', 'Apagar este pagamento?'))
     if (!ok) return
     await persistRegistos(registosRef.current.filter((x) => x.id !== p.id))
+    setSelecionados((prev) => {
+      if (!prev[p.id]) return prev
+      const next = { ...prev }
+      delete next[p.id]
+      return next
+    })
+    if (visualizarPag?.id === p.id) {
+      setVisualizarPag(null)
+      setVista('ficha')
+    }
     if (editingPag?.id === p.id) {
       setEditingPag(null)
       const inst = empresas.find((e) => e.id === instituicaoId)
@@ -353,6 +369,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     setAbaFicha('a-pagar')
     setEditingPag(null)
     setVisualizarPag(null)
+    setSelecionados({})
     setPagForm(pagamentoFormDaInstituicao(e))
     setErro('')
   }
@@ -413,6 +430,51 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
 
   const inputClass = 'ns-pagamentos-input'
 
+  const pdfLabels = () => ({
+    title: tr(safeT, 'pagamentosTitle', 'PAGAMENTOS'),
+    instituicao: tr(safeT, 'pagamentosInstituicaoNome', 'Nome da instituição'),
+    data: tr(safeT, 'pagamentosDataEfetuada', 'Data do pagamento'),
+    paraQuem: tr(safeT, 'pagamentosParaQuem', 'Para quem'),
+    metodo: tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento'),
+    entidade: tr(safeT, 'pagamentosEntidade', 'Entidade'),
+    referencia: tr(safeT, 'pagamentosReferencia', 'Referência'),
+    iban: tr(safeT, 'pagamentosIban', 'IBAN / conta'),
+    contribuinte: tr(safeT, 'pagamentosContribuinte', 'Contribuinte (NIF)'),
+    valor: tr(safeT, 'pagamentosValor', 'Valor'),
+    estado: tr(safeT, 'pagamentosEstado', 'Estado'),
+    aPagar: tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar'),
+    pago: tr(safeT, 'pagamentosItensPagos', 'Itens pagos'),
+    total: tr(safeT, 'pagamentosTotalInst', 'Total'),
+    print: tr(safeT, 'pagamentosPdfImprimir', 'Imprimir / PDF'),
+    close: tr(safeT, 'pagamentosFecharVisualizar', 'Fechar'),
+  })
+
+  const gerarPdf = (itens: PagamentoSaida[], titulo: string, instituicaoNome: string) => {
+    if (!itens.length) {
+      setErro(tr(safeT, 'pagamentosPdfVazio', 'Selecione pelo menos um pagamento'))
+      return
+    }
+    const html = buildPagamentosPdfHtml({
+      titulo,
+      instituicaoNome,
+      itens,
+      labels: pdfLabels(),
+      formatarData: (data) => formatarDataPagamentoVisivel(data, localeMes, tr(safeT, 'pagamentosSemData', 'Sem data')),
+      formatarValor: fmtValor,
+      metodoLabel: (m) => metodoLabel(safeT, m),
+    })
+    if (!abrirPdfPagamentos(html)) {
+      setErro(tr(safeT, 'pagamentosPopupBloqueado', 'Permita janelas emergentes para gerar o PDF'))
+    }
+  }
+
+  const toggleSelecionado = (id: string) => {
+    setSelecionados((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const listaAbaAtual = abaFicha === 'a-pagar' ? aPagar : pagos
+  const itensSelecionados = daInstituicao.filter((p) => selecionados[p.id])
+
   const renderAnexos = (p: PagamentoSaida) =>
     (p.anexos || []).length === 0 ? null : (
       <div className="ns-pagamentos-anexos-list">
@@ -444,6 +506,14 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
           <ul className="ns-pagamentos-list">
             {grupo.itens.map((p) => (
               <li key={p.id}>
+                <label className="ns-pagamentos-select">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(selecionados[p.id])}
+                    onChange={() => toggleSelecionado(p.id)}
+                    aria-label={tr(safeT, 'pagamentosSelecionar', 'Selecionar')}
+                  />
+                </label>
                 <div>
                   <strong>{p.paraQuem}</strong>
                   <span>
@@ -484,7 +554,14 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   </button>
                   <button
                     type="button"
-                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
+                    className="btn-primary ns-pagamentos-btn"
+                    onClick={() => gerarPdf([p], tr(safeT, 'pagamentosPdfIndividual', 'PDF individual'), p.empresaNome || instituicao?.nome || '')}
+                  >
+                    {tr(safeT, 'pagamentosPdfIndividual', 'PDF individual')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-apagar"
                     onClick={() => apagarPagamento(p)}
                   >
                     {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
@@ -547,6 +624,11 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <button type="button" className="btn-primary ns-pagamentos-btn" onClick={guardarEmpresa}>
                 {tr(safeT, 'pagamentosInstituicaoGuardar', 'Guardar instituição')}
               </button>
+              {editingEmpresa ? (
+                <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-apagar" onClick={() => apagarEmpresa(editingEmpresa)}>
+                  {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
+                </button>
+              ) : null}
               <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={voltarInstituicoes}>
                 {tr(safeT, 'pagamentosCancelar', 'Cancelar')}
               </button>
@@ -606,11 +688,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                     <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={() => abrirEditarInstituicao(e)}>
                       {tr(safeT, 'pagamentosEditarCurto', 'Editar')}
                     </button>
-                    {!oficial ? (
-                      <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={() => apagarEmpresa(e)}>
-                        {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
-                      </button>
-                    ) : null}
+                    <button
+                      type="button"
+                      className="btn-primary ns-pagamentos-btn"
+                      onClick={() => gerarPdf(itens, tr(safeT, 'pagamentosPdfTotal', 'PDF total'), e.nome)}
+                    >
+                      {tr(safeT, 'pagamentosPdfTotal', 'PDF total')}
+                    </button>
+                    <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-apagar" onClick={() => apagarEmpresa(e)}>
+                      {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
+                    </button>
                   </div>
                 </article>
               )
@@ -648,6 +735,38 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
           <div className="ns-pagamentos-actions">
             <button type="button" className="btn-primary ns-pagamentos-btn" onClick={abrirNovoPagamento}>
               {tr(safeT, 'pagamentosNovoItem', 'Novo item')}
+            </button>
+            <button
+              type="button"
+              className="btn-primary ns-pagamentos-btn"
+              onClick={() => gerarPdf(daInstituicao, tr(safeT, 'pagamentosPdfTotal', 'PDF total'), instituicao.nome)}
+            >
+              {tr(safeT, 'pagamentosPdfTotal', 'PDF total')}
+            </button>
+            <button
+              type="button"
+              className="btn-primary ns-pagamentos-btn"
+              onClick={() => gerarPdf(itensSelecionados, tr(safeT, 'pagamentosPdfSelecionados', 'PDF selecionados'), instituicao.nome)}
+            >
+              {tr(safeT, 'pagamentosPdfSelecionados', 'PDF selecionados')}
+            </button>
+            <button
+              type="button"
+              className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
+              onClick={() =>
+                setSelecionados((prev) => {
+                  const next = { ...prev }
+                  listaAbaAtual.forEach((p) => {
+                    next[p.id] = true
+                  })
+                  return next
+                })
+              }
+            >
+              {tr(safeT, 'pagamentosSelecionarTodos', 'Selecionar todos')}
+            </button>
+            <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={() => setSelecionados({})}>
+              {tr(safeT, 'pagamentosLimparSelecao', 'Limpar seleção')}
             </button>
           </div>
           <section className="ns-pagamentos-card">
@@ -875,6 +994,22 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
             </dl>
             {renderAnexos(visualizarPag)}
             <div className="ns-pagamentos-actions">
+              <button
+                type="button"
+                className="btn-primary ns-pagamentos-btn"
+                onClick={() =>
+                  gerarPdf(
+                    [visualizarPag],
+                    tr(safeT, 'pagamentosPdfIndividual', 'PDF individual'),
+                    visualizarPag.empresaNome || instituicao?.nome || ''
+                  )
+                }
+              >
+                {tr(safeT, 'pagamentosPdfIndividual', 'PDF individual')}
+              </button>
+              <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-apagar" onClick={() => apagarPagamento(visualizarPag)}>
+                {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
+              </button>
               <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={voltarFicha}>
                 {tr(safeT, 'pagamentosFecharVisualizar', 'Fechar')}
               </button>

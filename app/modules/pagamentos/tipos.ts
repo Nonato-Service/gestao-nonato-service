@@ -23,6 +23,7 @@ export type EmpresaRecebedora = {
   iban?: string
   banco?: string
   notas?: string
+  apagado?: boolean
   criadoEm: string
   atualizadoEm: string
 }

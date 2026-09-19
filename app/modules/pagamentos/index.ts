@@ -43,6 +43,7 @@ export type { TotalInstituicaoPagamento, GrupoMesPagamento } from './resumo'
 export {
   PAGAMENTOS_MES_SEM_DATA,
   compararNomePt,
+  empresasRecebedorasVisiveis,
   ordenarEmpresasAlfabeto,
   dataLocalISOFromMs,
   normalizarDataPagamento,
@@ -70,5 +71,9 @@ export {
   createAnexoPagamentoFromForm,
   arquivarAnexosAPagarComoPagos,
   marcarPagamentoSaidaComoPago,
+  marcarEmpresaRecebedoraApagada,
   normalizePagamentoSaida,
 } from './fromForm'
+
+export type { PagamentosPdfLabels } from './pdfHtml'
+export { buildPagamentosPdfHtml } from './pdfHtml'

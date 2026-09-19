@@ -2739,12 +2739,34 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
   border-color: rgba(255, 255, 255, 0.16) !important;
   box-shadow: none !important;
 }
+html body .ns-pagamentos-root .ns-pagamentos-btn-apagar,
+html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn-apagar {
+  background: rgba(220, 40, 40, 0.14) !important;
+  color: #ffb4b4 !important;
+  -webkit-text-fill-color: #ffb4b4 !important;
+  border-color: rgba(255, 80, 80, 0.45) !important;
+  box-shadow: none !important;
+}
+.ns-pagamentos-select {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+}
+.ns-pagamentos-select input {
+  width: 16px;
+  height: 16px;
+  accent-color: rgba(0, 255, 0, 0.55);
+}
 .ns-pagamentos-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .ns-pagamentos-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 10px 0;
   color: rgba(255, 255, 255, 0.9);
@@ -43574,6 +43596,21 @@ html body .relatorio-especial-root .relatorio-especial-form__envio .doc-envio-ac
 
 html body .relatorio-especial-root .relatorio-especial-form__hero {
   margin: 0 0 16px;
+}
+html body .relatorio-especial-form--leitura input:not([type="hidden"]),
+html body .relatorio-especial-form--leitura textarea,
+html body .relatorio-especial-form--leitura select {
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f4f4f4 !important;
+  -webkit-text-fill-color: #f4f4f4 !important;
+}
+html body .relatorio-especial-form--leitura .relatorio-especial-ver-valor {
+  margin: 6px 0 0;
+  color: #f4f4f4;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 html body .relatorio-especial-root .relatorio-especial-form__secoes-ajuda {

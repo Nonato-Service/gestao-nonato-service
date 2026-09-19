@@ -6,8 +6,12 @@ export function compararNomePt(a: string, b: string): number {
   return String(a || '').localeCompare(String(b || ''), 'pt', { sensitivity: 'base' })
 }
 
+export function empresasRecebedorasVisiveis(list: EmpresaRecebedora[]): EmpresaRecebedora[] {
+  return (Array.isArray(list) ? list : []).filter((e) => !e.apagado)
+}
+
 export function ordenarEmpresasAlfabeto(list: EmpresaRecebedora[]): EmpresaRecebedora[] {
-  return [...(Array.isArray(list) ? list : [])].sort((a, b) => compararNomePt(a.nome, b.nome))
+  return empresasRecebedorasVisiveis(list).sort((a, b) => compararNomePt(a.nome, b.nome))
 }
 
 export const PAGAMENTOS_MES_SEM_DATA = 'sem-data'

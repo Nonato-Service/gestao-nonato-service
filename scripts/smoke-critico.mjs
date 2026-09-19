@@ -1272,6 +1272,15 @@ try {
     pagSrc.includes("vista === 'editar'") &&
     pagSrc.includes("vista === 'visualizar'") &&
     pagSrc.includes('pagamentosNovoItem') &&
+    pagSrc.includes('pagamentosPdfIndividual') &&
+    pagSrc.includes('pagamentosPdfSelecionados') &&
+    pagSrc.includes('pagamentosPdfTotal') &&
+    pagSrc.includes('ns-pagamentos-btn-apagar') &&
+    pagSrc.includes('buildPagamentosPdfHtml') &&
+    pagSrc.includes('marcarEmpresaRecebedoraApagada') &&
+    exists('app/modules/pagamentos/pdfHtml.ts') &&
+    !fs.readFileSync(path.join(root, 'app/modules/pagamentos/pdfHtml.ts'), 'utf8').includes('Date.now') &&
+    pagFrom.includes('marcarEmpresaRecebedoraApagada') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('mergePagamentosPorId') &&
     pagFrom.includes('pagamentoPodeSerPago') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('formatarDataPagamentoVisivel') &&
@@ -2700,7 +2709,11 @@ try {
     hub.includes('re-form-equipamentos') &&
     hub.includes('re-form-dias') &&
     hub.includes('re-form-resumo') &&
-    hub.includes('re-form-observacoes')
+    hub.includes('re-form-observacoes') &&
+    hub.includes('abrirVisualizar') &&
+    hub.includes("modo === 'visualizar'") &&
+    hub.includes('relatorioEspecialVisualizar') &&
+    hub.includes('relatorio-especial-form--leitura')
   ) {
     ok('RelatorioEspecialHub: painéis retraíveis com seta (padrão BibliotecaHubPainel)')
   } else {

@@ -554,7 +554,7 @@ export default function RelatorioEspecialHub({
         </button>
       </span>
     ) : null
-  const [modo, setModo] = useState<'lista' | 'form' | 'fechamento'>('lista')
+  const [modo, setModo] = useState<'lista' | 'form' | 'visualizar' | 'fechamento'>('lista')
   const [form, setForm] = useState<RelatorioEspecial>(() => criarRelatorioEspecialVazio())
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [diaExpandido, setDiaExpandido] = useState<string | null>(null)
@@ -600,7 +600,7 @@ export default function RelatorioEspecialHub({
   }, [formComTotais])
 
   const voltarLista = useCallback(() => {
-    if (modo !== 'lista' && formTemAlteracoes()) {
+    if (modo !== 'lista' && modo !== 'visualizar' && formTemAlteracoes()) {
       const msg =
         t.relatorioEspecialSairSemGuardar ||
         'Tem alterações por guardar. Sair mesmo assim? (clique em Guardar para não perder)'
@@ -841,7 +841,7 @@ export default function RelatorioEspecialHub({
     [clienteEquipamentos, equipamentosArmazem]
   )
 
-  const abrirEditar = useCallback(
+  const carregarRelatorioNoForm = useCallback(
     (rel: RelatorioEspecial) => {
       const cid =
         resolverClienteIdRelatorio(rel, clientes) || String(rel.clienteId || '').trim()
@@ -863,11 +863,26 @@ export default function RelatorioEspecialHub({
       setForm(copia)
       marcarSnapshot(copia)
       setEditandoId(rel.id)
-      setModo('form')
       setDiaExpandido(null)
       setEquipExpandidos(new Set())
     },
     [marcarSnapshot, clientes, equipamentosArmazem]
+  )
+
+  const abrirEditar = useCallback(
+    (rel: RelatorioEspecial) => {
+      carregarRelatorioNoForm(rel)
+      setModo('form')
+    },
+    [carregarRelatorioNoForm]
+  )
+
+  const abrirVisualizar = useCallback(
+    (rel: RelatorioEspecial) => {
+      carregarRelatorioNoForm(rel)
+      setModo('visualizar')
+    },
+    [carregarRelatorioNoForm]
   )
 
   const abrirFechamento = useCallback(
@@ -1129,6 +1144,8 @@ export default function RelatorioEspecialHub({
     }
   }
 
+  const somenteLeitura = modo === 'visualizar'
+
   if (modo === 'lista') {
     return (
       <div className="relatorio-especial-hub" style={{ padding: '16px 0' }}>
@@ -1304,6 +1321,9 @@ export default function RelatorioEspecialHub({
                       )}
                     </div>
                     <div className="relatorio-especial-card__acoes">
+                      <button type="button" className="btn-secondary" onClick={() => abrirVisualizar(rel)}>
+                        {t.relatorioEspecialVisualizar || t.visualizar || 'Visualizar'}
+                      </button>
                       <button type="button" className="btn-secondary" onClick={() => abrirEditar(rel)}>
                         ✏️ {t.edit || 'Editar'}
                       </button>
@@ -1529,24 +1549,30 @@ export default function RelatorioEspecialHub({
   const statusObservacoes: HubPainelStatus = (form.observacoes || '').trim() ? 'ok' : 'empty'
 
   return (
-    <div className="relatorio-especial-form" style={{ padding: '16px 0' }}>
+    <div className={`relatorio-especial-form${somenteLeitura ? ' relatorio-especial-form--leitura' : ''}`} style={{ padding: '16px 0' }}>
       {modalEscolhaSecoesPdf}
       <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
         <button type="button" className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
-        <button
-          type="button"
-          className="mobile-toolbar-btn mobile-toolbar-btn--primary"
-          disabled={salvando}
-          onClick={() => void persistir()}
-        >
-          {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
-        </button>
+        {somenteLeitura ? (
+          <button type="button" className="mobile-toolbar-btn mobile-toolbar-btn--primary" onClick={() => setModo('form')}>
+            ✏️ {t.edit || 'Editar'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="mobile-toolbar-btn mobile-toolbar-btn--primary"
+            disabled={salvando}
+            onClick={() => void persistir()}
+          >
+            {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
+          </button>
+        )}
         <button type="button" className="mobile-toolbar-btn" onClick={() => pedirExportComSecoes(formComTotais, 'pdf')}>
           🖨 PDF
         </button>
-        {editandoId && (
+        {!somenteLeitura && editandoId ? (
           <button
             type="button"
             className="mobile-toolbar-btn mobile-toolbar-btn--danger"
@@ -1558,7 +1584,7 @@ export default function RelatorioEspecialHub({
               ? t.relatorioEspecialAEliminar || 'A eliminar…'
               : t.delete || 'Eliminar'}
           </button>
-        )}
+        ) : null}
       </div>
 
       <div className="relatorio-especial-form__action-bar relatorio-especial-form__action-bar--sticky-top relatorio-especial-desktop-nav">
@@ -1566,15 +1592,21 @@ export default function RelatorioEspecialHub({
           ← {t.voltar || 'Voltar'}
         </button>
         <div className="relatorio-especial-form__action-bar-acoes">
-          <button
-            type="button"
-            className="re-action-btn re-action-btn--primary"
-            disabled={salvando}
-            onClick={() => void persistir()}
-          >
-            {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
-          </button>
-          {editandoId ? (
+          {somenteLeitura ? (
+            <button type="button" className="re-action-btn re-action-btn--primary" onClick={() => setModo('form')}>
+              ✏️ {t.edit || 'Editar'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="re-action-btn re-action-btn--primary"
+              disabled={salvando}
+              onClick={() => void persistir()}
+            >
+              {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
+            </button>
+          )}
+          {!somenteLeitura && editandoId ? (
             <button
               type="button"
               className="re-action-btn re-action-btn--danger"
@@ -1602,15 +1634,19 @@ export default function RelatorioEspecialHub({
 
       <header className="relatorio-especial-form__hero">
         <h2 className="relatorio-especial-form__titulo">
-          {editandoId
-            ? t.relatorioEspecialEditar || 'Editar relatório de serviços'
-            : t.relatorioEspecialNovo || 'Novo relatório de serviços'}
+          {somenteLeitura
+            ? t.relatorioEspecialVisualizarTitulo || 'Visualizar relatório especial'
+            : editandoId
+              ? t.relatorioEspecialEditar || 'Editar relatório de serviços'
+              : t.relatorioEspecialNovo || 'Novo relatório de serviços'}
         </h2>
         <p className="relatorio-especial-form__secoes-ajuda">
-          {t.relatorioEspecialSecoesAjuda ||
-            'Toque numa secção para abrir ou fechar. No ecrã grande as secções aparecem em grelha.'}
+          {somenteLeitura
+            ? t.relatorioEspecialVisualizarAjuda || 'Só visualização. Use Editar para alterar os blocos.'
+            : t.relatorioEspecialSecoesAjuda ||
+              'Toque numa secção para abrir ou fechar. No ecrã grande as secções aparecem em grelha.'}
         </p>
-        {formTemAlteracoes() ? (
+        {!somenteLeitura && formTemAlteracoes() ? (
           <p className="relatorio-especial-form__aviso-pendente">
             {t.relatorioEspecialAlteracoesPendentes ||
               'Alterações por guardar — clique em Guardar antes de sair.'}
@@ -1662,7 +1698,9 @@ export default function RelatorioEspecialHub({
           </div>
           <div className="relatorio-especial-form__field relatorio-especial-form__field--full relatorio-especial-form__field--tecnico">
             <label>{t.selecioneTecnico || 'Técnico'}</label>
-            {tecnicosOpcoes.length > 0 ? (
+            {somenteLeitura ? (
+              <p className="relatorio-especial-ver-valor">{form.tecnico || '—'}</p>
+            ) : tecnicosOpcoes.length > 0 ? (
               <div className="relatorio-especial-tecnicos-chips" role="listbox" aria-label={t.selecioneTecnico || 'Técnico'}>
                 {tecnicosOpcoes.slice(0, tecnicosListaLimite).map((tec) => {
                   const selected = form.tecnico === tec.name
@@ -1699,20 +1737,24 @@ export default function RelatorioEspecialHub({
                   'Nenhum técnico na lista. Cadastre em Gestores / Técnicos, ou escreva o nome abaixo.'}
               </p>
             )}
-            <input
-              type="text"
-              value={form.tecnico}
-              onChange={(e) => setForm({ ...form, tecnico: e.target.value })}
-              placeholder={t.selecioneTecnico || 'Nome do técnico'}
-              list="relatorio-especial-tecnicos-datalist"
-              style={{ ...inputStyle, marginTop: 8 }}
-              autoComplete="off"
-            />
-            <datalist id="relatorio-especial-tecnicos-datalist">
-              {tecnicosOpcoes.map((tec) => (
-                <option key={`dl-${tec.id}`} value={tec.name} />
-              ))}
-            </datalist>
+            {somenteLeitura ? null : (
+              <>
+                <input
+                  type="text"
+                  value={form.tecnico}
+                  onChange={(e) => setForm({ ...form, tecnico: e.target.value })}
+                  placeholder={t.selecioneTecnico || 'Nome do técnico'}
+                  list="relatorio-especial-tecnicos-datalist"
+                  style={{ ...inputStyle, marginTop: 8 }}
+                  autoComplete="off"
+                />
+                <datalist id="relatorio-especial-tecnicos-datalist">
+                  {tecnicosOpcoes.map((tec) => (
+                    <option key={`dl-${tec.id}`} value={tec.name} />
+                  ))}
+                </datalist>
+              </>
+            )}
           </div>
 
           <div className="relatorio-especial-form__field relatorio-especial-form__field--full">
@@ -1720,8 +1762,9 @@ export default function RelatorioEspecialHub({
               <input
                 type="checkbox"
                 checked={Boolean(form.servicoConcluido)}
+                disabled={somenteLeitura}
                 onChange={(e) => setForm((prev) => ({ ...prev, servicoConcluido: e.target.checked }))}
-                style={{ width: 18, height: 18, cursor: 'pointer' }}
+                style={{ width: 18, height: 18, cursor: somenteLeitura ? 'default' : 'pointer' }}
               />
               <span>{t.servicoConcluido || 'Serviço Concluído'}</span>
             </label>
@@ -1731,7 +1774,7 @@ export default function RelatorioEspecialHub({
             </p>
           </div>
 
-          {editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
+          {!somenteLeitura && editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
             <div className="relatorio-especial-form__cobranca-bar relatorio-especial-form__cobranca-bar--row">
               {onAbrirFechamentoCobranca && form.servicoConcluido ? (
                 <RelatorioCobrancaAcoes
@@ -1799,22 +1842,26 @@ export default function RelatorioEspecialHub({
 
           <div className="relatorio-especial-form__field relatorio-especial-form__field--full">
             <label>{t.selecioneCliente || 'Cliente'}</label>
-            <ClienteAlfabetoPicker
-              clientes={clientesOrdenados}
-              selectedId={form.clienteId || ''}
-              language={selectedLanguage}
-              labels={t as any}
-              listMaxHeight={240}
-              onSelect={(c) =>
-                setForm((prev) => ({
-                  ...prev,
-                  clienteId: c.id,
-                  cliente: c.nomeEmpresa,
-                  cidade: c.localidade || prev.cidade,
-                  telefone: c.telefones || prev.telefone,
-                }))
-              }
-            />
+            {somenteLeitura ? (
+              <p className="relatorio-especial-ver-valor">{form.cliente || '—'}</p>
+            ) : (
+              <ClienteAlfabetoPicker
+                clientes={clientesOrdenados}
+                selectedId={form.clienteId || ''}
+                language={selectedLanguage}
+                labels={t as any}
+                listMaxHeight={240}
+                onSelect={(c) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    clienteId: c.id,
+                    cliente: c.nomeEmpresa,
+                    cidade: c.localidade || prev.cidade,
+                    telefone: c.telefones || prev.telefone,
+                  }))
+                }
+              />
+            )}
           </div>
           <div className="relatorio-especial-form__field">
             <label>{t.cidade || 'Cidade'}</label>
@@ -1888,6 +1935,7 @@ export default function RelatorioEspecialHub({
                 </button>
               </>
             )}
+            {somenteLeitura ? null : (
             <button
               type="button"
               className="btn-primary relatorio-equipamentos-block__add"
@@ -1896,6 +1944,7 @@ export default function RelatorioEspecialHub({
             >
               + {t.relatorioAdicionarEquipamento || 'Adicionar equipamento'}
             </button>
+            )}
           </div>
         </div>
 
@@ -1930,6 +1979,7 @@ export default function RelatorioEspecialHub({
                       {aberto ? '▼' : '▶'}
                     </span>
                   </button>
+                  {somenteLeitura ? null : (
                   <button
                     type="button"
                     className="btn-danger btn-danger--inline relatorio-equipamento-card__remove"
@@ -1944,6 +1994,7 @@ export default function RelatorioEspecialHub({
                   >
                     {t.removerEquipamentoRelatorio || 'Remover'}
                   </button>
+                  )}
                 </div>
 
                 {aberto && (
@@ -2457,9 +2508,11 @@ export default function RelatorioEspecialHub({
                 'Apenas a data é obrigatória. Horários, KM e equipamentos são opcionais.'}
             </p>
           </div>
+          {somenteLeitura ? null : (
           <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={adicionarDia}>
             + {t.adicionarDia || 'Adicionar dia'}
           </button>
+          )}
         </div>
         <div className="relatorio-especial-callout" role="note">
           <span className="relatorio-especial-callout__icon" aria-hidden="true">
@@ -2524,9 +2577,11 @@ export default function RelatorioEspecialHub({
                     <th colSpan={3}>{t.retorno || 'Retorno'}</th>
                     <th colSpan={3}>{t.km || 'KM'}</th>
                     <th rowSpan={2}>{t.pausa || 'Pausa'}</th>
+                    {somenteLeitura ? null : (
                     <th rowSpan={2} className="relatorio-dia-acao-head">
                       {t.acao || 'Ação'}
                     </th>
+                    )}
                   </tr>
                   <tr className="relatorio-especial-horas-table__sub">
                     <th>{t.saida || 'Saída'}</th>
@@ -2607,6 +2662,7 @@ export default function RelatorioEspecialHub({
                           <td>{dia.kmRetorno || '0'}</td>
                           <td>{diaCalc.kmTotal || '0'}</td>
                           <td rowSpan={temDescricao ? 2 : 1}>{pausaFmt}</td>
+                          {somenteLeitura ? null : (
                           <td className="relatorio-dia-acao-cell" rowSpan={temDescricao ? 2 : 1}>
                             <div className="relatorio-especial-horas-table__acoes">
                               <button
@@ -2643,6 +2699,7 @@ export default function RelatorioEspecialHub({
                               </button>
                             </div>
                           </td>
+                          )}
                         </tr>
                         {temDescricao && (
                           <tr className="relatorio-especial-horas-table__desc-row">
@@ -2969,6 +3026,7 @@ export default function RelatorioEspecialHub({
                             <label>{t.total || 'Total'}</label>
                             <input type="text" readOnly value={linhaCalc.horasDuracao || '—'} style={{ ...inputStyle, opacity: 0.85 }} />
                           </div>
+                          {somenteLeitura ? null : (
                           <button
                             type="button"
                             className="btn-danger btn-danger--inline"
@@ -2988,10 +3046,11 @@ export default function RelatorioEspecialHub({
                           >
                             ✕
                           </button>
+                          )}
                         </div>
                       )
                     })}
-                    {(dia.horasPorEquipamento?.length || 0) < MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA && (
+                    {!somenteLeitura && (dia.horasPorEquipamento?.length || 0) < MAX_LINHAS_HORAS_RELATORIO_ESPECIAL_DIA && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                         <button
                           type="button"
@@ -3134,6 +3193,7 @@ export default function RelatorioEspecialHub({
                       style={{ ...inputStyle, resize: 'vertical' }}
                     />
                   </div>
+                  {somenteLeitura ? null : (
                   <button
                     type="button"
                     className="btn-danger btn-danger--inline"
@@ -3148,6 +3208,7 @@ export default function RelatorioEspecialHub({
                   >
                     {t.removerDia || 'Remover dia'}
                   </button>
+                  )}
                 </div>
               )}
             </div>
@@ -3402,15 +3463,21 @@ export default function RelatorioEspecialHub({
 
       <div className="relatorio-especial-form__action-bar relatorio-especial-form__actions">
         <div className="relatorio-especial-form__action-bar-acoes">
-          <button
-            type="button"
-            className="re-action-btn re-action-btn--primary"
-            disabled={salvando}
-            onClick={() => void persistir()}
-          >
-            {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
-          </button>
-          {editandoId ? (
+          {somenteLeitura ? (
+            <button type="button" className="re-action-btn re-action-btn--primary" onClick={() => setModo('form')}>
+              ✏️ {t.edit || 'Editar'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="re-action-btn re-action-btn--primary"
+              disabled={salvando}
+              onClick={() => void persistir()}
+            >
+              {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
+            </button>
+          )}
+          {!somenteLeitura && editandoId ? (
             <button
               type="button"
               className="re-action-btn re-action-btn--danger"

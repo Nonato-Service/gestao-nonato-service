@@ -41,13 +41,27 @@ export function updateEmpresaRecebedoraFromForm(
   form: EmpresaRecebedoraFormState,
   opts: { atualizadoEm?: string; nowMs: number }
 ): EmpresaRecebedora {
-  return createEmpresaRecebedoraFromForm(form, {
-    id: existing.id,
-    tipo: existing.tipo || 'outra',
-    criadoEm: existing.criadoEm,
-    atualizadoEm: opts.atualizadoEm,
-    nowMs: opts.nowMs,
-  })
+  return {
+    ...createEmpresaRecebedoraFromForm(form, {
+      id: existing.id,
+      tipo: existing.tipo || 'outra',
+      criadoEm: existing.criadoEm,
+      atualizadoEm: opts.atualizadoEm,
+      nowMs: opts.nowMs,
+    }),
+    apagado: existing.apagado,
+  }
+}
+
+export function marcarEmpresaRecebedoraApagada(
+  existing: EmpresaRecebedora,
+  opts: { nowMs: number }
+): EmpresaRecebedora {
+  return {
+    ...existing,
+    apagado: true,
+    atualizadoEm: new Date(opts.nowMs).toISOString(),
+  }
 }
 
 export type PagamentoValidacaoErro =
