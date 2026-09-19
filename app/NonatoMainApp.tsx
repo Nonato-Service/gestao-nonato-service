@@ -958,6 +958,7 @@ import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { CadastroPecasStockContent } from './components/CadastroPecasStockContent'
+import { SessaoGateDialog } from './components/SessaoGateDialog'
 import { ClienteCadastroForm } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
 import { ClienteListaLinhas } from './components/ClienteListaLinhas'
@@ -1362,7 +1363,16 @@ function EquipamentosRelatorioDespesasInline({
 /* getLanguages → app/modules/idiomas */
 
 export default function Dashboard() {
-  const warmOnMount = useMemo(() => isWarmSessionResume(), [])
+  const warmOnMount = useMemo(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage.getItem('nonato-sessao-encerrada') === '1') {
+        return false
+      }
+    } catch {
+      /* ignorar */
+    }
+    return isWarmSessionResume()
+  }, [])
   const initialUiSession = useMemo(() => loadUiSessionSnapshot(), [])
 
   useEffect(() => {
@@ -1521,6 +1531,17 @@ export default function Dashboard() {
     return true
   })
   const [sairEmCurso, setSairEmCurso] = useState(false)
+  const [showSairGate, setShowSairGate] = useState(false)
+  const [showAcessoGate, setShowAcessoGate] = useState(false)
+  const SESSAO_ENCERRADA_KEY = 'nonato-sessao-encerrada'
+  const [sessaoEncerrada, setSessaoEncerrada] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.localStorage.getItem(SESSAO_ENCERRADA_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
   const [checklistAccessNomeInput, setChecklistAccessNomeInput] = useState('')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
@@ -6664,6 +6685,16 @@ export default function Dashboard() {
     fetch('/api/auth/status', { credentials: 'include' })
       .then((r) => r.json())
       .then((auth: { authenticated?: boolean; user?: User }) => {
+        try {
+          if (window.localStorage.getItem(SESSAO_ENCERRADA_KEY) === '1') {
+            setLoginUser(null)
+            setShowPasswordScreen(false)
+            setShowSplashInicial(true)
+            return
+          }
+        } catch {
+          /* ignorar */
+        }
         const isRealAuth = Boolean(
           auth.authenticated && auth.user && !auth.user.isDemoGuest && auth.user.id !== 'demo-visitor'
         )
@@ -23396,14 +23427,10 @@ export default function Dashboard() {
     })
   }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
 
-  // «Sair do sistema»: guardar (se online) + limpar sessão/auth → splash (login completo). Não usar o X do browser.
-  const handleSairDoSistema = useCallback(async () => {
+  // «Sair do programa»: portão formal → guardar + limpar sessão → ecrã de acesso. Não usar o X do browser.
+  const executarSaidaDoPrograma = useCallback(async () => {
     if (typeof window === 'undefined' || sairEmCurso) return
     const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const msg =
-      (t as { confirmarSair?: string }).confirmarSair ||
-      'Deseja sair do sistema? Os dados serão guardados e será necessário voltar a iniciar sessão.'
-    if (!window.confirm(msg)) return
 
     allowUnsafeBrowserExitRef.current = true
     setSairEmCurso(true)
@@ -23427,12 +23454,26 @@ export default function Dashboard() {
         void fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
         clearLastAuthUser()
         clearWarmSessionMarkers()
+        try {
+          window.localStorage.setItem(SESSAO_ENCERRADA_KEY, '1')
+        } catch {
+          /* ignorar */
+        }
+        setSessaoEncerrada(true)
+        setShowSairGate(false)
         setLoginUser(null)
         setLoginUsuarioInput('')
         setSenhaInicialInput('')
         setShowPasswordScreen(false)
         setShowSplashInicial(true)
       } else {
+        try {
+          window.localStorage.setItem(SESSAO_ENCERRADA_KEY, '1')
+        } catch {
+          /* ignorar */
+        }
+        setSessaoEncerrada(true)
+        setShowSairGate(false)
         setLoginUser(null)
         setShowPasswordScreen(false)
         setShowSplashInicial(true)
@@ -23446,7 +23487,31 @@ export default function Dashboard() {
     }
   }, [selectedLanguage, isDemoMode, sairEmCurso])
 
-  // Aviso ao fechar/recarregar só com «Exigir saída correcta» activo (Admin). Saída correcta = botão «Sair do sistema».
+  const handleSairDoSistema = useCallback(() => {
+    if (sairEmCurso) return
+    setShowSairGate(true)
+  }, [sairEmCurso])
+
+  const limparSessaoEncerrada = useCallback(() => {
+    try {
+      window.localStorage.removeItem(SESSAO_ENCERRADA_KEY)
+    } catch {
+      /* ignorar */
+    }
+    setSessaoEncerrada(false)
+  }, [])
+
+  const pedirAcessarPrograma = useCallback(() => {
+    setShowAcessoGate(true)
+  }, [])
+
+  const confirmarAcessoPrograma = useCallback(() => {
+    setShowAcessoGate(false)
+    setShowSplashInicial(false)
+    setShowPasswordScreen(true)
+  }, [])
+
+  // Aviso ao fechar/recarregar só com «Exigir saída correcta» activo (Admin). Saída correcta = botão «Sair do programa».
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!exigirSaidaCorrecta) return
@@ -67042,17 +67107,32 @@ A1;Peça exemplo;10`}
             <p className="ns-splash-hero-tag">
               {(safeT as any)?.telaInicialClaim || 'Plataforma integrada para gestão técnica, clientes e relatórios de serviço.'}
             </p>
+            {sessaoEncerrada ? (
+              <div className="ns-splash-sessao-banner" role="status">
+                <strong>
+                  {(safeT as { sessaoEncerradaTitle?: string }).sessaoEncerradaTitle ||
+                    'Saiu do programa de forma oficial'}
+                </strong>
+                <span>
+                  {(safeT as { sessaoEncerradaDesc?: string }).sessaoEncerradaDesc ||
+                    'Os dados ficaram guardados. Use o acesso oficial abaixo para voltar a entrar.'}
+                </span>
+              </div>
+            ) : null}
             <button
               type="button"
-              className="ns-splash-cta"
-              aria-label={safeT?.acessarSistema || 'Acessar sistema'}
-              onClick={() => {
-                setShowSplashInicial(false)
-                setShowPasswordScreen(true)
-              }}
+              className="ns-splash-cta ns-splash-cta--oficial"
+              aria-label={
+                (safeT as { acessarPrograma?: string }).acessarPrograma ||
+                safeT?.acessarSistema ||
+                'Acessar o programa'
+              }
+              onClick={pedirAcessarPrograma}
             >
-              <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>⚡</span>
-              {safeT?.acessarSistema || 'Acessar Sistema'}
+              <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>🔐</span>
+              {(safeT as { acessarPrograma?: string }).acessarPrograma ||
+                safeT?.acessarSistema ||
+                'Acessar o programa'}
               <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }} aria-hidden>→</span>
             </button>
           </section>
@@ -67152,6 +67232,32 @@ A1;Peça exemplo;10`}
             {safeT?.splashFooterTagline || '© Nonato Service · Todos os direitos reservados'}
           </footer>
         </div>
+        <SessaoGateDialog
+          open={showAcessoGate}
+          variant="acesso"
+          title={
+            (safeT as { acessarProgramaTitle?: string }).acessarProgramaTitle ||
+            'Aceder ao programa'
+          }
+          body={
+            sessaoEncerrada
+              ? (safeT as { acessarProgramaBodyAposSaida?: string }).acessarProgramaBodyAposSaida ||
+                'A sessão foi encerrada de forma oficial. Para voltar a trabalhar, confirme o acesso e identifique-se com utilizador e senha.'
+              : (safeT as { acessarProgramaBody?: string }).acessarProgramaBody ||
+                'O acesso ao programa é oficial e controlado. Confirme para continuar à identificação com utilizador e senha.'
+          }
+          confirmLabel={
+            (safeT as { acessarProgramaConfirm?: string }).acessarProgramaConfirm ||
+            'Continuar para identificação'
+          }
+          cancelLabel={
+            (safeT as { acessarProgramaCancel?: string }).acessarProgramaCancel ||
+            safeT?.voltar ||
+            'Cancelar'
+          }
+          onConfirm={confirmarAcessoPrograma}
+          onCancel={() => setShowAcessoGate(false)}
+        />
         {bootLoadingOverlay}
         {syncTrafficLightsWidget}
       </div>
@@ -67204,6 +67310,7 @@ A1;Peça exemplo;10`}
       }
       setLoginUser(data.user)
       if (data.user && !data.demoGuest) saveLastAuthUser(data.user)
+      limparSessaoEncerrada()
       setShowPasswordScreen(false)
       setShowSplashInicial(false)
       setLoginUsuarioInput('')
@@ -67234,7 +67341,17 @@ A1;Peça exemplo;10`}
           <div style={{ textAlign: 'center' }}>
             <span className="ns-login-badge">Nonato Service</span>
           </div>
-          <h2 className="ns-login-title">{safeT?.acessoAoSistema || 'Acesso ao sistema'}</h2>
+          <h2 className="ns-login-title">
+            {(safeT as { acessarProgramaTitle?: string }).acessarProgramaTitle ||
+              safeT?.acessoAoSistema ||
+              'Acesso ao sistema'}
+          </h2>
+          {sessaoEncerrada ? (
+            <p className="ns-login-hint ns-login-hint--oficial">
+              {(safeT as { sessaoEncerradaDesc?: string }).sessaoEncerradaDesc ||
+                'Os dados ficaram guardados. Identifique-se para voltar a entrar no programa.'}
+            </p>
+          ) : null}
           <p className="ns-login-subtitle">
             {(safeT as any)?.loginSubtitle ||
               safeT?.permissoesDefinidasAdministrador ||
@@ -67309,17 +67426,53 @@ A1;Peça exemplo;10`}
           <div style={{ textAlign: 'center' }}>
             <span className="ns-login-badge">Nonato Service</span>
           </div>
-          <h2 className="ns-login-title">{safeT?.acessoAoSistema || 'Acesso ao sistema'}</h2>
+          <h2 className="ns-login-title">
+            {(safeT as { acessarProgramaTitle?: string }).acessarProgramaTitle ||
+              safeT?.acessoAoSistema ||
+              'Acesso ao sistema'}
+          </h2>
           <p className="ns-login-subtitle">
             {(safeT as any)?.loginSessionRequired ||
               'Inicie sessão para aceder ao painel de gestão técnica e aos seus dados.'}
           </p>
           <div className="ns-login-actions">
-            <button type="button" className="ns-login-btn ns-login-btn--primary" onClick={() => setShowPasswordScreen(true)}>
-              {safeT?.fazerLogin || 'Fazer login'}
+            <button
+              type="button"
+              className="ns-login-btn ns-login-btn--primary"
+              onClick={pedirAcessarPrograma}
+            >
+              {(safeT as { acessarPrograma?: string }).acessarPrograma ||
+                safeT?.fazerLogin ||
+                'Acessar o programa'}
             </button>
           </div>
         </div>
+        <SessaoGateDialog
+          open={showAcessoGate}
+          variant="acesso"
+          title={
+            (safeT as { acessarProgramaTitle?: string }).acessarProgramaTitle ||
+            'Aceder ao programa'
+          }
+          body={
+            sessaoEncerrada
+              ? (safeT as { acessarProgramaBodyAposSaida?: string }).acessarProgramaBodyAposSaida ||
+                'A sessão foi encerrada de forma oficial. Para voltar a trabalhar, confirme o acesso e identifique-se com utilizador e senha.'
+              : (safeT as { acessarProgramaBody?: string }).acessarProgramaBody ||
+                'O acesso ao programa é oficial e controlado. Confirme para continuar à identificação com utilizador e senha.'
+          }
+          confirmLabel={
+            (safeT as { acessarProgramaConfirm?: string }).acessarProgramaConfirm ||
+            'Continuar para identificação'
+          }
+          cancelLabel={
+            (safeT as { acessarProgramaCancel?: string }).acessarProgramaCancel ||
+            safeT?.voltar ||
+            'Cancelar'
+          }
+          onConfirm={confirmarAcessoPrograma}
+          onCancel={() => setShowAcessoGate(false)}
+        />
         {bootLoadingOverlay}
         {syncTrafficLightsWidget}
       </div>
@@ -69453,27 +69606,65 @@ A1;Peça exemplo;10`}
 
         </div>
 
-        {/* Botão Sair do Sistema — rodapé dentro da sidebar */}
+        {/* Saída oficial do programa — obrigatória por este comando */}
         <div className="sidebar-footer">
         <button
           type="button"
           onClick={() => void handleSairDoSistema()}
-          className="btn-primary sidebar-logout-btn"
+          className="btn-primary sidebar-logout-btn sidebar-logout-btn--oficial"
           disabled={sairEmCurso}
           title={
             sairEmCurso
-              ? (safeT as { sairAGuardar?: string })?.sairAGuardar || 'A guardar dados antes de sair…'
-              : safeT?.sairDoSistema || 'Sair do sistema'
+              ? (safeT as { sairDoProgramaAGuardar?: string })?.sairDoProgramaAGuardar ||
+                (safeT as { sairAGuardar?: string })?.sairAGuardar ||
+                'A guardar e a encerrar…'
+              : (safeT as { sairDoPrograma?: string })?.sairDoPrograma ||
+                safeT?.sairDoSistema ||
+                'Sair do programa'
           }
         >
           <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden>🚪</span>
           <span>
             {sairEmCurso
-              ? (safeT as { sairAGuardar?: string })?.sairAGuardar || 'A guardar…'
-              : safeT?.sairDoSistema || 'Sair do Sistema'}
+              ? (safeT as { sairDoProgramaAGuardar?: string })?.sairDoProgramaAGuardar ||
+                (safeT as { sairAGuardar?: string })?.sairAGuardar ||
+                'A guardar…'
+              : (safeT as { sairDoPrograma?: string })?.sairDoPrograma ||
+                safeT?.sairDoSistema ||
+                'Sair do programa'}
           </span>
         </button>
         </div>
+        <SessaoGateDialog
+          open={showSairGate}
+          variant="sair"
+          title={
+            (safeT as { sairDoProgramaTitle?: string }).sairDoProgramaTitle ||
+            'Encerrar o programa'
+          }
+          body={
+            (safeT as { sairDoProgramaBody?: string }).sairDoProgramaBody ||
+            'A saída do programa é oficial e obrigatória por este comando. Os dados são guardados, a sessão é encerrada e o regresso só acontece pelo acesso oficial.'
+          }
+          confirmLabel={
+            (safeT as { sairDoProgramaConfirm?: string }).sairDoProgramaConfirm ||
+            'Encerrar sessão agora'
+          }
+          cancelLabel={
+            (safeT as { sairDoProgramaCancel?: string }).sairDoProgramaCancel ||
+            'Continuar no programa'
+          }
+          busy={sairEmCurso}
+          busyLabel={
+            (safeT as { sairDoProgramaAGuardar?: string }).sairDoProgramaAGuardar ||
+            (safeT as { sairAGuardar?: string }).sairAGuardar ||
+            'A guardar e a encerrar…'
+          }
+          onConfirm={() => void executarSaidaDoPrograma()}
+          onCancel={() => {
+            if (!sairEmCurso) setShowSairGate(false)
+          }}
+        />
       </div>
 
       {/* Área Principal */}

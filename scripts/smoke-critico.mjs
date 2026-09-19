@@ -1227,6 +1227,31 @@ try {
   fail(`cadastro de peças do stock: ${e && e.message ? e.message : e}`)
 }
 
+try {
+  const gateSrc = exists('app/components/SessaoGateDialog.tsx')
+    ? fs.readFileSync(path.join(root, 'app/components/SessaoGateDialog.tsx'), 'utf8')
+    : ''
+  const nmaGate = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const cssGate = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
+  const i18nGate = JSON.parse(fs.readFileSync(path.join(root, 'app/i18n/messages/pt-BR.json'), 'utf8'))
+  if (
+    gateSrc.includes("variant === 'acesso'") &&
+    nmaGate.includes('executarSaidaDoPrograma') &&
+    nmaGate.includes('pedirAcessarPrograma') &&
+    nmaGate.includes('nonato-sessao-encerrada') &&
+    nmaGate.includes('SessaoGateDialog') &&
+    cssGate.includes('.ns-sessao-gate') &&
+    i18nGate.sairDoPrograma &&
+    i18nGate.acessarPrograma
+  ) {
+    ok('saída e acesso oficiais (portão obrigatório)')
+  } else {
+    fail('saída/acesso oficiais incompletos')
+  }
+} catch (e) {
+  fail(`saída/acesso oficiais: ${e && e.message ? e.message : e}`)
+}
+
 // 3d) Módulo financeiro (3.º corte + 11.º: período/IVA + 18.º: fluxo tipos/mutações)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')

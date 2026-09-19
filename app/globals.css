@@ -3397,6 +3397,14 @@ svg.ns-vivid-icon.assist-field-glyph {
   outline-offset: 2px;
 }
 
+.sidebar-logout-btn--oficial {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  border-color: rgba(248, 113, 113, 0.42);
+  background: linear-gradient(180deg, rgba(80, 24, 24, 0.55) 0%, rgba(22, 16, 16, 0.92) 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar-nav-cluster,
   .sidebar-nav-subcluster {
@@ -15335,6 +15343,116 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 .ns-splash-cta:focus-visible {
   outline: 2px solid rgba(0, 255, 136, 0.9);
   outline-offset: 3px;
+}
+.ns-splash-cta--oficial {
+  min-width: min(100%, 22rem);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.ns-splash-sessao-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  width: min(100%, 36rem);
+  margin: 0 auto 1.1em;
+  padding: 0.85em 1.05em;
+  border-radius: 12px;
+  text-align: left;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  color: rgba(254, 226, 226, 0.96);
+}
+.ns-splash-sessao-banner strong {
+  font-size: clamp(0.86rem, 2.1vw, 1rem);
+  letter-spacing: 0.02em;
+}
+.ns-splash-sessao-banner span {
+  font-size: clamp(0.76rem, 1.95vw, 0.88rem);
+  line-height: 1.5;
+  color: rgba(254, 226, 226, 0.82);
+}
+.ns-sessao-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 120000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px))
+    max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
+  background: rgba(0, 0, 0, 0.72);
+}
+.ns-sessao-gate__card {
+  width: min(100%, 440px);
+  padding: 28px 24px 22px;
+  border-radius: 18px;
+  background: #2a2a2a;
+  border: 1px solid #00ff00;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+.ns-sessao-gate--sair .ns-sessao-gate__card {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+.ns-sessao-gate--acesso .ns-sessao-gate__card {
+  border-color: #00ff00;
+}
+.ns-sessao-gate__icon {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.ns-sessao-gate__title {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.ns-sessao-gate__body {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(226, 232, 240, 0.88);
+}
+.ns-sessao-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ns-sessao-gate__confirm,
+.ns-sessao-gate__cancel {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ns-sessao-gate__confirm {
+  color: #fff;
+  background: rgba(185, 28, 28, 0.92);
+  border: 1px solid rgba(252, 165, 165, 0.45);
+}
+.ns-sessao-gate__confirm--acesso {
+  color: #052e16;
+  background: #00ff00;
+  border-color: #00ff00;
+}
+.ns-sessao-gate__cancel {
+  color: rgba(226, 232, 240, 0.92);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.ns-sessao-gate__confirm:disabled,
+.ns-sessao-gate__cancel:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.ns-login-hint--oficial {
+  color: rgba(254, 226, 226, 0.96);
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.28);
 }
 .ns-splash-legal {
   width: 100%;
