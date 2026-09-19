@@ -14,8 +14,14 @@ import {
   isEmpresaRecebedoraFormValid,
   isEmpresaRecebedoraOficial,
   isPagamentoSaidaFormValid,
+  agruparPagamentosPorMes,
+  mesesDisponiveisPagamentos,
   normalizePagamentoSaida,
   PAGAMENTOS_EMPRESAS_OFICIAIS,
+  PAGAMENTOS_MES_SEM_DATA,
+  pagamentosDoMes,
+  somarValorPagamentos,
+  totaisPorInstituicao,
   PAGAMENTOS_EMPRESAS_STORAGE_KEY,
   PAGAMENTOS_REGISTOS_STORAGE_KEY,
   pagamentoSaidaToForm,
@@ -37,6 +43,7 @@ type Props = {
   saveData: (key: string, data: unknown) => Promise<unknown>
   loadData: (key: string) => Promise<unknown>
   safeT: Record<string, string | undefined>
+  localeLang?: string
 }
 
 type AbaPagamentos = 'empresas' | 'registos'
@@ -60,7 +67,23 @@ function fmtValor(n: number): string {
   return n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-export function PagamentosContent({ saveData, loadData, safeT }: Props) {
+function localePagamentos(lang?: string): string {
+  const k = String(lang || 'pt-BR')
+  if (k === 'pt-BR') return 'pt-PT'
+  if (k === 'es' || k === 'fr' || k === 'it' || k === 'de' || k === 'en') return k
+  return 'pt-PT'
+}
+
+function rotuloMesPagamento(mes: string, locale: string, semData: string): string {
+  if (mes === PAGAMENTOS_MES_SEM_DATA || !/^\d{4}-\d{2}$/.test(mes)) return semData
+  const [y, m] = mes.split('-')
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(locale, {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Props) {
   const [aba, setAba] = useState<AbaPagamentos>('empresas')
   const [empresas, setEmpresas] = useState<EmpresaRecebedora[]>([])
   const [registos, setRegistos] = useState<PagamentoSaida[]>([])
@@ -70,6 +93,7 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
   const [editingPag, setEditingPag] = useState<PagamentoSaida | null>(null)
   const [erro, setErro] = useState('')
   const [okMsg, setOkMsg] = useState('')
+  const [mesFiltro, setMesFiltro] = useState('todos')
   const anexoAPagarRef = useRef<HTMLInputElement>(null)
   const anexoPagoRef = useRef<HTMLInputElement>(null)
 
@@ -249,6 +273,25 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
     oficiais.sort((a, b) => ordem.indexOf(a.id as (typeof ordem)[number]) - ordem.indexOf(b.id as (typeof ordem)[number]))
     return [...oficiais, ...outras]
   }, [empresas])
+
+  const mesesOpcoes = useMemo(() => mesesDisponiveisPagamentos(registos), [registos])
+  const registosVisiveis = useMemo(
+    () => pagamentosDoMes(registos, mesFiltro),
+    [registos, mesFiltro]
+  )
+  const gruposMes = useMemo(
+    () => agruparPagamentosPorMes(registosVisiveis),
+    [registosVisiveis]
+  )
+  const totaisInstituicao = useMemo(
+    () => totaisPorInstituicao(registosVisiveis),
+    [registosVisiveis]
+  )
+  const totalPagoFinal = useMemo(
+    () => somarValorPagamentos(registosVisiveis, true),
+    [registosVisiveis]
+  )
+  const localeMes = localePagamentos(localeLang)
 
   const escolherDestinoOficial = (e: EmpresaRecebedora) => {
     setPagForm((f) => ({
@@ -695,67 +738,132 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
                 {tr(safeT, 'pagamentosVazio', 'Ainda não há pagamentos')}
               </p>
             ) : (
-              <ul className="ns-pagamentos-list">
-                {registos.map((p) => (
-                  <li key={p.id}>
-                    <div>
-                      <strong>{p.paraQuem}</strong>
-                      <span className={`ns-pagamentos-oficial-tag${p.status === 'pago' ? ' ns-pagamentos-status-pago' : ''}`}>
-                        {p.status === 'pago'
-                          ? tr(safeT, 'pagamentosEstadoPago', 'Pago')
-                          : tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
-                      </span>
+              <>
+                <label>
+                  {tr(safeT, 'pagamentosFiltroMes', 'Mês')}
+                  <select
+                    style={inputStyle}
+                    value={mesFiltro}
+                    onChange={(e) => setMesFiltro(e.target.value)}
+                  >
+                    <option value="todos">{tr(safeT, 'pagamentosTodosMeses', 'Todos os meses')}</option>
+                    {mesesOpcoes.map((mes) => (
+                      <option key={mes} value={mes}>
+                        {rotuloMesPagamento(
+                          mes,
+                          localeMes,
+                          tr(safeT, 'pagamentosSemData', 'Sem data')
+                        )}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="ns-pagamentos-totais">
+                  <div className="ns-pagamentos-total-final">
+                    <span>{tr(safeT, 'pagamentosTotalFinal', 'Valor final (tudo somado)')}</span>
+                    <strong>{fmtValor(totalPagoFinal)}</strong>
+                  </div>
+                  <h3>{tr(safeT, 'pagamentosTotalInstituicao', 'Total pago por instituição')}</h3>
+                  {totaisInstituicao.length === 0 ? (
+                    <p className="ns-pagamentos-empty">
+                      {tr(safeT, 'pagamentosVazio', 'Ainda não há pagamentos')}
+                    </p>
+                  ) : (
+                    <ul className="ns-pagamentos-totais-list">
+                      {totaisInstituicao.map((t) => (
+                        <li key={t.empresaId}>
+                          <span>{t.empresaNome}</span>
+                          <strong>{fmtValor(t.totalPago)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {gruposMes.map((grupo) => (
+                  <div key={grupo.mes} className="ns-pagamentos-mes">
+                    <h3>
+                      {rotuloMesPagamento(
+                        grupo.mes,
+                        localeMes,
+                        tr(safeT, 'pagamentosSemData', 'Sem data')
+                      )}
                       <span>
                         {' '}
-                        · {p.empresaNome} · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
+                        · {tr(safeT, 'pagamentosTotalMes', 'Total do mês')} {fmtValor(grupo.totalPago)}
                       </span>
-                      {(p.anexos || []).length > 0 ? (
-                        <div className="ns-pagamentos-anexos-list">
-                          {(p.anexos || []).map((a) => (
+                    </h3>
+                    <ul className="ns-pagamentos-totais-list ns-pagamentos-totais-list--mes">
+                      {grupo.porInstituicao.map((t) => (
+                        <li key={`${grupo.mes}-${t.empresaId}`}>
+                          <span>{t.empresaNome}</span>
+                          <strong>{fmtValor(t.totalPago)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                    <ul className="ns-pagamentos-list">
+                      {grupo.itens.map((p) => (
+                        <li key={p.id}>
+                          <div>
+                            <strong>{p.paraQuem}</strong>
+                            <span className={`ns-pagamentos-oficial-tag${p.status === 'pago' ? ' ns-pagamentos-status-pago' : ''}`}>
+                              {p.status === 'pago'
+                                ? tr(safeT, 'pagamentosEstadoPago', 'Pago')
+                                : tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
+                            </span>
+                            <span>
+                              {' '}
+                              · {p.empresaNome} · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
+                            </span>
+                            {(p.anexos || []).length > 0 ? (
+                              <div className="ns-pagamentos-anexos-list">
+                                {(p.anexos || []).map((a) => (
+                                  <button
+                                    key={a.id}
+                                    type="button"
+                                    className="ns-pagamentos-anexo-chip"
+                                    onClick={() => verAnexo(a)}
+                                  >
+                                    {a.papel === 'pago'
+                                      ? tr(safeT, 'pagamentosAnexoPagoChip', 'Pago')
+                                      : tr(safeT, 'pagamentosAnexoAPagarChip', 'A pagar')}
+                                    {': '}
+                                    {a.nome}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="ns-pagamentos-row-actions">
+                            {p.status !== 'pago' ? (
+                              <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
+                                {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
+                              </button>
+                            ) : null}
                             <button
-                              key={a.id}
                               type="button"
-                              className="ns-pagamentos-anexo-chip"
-                              onClick={() => verAnexo(a)}
+                              className="btn-primary"
+                              onClick={() => {
+                                setEditingPag(p)
+                                setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
+                                setErro('')
+                              }}
                             >
-                              {a.papel === 'pago'
-                                ? tr(safeT, 'pagamentosAnexoPagoChip', 'Pago')
-                                : tr(safeT, 'pagamentosAnexoAPagarChip', 'A pagar')}
-                              {': '}
-                              {a.nome}
+                              {tr(safeT, 'pagamentosEditar', 'Editar pagamento')}
                             </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="ns-pagamentos-row-actions">
-                      {p.status !== 'pago' ? (
-                        <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
-                          {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => {
-                          setEditingPag(p)
-                          setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
-                          setErro('')
-                        }}
-                      >
-                        {tr(safeT, 'pagamentosEditar', 'Editar pagamento')}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-primary ns-pagamentos-btn-ghost"
-                        onClick={() => apagarPagamento(p)}
-                      >
-                        {tr(safeT, 'pagamentosApagar', 'Apagar pagamento')}
-                      </button>
-                    </div>
-                  </li>
+                            <button
+                              type="button"
+                              className="btn-primary ns-pagamentos-btn-ghost"
+                              onClick={() => apagarPagamento(p)}
+                            >
+                              {tr(safeT, 'pagamentosApagar', 'Apagar pagamento')}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </>
             )}
           </section>
         </div>

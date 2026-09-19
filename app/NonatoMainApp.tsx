@@ -45419,6 +45419,7 @@ A1;Peça exemplo;10`}
             }}
             loadData={loadData}
             safeT={safeT as Record<string, string | undefined>}
+            localeLang={selectedLanguage}
           />
         )
 

@@ -2750,6 +2750,53 @@ body {
   padding: 6px 10px;
   cursor: pointer;
 }
+.ns-pagamentos-totais {
+  margin: 14px 0 18px;
+  padding: 12px;
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+  background: #111;
+}
+.ns-pagamentos-totais h3,
+.ns-pagamentos-mes h3 {
+  margin: 12px 0 8px;
+  color: #00ff00;
+  font-size: 14px;
+}
+.ns-pagamentos-total-final {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fff;
+  font-size: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+}
+.ns-pagamentos-total-final strong {
+  color: #00ff00;
+}
+.ns-pagamentos-totais-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ns-pagamentos-totais-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fff;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.15);
+}
+.ns-pagamentos-totais-list--mes {
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.ns-pagamentos-mes {
+  margin-top: 18px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 255, 0, 0.25);
+}
 @media (max-width: 900px) {
   .ns-pagamentos-grid { grid-template-columns: 1fr; }
 }

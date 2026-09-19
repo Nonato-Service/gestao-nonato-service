@@ -1257,6 +1257,11 @@ try {
     pagSrc.includes('handleAnexoFiles') &&
     pagSrc.includes('application/pdf') &&
     pagSrc.includes('marcarComoPago') &&
+    pagSrc.includes('agruparPagamentosPorMes') &&
+    pagSrc.includes('totaisPorInstituicao') &&
+    exists('app/modules/pagamentos/resumo.ts') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('agruparPagamentosPorMes') &&
+    !fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('Date.now') &&
     pagKeys.includes('nonato-pagamentos-empresas') &&
     pagKeys.includes('nonato-pagamentos-registos') &&
     nmaPag.includes('open-pagamentos') &&

@@ -35,6 +35,17 @@ export type {
   CreatePagamentoSaidaFromFormOpts,
   CreateAnexoPagamentoFromFormOpts,
 } from './fromForm'
+export type { TotalInstituicaoPagamento, GrupoMesPagamento } from './resumo'
+export {
+  PAGAMENTOS_MES_SEM_DATA,
+  mesKeyPagamento,
+  pagamentosDoMes,
+  somarValorPagamentos,
+  totaisPorInstituicao,
+  mesesDisponiveisPagamentos,
+  agruparPagamentosPorMes,
+} from './resumo'
+
 export {
   isEmpresaRecebedoraFormValid,
   createEmpresaRecebedoraFromForm,
