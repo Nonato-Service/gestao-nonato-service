@@ -6781,43 +6781,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 /* Página inicial + Ajuda (F1): dentro da área principal / painel do módulo */
 .main-dashboard-actions-bar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-  padding: 0 2px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-.main-dashboard-actions-bar__identity {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.main-dashboard-actions-bar__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #00ff00;
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.45);
-  flex-shrink: 0;
-}
-.main-dashboard-actions-bar__title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #f4f4f4;
-  line-height: 1.2;
-}
-.main-dashboard-actions-bar__actions {
-  display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-left: auto;
+  margin-bottom: 14px;
 }
 .main-module-context-actions {
   /* center: evita botões «Página inicial / HELP» esticarem à altura do bloco do ícone + título (ficavam desproporcionais). */
@@ -52233,23 +52201,52 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   color: #f5e6b8;
 }
 
-.ns-hub-page-head {
-  margin: 0 0 18px;
-  padding: 0 2px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.ns-dashboard-full-hero--bar {
+  text-align: left;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  box-shadow: none;
 }
-.ns-hub-page-head__eyebrow {
-  margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 700;
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__backdrop {
+  display: none;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__content,
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__brand {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+  text-align: left;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__mark {
+  width: 44px !important;
+  height: 44px !important;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__badge {
+  padding: 3px 10px;
+  font-size: 10px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(167, 243, 208, 0.78);
 }
-.ns-hub-page-head__title {
+.ns-dashboard-full-hero--bar .ns-dashboard-full-title {
   margin: 0;
-  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
-  font-weight: 800;
-  letter-spacing: 0.01em;
+  max-width: none;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  line-height: 1.25;
+  letter-spacing: 0;
+  background: none;
+  -webkit-text-fill-color: #f4f4f4;
   color: #f4f4f4;
 }

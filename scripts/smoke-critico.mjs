@@ -1256,14 +1256,15 @@ try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
   const nmaDash = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
-    cssVisual.includes('main-dashboard-actions-bar__identity') &&
-    nmaDash.includes('main-dashboard-actions-bar__identity') &&
-    !nmaDash.includes('ns-dashboard-full-hero--bar') &&
+    cssVisual.includes('ns-dashboard-full-hero--bar') &&
+    nmaDash.includes('ns-dashboard-full-hero--bar') &&
+    nmaDash.includes('ns-dashboard-full-hero__mark') &&
+    !nmaDash.includes('main-dashboard-actions-bar__identity') &&
     !nmaDash.includes('ns-dashboard-full-welcome')
   ) {
-    ok('cabeçalho do painel integrado na barra (sem cartão)')
+    ok('cabeçalho compacto do painel (logo pequeno, sem linha vazia)')
   } else {
-    fail('cabeçalho do painel ainda com cartão extra')
+    fail('cabeçalho do painel fora do visual compacto')
   }
 } catch (e) {
   fail(`visual profissional: ${e && e.message ? e.message : e}`)
