@@ -63007,19 +63007,10 @@ A1;Peça exemplo;10`}
             ← {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
           </button>
         </div>
-        <div className="ns-dashboard-full-hero ns-hub-root__hero ns-dashboard-full-hero--bar">
-          <div className="ns-dashboard-full-hero__content">
-            <div className="ns-dashboard-full-hero__brand">
-              <div className="ns-dashboard-full-hero__logo">
-                <LogoComponent size="small" />
-              </div>
-              <div className="ns-dashboard-full-hero__copy">
-                {hubEyebrow ? <span className="ns-dashboard-full-hero__badge">{hubEyebrow}</span> : null}
-                <h1 className="ns-dashboard-full-title">{getDashboardMainHubTitle(hubId)}</h1>
-              </div>
-            </div>
-          </div>
-        </div>
+        <header className="ns-hub-page-head">
+          {hubEyebrow ? <p className="ns-hub-page-head__eyebrow">{hubEyebrow}</p> : null}
+          <h1 className="ns-hub-page-head__title">{getDashboardMainHubTitle(hubId)}</h1>
+        </header>
         {rows.length === 0 ? (
           <p className="ns-hub-empty">{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</p>
         ) : (
@@ -69885,6 +69876,13 @@ A1;Peça exemplo;10`}
               flexDirection: dashboardWorkspaceExpanded ? undefined : 'column',
             }}>
               <div className="main-dashboard-actions-bar">
+                <div className="main-dashboard-actions-bar__identity">
+                  <span className="main-dashboard-actions-bar__dot" aria-hidden />
+                  <h1 className="main-dashboard-actions-bar__title">
+                    {safeT?.boaTrade || safeT?.nonatoService || 'NONATO SERVICE'}
+                  </h1>
+                </div>
+                <div className="main-dashboard-actions-bar__actions">
                 {dashboardWorkspaceExpanded ? (
                   <button
                     type="button"
@@ -69908,6 +69906,7 @@ A1;Peça exemplo;10`}
                     {safeT?.help || 'HELP'} - F1
                   </span>
                 </button>
+                </div>
               </div>
               {!dashboardWorkspaceExpanded ? (
                 <div className="ns-dashboard-entry">
@@ -69935,23 +69934,6 @@ A1;Peça exemplo;10`}
                 renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
                 <div className="ns-dashboard-full">
-              <div className="ns-dashboard-full-hero ns-dashboard-full-hero--bar">
-                <div className="ns-dashboard-full-hero__content">
-                  <div className="ns-dashboard-full-hero__brand">
-                    <div className="ns-dashboard-full-hero__logo">
-                      <LogoComponent size="small" />
-                    </div>
-                    <div className="ns-dashboard-full-hero__copy">
-                      <span className="ns-dashboard-full-hero__badge">
-                        {(safeT as Record<string, string | undefined>)?.dashboardShowcaseBadge ||
-                          'Nonato Service · Gestão Técnica'}
-                      </span>
-                      <h1 className="ns-dashboard-full-title">{safeT?.title || 'Gestão Técnica'}</h1>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Estatísticas rápidas — cartões uniformes, hover em CSS */}
               <div className="ns-dashboard-stats">
                 <div

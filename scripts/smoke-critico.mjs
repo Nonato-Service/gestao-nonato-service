@@ -1256,13 +1256,14 @@ try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
   const nmaDash = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
-    cssVisual.includes('ns-dashboard-full-hero--bar') &&
-    nmaDash.includes('ns-dashboard-full-hero--bar') &&
+    cssVisual.includes('main-dashboard-actions-bar__identity') &&
+    nmaDash.includes('main-dashboard-actions-bar__identity') &&
+    !nmaDash.includes('ns-dashboard-full-hero--bar') &&
     !nmaDash.includes('ns-dashboard-full-welcome')
   ) {
-    ok('cabeçalho compacto do painel (sem cartão de apresentação)')
+    ok('cabeçalho do painel integrado na barra (sem cartão)')
   } else {
-    fail('cabeçalho do painel ainda no modo apresentação')
+    fail('cabeçalho do painel ainda com cartão extra')
   }
 } catch (e) {
   fail(`visual profissional: ${e && e.message ? e.message : e}`)
