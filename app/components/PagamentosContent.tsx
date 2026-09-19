@@ -10,7 +10,9 @@ import {
   emptyEmpresaRecebedoraForm,
   empresaRecebedoraToForm,
   isEmpresaRecebedoraFormValid,
+  isEmpresaRecebedoraOficial,
   isPagamentoSaidaFormValid,
+  PAGAMENTOS_EMPRESAS_OFICIAIS,
   PAGAMENTOS_EMPRESAS_STORAGE_KEY,
   PAGAMENTOS_REGISTOS_STORAGE_KEY,
   pagamentoSaidaToForm,
@@ -19,6 +21,7 @@ import {
   createEmpresaRecebedoraFromForm,
   createPagamentoSaidaFromForm,
   emptyPagamentoSaidaForm,
+  ensureEmpresasOficiaisPagamentos,
   updateEmpresaRecebedoraFromForm,
   updatePagamentoSaidaFromForm,
 } from '../lib/pagamentosFromForm'
@@ -69,13 +72,21 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
         loadData(PAGAMENTOS_REGISTOS_STORAGE_KEY),
       ])
       if (cancelled) return
-      setEmpresas(asArray<EmpresaRecebedora>(empRaw))
+      const loaded = asArray<EmpresaRecebedora>(empRaw)
+      const nomesOficiais = Object.fromEntries(
+        PAGAMENTOS_EMPRESAS_OFICIAIS.map((d) => [d.id, tr(safeT, d.nomeKey, d.nomeFallback)])
+      ) as Record<(typeof PAGAMENTOS_EMPRESAS_OFICIAIS)[number]['id'], string>
+      const ensured = ensureEmpresasOficiaisPagamentos(loaded, { nomes: nomesOficiais })
+      setEmpresas(ensured.list)
+      if (ensured.added > 0) {
+        await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, ensured.list)
+      }
       setRegistos(asArray<PagamentoSaida>(pagRaw))
     })()
     return () => {
       cancelled = true
     }
-  }, [loadData])
+  }, [loadData, saveData])
 
   const persistEmpresas = useCallback(
     async (next: EmpresaRecebedora[]) => {
@@ -117,6 +128,10 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
   }
 
   const apagarEmpresa = async (e: EmpresaRecebedora) => {
+    if (isEmpresaRecebedoraOficial(e.id)) {
+      setErro(tr(safeT, 'pagamentosEmpresaOficialBloqueada', 'Este destino oficial não pode ser apagado'))
+      return
+    }
     const ok = window.confirm(
       tr(safeT, 'pagamentosEmpresaConfirmApagar', 'Apagar esta empresa?')
     )
@@ -163,10 +178,25 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
     }
   }
 
-  const empresasOrdenadas = useMemo(
-    () => [...empresas].sort((a, b) => a.nome.localeCompare(b.nome, 'pt')),
-    [empresas]
-  )
+  const empresasOrdenadas = useMemo(() => {
+    const oficiais = empresas.filter((e) => isEmpresaRecebedoraOficial(e.id))
+    const outras = empresas
+      .filter((e) => !isEmpresaRecebedoraOficial(e.id))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt'))
+    const ordem = PAGAMENTOS_EMPRESAS_OFICIAIS.map((d) => d.id)
+    oficiais.sort((a, b) => ordem.indexOf(a.id as (typeof ordem)[number]) - ordem.indexOf(b.id as (typeof ordem)[number]))
+    return [...oficiais, ...outras]
+  }, [empresas])
+
+  const escolherDestinoOficial = (e: EmpresaRecebedora) => {
+    setPagForm((f) => ({
+      ...f,
+      empresaId: e.id,
+      paraQuem: e.nome,
+    }))
+    setAba('registos')
+    setErro('')
+  }
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -264,14 +294,50 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
           </section>
 
           <section className="ns-pagamentos-card">
-            <h2>{tr(safeT, 'pagamentosListaEmpresas', 'Empresas que receberam')}</h2>
-            {empresasOrdenadas.length === 0 ? (
+            <h2>{tr(safeT, 'pagamentosEmpresasOficiais', 'Destinos oficiais')}</h2>
+            <ul className="ns-pagamentos-list">
+              {empresasOrdenadas.filter((e) => isEmpresaRecebedoraOficial(e.id)).map((e) => (
+                <li key={e.id}>
+                  <div>
+                    <strong>{e.nome}</strong>
+                    {e.nif ? <span> · {e.nif}</span> : null}
+                    <span className="ns-pagamentos-oficial-tag">
+                      {tr(safeT, 'pagamentosEmpresaOficialTag', 'Oficial')}
+                    </span>
+                  </div>
+                  <div className="ns-pagamentos-row-actions">
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => escolherDestinoOficial(e)}
+                    >
+                      {tr(safeT, 'pagamentosPagarAgora', 'Registar pagamento')}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary ns-pagamentos-btn-ghost"
+                      onClick={() => {
+                        setEditingEmpresa(e)
+                        setEmpresaForm(empresaRecebedoraToForm(e))
+                        setErro('')
+                      }}
+                    >
+                      {tr(safeT, 'pagamentosEmpresaEditar', 'Editar empresa')}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <h2 className="ns-pagamentos-card-sub">
+              {tr(safeT, 'pagamentosListaEmpresas', 'Empresas que receberam')}
+            </h2>
+            {empresasOrdenadas.filter((e) => !isEmpresaRecebedoraOficial(e.id)).length === 0 ? (
               <p className="ns-pagamentos-empty">
                 {tr(safeT, 'pagamentosEmpresaVazia', 'Ainda não há empresas cadastradas')}
               </p>
             ) : (
               <ul className="ns-pagamentos-list">
-                {empresasOrdenadas.map((e) => (
+                {empresasOrdenadas.filter((e) => !isEmpresaRecebedoraOficial(e.id)).map((e) => (
                   <li key={e.id}>
                     <div>
                       <strong>{e.nome}</strong>
@@ -311,6 +377,30 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
                 ? tr(safeT, 'pagamentosEditar', 'Editar pagamento')
                 : tr(safeT, 'pagamentosNovo', 'Novo pagamento')}
             </h2>
+            <fieldset className="ns-pagamentos-metodos ns-pagamentos-oficiais">
+              <legend>{tr(safeT, 'pagamentosEmpresasOficiais', 'Destinos oficiais')}</legend>
+              <div className="ns-pagamentos-oficial-chips">
+                {empresasOrdenadas.filter((e) => isEmpresaRecebedoraOficial(e.id)).map((e) => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    className={`btn-primary ns-pagamentos-oficial-chip${
+                      pagForm.empresaId === e.id ? ' ns-pagamentos-oficial-chip--on' : ''
+                    }`}
+                    onClick={() => {
+                      setPagForm((f) => ({
+                        ...f,
+                        empresaId: e.id,
+                        paraQuem: e.nome,
+                      }))
+                      setErro('')
+                    }}
+                  >
+                    {e.nome}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <label>
               {tr(safeT, 'pagamentosEmpresaDestino', 'Empresa que recebeu')} *
               <select

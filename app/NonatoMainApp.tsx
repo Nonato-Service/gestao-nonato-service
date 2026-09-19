@@ -67995,7 +67995,7 @@ A1;Peça exemplo;10`}
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{safeT?.pagamentosTitle || 'PAGAMENTOS'}</span>
                 <span className="sidebar-nav-label-sub">
-                  {(safeT as any)?.pagamentosSub || 'Empresas · Referência · Transferência'}
+                  {(safeT as any)?.pagamentosSub || 'Finanças · Segurança Social · IRS'}
                 </span>
               </span>
             </span>

@@ -12,6 +12,17 @@ import {
 import type { EmpresaRecebedoraFormState, PagamentoSaidaFormState } from '../modules/pagamentos/formState'
 import { emptyPagamentoSaidaForm as emptyPagamentoSaidaFormPure } from '../modules/pagamentos/formState'
 import type { EmpresaRecebedora, PagamentoSaida } from '../modules/pagamentos/tipos'
+import {
+  ensureEmpresasOficiaisPagamentos as ensureEmpresasOficiaisPagamentosPure,
+  type EnsureEmpresasOficiaisPagamentosOpts,
+} from '../modules/pagamentos/oficiais'
+
+export function ensureEmpresasOficiaisPagamentos(
+  existing: EmpresaRecebedora[],
+  opts: Omit<EnsureEmpresasOficiaisPagamentosOpts, 'nowMs'> = {}
+) {
+  return ensureEmpresasOficiaisPagamentosPure(existing, { ...opts, nowMs: Date.now() })
+}
 
 export function createEmpresaRecebedoraFromForm(
   form: EmpresaRecebedoraFormState,

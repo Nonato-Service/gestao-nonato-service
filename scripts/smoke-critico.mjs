@@ -1258,7 +1258,14 @@ try {
     mergePag.includes('pagamentos-default') &&
     mergePag.includes("group: 'pagamentos'") &&
     gruposPag.includes("buttonId === 'pagamentos-default'") &&
-    !gruposPag.includes("pagamentos-default') return 'gestao-financeira")
+    !gruposPag.includes("pagamentos-default') return 'gestao-financeira") &&
+    exists('app/modules/pagamentos/oficiais.ts') &&
+    pagSrc.includes('PAGAMENTOS_EMPRESAS_OFICIAIS') &&
+    pagSrc.includes('pag-oficial-financas') === false &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-financas') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-seguranca-social') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-imposto-nsa') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-irs')
   ) {
     ok('módulo PAGAMENTOS isolado (não financeiro, não fornecedores)')
   } else {

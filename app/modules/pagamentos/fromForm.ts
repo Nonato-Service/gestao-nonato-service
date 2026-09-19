@@ -9,8 +9,9 @@ export function isEmpresaRecebedoraFormValid(form: Pick<EmpresaRecebedoraFormSta
 
 export type CreateEmpresaRecebedoraFromFormOpts = {
   id?: string
+  tipo?: EmpresaRecebedora['tipo']
   criadoEm?: string
-  nowizadoEm?: string
+  atualizadoEm?: string
   nowMs: number
 }
 
@@ -18,10 +19,11 @@ export function createEmpresaRecebedoraFromForm(
   form: EmpresaRecebedoraFormState,
   opts: CreateEmpresaRecebedoraFromFormOpts
 ): EmpresaRecebedora {
-  const nowizadoEm = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
+  const atualizadoEm = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
   return {
     id: opts.id ?? `emp-rec-${opts.nowMs}`,
     nome: form.nome.trim(),
+    tipo: opts.tipo || 'outra',
     nif: form.nif.trim() || undefined,
     notas: form.notas.trim() || undefined,
     criadoEm: opts.criadoEm ?? atualizadoEm,
@@ -32,10 +34,11 @@ export function createEmpresaRecebedoraFromForm(
 export function updateEmpresaRecebedoraFromForm(
   existing: EmpresaRecebedora,
   form: EmpresaRecebedoraFormState,
-  opts: { nowizadoEm?: string; nowMs: number }
+  opts: { atualizadoEm?: string; nowMs: number }
 ): EmpresaRecebedora {
   return createEmpresaRecebedoraFromForm(form, {
     id: existing.id,
+    tipo: existing.tipo || 'outra',
     criadoEm: existing.criadoEm,
     atualizadoEm: opts.atualizadoEm,
     nowMs: opts.nowMs,

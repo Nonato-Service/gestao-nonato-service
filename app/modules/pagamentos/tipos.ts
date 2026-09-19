@@ -5,9 +5,17 @@ export const PAGAMENTOS_REGISTOS_STORAGE_KEY = 'nonato-pagamentos-registos'
 
 export type PagamentoMetodo = 'referencia' | 'transferencia' | 'entidade-referencia'
 
+export type EmpresaRecebedoraTipo =
+  | 'financas'
+  | 'seguranca-social'
+  | 'imposto-nsa'
+  | 'irs'
+  | 'outra'
+
 export type EmpresaRecebedora = {
   id: string
   nome: string
+  tipo?: EmpresaRecebedoraTipo
   nif?: string
   notas?: string
   criadoEm: string

@@ -2692,6 +2692,33 @@ body {
 }
 .ns-pagamentos-msg--err { color: #ff6b6b; }
 .ns-pagamentos-msg--ok { color: #00ff00; }
+.ns-pagamentos-card-sub {
+  margin-top: 22px !important;
+}
+.ns-pagamentos-oficial-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border: 1px solid #00ff00;
+  border-radius: 999px;
+  color: #00ff00;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ns-pagamentos-oficial-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ns-pagamentos-oficial-chip {
+  background: transparent !important;
+  color: #fff !important;
+}
+.ns-pagamentos-oficial-chip--on {
+  background: #00ff00 !important;
+  color: #000 !important;
+}
 @media (max-width: 900px) {
   .ns-pagamentos-grid { grid-template-columns: 1fr; }
 }
