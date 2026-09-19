@@ -1,12 +1,14 @@
 /** Destinos oficiais de PAGAMENTOS — Finanças, Segurança Social, Imposto da NSA e IRS. */
 
-import type { EmpresaRecebedora, EmpresaRecebedoraTipo } from './tipos'
+import type { EmpresaRecebedora, EmpresaRecebedoraTipo, PagamentoMetodo } from './tipos'
 
 export type EmpresaRecebedoraOficialId =
   | 'pag-oficial-financas'
   | 'pag-oficial-seguranca-social'
   | 'pag-oficial-imposto-nsa'
   | 'pag-oficial-irs'
+  | 'pag-oficial-contadora'
+  | 'pag-oficial-advogada'
 
 export type EmpresaRecebedoraOficialDef = {
   id: EmpresaRecebedoraOficialId
@@ -40,7 +42,27 @@ export const PAGAMENTOS_EMPRESAS_OFICIAIS: readonly EmpresaRecebedoraOficialDef[
     nomeKey: 'pagamentosEmpresaIrs',
     nomeFallback: 'Pagamento do IRS',
   },
+  {
+    id: 'pag-oficial-contadora',
+    tipo: 'contadora',
+    nomeKey: 'pagamentosEmpresaContadora',
+    nomeFallback: 'Contadora',
+  },
+  {
+    id: 'pag-oficial-advogada',
+    tipo: 'advogada',
+    nomeKey: 'pagamentosEmpresaAdvogada',
+    nomeFallback: 'Advogada',
+  },
 ]
+
+export function isDestinoTransferenciaBancaria(id: string): boolean {
+  return id === 'pag-oficial-contadora' || id === 'pag-oficial-advogada'
+}
+
+export function metodoPadraoPagamento(id: string): PagamentoMetodo {
+  return isDestinoTransferenciaBancaria(id) ? 'transferencia' : 'referencia'
+}
 
 export function isEmpresaRecebedoraOficial(id: string): boolean {
   return PAGAMENTOS_EMPRESAS_OFICIAIS.some((d) => d.id === id)

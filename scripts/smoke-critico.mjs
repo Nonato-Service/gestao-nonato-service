@@ -1262,7 +1262,10 @@ try {
     pagSrc.includes('pagamentosItensAPagar') &&
     pagSrc.includes('pagamentosItensPagos') &&
     pagSrc.includes('pagamentosSalvar') &&
-    pagFrom.includes('return valor > 0') &&
+    pagSrc.includes('ns-pagamentos-btn') &&
+    pagSrc.includes('pagamentosAbrirCurto') &&
+    pagFrom.includes('pagamentoPodeSerPago') &&
+    pagFrom.includes('erroValidacaoPagamentoSaida') &&
     exists('app/modules/pagamentos/resumo.ts') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('agruparPagamentosPorMes') &&
     !fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('Date.now') &&
@@ -1281,7 +1284,9 @@ try {
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-financas') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-seguranca-social') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-imposto-nsa') &&
-    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-irs')
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-irs') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-contadora') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/oficiais.ts'), 'utf8').includes('pag-oficial-advogada')
   ) {
     ok('módulo PAGAMENTOS isolado (não financeiro, não fornecedores)')
   } else {

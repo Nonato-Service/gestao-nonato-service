@@ -10,6 +10,8 @@ export type EmpresaRecebedoraTipo =
   | 'seguranca-social'
   | 'imposto-nsa'
   | 'irs'
+  | 'contadora'
+  | 'advogada'
   | 'outra'
 
 export type EmpresaRecebedora = {
@@ -17,6 +19,9 @@ export type EmpresaRecebedora = {
   nome: string
   tipo?: EmpresaRecebedoraTipo
   nif?: string
+  contribuinte?: string
+  iban?: string
+  banco?: string
   notas?: string
   criadoEm: string
   atualizadoEm: string
@@ -45,6 +50,7 @@ export type PagamentoSaida = {
   entidade?: string
   iban?: string
   banco?: string
+  contribuinte?: string
   valor: number
   dataPagamento: string
   descricao?: string

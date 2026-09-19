@@ -20,11 +20,15 @@ export function createEmpresaRecebedoraFromForm(
   opts: CreateEmpresaRecebedoraFromFormOpts
 ): EmpresaRecebedora {
   const atualizadoEm = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
+  const contribuinte = form.contribuinte.trim() || form.nif.trim()
   return {
     id: opts.id ?? `emp-rec-${opts.nowMs}`,
     nome: form.nome.trim(),
     tipo: opts.tipo || 'outra',
-    nif: form.nif.trim() || undefined,
+    nif: form.nif.trim() || contribuinte || undefined,
+    contribuinte: contribuinte || undefined,
+    iban: form.iban.trim() || undefined,
+    banco: form.banco.trim() || undefined,
     notas: form.notas.trim() || undefined,
     criadoEm: opts.criadoEm ?? atualizadoEm,
     atualizadoEm,
@@ -45,15 +49,69 @@ export function updateEmpresaRecebedoraFromForm(
   })
 }
 
+export type PagamentoValidacaoErro =
+  | 'pagamentosFaltaValor'
+  | 'pagamentosInvalido'
+  | 'pagamentosFaltaReferencia'
+  | 'pagamentosFaltaEntidadeReferencia'
+  | 'pagamentosFaltaTransferencia'
+
+export function erroValidacaoPagamentoSaida(
+  form: Pick<
+    PagamentoSaidaFormState,
+    | 'empresaId'
+    | 'paraQuem'
+    | 'metodo'
+    | 'referencia'
+    | 'entidade'
+    | 'iban'
+    | 'contribuinte'
+    | 'valor'
+    | 'dataPagamento'
+  >
+): PagamentoValidacaoErro | null {
+  if (!form.empresaId.trim() || !form.paraQuem.trim() || !form.dataPagamento.trim()) return 'pagamentosInvalido'
+  const valor = Number(String(form.valor).replace(',', '.'))
+  if (!(valor > 0)) return 'pagamentosFaltaValor'
+  if (form.metodo === 'referencia') {
+    return form.referencia.trim() ? null : 'pagamentosFaltaReferencia'
+  }
+  if (form.metodo === 'entidade-referencia') {
+    return form.entidade.trim() && form.referencia.trim() ? null : 'pagamentosFaltaEntidadeReferencia'
+  }
+  if (form.metodo === 'transferencia') {
+    return form.iban.trim() && form.contribuinte.trim() ? null : 'pagamentosFaltaTransferencia'
+  }
+  return 'pagamentosInvalido'
+}
+
 export function isPagamentoSaidaFormValid(
   form: Pick<
     PagamentoSaidaFormState,
-    'empresaId' | 'paraQuem' | 'metodo' | 'referencia' | 'entidade' | 'iban' | 'valor' | 'dataPagamento'
+    | 'empresaId'
+    | 'paraQuem'
+    | 'metodo'
+    | 'referencia'
+    | 'entidade'
+    | 'iban'
+    | 'contribuinte'
+    | 'valor'
+    | 'dataPagamento'
   >
 ): boolean {
-  if (!form.empresaId.trim() || !form.paraQuem.trim() || !form.dataPagamento.trim()) return false
-  const valor = Number(String(form.valor).replace(',', '.'))
-  return valor > 0
+  return erroValidacaoPagamentoSaida(form) === null
+}
+
+export function pagamentoPodeSerPago(p: Pick<PagamentoSaida, 'metodo' | 'referencia' | 'entidade' | 'iban' | 'contribuinte' | 'valor'>): boolean {
+  if (!(p.valor > 0)) return false
+  if (p.metodo === 'referencia') return Boolean((p.referencia || '').trim())
+  if (p.metodo === 'entidade-referencia') {
+    return Boolean((p.entidade || '').trim() && (p.referencia || '').trim())
+  }
+  if (p.metodo === 'transferencia') {
+    return Boolean((p.iban || '').trim() && (p.contribuinte || '').trim())
+  }
+  return false
 }
 
 export type CreatePagamentoSaidaFromFormOpts = {
@@ -82,6 +140,7 @@ export function createPagamentoSaidaFromForm(
     entidade: form.entidade.trim() || undefined,
     iban: form.iban.trim() || undefined,
     banco: form.banco.trim() || undefined,
+    contribuinte: form.contribuinte.trim() || undefined,
     valor,
     dataPagamento: form.dataPagamento.trim(),
     descricao: form.descricao.trim() || undefined,

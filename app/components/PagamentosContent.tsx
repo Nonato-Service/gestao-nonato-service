@@ -11,9 +11,12 @@ import type {
 import {
   emptyEmpresaRecebedoraForm,
   empresaRecebedoraToForm,
+  erroValidacaoPagamentoSaida,
+  isDestinoTransferenciaBancaria,
   isEmpresaRecebedoraFormValid,
   isEmpresaRecebedoraOficial,
   isPagamentoSaidaFormValid,
+  pagamentoPodeSerPago,
   agruparPagamentosPorMes,
   mesesDisponiveisPagamentos,
   normalizePagamentoSaida,
@@ -31,6 +34,7 @@ import {
   createPagamentoSaidaFromForm,
   emptyPagamentoSaidaForm,
   ensureEmpresasOficiaisPagamentos,
+  pagamentoFormDaInstituicao,
   marcarPagamentoSaidaComoPago,
   updateEmpresaRecebedoraFromForm,
   updatePagamentoSaidaFromForm,
@@ -181,17 +185,28 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   }
 
   const guardarPagamento = async () => {
-    const valorNum = Number(String(pagForm.valor).replace(',', '.'))
-    if (!(valorNum > 0)) {
-      setErro(tr(safeT, 'pagamentosFaltaValor', 'Indique o valor para salvar'))
-      return
-    }
-    if (!pagForm.paraQuem.trim() || !pagForm.dataPagamento.trim()) {
-      setErro(tr(safeT, 'pagamentosInvalido', 'Preencha os campos obrigatórios'))
+    const erroVal = erroValidacaoPagamentoSaida(pagForm)
+    if (erroVal) {
+      const mensagens: Record<string, string> = {
+        pagamentosFaltaValor: tr(safeT, 'pagamentosFaltaValor', 'Indique o valor para salvar'),
+        pagamentosInvalido: tr(safeT, 'pagamentosInvalido', 'Preencha os campos obrigatórios'),
+        pagamentosFaltaReferencia: tr(safeT, 'pagamentosFaltaReferencia', 'Indique a referência para pagar'),
+        pagamentosFaltaEntidadeReferencia: tr(
+          safeT,
+          'pagamentosFaltaEntidadeReferencia',
+          'Indique entidade e referência para pagar'
+        ),
+        pagamentosFaltaTransferencia: tr(
+          safeT,
+          'pagamentosFaltaTransferencia',
+          'Indique IBAN e contribuinte para transferir'
+        ),
+      }
+      setErro(mensagens[erroVal] || tr(safeT, 'pagamentosBloqueadoSemDados', 'Sem estes dados não deve pagar nem transferir'))
       return
     }
     if (!isPagamentoSaidaFormValid(pagForm)) {
-      setErro(tr(safeT, 'pagamentosInvalido', 'Preencha os campos obrigatórios'))
+      setErro(tr(safeT, 'pagamentosBloqueadoSemDados', 'Sem estes dados não deve pagar nem transferir'))
       return
     }
     const empresa = empresas.find((e) => e.id === pagForm.empresaId)
@@ -208,11 +223,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       await persistRegistos([created, ...registos])
     }
     const proximoStatus = pagForm.status === 'pago' ? 'pagos' : 'a-pagar'
-    setPagForm({
-      ...emptyPagamentoSaidaForm(empresa.id),
-      empresaId: empresa.id,
-      paraQuem: empresa.nome,
-    })
+    setPagForm(pagamentoFormDaInstituicao(empresa))
     flashOk(tr(safeT, 'pagamentosGuardado', 'Pagamento guardado'))
     setAbaFicha(proximoStatus)
   }
@@ -261,6 +272,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   }
 
   const marcarComoPago = async (p: PagamentoSaida) => {
+    if (!pagamentoPodeSerPago(p)) {
+      setErro(
+        tr(
+          safeT,
+          'pagamentosBloqueadoSemDados',
+          'Sem referência, entidade ou dados de transferência (IBAN e contribuinte) não deve pagar nem transferir'
+        )
+      )
+      return
+    }
     const pago = marcarPagamentoSaidaComoPago(normalizePagamentoSaida(p))
     await persistRegistos(registos.map((x) => (x.id === pago.id ? pago : x)))
     if (editingPag?.id === p.id) {
@@ -278,8 +299,8 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     if (editingPag?.id === p.id) {
       setEditingPag(null)
       const inst = empresas.find((e) => e.id === instituicaoId)
-      setPagForm(emptyPagamentoSaidaForm(instituicaoId))
-      if (inst) setPagForm((f) => ({ ...f, empresaId: inst.id, paraQuem: inst.nome }))
+      if (inst) setPagForm(pagamentoFormDaInstituicao(inst))
+      else setPagForm(emptyPagamentoSaidaForm(instituicaoId))
     }
   }
 
@@ -317,11 +338,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     setVista('ficha')
     setAbaFicha('a-pagar')
     setEditingPag(null)
-    setPagForm({
-      ...emptyPagamentoSaidaForm(e.id),
-      empresaId: e.id,
-      paraQuem: e.nome,
-    })
+    setPagForm(pagamentoFormDaInstituicao(e))
     setErro('')
   }
 
@@ -374,13 +391,13 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 </div>
                 <div className="ns-pagamentos-row-actions">
                   {mostrarMarcarPago && p.status !== 'pago' ? (
-                    <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
-                      {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
+                    <button type="button" className="btn-primary ns-pagamentos-btn" onClick={() => marcarComoPago(p)}>
+                      {tr(safeT, 'pagamentosMarcarPagoCurto', 'Pago')}
                     </button>
                   ) : null}
                   <button
                     type="button"
-                    className="btn-primary"
+                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                     onClick={() => {
                       setEditingPag(p)
                       setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
@@ -388,10 +405,14 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                       setErro('')
                     }}
                   >
-                    {tr(safeT, 'pagamentosEditar', 'Editar pagamento')}
+                    {tr(safeT, 'pagamentosEditarCurto', 'Editar')}
                   </button>
-                  <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => apagarPagamento(p)}>
-                    {tr(safeT, 'pagamentosApagar', 'Apagar pagamento')}
+                  <button
+                    type="button"
+                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
+                    onClick={() => apagarPagamento(p)}
+                  >
+                    {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
                   </button>
                 </div>
               </li>
@@ -431,11 +452,27 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 />
               </label>
               <label>
-                {tr(safeT, 'pagamentosEmpresaNif', 'NIF')}
+                {tr(safeT, 'pagamentosContribuinte', 'Contribuinte (NIF)')}
                 <input
                   className={inputClass}
-                  value={empresaForm.nif}
-                  onChange={(e) => setEmpresaForm((f) => ({ ...f, nif: e.target.value }))}
+                  value={empresaForm.contribuinte}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, contribuinte: e.target.value, nif: e.target.value }))}
+                />
+              </label>
+              <label>
+                {tr(safeT, 'pagamentosIban', 'IBAN / conta')}
+                <input
+                  className={inputClass}
+                  value={empresaForm.iban}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, iban: e.target.value }))}
+                />
+              </label>
+              <label>
+                {tr(safeT, 'pagamentosBanco', 'Banco')}
+                <input
+                  className={inputClass}
+                  value={empresaForm.banco}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, banco: e.target.value }))}
                 />
               </label>
               <label className="ns-pagamentos-form-grid__wide">
@@ -448,13 +485,13 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               </label>
             </div>
             <div className="ns-pagamentos-actions">
-              <button type="button" className="btn-primary" onClick={guardarEmpresa}>
+              <button type="button" className="btn-primary ns-pagamentos-btn" onClick={guardarEmpresa}>
                 {tr(safeT, 'pagamentosInstituicaoGuardar', 'Guardar instituição')}
               </button>
               {editingEmpresa ? (
                 <button
                   type="button"
-                  className="btn-primary ns-pagamentos-btn-ghost"
+                  className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                   onClick={() => {
                     setEditingEmpresa(null)
                     setEmpresaForm(emptyEmpresaRecebedoraForm())
@@ -494,7 +531,9 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                       </span>
                     ) : null}
                   </header>
-                  {e.nif ? <p className="ns-pagamentos-inst-meta">{e.nif}</p> : null}
+                  {e.contribuinte || e.nif ? (
+                    <p className="ns-pagamentos-inst-meta">{e.contribuinte || e.nif}</p>
+                  ) : null}
                   <dl className="ns-pagamentos-inst-stats">
                     <div>
                       <dt>{tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}</dt>
@@ -510,23 +549,27 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                     </div>
                   </dl>
                   <div className="ns-pagamentos-row-actions">
-                    <button type="button" className="btn-primary" onClick={() => abrirInstituicao(e)}>
-                      {tr(safeT, 'pagamentosAbrirInstituicao', 'Abrir instituição')}
+                    <button type="button" className="btn-primary ns-pagamentos-btn" onClick={() => abrirInstituicao(e)}>
+                      {tr(safeT, 'pagamentosAbrirCurto', 'Abrir')}
                     </button>
                     <button
                       type="button"
-                      className="btn-primary ns-pagamentos-btn-ghost"
+                      className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                       onClick={() => {
                         setEditingEmpresa(e)
                         setEmpresaForm(empresaRecebedoraToForm(e))
                         setErro('')
                       }}
                     >
-                      {tr(safeT, 'pagamentosInstituicaoEditar', 'Editar instituição')}
+                      {tr(safeT, 'pagamentosEditarCurto', 'Editar')}
                     </button>
                     {!oficial ? (
-                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => apagarEmpresa(e)}>
-                        {tr(safeT, 'pagamentosInstituicaoApagar', 'Apagar instituição')}
+                      <button
+                        type="button"
+                        className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
+                        onClick={() => apagarEmpresa(e)}
+                      >
+                        {tr(safeT, 'pagamentosApagarCurto', 'Apagar')}
                       </button>
                     ) : null}
                   </div>
@@ -617,20 +660,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 />
               </label>
               <div className="ns-pagamentos-actions ns-pagamentos-salvar-row">
-                <button type="submit" className="btn-primary ns-pagamentos-btn-salvar">
+                <button type="submit" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-salvar">
                   {tr(safeT, 'pagamentosSalvar', 'Salvar')}
                 </button>
                 {editingPag ? (
                   <button
                     type="button"
-                    className="btn-primary ns-pagamentos-btn-ghost"
+                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                     onClick={() => {
                       setEditingPag(null)
-                      setPagForm({
-                        ...emptyPagamentoSaidaForm(instituicao.id),
-                        empresaId: instituicao.id,
-                        paraQuem: instituicao.nome,
-                      })
+                      setPagForm(pagamentoFormDaInstituicao(instituicao))
                       setErro('')
                     }}
                   >
@@ -640,7 +679,12 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               </div>
               <fieldset className="ns-pagamentos-metodos">
                 <legend>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</legend>
-                {(['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[]).map((m) => (
+                {(isDestinoTransferenciaBancaria(instituicao.id)
+                  ? (['transferencia'] as PagamentoMetodo[])
+                  : isEmpresaRecebedoraOficial(instituicao.id)
+                    ? (['referencia', 'entidade-referencia'] as PagamentoMetodo[])
+                    : (['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[])
+                ).map((m) => (
                   <label key={m} className="ns-pagamentos-radio">
                     <input
                       type="radio"
@@ -654,7 +698,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               </fieldset>
               {pagForm.metodo === 'referencia' || pagForm.metodo === 'entidade-referencia' ? (
                 <label>
-                  {tr(safeT, 'pagamentosReferencia', 'Referência')}
+                  {tr(safeT, 'pagamentosReferencia', 'Referência')} *
                   <input
                     className={inputClass}
                     value={pagForm.referencia}
@@ -664,7 +708,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               ) : null}
               {pagForm.metodo === 'entidade-referencia' ? (
                 <label>
-                  {tr(safeT, 'pagamentosEntidade', 'Entidade')}
+                  {tr(safeT, 'pagamentosEntidade', 'Entidade')} *
                   <input
                     className={inputClass}
                     value={pagForm.entidade}
@@ -674,12 +718,27 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               ) : null}
               {pagForm.metodo === 'transferencia' ? (
                 <>
+                  <p className="ns-pagamentos-msg ns-pagamentos-msg--err">
+                    {tr(
+                      safeT,
+                      'pagamentosAvisoTransferencia',
+                      'Sem IBAN e contribuinte não deve transferir'
+                    )}
+                  </p>
                   <label>
-                    {tr(safeT, 'pagamentosIban', 'IBAN / conta')}
+                    {tr(safeT, 'pagamentosIban', 'IBAN / conta')} *
                     <input
                       className={inputClass}
                       value={pagForm.iban}
                       onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    {tr(safeT, 'pagamentosContribuinte', 'Contribuinte (NIF)')} *
+                    <input
+                      className={inputClass}
+                      value={pagForm.contribuinte}
+                      onChange={(e) => setPagForm((f) => ({ ...f, contribuinte: e.target.value }))}
                     />
                   </label>
                   <label>
@@ -734,7 +793,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                     e.target.value = ''
                   }}
                 />
-                <button type="button" className="btn-primary" onClick={() => anexoAPagarRef.current?.click()}>
+                <button type="button" className="btn-primary ns-pagamentos-btn" onClick={() => anexoAPagarRef.current?.click()}>
                   {tr(safeT, 'pagamentosAnexarAPagar', 'Anexar PDF ou imagem a pagar')}
                 </button>
                 <ul className="ns-pagamentos-anexos-list">
@@ -743,7 +802,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                       <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
                         {a.nome}
                       </button>
-                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                      <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
                         {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
                       </button>
                     </li>
@@ -763,7 +822,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                     e.target.value = ''
                   }}
                 />
-                <button type="button" className="btn-primary" onClick={() => anexoPagoRef.current?.click()}>
+                <button type="button" className="btn-primary ns-pagamentos-btn" onClick={() => anexoPagoRef.current?.click()}>
                   {tr(safeT, 'pagamentosAnexarPago', 'Anexar comprovativo pago')}
                 </button>
                 <ul className="ns-pagamentos-anexos-list">
@@ -772,7 +831,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                       <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
                         {a.nome}
                       </button>
-                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                      <button type="button" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
                         {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
                       </button>
                     </li>
@@ -780,20 +839,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 </ul>
               </div>
               <div className="ns-pagamentos-actions ns-pagamentos-salvar-row">
-                <button type="submit" className="btn-primary ns-pagamentos-btn-salvar">
+                <button type="submit" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-salvar">
                   {tr(safeT, 'pagamentosSalvar', 'Salvar')}
                 </button>
                 {editingPag ? (
                   <button
                     type="button"
-                    className="btn-primary ns-pagamentos-btn-ghost"
+                    className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                     onClick={() => {
                       setEditingPag(null)
-                      setPagForm({
-                        ...emptyPagamentoSaidaForm(instituicao.id),
-                        empresaId: instituicao.id,
-                        paraQuem: instituicao.nome,
-                      })
+                      setPagForm(pagamentoFormDaInstituicao(instituicao))
                       setErro('')
                     }}
                   >

@@ -2708,14 +2708,29 @@ body {
 .ns-pagamentos-row-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-top: 8px;
+  align-items: center;
 }
 .ns-pagamentos-salvar-row {
   margin: 12px 0 16px;
 }
 .ns-pagamentos-btn-salvar {
-  min-width: 132px;
+  min-width: 88px !important;
+}
+html body .ns-pagamentos-root .ns-pagamentos-btn,
+html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn {
+  min-height: 28px !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100%;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  border-radius: 7px !important;
+  flex: 0 0 auto;
+  line-height: 1.2 !important;
 }
 .ns-pagamentos-btn-ghost {
   background: transparent !important;

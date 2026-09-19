@@ -35,7 +35,7 @@ export function getSidebarGroupSub(
     case 'empresa-institucional':
       return tr.empresaInstitucionalSub || 'Cadastro · Fichas · SST'
     case 'pagamentos':
-      return tr.pagamentosSub || 'Autoridade Tributária · Segurança Social · IRS'
+      return tr.pagamentosSub || 'Autoridade Tributária · Contadora · Advogada'
     default:
       return tr.extrasSub || 'Ferramentas extra'
   }

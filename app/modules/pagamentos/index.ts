@@ -19,6 +19,8 @@ export type { EmpresaRecebedoraOficialId, EmpresaRecebedoraOficialDef } from './
 export {
   PAGAMENTOS_EMPRESAS_OFICIAIS,
   isEmpresaRecebedoraOficial,
+  isDestinoTransferenciaBancaria,
+  metodoPadraoPagamento,
   ensureEmpresasOficiaisPagamentos,
 } from './oficiais'
 
@@ -28,12 +30,14 @@ export {
   empresaRecebedoraToForm,
   emptyPagamentoSaidaForm,
   pagamentoSaidaToForm,
+  pagamentoFormDaInstituicao,
 } from './formState'
 
 export type {
   CreateEmpresaRecebedoraFromFormOpts,
   CreatePagamentoSaidaFromFormOpts,
   CreateAnexoPagamentoFromFormOpts,
+  PagamentoValidacaoErro,
 } from './fromForm'
 export type { TotalInstituicaoPagamento, GrupoMesPagamento } from './resumo'
 export {
@@ -51,6 +55,8 @@ export {
   createEmpresaRecebedoraFromForm,
   updateEmpresaRecebedoraFromForm,
   isPagamentoSaidaFormValid,
+  erroValidacaoPagamentoSaida,
+  pagamentoPodeSerPago,
   createPagamentoSaidaFromForm,
   updatePagamentoSaidaFromForm,
   isAnexoPagamentoFormValid,

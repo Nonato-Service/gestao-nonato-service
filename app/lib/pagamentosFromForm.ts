@@ -13,7 +13,10 @@ import {
   type CreatePagamentoSaidaFromFormOpts,
 } from '../modules/pagamentos/fromForm'
 import type { EmpresaRecebedoraFormState, PagamentoSaidaFormState } from '../modules/pagamentos/formState'
-import { emptyPagamentoSaidaForm as emptyPagamentoSaidaFormPure } from '../modules/pagamentos/formState'
+import {
+  emptyPagamentoSaidaForm as emptyPagamentoSaidaFormPure,
+  pagamentoFormDaInstituicao as pagamentoFormDaInstituicaoPure,
+} from '../modules/pagamentos/formState'
 import type { AnexoPagamento, EmpresaRecebedora, PagamentoSaida } from '../modules/pagamentos/tipos'
 import {
   ensureEmpresasOficiaisPagamentos as ensureEmpresasOficiaisPagamentosPure,
@@ -59,6 +62,10 @@ export function updatePagamentoSaidaFromForm(
 
 export function emptyPagamentoSaidaForm(empresaId = ''): PagamentoSaidaFormState {
   return emptyPagamentoSaidaFormPure({ nowMs: Date.now(), empresaId })
+}
+
+export function pagamentoFormDaInstituicao(e: EmpresaRecebedora): PagamentoSaidaFormState {
+  return pagamentoFormDaInstituicaoPure(e, { nowMs: Date.now() })
 }
 
 export function createAnexoPagamentoFromForm(

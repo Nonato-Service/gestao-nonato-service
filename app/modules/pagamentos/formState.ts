@@ -1,21 +1,28 @@
 /** Formulários vazios e mapeamento empresa / pagamento → form. */
 
+import { metodoPadraoPagamento } from './oficiais'
 import type { AnexoPagamento, EmpresaRecebedora, PagamentoMetodo, PagamentoSaida, PagamentoSaidaStatus } from './tipos'
 
 export type EmpresaRecebedoraFormState = {
   nome: string
   nif: string
+  contribuinte: string
+  iban: string
+  banco: string
   notas: string
 }
 
 export function emptyEmpresaRecebedoraForm(): EmpresaRecebedoraFormState {
-  return { nome: '', nif: '', notas: '' }
+  return { nome: '', nif: '', contribuinte: '', iban: '', banco: '', notas: '' }
 }
 
 export function empresaRecebedoraToForm(e: EmpresaRecebedora): EmpresaRecebedoraFormState {
   return {
     nome: e.nome || '',
     nif: e.nif || '',
+    contribuinte: e.contribuinte || e.nif || '',
+    iban: e.iban || '',
+    banco: e.banco || '',
     notas: e.notas || '',
   }
 }
@@ -28,6 +35,7 @@ export type PagamentoSaidaFormState = {
   entidade: string
   iban: string
   banco: string
+  contribuinte: string
   valor: string
   dataPagamento: string
   descricao: string
@@ -44,6 +52,7 @@ export function emptyPagamentoSaidaForm(opts: { nowMs: number; empresaId?: strin
     entidade: '',
     iban: '',
     banco: '',
+    contribuinte: '',
     valor: '',
     dataPagamento: new Date(opts.nowMs).toISOString().slice(0, 10),
     descricao: '',
@@ -61,10 +70,27 @@ export function pagamentoSaidaToForm(p: PagamentoSaida): PagamentoSaidaFormState
     entidade: p.entidade || '',
     iban: p.iban || '',
     banco: p.banco || '',
+    contribuinte: p.contribuinte || '',
     valor: p.valor > 0 ? String(p.valor) : '',
     dataPagamento: p.dataPagamento || '',
     descricao: p.descricao || '',
     status: p.status || 'pendente',
     anexos: Array.isArray(p.anexos) ? [...p.anexos] : [],
+  }
+}
+
+export function pagamentoFormDaInstituicao(
+  e: Pick<EmpresaRecebedora, 'id' | 'nome' | 'nif' | 'iban' | 'banco' | 'contribuinte'>,
+  opts: { nowMs: number }
+): PagamentoSaidaFormState {
+  return {
+    ...emptyPagamentoSaidaForm({ nowMs: opts.nowMs, empresaId: e.id }),
+    paraQuem: e.nome || '',
+    metodo: metodoPadraoPagamento(e.id),
+    iban: e.iban || '',
+    banco: e.banco || '',
+    contribuinte: e.contribuinte || e.nif || '',
+    referencia: '',
+    entidade: '',
   }
 }
