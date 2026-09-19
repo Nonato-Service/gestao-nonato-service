@@ -3366,6 +3366,14 @@ function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, lo
     return true
   }
   if (
+    (key === 'nonato-pagamentos-registos' || key === 'nonato-pagamentos-empresas') &&
+    Array.isArray(serverValue) &&
+    Array.isArray(localParsed) &&
+    localParsed.length > serverValue.length
+  ) {
+    return true
+  }
+  if (
     typeof serverValue === 'object' &&
     serverValue !== null &&
     !Array.isArray(serverValue) &&

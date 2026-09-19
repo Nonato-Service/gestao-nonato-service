@@ -48,6 +48,8 @@ export {
   mesKeyPagamento,
   pagamentosDoMes,
   somarValorPagamentos,
+  mergePagamentosPorId,
+  asListaPagamentos,
   totaisPorInstituicao,
   mesesDisponiveisPagamentos,
   agruparPagamentosPorMes,

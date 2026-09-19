@@ -1266,6 +1266,9 @@ try {
     pagSrc.includes('pagamentosAbrirCurto') &&
     pagSrc.includes('pagamentosVisualizar') &&
     pagSrc.includes('formatarDataPagamentoVisivel') &&
+    pagSrc.includes('mergePagamentosPorId') &&
+    pagSrc.includes('registosRef') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('mergePagamentosPorId') &&
     pagFrom.includes('pagamentoPodeSerPago') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('formatarDataPagamentoVisivel') &&
     pagFrom.includes('erroValidacaoPagamentoSaida') &&

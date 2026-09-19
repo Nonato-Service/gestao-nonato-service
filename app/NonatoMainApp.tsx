@@ -45414,9 +45414,7 @@ A1;Peça exemplo;10`}
       case 'pagamentos':
         return (
           <PagamentosContent
-            saveData={async (key, data) => {
-              await saveData(key, data)
-            }}
+            saveData={saveData}
             loadData={loadData}
             safeT={safeT as Record<string, string | undefined>}
             localeLang={selectedLanguage}

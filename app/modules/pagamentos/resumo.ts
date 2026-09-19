@@ -54,6 +54,32 @@ export function pagamentosDoMes(list: PagamentoSaida[], mes: string): PagamentoS
   return list.filter((p) => mesKeyPagamento(p.dataPagamento) === mes)
 }
 
+export function mergePagamentosPorId(local: PagamentoSaida[], incoming: PagamentoSaida[]): PagamentoSaida[] {
+  const map = new Map<string, PagamentoSaida>()
+  for (const p of incoming) {
+    if (p && p.id) map.set(p.id, p)
+  }
+  for (const p of local) {
+    if (!p || !p.id) continue
+    const other = map.get(p.id)
+    if (!other || String(p.atualizadoEm || '') >= String(other.atualizadoEm || '')) {
+      map.set(p.id, p)
+    }
+  }
+  return [...map.values()]
+}
+
+export function asListaPagamentos(value: unknown): PagamentoSaida[] {
+  if (Array.isArray(value)) return value as PagamentoSaida[]
+  if (value && typeof value === 'object') {
+    const o = value as { registos?: unknown; items?: unknown; data?: unknown }
+    if (Array.isArray(o.registos)) return o.registos as PagamentoSaida[]
+    if (Array.isArray(o.items)) return o.items as PagamentoSaida[]
+    if (Array.isArray(o.data)) return o.data as PagamentoSaida[]
+  }
+  return []
+}
+
 export function somarValorPagamentos(list: PagamentoSaida[], soPago = false): number {
   let total = 0
   for (const p of list) {

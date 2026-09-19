@@ -18,7 +18,9 @@ import {
   isPagamentoSaidaFormValid,
   pagamentoPodeSerPago,
   agruparPagamentosPorMes,
+  asListaPagamentos,
   formatarDataPagamentoVisivel,
+  mergePagamentosPorId,
   mesesDisponiveisPagamentos,
   normalizePagamentoSaida,
   PAGAMENTOS_EMPRESAS_OFICIAIS,
@@ -104,8 +106,14 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   const [mesFiltro, setMesFiltro] = useState('todos')
   const anexoAPagarRef = useRef<HTMLInputElement>(null)
   const anexoPagoRef = useRef<HTMLInputElement>(null)
+  const empresasRef = useRef<EmpresaRecebedora[]>([])
+  const registosRef = useRef<PagamentoSaida[]>([])
+  const loadedRef = useRef(false)
+  empresasRef.current = empresas
+  registosRef.current = registos
 
   useEffect(() => {
+    if (loadedRef.current) return
     let cancelled = false
     ;(async () => {
       const [empRaw, pagRaw] = await Promise.all([
@@ -113,24 +121,30 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
         loadData(PAGAMENTOS_REGISTOS_STORAGE_KEY),
       ])
       if (cancelled) return
+      loadedRef.current = true
       const loaded = asArray<EmpresaRecebedora>(empRaw)
       const nomesOficiais = Object.fromEntries(
         PAGAMENTOS_EMPRESAS_OFICIAIS.map((d) => [d.id, tr(safeT, d.nomeKey, d.nomeFallback)])
       ) as Record<(typeof PAGAMENTOS_EMPRESAS_OFICIAIS)[number]['id'], string>
       const ensured = ensureEmpresasOficiaisPagamentos(loaded, { nomes: nomesOficiais })
+      empresasRef.current = ensured.list
       setEmpresas(ensured.list)
       if (ensured.added > 0 || ensured.changed > 0) {
         await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, ensured.list)
       }
-      setRegistos(asArray<PagamentoSaida>(pagRaw).map(normalizePagamentoSaida))
+      const incoming = asListaPagamentos(pagRaw).map(normalizePagamentoSaida)
+      const merged = mergePagamentosPorId(registosRef.current, incoming)
+      registosRef.current = merged
+      setRegistos(merged)
     })()
     return () => {
       cancelled = true
     }
-  }, [loadData, saveData])
+  }, [loadData, saveData, safeT])
 
   const persistEmpresas = useCallback(
     async (next: EmpresaRecebedora[]) => {
+      empresasRef.current = next
       setEmpresas(next)
       await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, next)
     },
@@ -139,8 +153,10 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
 
   const persistRegistos = useCallback(
     async (next: PagamentoSaida[]) => {
-      setRegistos(next)
-      await saveData(PAGAMENTOS_REGISTOS_STORAGE_KEY, next)
+      const merged = mergePagamentosPorId(next, [])
+      registosRef.current = merged
+      setRegistos(merged)
+      await saveData(PAGAMENTOS_REGISTOS_STORAGE_KEY, merged)
     },
     [saveData]
   )
@@ -218,11 +234,11 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     }
     if (editingPag) {
       const updated = updatePagamentoSaidaFromForm(editingPag, pagForm, { empresaNome: empresa.nome })
-      await persistRegistos(registos.map((p) => (p.id === updated.id ? updated : p)))
+      await persistRegistos(registosRef.current.map((p) => (p.id === updated.id ? updated : p)))
       setEditingPag(null)
     } else {
       const created = createPagamentoSaidaFromForm(pagForm, { empresaNome: empresa.nome })
-      await persistRegistos([created, ...registos])
+      await persistRegistos([created, ...registosRef.current.filter((p) => p.id !== created.id)])
     }
     const proximoStatus = pagForm.status === 'pago' ? 'pagos' : 'a-pagar'
     setPagForm(pagamentoFormDaInstituicao(empresa))
@@ -285,7 +301,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       return
     }
     const pago = marcarPagamentoSaidaComoPago(normalizePagamentoSaida(p))
-    await persistRegistos(registos.map((x) => (x.id === pago.id ? pago : x)))
+    await persistRegistos(registosRef.current.map((x) => (x.id === pago.id ? pago : x)))
     if (editingPag?.id === p.id) {
       setEditingPag(pago)
       setPagForm(pagamentoSaidaToForm(pago))
@@ -297,7 +313,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   const apagarPagamento = async (p: PagamentoSaida) => {
     const ok = window.confirm(tr(safeT, 'pagamentosConfirmApagar', 'Apagar este pagamento?'))
     if (!ok) return
-    await persistRegistos(registos.filter((x) => x.id !== p.id))
+    await persistRegistos(registosRef.current.filter((x) => x.id !== p.id))
     if (editingPag?.id === p.id) {
       setEditingPag(null)
       const inst = empresas.find((e) => e.id === instituicaoId)
@@ -542,9 +558,11 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
           <div className="ns-pagamentos-inst-grid">
             {empresasOrdenadas.map((e) => {
               const itens = registos.filter((p) => p.empresaId === e.id)
-              const qtdAPagar = itens.filter((p) => p.status !== 'pago').length
-              const qtdPagos = itens.filter((p) => p.status === 'pago').length
-              const total = somarValorPagamentos(itens, true)
+              const aPagarItens = itens.filter((p) => p.status !== 'pago')
+              const pagosItens = itens.filter((p) => p.status === 'pago')
+              const totalAPagar = somarValorPagamentos(aPagarItens, false)
+              const totalPago = somarValorPagamentos(pagosItens, true)
+              const totalTudo = somarValorPagamentos(itens, false)
               const oficial = isEmpresaRecebedoraOficial(e.id)
               return (
                 <article key={e.id} className="ns-pagamentos-inst-card">
@@ -562,15 +580,15 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   <dl className="ns-pagamentos-inst-stats">
                     <div>
                       <dt>{tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}</dt>
-                      <dd>{qtdAPagar}</dd>
+                      <dd>{fmtValor(totalAPagar)}</dd>
                     </div>
                     <div>
                       <dt>{tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}</dt>
-                      <dd>{qtdPagos}</dd>
+                      <dd>{fmtValor(totalPago)}</dd>
                     </div>
                     <div>
-                      <dt>{tr(safeT, 'pagamentosTotalPago', 'Total pago')}</dt>
-                      <dd>{fmtValor(total)}</dd>
+                      <dt>{tr(safeT, 'pagamentosTotalInst', 'Total')}</dt>
+                      <dd>{fmtValor(totalTudo)}</dd>
                     </div>
                   </dl>
                   <div className="ns-pagamentos-row-actions">
@@ -684,6 +702,8 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   onChange={(e) => setPagForm((f) => ({ ...f, dataPagamento: e.target.value }))}
                 />
               </label>
+              {erro ? <p className="ns-pagamentos-msg ns-pagamentos-msg--err">{erro}</p> : null}
+              {okMsg ? <p className="ns-pagamentos-msg ns-pagamentos-msg--ok">{okMsg}</p> : null}
               <div className="ns-pagamentos-actions ns-pagamentos-salvar-row">
                 <button type="submit" className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-salvar">
                   {tr(safeT, 'pagamentosSalvar', 'Salvar')}
