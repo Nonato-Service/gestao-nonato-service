@@ -22,6 +22,19 @@ export type EmpresaRecebedora = {
   atualizadoEm: string
 }
 
+export type PagamentoSaidaStatus = 'pendente' | 'pago'
+
+export type AnexoPagamentoPapel = 'a-pagar' | 'pago'
+
+export type AnexoPagamento = {
+  id: string
+  nome: string
+  mime: string
+  base64: string
+  papel: AnexoPagamentoPapel
+  criadoEm: string
+}
+
 export type PagamentoSaida = {
   id: string
   empresaId: string
@@ -35,6 +48,8 @@ export type PagamentoSaida = {
   valor: number
   dataPagamento: string
   descricao?: string
+  status: PagamentoSaidaStatus
+  anexos: AnexoPagamento[]
   criadoEm: string
   atualizadoEm: string
 }

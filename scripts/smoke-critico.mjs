@@ -1248,8 +1248,15 @@ try {
     pagSrc.includes('fornecedores') === false &&
     pagMod.includes('EmpresaRecebedora') &&
     pagMod.includes('PagamentoSaida') &&
+    pagMod.includes('AnexoPagamento') &&
+    pagMod.includes('marcarPagamentoSaidaComoPago') &&
     pagFrom.includes('isPagamentoSaidaFormValid') &&
+    pagFrom.includes('createAnexoPagamentoFromForm') &&
+    pagFrom.includes('arquivarAnexosAPagarComoPagos') &&
     !pagFrom.includes('Date.now') &&
+    pagSrc.includes('handleAnexoFiles') &&
+    pagSrc.includes('application/pdf') &&
+    pagSrc.includes('marcarComoPago') &&
     pagKeys.includes('nonato-pagamentos-empresas') &&
     pagKeys.includes('nonato-pagamentos-registos') &&
     nmaPag.includes('open-pagamentos') &&

@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
+  AnexoPagamento,
+  AnexoPagamentoPapel,
   EmpresaRecebedora,
   PagamentoMetodo,
   PagamentoSaida,
@@ -12,19 +14,24 @@ import {
   isEmpresaRecebedoraFormValid,
   isEmpresaRecebedoraOficial,
   isPagamentoSaidaFormValid,
+  normalizePagamentoSaida,
   PAGAMENTOS_EMPRESAS_OFICIAIS,
   PAGAMENTOS_EMPRESAS_STORAGE_KEY,
   PAGAMENTOS_REGISTOS_STORAGE_KEY,
   pagamentoSaidaToForm,
 } from '../modules/pagamentos'
 import {
+  createAnexoPagamentoFromForm,
   createEmpresaRecebedoraFromForm,
   createPagamentoSaidaFromForm,
   emptyPagamentoSaidaForm,
   ensureEmpresasOficiaisPagamentos,
+  marcarPagamentoSaidaComoPago,
   updateEmpresaRecebedoraFromForm,
   updatePagamentoSaidaFromForm,
 } from '../lib/pagamentosFromForm'
+
+const MAX_ANEXO_BYTES = 8 * 1024 * 1024
 
 type Props = {
   saveData: (key: string, data: unknown) => Promise<unknown>
@@ -63,6 +70,8 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
   const [editingPag, setEditingPag] = useState<PagamentoSaida | null>(null)
   const [erro, setErro] = useState('')
   const [okMsg, setOkMsg] = useState('')
+  const anexoAPagarRef = useRef<HTMLInputElement>(null)
+  const anexoPagoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -81,7 +90,7 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
       if (ensured.added > 0) {
         await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, ensured.list)
       }
-      setRegistos(asArray<PagamentoSaida>(pagRaw))
+      setRegistos(asArray<PagamentoSaida>(pagRaw).map(normalizePagamentoSaida))
     })()
     return () => {
       cancelled = true
@@ -166,6 +175,59 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
     }
     setPagForm(emptyPagamentoSaidaForm(empresa.id))
     flashOk(tr(safeT, 'pagamentosGuardado', 'Pagamento guardado'))
+  }
+
+  const handleAnexoFiles = async (files: FileList | null, papel: AnexoPagamentoPapel) => {
+    if (!files?.length) return
+    const novos: AnexoPagamento[] = []
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_ANEXO_BYTES) {
+        setErro(tr(safeT, 'pagamentosAnexoGrande', 'Ficheiro demasiado grande (máx. 8 MB): ') + file.name)
+        continue
+      }
+      const mime = file.type || 'application/octet-stream'
+      if (!mime.startsWith('image/') && mime !== 'application/pdf') {
+        setErro(tr(safeT, 'pagamentosAnexoTipo', 'Só imagens ou PDF: ') + file.name)
+        continue
+      }
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result ?? ''))
+        r.onerror = () => reject(new Error('read'))
+        r.readAsDataURL(file)
+      })
+      novos.push(createAnexoPagamentoFromForm({ nome: file.name, mime, base64, papel }))
+    }
+    if (novos.length) {
+      setPagForm((prev) => ({ ...prev, anexos: [...prev.anexos, ...novos] }))
+      setErro('')
+    }
+  }
+
+  const removerAnexo = (anexoId: string) => {
+    setPagForm((prev) => ({ ...prev, anexos: prev.anexos.filter((a) => a.id !== anexoId) }))
+  }
+
+  const verAnexo = (a: AnexoPagamento) => {
+    const w = window.open('', '_blank')
+    if (!w) return
+    if (a.mime === 'application/pdf') {
+      w.document.write(
+        `<iframe src="${a.base64}" style="width:100%;height:100%;border:none" title="${a.nome}"></iframe>`
+      )
+    } else {
+      w.document.write(`<img src="${a.base64}" alt="${a.nome}" style="max-width:100%;height:auto" />`)
+    }
+  }
+
+  const marcarComoPago = async (p: PagamentoSaida) => {
+    const pago = marcarPagamentoSaidaComoPago(normalizePagamentoSaida(p))
+    await persistRegistos(registos.map((x) => (x.id === pago.id ? pago : x)))
+    if (editingPag?.id === p.id) {
+      setEditingPag(pago)
+      setPagForm(pagamentoSaidaToForm(pago))
+    }
+    flashOk(tr(safeT, 'pagamentosMarcadoPago', 'Pagamento marcado como pago e documentos arquivados'))
   }
 
   const apagarPagamento = async (p: PagamentoSaida) => {
@@ -517,6 +579,95 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
                 onChange={(e) => setPagForm((f) => ({ ...f, descricao: e.target.value }))}
               />
             </label>
+            <fieldset className="ns-pagamentos-metodos">
+              <legend>{tr(safeT, 'pagamentosEstado', 'Estado')}</legend>
+              <label className="ns-pagamentos-radio">
+                <input
+                  type="radio"
+                  name="pagamentos-estado"
+                  checked={pagForm.status === 'pendente'}
+                  onChange={() => setPagForm((f) => ({ ...f, status: 'pendente' }))}
+                />
+                {tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
+              </label>
+              <label className="ns-pagamentos-radio">
+                <input
+                  type="radio"
+                  name="pagamentos-estado"
+                  checked={pagForm.status === 'pago'}
+                  onChange={() => setPagForm((f) => ({ ...f, status: 'pago' }))}
+                />
+                {tr(safeT, 'pagamentosEstadoPago', 'Pago')}
+              </label>
+            </fieldset>
+            <div className="ns-pagamentos-anexos-block">
+              <strong>{tr(safeT, 'pagamentosAnexosAPagar', 'Documentos que devem ser pagos')}</strong>
+              <p className="ns-pagamentos-empty">
+                {tr(safeT, 'pagamentosAnexosAPagarHint', 'Anexe o PDF ou a imagem do documento a pagar.')}
+              </p>
+              <input
+                ref={anexoAPagarRef}
+                type="file"
+                accept="application/pdf,image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  void handleAnexoFiles(e.target.files, 'a-pagar')
+                  e.target.value = ''
+                }}
+              />
+              <button type="button" className="btn-primary" onClick={() => anexoAPagarRef.current?.click()}>
+                {tr(safeT, 'pagamentosAnexarAPagar', 'Anexar PDF ou imagem a pagar')}
+              </button>
+              <ul className="ns-pagamentos-anexos-list">
+                {pagForm.anexos.filter((a) => a.papel === 'a-pagar').map((a) => (
+                  <li key={a.id}>
+                    <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
+                      {a.nome}
+                    </button>
+                    <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                      {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="ns-pagamentos-anexos-block">
+              <strong>{tr(safeT, 'pagamentosAnexosPago', 'Documentos do pagamento pago')}</strong>
+              <p className="ns-pagamentos-empty">
+                {tr(
+                  safeT,
+                  'pagamentosAnexosPagoHint',
+                  'Quando o pagamento fica pago, os documentos passam para aqui. Também pode anexar o comprovativo.'
+                )}
+              </p>
+              <input
+                ref={anexoPagoRef}
+                type="file"
+                accept="application/pdf,image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  void handleAnexoFiles(e.target.files, 'pago')
+                  e.target.value = ''
+                }}
+              />
+              <button type="button" className="btn-primary" onClick={() => anexoPagoRef.current?.click()}>
+                {tr(safeT, 'pagamentosAnexarPago', 'Anexar comprovativo pago')}
+              </button>
+              <ul className="ns-pagamentos-anexos-list">
+                {pagForm.anexos.filter((a) => a.papel === 'pago').map((a) => (
+                  <li key={a.id}>
+                    <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
+                      {a.nome}
+                    </button>
+                    <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                      {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <div className="ns-pagamentos-actions">
               <button type="button" className="btn-primary" onClick={guardarPagamento}>
                 {tr(safeT, 'pagamentosGuardar', 'Guardar pagamento')}
@@ -549,18 +700,46 @@ export function PagamentosContent({ saveData, loadData, safeT }: Props) {
                   <li key={p.id}>
                     <div>
                       <strong>{p.paraQuem}</strong>
+                      <span className={`ns-pagamentos-oficial-tag${p.status === 'pago' ? ' ns-pagamentos-status-pago' : ''}`}>
+                        {p.status === 'pago'
+                          ? tr(safeT, 'pagamentosEstadoPago', 'Pago')
+                          : tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
+                      </span>
                       <span>
                         {' '}
                         · {p.empresaNome} · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
                       </span>
+                      {(p.anexos || []).length > 0 ? (
+                        <div className="ns-pagamentos-anexos-list">
+                          {(p.anexos || []).map((a) => (
+                            <button
+                              key={a.id}
+                              type="button"
+                              className="ns-pagamentos-anexo-chip"
+                              onClick={() => verAnexo(a)}
+                            >
+                              {a.papel === 'pago'
+                                ? tr(safeT, 'pagamentosAnexoPagoChip', 'Pago')
+                                : tr(safeT, 'pagamentosAnexoAPagarChip', 'A pagar')}
+                              {': '}
+                              {a.nome}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="ns-pagamentos-row-actions">
+                      {p.status !== 'pago' ? (
+                        <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
+                          {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         className="btn-primary"
                         onClick={() => {
                           setEditingPag(p)
-                          setPagForm(pagamentoSaidaToForm(p))
+                          setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
                           setErro('')
                         }}
                       >

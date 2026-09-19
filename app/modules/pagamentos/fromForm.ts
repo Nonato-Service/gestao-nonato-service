@@ -1,7 +1,7 @@
 /** Validação e mapeamento puro de empresa recebedora e pagamento de saída. */
 
 import type { EmpresaRecebedoraFormState, PagamentoSaidaFormState } from './formState'
-import type { EmpresaRecebedora, PagamentoSaida } from './tipos'
+import type { AnexoPagamento, AnexoPagamentoPapel, EmpresaRecebedora, PagamentoSaida } from './tipos'
 
 export function isEmpresaRecebedoraFormValid(form: Pick<EmpresaRecebedoraFormState, 'nome'>): boolean {
   return Boolean(form.nome.trim())
@@ -76,6 +76,8 @@ export function createPagamentoSaidaFromForm(
 ): PagamentoSaida {
   const now = opts.atualizadoEm ?? new Date(opts.nowMs).toISOString()
   const valor = Math.round(Number(String(form.valor).replace(',', '.')) * 100) / 100
+  const anexosBrutos = Array.isArray(form.anexos) ? [...form.anexos] : []
+  const anexos = form.status === 'pago' ? arquivarAnexosAPagarComoPagos(anexosBrutos) : anexosBrutos
   return {
     id: opts.id ?? `pag-sai-${opts.nowMs}`,
     empresaId: form.empresaId.trim(),
@@ -89,6 +91,8 @@ export function createPagamentoSaidaFromForm(
     valor,
     dataPagamento: form.dataPagamento.trim(),
     descricao: form.descricao.trim() || undefined,
+    status: form.status || 'pendente',
+    anexos,
     criadoEm: opts.criadoEm ?? now,
     atualizadoEm: now,
   }
@@ -106,4 +110,59 @@ export function updatePagamentoSaidaFromForm(
     atualizadoEm: opts.atualizadoEm,
     nowMs: opts.nowMs,
   })
+}
+
+export function isAnexoPagamentoFormValid(form: Pick<AnexoPagamento, 'nome' | 'base64'>): boolean {
+  return Boolean(form.nome && form.base64)
+}
+
+export type CreateAnexoPagamentoFromFormOpts = {
+  id?: string
+  criadoEm?: string
+  nowMs: number
+  random: () => number
+}
+
+export function createAnexoPagamentoFromForm(
+  form: Pick<AnexoPagamento, 'nome' | 'mime' | 'base64' | 'papel'>,
+  opts: CreateAnexoPagamentoFromFormOpts
+): AnexoPagamento {
+  return {
+    id: opts.id ?? `pag-anx-${opts.nowMs}-${opts.random().toString(36).slice(2, 7)}`,
+    nome: form.nome,
+    mime: form.mime,
+    base64: form.base64,
+    papel: form.papel,
+    criadoEm: opts.criadoEm ?? new Date(opts.nowMs).toISOString(),
+  }
+}
+
+/** Passa os documentos «a pagar» para o sítio do pagamento já pago, sem os apagar. */
+export function arquivarAnexosAPagarComoPagos(
+  anexos: AnexoPagamento[],
+  papelPago: AnexoPagamentoPapel = 'pago'
+): AnexoPagamento[] {
+  return (Array.isArray(anexos) ? anexos : []).map((a) =>
+    a.papel === 'a-pagar' ? { ...a, papel: papelPago } : a
+  )
+}
+
+export function marcarPagamentoSaidaComoPago(
+  existing: PagamentoSaida,
+  opts: { atualizadoEm?: string; nowMs: number }
+): PagamentoSaida {
+  return {
+    ...existing,
+    status: 'pago',
+    anexos: arquivarAnexosAPagarComoPagos(existing.anexos || []),
+    atualizadoEm: opts.atualizadoEm ?? new Date(opts.nowMs).toISOString(),
+  }
+}
+
+export function normalizePagamentoSaida(raw: PagamentoSaida): PagamentoSaida {
+  return {
+    ...raw,
+    status: raw.status === 'pago' ? 'pago' : 'pendente',
+    anexos: Array.isArray(raw.anexos) ? raw.anexos : [],
+  }
 }

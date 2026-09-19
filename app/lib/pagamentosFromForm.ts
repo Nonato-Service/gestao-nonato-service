@@ -2,16 +2,19 @@
  * I/O de relógio — fromForm canónico em `app/modules/pagamentos/fromForm`.
  */
 import {
+  createAnexoPagamentoFromForm as createAnexoPagamentoFromFormPure,
   createEmpresaRecebedoraFromForm as createEmpresaRecebedoraFromFormPure,
   createPagamentoSaidaFromForm as createPagamentoSaidaFromFormPure,
+  marcarPagamentoSaidaComoPago as marcarPagamentoSaidaComoPagoPure,
   updateEmpresaRecebedoraFromForm as updateEmpresaRecebedoraFromFormPure,
   updatePagamentoSaidaFromForm as updatePagamentoSaidaFromFormPure,
+  type CreateAnexoPagamentoFromFormOpts,
   type CreateEmpresaRecebedoraFromFormOpts,
   type CreatePagamentoSaidaFromFormOpts,
 } from '../modules/pagamentos/fromForm'
 import type { EmpresaRecebedoraFormState, PagamentoSaidaFormState } from '../modules/pagamentos/formState'
 import { emptyPagamentoSaidaForm as emptyPagamentoSaidaFormPure } from '../modules/pagamentos/formState'
-import type { EmpresaRecebedora, PagamentoSaida } from '../modules/pagamentos/tipos'
+import type { AnexoPagamento, EmpresaRecebedora, PagamentoSaida } from '../modules/pagamentos/tipos'
 import {
   ensureEmpresasOficiaisPagamentos as ensureEmpresasOficiaisPagamentosPure,
   type EnsureEmpresasOficiaisPagamentosOpts,
@@ -56,4 +59,15 @@ export function updatePagamentoSaidaFromForm(
 
 export function emptyPagamentoSaidaForm(empresaId = ''): PagamentoSaidaFormState {
   return emptyPagamentoSaidaFormPure({ nowMs: Date.now(), empresaId })
+}
+
+export function createAnexoPagamentoFromForm(
+  form: Pick<AnexoPagamento, 'nome' | 'mime' | 'base64' | 'papel'>,
+  opts: Omit<CreateAnexoPagamentoFromFormOpts, 'nowMs' | 'random'> = {}
+): AnexoPagamento {
+  return createAnexoPagamentoFromFormPure(form, { ...opts, nowMs: Date.now(), random: Math.random })
+}
+
+export function marcarPagamentoSaidaComoPago(existing: PagamentoSaida): PagamentoSaida {
+  return marcarPagamentoSaidaComoPagoPure(existing, { nowMs: Date.now() })
 }

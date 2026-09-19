@@ -1,6 +1,14 @@
 /** Módulo PAGAMENTOS — empresas recebedoras (isolado de fornecedores) e saídas. */
 
-export type { PagamentoMetodo, EmpresaRecebedora, EmpresaRecebedoraTipo, PagamentoSaida } from './tipos'
+export type {
+  PagamentoMetodo,
+  EmpresaRecebedora,
+  EmpresaRecebedoraTipo,
+  PagamentoSaida,
+  PagamentoSaidaStatus,
+  AnexoPagamento,
+  AnexoPagamentoPapel,
+} from './tipos'
 export {
   PAGAMENTOS_EMPRESAS_STORAGE_KEY,
   PAGAMENTOS_REGISTOS_STORAGE_KEY,
@@ -22,7 +30,11 @@ export {
   pagamentoSaidaToForm,
 } from './formState'
 
-export type { CreateEmpresaRecebedoraFromFormOpts, CreatePagamentoSaidaFromFormOpts } from './fromForm'
+export type {
+  CreateEmpresaRecebedoraFromFormOpts,
+  CreatePagamentoSaidaFromFormOpts,
+  CreateAnexoPagamentoFromFormOpts,
+} from './fromForm'
 export {
   isEmpresaRecebedoraFormValid,
   createEmpresaRecebedoraFromForm,
@@ -30,4 +42,9 @@ export {
   isPagamentoSaidaFormValid,
   createPagamentoSaidaFromForm,
   updatePagamentoSaidaFromForm,
+  isAnexoPagamentoFormValid,
+  createAnexoPagamentoFromForm,
+  arquivarAnexosAPagarComoPagos,
+  marcarPagamentoSaidaComoPago,
+  normalizePagamentoSaida,
 } from './fromForm'
