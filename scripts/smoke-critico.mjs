@@ -1252,6 +1252,17 @@ try {
   fail(`saída/acesso oficiais: ${e && e.message ? e.message : e}`)
 }
 
+try {
+  const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
+  if (cssVisual.includes('Visual Pro v487') && cssVisual.includes('organização e hierarquia do programa')) {
+    ok('visual profissional do programa (v487)')
+  } else {
+    fail('camada visual profissional v487 em falta')
+  }
+} catch (e) {
+  fail(`visual profissional: ${e && e.message ? e.message : e}`)
+}
+
 // 3d) Módulo financeiro (3.º corte + 11.º: período/IVA + 18.º: fluxo tipos/mutações)
 try {
   const idx = fs.readFileSync(path.join(root, 'app/modules/financeiro/index.ts'), 'utf8')

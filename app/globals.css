@@ -52084,3 +52084,238 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   opacity: 1 !important;
   visibility: visible !important;
 }
+
+/* ===== Visual Pro v487 — organização e hierarquia do programa ===== */
+.sidebar {
+  background:
+    linear-gradient(180deg, #2e2e2e 0%, #2a2a2a 52%, #252525 100%) !important;
+  border-right-color: rgba(255, 255, 255, 0.05);
+}
+.sidebar::after {
+  opacity: 0.16;
+}
+.sidebar::before {
+  width: 3px;
+  background: linear-gradient(180deg, #00ff00 0%, rgba(0, 200, 83, 0.55) 42%, rgba(0, 200, 83, 0.08) 100%);
+  box-shadow: 2px 0 16px rgba(0, 255, 0, 0.12);
+}
+
+.sidebar-section-sep {
+  margin: 16px 2px 8px;
+}
+.sidebar-section-sep__row {
+  min-height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.sidebar-section-sep__row::before {
+  display: none;
+}
+.sidebar-section-sep__row::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  margin-left: 10px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 88%);
+}
+.sidebar-section-sep__accent {
+  display: none;
+}
+.sidebar-section-sep__icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  font-size: 10px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.sidebar-section-sep__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-shadow: none;
+  color: rgba(232, 232, 232, 0.46);
+}
+
+.sidebar-nav-cluster {
+  margin-bottom: 6px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 255, 255, 0.045);
+  box-shadow: none;
+}
+.sidebar-nav-cluster:has(.sidebar-action-buttons) {
+  background: rgba(12, 12, 12, 0.55);
+  border-color: rgba(0, 255, 0, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sidebar .sidebar-nav-label-sub {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  color: rgba(167, 243, 208, 0.7) !important;
+}
+
+.sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected) {
+  background: #2a2a2a !important;
+  border-color: #3f3f3f !important;
+  color: rgba(244, 244, 244, 0.9) !important;
+}
+
+.sidebar .sidebar-action-buttons {
+  background: linear-gradient(180deg, #222222 0%, #1c1c1c 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar .sidebar-action-btn--row .sidebar-empresa-entry-row::before,
+.sidebar .sidebar-action-btn--row .sidebar-protocolos-entry-row::before {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #1a1a1a;
+  border-color: rgba(0, 255, 0, 0.22);
+  box-shadow: none;
+}
+
+.sidebar-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  padding-top: 12px;
+}
+
+.main-app-column {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -8%, rgba(0, 200, 83, 0.05), transparent 52%),
+    #2f2f2f !important;
+}
+
+.biblioteca-aviso-global {
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 193, 7, 0.28);
+  background: rgba(40, 34, 16, 0.92);
+  color: #f5e6b8;
+}
+
+.ns-dashboard-full {
+  gap: clamp(18px, 2.6vw, 28px);
+}
+
+.ns-dashboard-full-hero {
+  padding: clamp(18px, 2.6vw, 28px) clamp(16px, 2.4vw, 28px);
+  border-radius: 16px;
+  background: linear-gradient(160deg, #2a2a2a 0%, #222222 100%);
+  border: 1px solid rgba(0, 255, 0, 0.16);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+.ns-dashboard-full-hero__orb {
+  opacity: 0.22;
+}
+
+.ns-dashboard-full-title {
+  max-width: none;
+  letter-spacing: -0.02em;
+}
+
+.ns-dashboard-section-title,
+.ns-hub-subsection-title,
+.ns-dashboard-inventory-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  letter-spacing: 0.08em;
+}
+.ns-dashboard-section-title::after,
+.ns-hub-subsection-title::after,
+.ns-dashboard-inventory-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.35), transparent 90%);
+}
+
+.ns-dashboard-stat,
+.ns-dashboard-inventory-tile {
+  text-align: left;
+  border-radius: 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid #00c853;
+  box-shadow: none;
+}
+.ns-dashboard-stat:hover,
+.ns-dashboard-qa-card:hover,
+.ns-hub-card:hover {
+  transform: translateY(-2px);
+}
+
+.ns-dashboard-qa-card,
+.ns-hub-card {
+  min-height: 136px;
+  padding: 18px 18px 16px;
+  border-radius: 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid rgba(0, 200, 83, 0.55);
+  box-shadow: none;
+}
+.ns-dashboard-qa-card-title,
+.ns-hub-card-title {
+  letter-spacing: 0.04em;
+}
+.ns-dashboard-qa-card-icon,
+.ns-hub-card-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.ns-dashboard-inventory {
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  background: #262626;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
+
+@media (min-width: 900px) {
+  .ns-dashboard-full-hero,
+  .ns-hub-hero,
+  .ns-hub-root__hero .ns-dashboard-full-hero__content {
+    text-align: left;
+  }
+  .ns-dashboard-full-hero__content,
+  .ns-dashboard-full-hero__brand {
+    align-items: flex-start;
+  }
+  .ns-dashboard-full-lead,
+  .ns-hub-intro {
+    margin-left: 0;
+  }
+  .ns-dashboard-full-hero .ns-logo-in-box {
+    width: 96px !important;
+    height: 96px !important;
+  }
+}
+
+.ns-hub-hero {
+  background: linear-gradient(160deg, #2a2a2a 0%, #222222 100%);
+  border-color: rgba(0, 255, 0, 0.16);
+  box-shadow: none;
+}
+
+.tab-content-wrapper h1,
+.tab-content-wrapper h2,
+.tab-content-wrapper h3 {
+  letter-spacing: 0.02em;
+}
+
+.container {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22) !important;
+}
