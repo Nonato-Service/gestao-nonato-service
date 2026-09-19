@@ -24,6 +24,7 @@ export const SIDEBAR_ACTION_GLYPHS: Record<string, string> = {
   'open-comprovantes-despesas': '🧾',
   'open-registro-despesas': '📒',
   'open-pagamentos-contador': '🏦',
+  'open-pagamentos': '💸',
   'open-equipamentos': '🖥️',
   'open-familias-grupos-equipamentos': '🌳',
   'open-desmontados': '⚙️',

@@ -46,6 +46,7 @@ export const REQUIRED_SIDEBAR_BUTTON_IDS = [
   'clientes-financeiro-default',
   'comprovantes-despesas-default',
   'pagamentos-contador-default',
+  'pagamentos-default',
   'administrador-default',
   'cadastro-nonato-service-default',
   'ficha-pagamento-transferencia-default',
@@ -128,6 +129,14 @@ export const SIDEBAR_BUTTON_CATALOG: SidebarButtonMerge[] = [
     order: 3,
     translationKey: 'pagamentosContadorTitle',
     group: 'gestao-financeira',
+  },
+  {
+    id: 'pagamentos-default',
+    name: 'PAGAMENTOS',
+    action: 'open-pagamentos',
+    order: 12,
+    translationKey: 'pagamentosTitle',
+    group: 'pagamentos',
   },
   {
     id: 'administrador-default',

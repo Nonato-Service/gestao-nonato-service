@@ -206,6 +206,17 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     ],
   },
   {
+    id: 'pagamentos',
+    titleKey: 'pagamentosTitle',
+    fallbackTitle: 'Pagamentos',
+    descKey: 'pagamentosDesc',
+    fallbackDesc: 'Empresas que receberam dinheiro e dados de pagamento.',
+    icon: '💸',
+    items: [
+      { buttonId: 'pagamentos-default', action: 'open-pagamentos', labelKey: 'pagamentosTitle', fallbackLabel: 'Pagamentos', legacyKey: 'cadastroServicos' },
+    ],
+  },
+  {
     id: 'outros',
     titleKey: 'administrador',
     fallbackTitle: 'Administrador e Extras',

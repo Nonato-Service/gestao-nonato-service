@@ -2572,6 +2572,7 @@ body {
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-comprovantes-despesas'] .sidebar-empresa-entry-row::before { content: '🧾'; }
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-registro-despesas'] .sidebar-empresa-entry-row::before { content: '📒'; }
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-pagamentos-contador'] .sidebar-empresa-entry-row::before { content: '🏦'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-pagamentos'] .sidebar-empresa-entry-row::before { content: '💸'; }
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-equipamentos'] .sidebar-empresa-entry-row::before { content: '🖥️'; }
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-familias-grupos-equipamentos'] .sidebar-empresa-entry-row::before { content: '🌳'; }
 .sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-desmontados'] .sidebar-empresa-entry-row::before { content: '⚙️'; }
@@ -2615,6 +2616,84 @@ body {
 }
 .sidebar-nav-cluster {
   margin-bottom: 12px;
+}
+
+.ns-pagamentos-root {
+  padding: 18px 16px 28px;
+}
+.ns-pagamentos-tabs {
+  margin: 16px 0 18px;
+}
+.ns-pagamentos-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.1fr);
+  gap: 16px;
+}
+.ns-pagamentos-card {
+  background: #2a2a2a;
+  border: 1px solid #00ff00;
+  border-radius: 10px;
+  padding: 16px;
+}
+.ns-pagamentos-card h2 {
+  margin: 0 0 14px;
+  color: #00ff00;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+}
+.ns-pagamentos-card label {
+  display: block;
+  margin-bottom: 12px;
+  color: #fff;
+  font-size: 13px;
+}
+.ns-pagamentos-metodos {
+  border: 1px solid rgba(0, 255, 0, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  color: #fff;
+}
+.ns-pagamentos-metodos legend {
+  color: #00ff00;
+  padding: 0 6px;
+}
+.ns-pagamentos-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.ns-pagamentos-actions,
+.ns-pagamentos-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ns-pagamentos-btn-ghost {
+  background: transparent !important;
+  color: #fff !important;
+}
+.ns-pagamentos-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ns-pagamentos-list li {
+  border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+  padding: 10px 0;
+  color: #fff;
+}
+.ns-pagamentos-empty,
+.ns-pagamentos-msg {
+  color: #fff;
+  margin: 0 0 12px;
+}
+.ns-pagamentos-msg--err { color: #ff6b6b; }
+.ns-pagamentos-msg--ok { color: #00ff00; }
+@media (max-width: 900px) {
+  .ns-pagamentos-grid { grid-template-columns: 1fr; }
 }
 
 .sidebar .sidebar-empresa-entry-sub {

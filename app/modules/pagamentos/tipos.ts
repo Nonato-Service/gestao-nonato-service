@@ -1,0 +1,38 @@
+/** Tipos canónicos de PAGAMENTOS — empresas recebedoras (não fornecedores) e saídas. */
+
+export const PAGAMENTOS_EMPRESAS_STORAGE_KEY = 'nonato-pagamentos-empresas'
+export const PAGAMENTOS_REGISTOS_STORAGE_KEY = 'nonato-pagamentos-registos'
+
+export type PagamentoMetodo = 'referencia' | 'transferencia' | 'entidade-referencia'
+
+export type EmpresaRecebedora = {
+  id: string
+  nome: string
+  nif?: string
+  notas?: string
+  criadoEm: string
+  atualizadoEm: string
+}
+
+export type PagamentoSaida = {
+  id: string
+  empresaId: string
+  empresaNome: string
+  paraQuem: string
+  metodo: PagamentoMetodo
+  referencia?: string
+  entidade?: string
+  iban?: string
+  banco?: string
+  valor: number
+  dataPagamento: string
+  descricao?: string
+  criadoEm: string
+  atualizadoEm: string
+}
+
+export const PAGAMENTO_METODOS: readonly PagamentoMetodo[] = [
+  'referencia',
+  'transferencia',
+  'entidade-referencia',
+]

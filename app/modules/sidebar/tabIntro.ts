@@ -43,6 +43,7 @@ export const TAB_MODULE_INTRO_KEYS: Partial<Record<TabType, readonly string[]>> 
   'clientes-financeiro': ['clientesFinanceiroHubCardDesc'],
   'comprovantes-despesas': ['comprovantesDespesasDesc'],
   'pagamentos-contador': ['pagamentosContadorDesc'],
+  pagamentos: ['pagamentosDesc'],
   'mensagens-internas': ['mensagensInternasHubCardDesc'],
   'mensagens-internas-tecnicos': ['mensagensInternasTecnicosHubCardDesc'],
   'alerta-mensagens': ['alertaMensagensDesc'],

@@ -33,6 +33,8 @@ export const NONATO_CRITICAL_CADASTRO_KEYS = [
   'nonato-cartoes-empresa-despesas',
   'nonato-protocolos-servico',
   'nonato-fechamentos-guardados-biblioteca',
+  'nonato-pagamentos-empresas',
+  'nonato-pagamentos-registos',
 ] as const
 
 export type NonatoCriticalCadastroKey = (typeof NONATO_CRITICAL_CADASTRO_KEYS)[number]

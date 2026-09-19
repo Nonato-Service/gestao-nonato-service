@@ -38,6 +38,7 @@ export function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   ].includes(buttonId)) return 'gestao-custos'
 
   if (['registro-despesas-default', 'pagamentos-contador-default'].includes(buttonId)) return 'gestao-financeira'
+  if (buttonId === 'pagamentos-default') return 'pagamentos'
 
   if (['mapa-visual-separacao-pecas-default'].includes(buttonId)) return 'almoxarifado-armazem'
 

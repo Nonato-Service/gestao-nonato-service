@@ -14,6 +14,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
   'almoxarifado-armazem',
   'gestao-financeira',
   'empresa-institucional',
+  'pagamentos',
   'outros',
 ]
 
@@ -104,6 +105,7 @@ export const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'clientes-financeiro-default': 'clientesFinanceiroTitle',
   'comprovantes-despesas-default': 'comprovantesDespesasTitle',
   'pagamentos-contador-default': 'pagamentosContadorTitle',
+  'pagamentos-default': 'pagamentosTitle',
   'administrador-default': 'administrador',
 }
 
@@ -116,5 +118,6 @@ export const SIDEBAR_SECTION_ICONS: Record<string, string> = {
   checklist: '✅',
   'pecas-armazem': '📦',
   institucional: '🏛️',
+  pagamentos: '💸',
   sistema: '⚙️',
 }

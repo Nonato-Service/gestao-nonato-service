@@ -67,6 +67,7 @@ const critical = [
   'app/modules/ordem-preparacao/index.ts',
   'app/modules/pre-check/index.ts',
   'app/modules/pagamentos-contador/index.ts',
+  'app/modules/pagamentos/index.ts',
   'app/modules/registro-despesas/index.ts',
     'app/modules/ui/index.ts',
     'pwa-version.json',
@@ -1225,6 +1226,46 @@ try {
   }
 } catch (e) {
   fail(`cadastro de peças do stock: ${e && e.message ? e.message : e}`)
+}
+
+try {
+  const pagSrc = exists('app/components/PagamentosContent.tsx')
+    ? fs.readFileSync(path.join(root, 'app/components/PagamentosContent.tsx'), 'utf8')
+    : ''
+  const pagMod = exists('app/modules/pagamentos/index.ts')
+    ? fs.readFileSync(path.join(root, 'app/modules/pagamentos/index.ts'), 'utf8')
+    : ''
+  const pagFrom = exists('app/modules/pagamentos/fromForm.ts')
+    ? fs.readFileSync(path.join(root, 'app/modules/pagamentos/fromForm.ts'), 'utf8')
+    : ''
+  const pagKeys = fs.readFileSync(path.join(root, 'app/lib/criticalCadastroKeys.ts'), 'utf8')
+  const nmaPag = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const mergePag = fs.readFileSync(path.join(root, 'app/modules/sidebar/merge.ts'), 'utf8')
+  const gruposPag = fs.readFileSync(path.join(root, 'app/modules/sidebar/grupos.ts'), 'utf8')
+  if (
+    pagSrc.includes('PAGAMENTOS_EMPRESAS_STORAGE_KEY') &&
+    pagSrc.includes('nonato-pagamentos-empresas') === false &&
+    pagSrc.includes('fornecedores') === false &&
+    pagMod.includes('EmpresaRecebedora') &&
+    pagMod.includes('PagamentoSaida') &&
+    pagFrom.includes('isPagamentoSaidaFormValid') &&
+    !pagFrom.includes('Date.now') &&
+    pagKeys.includes('nonato-pagamentos-empresas') &&
+    pagKeys.includes('nonato-pagamentos-registos') &&
+    nmaPag.includes('open-pagamentos') &&
+    nmaPag.includes('PagamentosContent') &&
+    nmaPag.includes('data-sidebar-zone="pagamentos"') &&
+    mergePag.includes('pagamentos-default') &&
+    mergePag.includes("group: 'pagamentos'") &&
+    gruposPag.includes("buttonId === 'pagamentos-default'") &&
+    !gruposPag.includes("pagamentos-default') return 'gestao-financeira")
+  ) {
+    ok('módulo PAGAMENTOS isolado (não financeiro, não fornecedores)')
+  } else {
+    fail('módulo PAGAMENTOS incompleto ou misturado com financeiro/fornecedores')
+  }
+} catch (e) {
+  fail(`módulo PAGAMENTOS: ${e && e.message ? e.message : e}`)
 }
 
 try {

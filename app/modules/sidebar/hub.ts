@@ -53,6 +53,7 @@ export const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
   'clientes-financeiro': 'gestao-financeira',
   'comprovantes-despesas': 'gestao-financeira',
   'pagamentos-contador': 'gestao-financeira',
+  pagamentos: 'pagamentos',
   'protocolos-servico': 'protocolos-main',
   'manual-programa': 'manual-programa-main',
   'cadastro-nonato-service': 'empresa-institucional-main',
@@ -112,6 +113,7 @@ export function getTabTitleForBundle(type: TabType, tRaw: Record<string, unknown
     'orcamento-servico-tecnico': t?.orcamentoServicoTecnicoTitle || 'ORÇAMENTO DE SERVIÇO TÉCNICO',
     'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
     'pagamentos-contador': t?.pagamentosContadorTitle || 'PAGAMENTOS AO CONTADOR',
+    pagamentos: t?.pagamentosTitle || 'PAGAMENTOS',
     'comprovantes-despesas':
       t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
     'mapa-visual-separacao-pecas':
@@ -194,6 +196,7 @@ export const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'clientes-financeiro-default': ['clientesFinanceiroHubCardDesc'],
   'comprovantes-despesas-default': ['comprovantesDespesasDesc'],
   'pagamentos-contador-default': ['pagamentosContadorDesc'],
+  'pagamentos-default': ['pagamentosDesc'],
   'open-translator': ['quickAccessTranslatorDesc'],
   'open-manual-gestor': ['manualUsoGestorHubCardDesc'],
 }

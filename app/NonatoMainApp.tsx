@@ -958,6 +958,7 @@ import { RelatorioPdfModeloPicker } from './components/RelatorioPdfModeloPicker'
 import { BibliotecaRowAcoesMenu } from './components/BibliotecaRowAcoesMenu'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { CadastroPecasStockContent } from './components/CadastroPecasStockContent'
+import { PagamentosContent } from './components/PagamentosContent'
 import { SessaoGateDialog } from './components/SessaoGateDialog'
 import { ClienteCadastroForm } from './components/ClienteCadastroForm'
 import { ClienteIdentidadeChips, formatClienteIdentidadeTexto, formatNifClienteExibicao } from './components/ClienteIdentidadeChips'
@@ -2640,6 +2641,7 @@ export default function Dashboard() {
       'clientes-financeiro': 'open-clientes-financeiro',
       'comprovantes-despesas': 'open-comprovantes-despesas',
       'pagamentos-contador': 'open-pagamentos-contador',
+      pagamentos: 'open-pagamentos',
       'protocolos-servico': 'open-protocolos-servico',
       'manual-programa': 'open-manual-programa'
     }
@@ -4414,6 +4416,7 @@ export default function Dashboard() {
       'open-clientes-financeiro',
       'open-comprovantes-despesas',
       'open-pagamentos-contador',
+      'open-pagamentos',
       'open-hub-comunicacao',
       'open-mensagens-internas',
       'open-mensagens-internas-tecnicos',
@@ -8951,6 +8954,7 @@ export default function Dashboard() {
           'clientes-financeiro-default': { translationKey: 'clientesFinanceiroTitle', group: 'gestao-financeira' },
           'comprovantes-despesas-default': { translationKey: 'comprovantesDespesasTitle', group: 'gestao-financeira' },
           'pagamentos-contador-default': { translationKey: 'pagamentosContadorTitle', group: 'gestao-financeira' },
+          'pagamentos-default': { translationKey: 'pagamentosTitle', group: 'pagamentos' },
           'administrador-default': { translationKey: 'administrador' }
         }
         
@@ -9006,6 +9010,7 @@ export default function Dashboard() {
                                b.id === 'relatorio-especial-default' ? 'open-relatorio-especial' :
                                b.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' :
                                b.id === 'cadastro-pecas-stock-default' ? 'open-cadastro-pecas-stock' :
+                               b.id === 'pagamentos-default' ? 'open-pagamentos' :
                                b.id === 'solicitacao-servico-tecnico-default' ? 'open-solicitacao-servico-tecnico' :
                                b.id === 'agenda-default' ? 'open-agenda' :
                                b.id === 'diario-pedidos-dia-default' ? 'open-diario-pedidos-dia' :
@@ -9408,6 +9413,19 @@ export default function Dashboard() {
           group: 'gestao-financeira',
         }
         buttons.push(pagamentosContadorButton)
+        saveData('nonato-sidebar-buttons', buttons)
+      }
+
+      const hasPagamentos = buttons.some((b: SidebarButton) => b.id === 'pagamentos-default')
+      if (!hasPagamentos) {
+        buttons.push({
+          id: 'pagamentos-default',
+          name: 'PAGAMENTOS',
+          action: 'open-pagamentos',
+          order: buttons.length,
+          translationKey: 'pagamentosTitle',
+          group: 'pagamentos',
+        })
         saveData('nonato-sidebar-buttons', buttons)
       }
       
@@ -10269,6 +10287,7 @@ export default function Dashboard() {
       const hasRelatorioServicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
       const hasBibliotecaPecasAfter = filteredButtons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
       const hasCadastroPecasStockAfter = filteredButtons.some((b: SidebarButton) => b.id === 'cadastro-pecas-stock-default')
+      const hasPagamentosAfter = filteredButtons.some((b: SidebarButton) => b.id === 'pagamentos-default')
       const hasSolicitacaoServicoTecnicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'solicitacao-servico-tecnico-default')
       const hasAgendaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'agenda-default')
       const hasDiarioPedidosDiaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'diario-pedidos-dia-default')
@@ -10415,6 +10434,16 @@ export default function Dashboard() {
           order: filteredButtons.length,
           translationKey: 'cadastroPecasStockTitle',
           group: 'pecas-biblioteca',
+        })
+      }
+      if (!hasPagamentosAfter) {
+        filteredButtons.push({
+          id: 'pagamentos-default',
+          name: 'PAGAMENTOS',
+          action: 'open-pagamentos',
+          order: filteredButtons.length,
+          translationKey: 'pagamentosTitle',
+          group: 'pagamentos',
         })
       }
       if (!hasSolicitacaoServicoTecnicoAfter) {
@@ -23100,6 +23129,7 @@ export default function Dashboard() {
     'open-orcamento-servico-tecnico': 'cadastroServicos',
     'open-registro-despesas': 'cadastroServicos',
     'open-pagamentos-contador': 'cadastroServicos',
+    'open-pagamentos': 'cadastroServicos',
     'open-mapa-visual-separacao': 'extras',
     'open-comunicacao-interna': 'extras',
     'open-hub-comunicacao': 'extras',
@@ -23792,6 +23822,8 @@ export default function Dashboard() {
     } else if (action === 'open-pagamentos-contador') {
       ensureGestaoFinanceiraSidebarExpanded()
       openTab('pagamentos-contador', getTabTitle('pagamentos-contador'))
+    } else if (action === 'open-pagamentos') {
+      openTab('pagamentos', getTabTitle('pagamentos'))
     } else if (action === 'open-gestao-industrial') {
       toggleOrOpenDashboardHub('gestao-industrial', 'gestao-industrial')
     } else if (action === 'open-checklist-group') {
@@ -45376,6 +45408,17 @@ A1;Peça exemplo;10`}
             closeTab={closeTab}
             activeTabId={activeTabId || undefined}
             isCompactLayout={isCompactLayout}
+          />
+        )
+
+      case 'pagamentos':
+        return (
+          <PagamentosContent
+            saveData={async (key, data) => {
+              await saveData(key, data)
+            }}
+            loadData={loadData}
+            safeT={safeT as Record<string, string | undefined>}
           />
         )
 
@@ -67934,6 +67977,36 @@ A1;Peça exemplo;10`}
             )}
           </div>
           )}
+        {canAccessAction('open-pagamentos') && (
+        <div className="sidebar-nav-cluster" data-sidebar-zone="pagamentos">
+          <button
+            type="button"
+            data-sidebar-nav-action="open-pagamentos"
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-pagamentos' ? ' sidebar-group-btn-selected' : ''}`}
+            onClick={() => handleButtonClick('open-pagamentos')}
+          >
+            {selectedSidebarButton === 'open-pagamentos' && (
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
+            )}
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                💸
+              </span>
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.pagamentosTitle || 'PAGAMENTOS'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.pagamentosSub || 'Empresas · Referência · Transferência'}
+                </span>
+              </span>
+            </span>
+            {String(pickTrChain(trCardDesc, ['pagamentosDesc']) || '').trim() ? (
+              <span className="sidebar-tip-bubble" role="tooltip">
+                {pickTrChain(trCardDesc, ['pagamentosDesc']) || ''}
+              </span>
+            ) : null}
+          </button>
+        </div>
+        )}
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
         {canAccessModule('gestao-custos') && (
         <div className="sidebar-nav-cluster" data-sidebar-zone="comercial">

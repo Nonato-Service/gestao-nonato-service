@@ -12,6 +12,7 @@ export type SidebarGroup =
   | 'biblia-nonato-service'
   | 'almoxarifado-armazem'
   | 'empresa-institucional'
+  | 'pagamentos'
   | 'outros'
 
 export type SidebarButton = {
@@ -65,6 +66,7 @@ export type TabType =
   | 'orcamento-servico-tecnico'
   | 'registro-despesas'
   | 'pagamentos-contador'
+  | 'pagamentos'
   | 'manuais-informacoes-tecnicas'
   | 'biblia-nonato-service'
   | 'almoxarifado-armazem'

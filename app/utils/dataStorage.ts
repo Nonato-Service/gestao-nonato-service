@@ -791,6 +791,8 @@ export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
   'nonato-solicitacoes-servico-tecnico',
   'nonato-pecas-solicitadas-armazem',
   'nonato-users',
+  'nonato-pagamentos-empresas',
+  'nonato-pagamentos-registos',
 ])
 
 function isEmptyDataArray(value: unknown): boolean {

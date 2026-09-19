@@ -34,6 +34,8 @@ export function getSidebarGroupSub(
       return tr.almoxarifadoArmazemSub || 'Stock · Pedidos · Mapa'
     case 'empresa-institucional':
       return tr.empresaInstitucionalSub || 'Cadastro · Fichas · SST'
+    case 'pagamentos':
+      return tr.pagamentosSub || 'Empresas · Referência · Transferência'
     default:
       return tr.extrasSub || 'Ferramentas extra'
   }
@@ -70,6 +72,8 @@ export function getSidebarGroupLabel(
       return tr.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'
     case 'empresa-institucional':
       return tr.empresaInstitucionalTitle || 'EMPRESA & REGISTOS OFICIAIS'
+    case 'pagamentos':
+      return tr.pagamentosTitle || 'PAGAMENTOS'
     default:
       return tr.outrosBotoes || 'OUTROS'
   }
