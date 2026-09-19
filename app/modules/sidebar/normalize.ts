@@ -47,7 +47,10 @@ export function normalizeSidebarButtons(buttons: SidebarButton[]): SidebarButton
 
   for (const button of sorted) {
     if (isSidebarButtonLocked(button)) continue
-    const group = button.group || getDefaultSidebarGroup(button.id)
+    let group = button.group || getDefaultSidebarGroup(button.id)
+    if (button.id === 'gestores-default' && (!button.group || button.group === 'gestao-tecnica')) {
+      group = 'parceiros-comercial'
+    }
     grouped.get(group)!.push({ ...button, group })
   }
 

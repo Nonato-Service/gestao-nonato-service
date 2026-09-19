@@ -3,7 +3,6 @@ import type { SidebarButton, SidebarGroup } from './tipos'
 
 export function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if ([
-    'gestores-default',
     'cadastro-servicos-default',
     'agenda-default',
     'diario-pedidos-dia-default',
@@ -11,7 +10,9 @@ export function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
     'informacoes-conhecimento-tecnicos-default',
   ].includes(buttonId)) return 'gestao-tecnica'
 
-  if (['clientes-default', 'fornecedores-default'].includes(buttonId)) return 'parceiros-comercial'
+  if (['clientes-default', 'fornecedores-default', 'gestores-default'].includes(buttonId)) {
+    return 'parceiros-comercial'
+  }
 
   if (
     [

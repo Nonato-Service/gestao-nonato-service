@@ -3900,7 +3900,8 @@ try {
     idx.includes('getBottomTabAccentClass') &&
     idx.includes('getHelpContent') &&
     idx.includes('getSidebarGroupLabel') &&
-    idx.includes('formatNavBackToHub')
+    idx.includes('formatNavBackToHub') &&
+    idx.includes('getSidebarActionGlyph')
   ) {
     ok('módulo sidebar exporta normalize/hub/tabIntro/hubLabels')
   } else {
@@ -3915,6 +3916,21 @@ try {
     fail('falta app/modules/sidebar/hubLabels.ts')
   } else {
     ok('existe app/modules/sidebar/hubLabels.ts')
+  }
+  const gruposSrc = fs.readFileSync(path.join(root, 'app/modules/sidebar/grupos.ts'), 'utf8')
+  const navGlyphs = exists('app/modules/sidebar/navGlyphs.ts')
+    ? fs.readFileSync(path.join(root, 'app/modules/sidebar/navGlyphs.ts'), 'utf8')
+    : ''
+  if (
+    navGlyphs.includes('open-clientes') &&
+    navGlyphs.includes('open-fornecedores') &&
+    navGlyphs.includes('open-gestores') &&
+    gruposSrc.includes("'gestores-default'") &&
+    gruposSrc.includes('parceiros-comercial')
+  ) {
+    ok('sidebar: ícones de acção e cadastros (clientes/fornecedores/técnicos)')
+  } else {
+    fail('sidebar sem ícones de acção ou gestores fora de cadastros')
   }
   const nma = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nma.includes("from './modules/sidebar'") || nma.includes('from "./modules/sidebar"')) {

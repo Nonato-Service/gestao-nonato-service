@@ -2526,6 +2526,97 @@ body {
   text-transform: uppercase;
 }
 
+/* Ícone de reconhecimento em cada acção da barra */
+.sidebar .sidebar-action-btn--row .sidebar-empresa-entry-row::before,
+.sidebar .sidebar-action-btn--row .sidebar-protocolos-entry-row::before {
+  content: '▸';
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1;
+  background: linear-gradient(180deg, rgba(22, 28, 24, 0.98), rgba(10, 12, 11, 0.98));
+  border: 1px solid rgba(0, 200, 83, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 12px rgba(0, 200, 83, 0.08);
+}
+.sidebar .sidebar-action-btn--row:has(.sidebar-empresa-icon) .sidebar-empresa-entry-row::before,
+.sidebar .sidebar-action-btn--row:has(.sidebar-protocolos-icon) .sidebar-protocolos-entry-row::before {
+  display: none;
+}
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-clientes'] .sidebar-empresa-entry-row::before { content: '👤'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-fornecedores'] .sidebar-empresa-entry-row::before { content: '🏭'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-gestores'] .sidebar-empresa-entry-row::before { content: '👷'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-cadastro-servicos'] .sidebar-empresa-entry-row::before { content: '💶'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-agenda'] .sidebar-empresa-entry-row::before { content: '📅'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-diario-pedidos-dia'] .sidebar-empresa-entry-row::before { content: '📓'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-estado-visual-tecnico'] .sidebar-empresa-entry-row::before { content: '📍'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-informacoes-conhecimento-tecnicos'] .sidebar-empresa-entry-row::before { content: '🧠'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-relatorio-servico'] .sidebar-empresa-entry-row::before { content: '📝'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-relatorio-especial'] .sidebar-empresa-entry-row::before { content: '📊'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-biblioteca-relatorios'] .sidebar-empresa-entry-row::before { content: '📚'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-relatorios-excluidos-clientes'] .sidebar-empresa-entry-row::before { content: '🗃️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-fechamento-relatorios-servicos'] .sidebar-empresa-entry-row::before { content: '✅'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-biblioteca-pecas'] .sidebar-empresa-entry-row::before { content: '🧩'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-cadastro-pecas-stock'] .sidebar-empresa-entry-row::before { content: '📦'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-orcamentos-avulso'] .sidebar-empresa-entry-row::before { content: '💼'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-pedido-orcamentos-avulso'] .sidebar-empresa-entry-row::before { content: '📨'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-orcamentos-pecas-especiais'] .sidebar-empresa-entry-row::before { content: '🔧'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-orcamento-servico-tecnico'] .sidebar-empresa-entry-row::before { content: '🛠️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-clientes-financeiro'] .sidebar-empresa-entry-row::before { content: '💳'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-comprovantes-despesas'] .sidebar-empresa-entry-row::before { content: '🧾'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-registro-despesas'] .sidebar-empresa-entry-row::before { content: '📒'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-pagamentos-contador'] .sidebar-empresa-entry-row::before { content: '🏦'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-equipamentos'] .sidebar-empresa-entry-row::before { content: '🖥️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-familias-grupos-equipamentos'] .sidebar-empresa-entry-row::before { content: '🌳'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-desmontados'] .sidebar-empresa-entry-row::before { content: '⚙️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-pre-checklist'] .sidebar-empresa-entry-row::before { content: '☑️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-checklist-basico'] .sidebar-empresa-entry-row::before { content: '📋'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-checklist'] .sidebar-empresa-entry-row::before { content: '✅'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-gestao-grupos-checklist'] .sidebar-empresa-entry-row::before { content: '📁'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-ordem-preparacao'] .sidebar-empresa-entry-row::before { content: '📨'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-formularios-checklist-tecnicos'] .sidebar-empresa-entry-row::before { content: '📄'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-verificacao-final-entrega'] .sidebar-empresa-entry-row::before { content: '🏁'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-familias-grupos'] .sidebar-empresa-entry-row::before { content: '🏷️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-hub-comunicacao'] .sidebar-empresa-entry-row::before { content: '💬'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-mensagens-internas'] .sidebar-empresa-entry-row::before { content: '✉️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-mensagens-internas-tecnicos'] .sidebar-empresa-entry-row::before { content: '📡'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-alerta-mensagens'] .sidebar-empresa-entry-row::before { content: '🔔'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-manuais-informacoes-tecnicas'] .sidebar-empresa-entry-row::before { content: '📖'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-biblia-nonato-service'] .sidebar-empresa-entry-row::before { content: '✝️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-almoxarifado-armazem'] .sidebar-empresa-entry-row::before { content: '🏬'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-mapa-visual-separacao-pecas'] .sidebar-empresa-entry-row::before { content: '🗺️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-cadastro-nonato-service'] .sidebar-empresa-entry-row::before { content: '🏛️'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-ficha-pagamento-transferencia'] .sidebar-empresa-entry-row::before { content: '💸'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-ficha-fatura-cliente'] .sidebar-empresa-entry-row::before { content: '📑'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-solicitacao-servico-tecnico'] .sidebar-empresa-entry-row::before { content: '🎫'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-protocolos-servico'] .sidebar-protocolos-entry-row::before { content: '📜'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-manual-programa'] .sidebar-empresa-entry-row::before { content: '📘'; }
+.sidebar .sidebar-action-btn--row[data-sidebar-nav-action='open-administrador'] .sidebar-empresa-entry-row::before { content: '⚙️'; }
+
+.sidebar .sidebar-group-header .sidebar-nav-label--stacked > span[aria-hidden] {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(24, 32, 28, 0.98), rgba(8, 10, 9, 0.98));
+  border: 1px solid rgba(0, 200, 83, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 14px rgba(0, 200, 83, 0.1);
+  font-size: 15px;
+}
+.sidebar-nav-cluster {
+  margin-bottom: 12px;
+}
+
 .sidebar .sidebar-empresa-entry-sub {
   font-size: 9px !important;
   font-weight: 500 !important;

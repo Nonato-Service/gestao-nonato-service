@@ -166,7 +166,7 @@ export const SIDEBAR_BUTTON_CATALOG: SidebarButtonMerge[] = [
     action: 'open-gestores',
     order: 1,
     translationKey: 'gestoresTitle',
-    group: 'gestao-tecnica',
+    group: 'parceiros-comercial',
   },
   {
     id: 'familias-grupos-default',

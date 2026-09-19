@@ -67730,11 +67730,15 @@ A1;Peça exemplo;10`}
               )}
               <span className="sidebar-nav-label sidebar-nav-label--stacked">
                 <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                  👥
+                  🗂️
                 </span>
                 <span className="sidebar-nav-label-stack">
                   <span className="sidebar-nav-label-text">
-                    {(safeT as any)?.parceirosComercialTitle || 'CLIENTES E FORNECEDORES'}
+                    {(safeT as any)?.parceirosComercialTitle || 'CADASTROS'}
+                  </span>
+                  <span className="sidebar-nav-label-sub">
+                    {(safeT as any)?.parceirosComercialSub ||
+                      'Clientes · Fornecedores · Técnicos'}
                   </span>
                 </span>
               </span>

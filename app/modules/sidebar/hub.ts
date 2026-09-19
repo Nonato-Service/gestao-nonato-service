@@ -2,7 +2,7 @@ import type { TabType } from './tipos'
 
 /** Hub pai por defeito quando a aba é aberta pela sidebar (sem hub activo no centro). */
 export const TAB_DEFAULT_PARENT_HUB: Partial<Record<TabType, string>> = {
-  gestores: 'gestao-tecnica',
+  gestores: 'parceiros-comercial',
   agenda: 'gestao-tecnica',
   'diario-pedidos-dia': 'gestao-tecnica',
   'estado-visual-tecnico': 'gestao-tecnica',

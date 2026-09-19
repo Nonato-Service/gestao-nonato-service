@@ -23,6 +23,8 @@ export {
   normalizeSidebarButtons,
 } from './normalize'
 
+export { SIDEBAR_ACTION_GLYPHS, getSidebarActionGlyph } from './navGlyphs'
+
 export { extractSidebarButtonTip } from './tipBubble'
 
 export {

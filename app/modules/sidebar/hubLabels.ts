@@ -11,7 +11,7 @@ export function getSidebarGroupLabel(
     case 'gestao-tecnica':
       return tr.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'
     case 'parceiros-comercial':
-      return tr.parceirosComercialTitle || 'CLIENTES E FORNECEDORES'
+      return tr.parceirosComercialTitle || 'CADASTROS'
     case 'documentacao-relatorios':
       return tr.documentacaoRelatoriosTitle || 'DOCUMENTAÇÃO E RELATÓRIOS'
     case 'pecas-biblioteca':
