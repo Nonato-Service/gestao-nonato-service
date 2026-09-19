@@ -52201,121 +52201,19 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   color: #f5e6b8;
 }
 
-.ns-dashboard-full {
-  gap: clamp(18px, 2.6vw, 28px);
+.ns-dashboard-full-hero,
+.ns-hub-hero,
+.ns-hub-root__hero .ns-dashboard-full-hero__content,
+.ns-dashboard-full-hero__content,
+.ns-dashboard-full-hero__brand {
+  text-align: center;
 }
-
-.ns-dashboard-full-hero {
-  padding: clamp(18px, 2.6vw, 28px) clamp(16px, 2.4vw, 28px);
-  border-radius: 16px;
-  background: linear-gradient(160deg, #2a2a2a 0%, #222222 100%);
-  border: 1px solid rgba(0, 255, 0, 0.16);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-}
-.ns-dashboard-full-hero__orb {
-  opacity: 0.22;
-}
-
-.ns-dashboard-full-title {
-  max-width: none;
-  letter-spacing: -0.02em;
-}
-
-.ns-dashboard-section-title,
-.ns-hub-subsection-title,
-.ns-dashboard-inventory-title {
-  display: flex;
+.ns-dashboard-full-hero__content,
+.ns-dashboard-full-hero__brand {
   align-items: center;
-  gap: 12px;
-  text-align: left;
-  letter-spacing: 0.08em;
 }
-.ns-dashboard-section-title::after,
-.ns-hub-subsection-title::after,
-.ns-dashboard-inventory-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.35), transparent 90%);
-}
-
-.ns-dashboard-stat,
-.ns-dashboard-inventory-tile {
-  text-align: left;
-  border-radius: 14px;
-  background: #2a2a2a;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-left: 3px solid #00c853;
-  box-shadow: none;
-}
-.ns-dashboard-stat:hover,
-.ns-dashboard-qa-card:hover,
-.ns-hub-card:hover {
-  transform: translateY(-2px);
-}
-
-.ns-dashboard-qa-card,
-.ns-hub-card {
-  min-height: 136px;
-  padding: 18px 18px 16px;
-  border-radius: 14px;
-  background: #2a2a2a;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-left: 3px solid rgba(0, 200, 83, 0.55);
-  box-shadow: none;
-}
-.ns-dashboard-qa-card-title,
-.ns-hub-card-title {
-  letter-spacing: 0.04em;
-}
-.ns-dashboard-qa-card-icon,
-.ns-hub-card-icon {
-  font-size: 28px;
-  margin-bottom: 10px;
-}
-
-.ns-dashboard-inventory {
-  padding: 18px 18px 16px;
-  border-radius: 16px;
-  background: #262626;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-
-@media (min-width: 900px) {
-  .ns-dashboard-full-hero,
-  .ns-hub-hero,
-  .ns-hub-root__hero .ns-dashboard-full-hero__content {
-    text-align: left;
-  }
-  .ns-dashboard-full-hero__content,
-  .ns-dashboard-full-hero__brand {
-    align-items: flex-start;
-  }
-  .ns-dashboard-full-lead,
-  .ns-hub-intro {
-    margin-left: 0;
-  }
-  .ns-dashboard-full-hero .ns-logo-in-box {
-    width: 96px !important;
-    height: 96px !important;
-  }
-}
-
-.ns-hub-hero {
-  background: linear-gradient(160deg, #2a2a2a 0%, #222222 100%);
-  border-color: rgba(0, 255, 0, 0.16);
-  box-shadow: none;
-}
-
-.tab-content-wrapper h1,
-.tab-content-wrapper h2,
-.tab-content-wrapper h3 {
-  letter-spacing: 0.02em;
-}
-
-.container {
-  background: #2a2a2a !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22) !important;
+.ns-dashboard-full-lead,
+.ns-hub-intro {
+  margin-left: auto;
+  margin-right: auto;
 }

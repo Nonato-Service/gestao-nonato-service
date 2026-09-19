@@ -1254,10 +1254,14 @@ try {
 
 try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
-  if (cssVisual.includes('Visual Pro v487') && cssVisual.includes('organização e hierarquia do programa')) {
-    ok('visual profissional do programa (v487)')
+  if (
+    cssVisual.includes('Visual Pro v487') &&
+    cssVisual.includes('organização e hierarquia do programa') &&
+    !cssVisual.includes('.ns-dashboard-full-hero .ns-logo-in-box {\n    width: 96px')
+  ) {
+    ok('visual profissional do programa (hero centrado)')
   } else {
-    fail('camada visual profissional v487 em falta')
+    fail('hero do dashboard ainda com o visual achatado')
   }
 } catch (e) {
   fail(`visual profissional: ${e && e.message ? e.message : e}`)
