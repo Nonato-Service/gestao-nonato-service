@@ -46,6 +46,7 @@ export {
 
 export {
   getSidebarGroupLabel,
+  getSidebarGroupSub,
   getDashboardMainHubTitle,
   formatNavBackToHub,
 } from './hubLabels'

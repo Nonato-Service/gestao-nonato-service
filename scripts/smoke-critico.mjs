@@ -3900,6 +3900,7 @@ try {
     idx.includes('getBottomTabAccentClass') &&
     idx.includes('getHelpContent') &&
     idx.includes('getSidebarGroupLabel') &&
+    idx.includes('getSidebarGroupSub') &&
     idx.includes('formatNavBackToHub') &&
     idx.includes('getSidebarActionGlyph')
   ) {

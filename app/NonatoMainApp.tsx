@@ -66901,6 +66901,9 @@ A1;Peça exemplo;10`}
             </span>
             <span className="sidebar-nav-label-stack">
               <span className="sidebar-nav-label-text">{getButtonName(checklistBtn)}</span>
+              <span className="sidebar-nav-label-sub">
+                {(safeT as any)?.checklistGroupSub || 'Pré-check · Montagem · Entrega'}
+              </span>
             </span>
           </span>
           <span className={sidebarGroupChevronClass(expandedGroups.has('checklist-group'))} aria-hidden />
@@ -66935,6 +66938,7 @@ A1;Peça exemplo;10`}
                       isSubSelected ? ' sidebar-action-btn-active' : ''
                     }`}
                     data-button-action={subButton.action}
+                    data-sidebar-nav-action={subButton.action}
                     onClick={() => handleButtonClick(subButton.action)}
                   >
                     {isSubSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
@@ -67605,6 +67609,9 @@ A1;Peça exemplo;10`}
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.gestaoTecnicaSub || 'Agenda · Diário · Serviços'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-tecnica'))} aria-hidden />
@@ -67807,6 +67814,9 @@ A1;Peça exemplo;10`}
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.gestaoCustosSub || 'Orçamentos · Pedidos'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-custos'))} aria-hidden />
@@ -67948,6 +67958,9 @@ A1;Peça exemplo;10`}
                     </span>
                     <span className="sidebar-nav-label-stack">
                       <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
+                      <span className="sidebar-nav-label-sub">
+                        {(safeT as any)?.gestaoFinanceiraSub || 'Clientes · Despesas · Contador'}
+                      </span>
                     </span>
                   </span>
                   <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-financeira'))} aria-hidden />
@@ -68062,6 +68075,9 @@ A1;Peça exemplo;10`}
                   <span className="sidebar-nav-label-text">
                     {(safeT as any)?.documentacaoRelatoriosTitle || 'DOCUMENTAÇÃO E RELATÓRIOS'}
                   </span>
+                  <span className="sidebar-nav-label-sub">
+                    {(safeT as any)?.documentacaoRelatoriosSub || 'Serviço · Especiais · Fechamento'}
+                  </span>
                 </span>
               </span>
               <span className={sidebarGroupChevronClass(expandedGroups.has('documentacao-relatorios'))} aria-hidden />
@@ -68144,6 +68160,9 @@ A1;Peça exemplo;10`}
                 <span className="sidebar-nav-label-text">
                   {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
                 </span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.protocolosServicoSub || 'Relatório visual · PDF · Envio'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('protocolos-main'))} aria-hidden />
@@ -68222,6 +68241,9 @@ A1;Peça exemplo;10`}
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.manualProgramaSub || 'Ajuda e orientação do sistema'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('manual-programa-main'))} aria-hidden />
@@ -68314,6 +68336,9 @@ A1;Peça exemplo;10`}
                         +{bibliotecaNovidadesServidor}
                       </span>
                     ) : null}
+                  </span>
+                  <span className="sidebar-nav-label-sub">
+                    {(safeT as any)?.pecasBibliotecaSub || 'Biblioteca · Stock'}
                   </span>
                 </span>
               </span>
@@ -68479,6 +68504,9 @@ A1;Peça exemplo;10`}
                             ? getButtonName(headerBtn)
                             : (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
                         </span>
+                        <span className="sidebar-nav-label-sub">
+                          {(safeT as any)?.almoxarifadoArmazemSub || 'Stock · Pedidos · Mapa'}
+                        </span>
                       </span>
                     </span>
                     <span className={sidebarGroupChevronClass(expandedGroups.has('almoxarifado-main'))} aria-hidden />
@@ -68559,6 +68587,9 @@ A1;Peça exemplo;10`}
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">
                   {safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS'}
+                </span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.comunicacaoInternaSub || 'Mensagens · Alertas'}
                 </span>
               </span>
             </span>
@@ -68734,6 +68765,9 @@ A1;Peça exemplo;10`}
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.gestaoIndustrialSub || 'Equipamentos · Famílias'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('gestao-industrial'))} aria-hidden />
@@ -68815,6 +68849,9 @@ A1;Peça exemplo;10`}
                         </span>
                         <span className="sidebar-nav-label-stack">
                           <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                          <span className="sidebar-nav-label-sub">
+                            {(safeT as any)?.manuaisInformacoesTecnicasSub || 'Família · Grupo · Modelo'}
+                          </span>
                         </span>
                       </span>
                       <span className={sidebarGroupChevronClass(expandedGroups.has('manuais-informacoes-main'))} aria-hidden />
@@ -68873,6 +68910,9 @@ A1;Peça exemplo;10`}
                         </span>
                         <span className="sidebar-nav-label-stack">
                           <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                          <span className="sidebar-nav-label-sub">
+                            {(safeT as any)?.bibliaNonatoServiceSub || 'Referências internas'}
+                          </span>
                         </span>
                       </span>
                       <span className={sidebarGroupChevronClass(expandedGroups.has('biblia-nonato-main'))} aria-hidden />
@@ -68974,6 +69014,9 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.empresaInstitucionalTitle ||
                         safeT?.cadastroNonatoServiceTitle ||
                         'EMPRESA & REGISTOS OFICIAIS'}
+                    </span>
+                    <span className="sidebar-nav-label-sub">
+                      {(safeT as any)?.empresaInstitucionalSub || 'Cadastro · Fichas · SST'}
                     </span>
                   </span>
                 </span>
@@ -69149,6 +69192,9 @@ A1;Peça exemplo;10`}
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">{safeT?.extras || 'EXTRAS'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.extrasSub || 'Ferramentas extra'}
+                </span>
               </span>
             </span>
             <span className={sidebarGroupChevronClass(expandedGroups.has('extra'))} aria-hidden />

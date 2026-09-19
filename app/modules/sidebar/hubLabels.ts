@@ -3,6 +3,42 @@
 import type { SidebarGroup } from './tipos'
 import { SIDEBAR_GROUPS } from './constantes'
 
+export function getSidebarGroupSub(
+  group: SidebarGroup,
+  tr: Record<string, string | undefined>
+): string {
+  switch (group) {
+    case 'gestao-tecnica':
+      return tr.gestaoTecnicaSub || 'Agenda · Diário · Serviços'
+    case 'parceiros-comercial':
+      return tr.parceirosComercialSub || 'Clientes · Fornecedores · Técnicos'
+    case 'documentacao-relatorios':
+      return tr.documentacaoRelatoriosSub || 'Serviço · Especiais · Fechamento'
+    case 'pecas-biblioteca':
+      return tr.pecasBibliotecaSub || 'Biblioteca · Stock'
+    case 'gestao-custos':
+      return tr.gestaoCustosSub || 'Orçamentos · Pedidos'
+    case 'gestao-industrial':
+      return tr.gestaoIndustrialSub || 'Equipamentos · Famílias'
+    case 'gestao-financeira':
+      return tr.gestaoFinanceiraSub || 'Clientes · Despesas · Contador'
+    case 'checklist-group':
+      return tr.checklistGroupSub || 'Pré-check · Montagem · Entrega'
+    case 'comunicacao-interna':
+      return tr.comunicacaoInternaSub || 'Mensagens · Alertas'
+    case 'manuais-informacoes-tecnicas':
+      return tr.manuaisInformacoesTecnicasSub || 'Família · Grupo · Modelo'
+    case 'biblia-nonato-service':
+      return tr.bibliaNonatoServiceSub || 'Referências internas'
+    case 'almoxarifado-armazem':
+      return tr.almoxarifadoArmazemSub || 'Stock · Pedidos · Mapa'
+    case 'empresa-institucional':
+      return tr.empresaInstitucionalSub || 'Cadastro · Fichas · SST'
+    default:
+      return tr.extrasSub || 'Ferramentas extra'
+  }
+}
+
 export function getSidebarGroupLabel(
   group: SidebarGroup,
   tr: Record<string, string | undefined>
