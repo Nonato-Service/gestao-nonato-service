@@ -2708,6 +2708,7 @@ try {
     hub.includes('re-form-basicas') &&
     hub.includes('re-form-equipamentos') &&
     hub.includes('re-form-dias') &&
+    hub.includes('relatorio-especial-dias-rodape') &&
     hub.includes('re-form-resumo') &&
     hub.includes('re-form-observacoes') &&
     hub.includes('abrirVisualizar') &&
