@@ -21,7 +21,6 @@ import {
   PAGAMENTOS_MES_SEM_DATA,
   pagamentosDoMes,
   somarValorPagamentos,
-  totaisPorInstituicao,
   PAGAMENTOS_EMPRESAS_STORAGE_KEY,
   PAGAMENTOS_REGISTOS_STORAGE_KEY,
   pagamentoSaidaToForm,
@@ -46,7 +45,8 @@ type Props = {
   localeLang?: string
 }
 
-type AbaPagamentos = 'empresas' | 'registos'
+type VistaPagamentos = 'instituicoes' | 'ficha'
+type AbaFicha = 'a-pagar' | 'pagos'
 
 function tr(safeT: Props['safeT'], key: string, fallback: string): string {
   const v = safeT[key]
@@ -84,7 +84,9 @@ function rotuloMesPagamento(mes: string, locale: string, semData: string): strin
 }
 
 export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Props) {
-  const [aba, setAba] = useState<AbaPagamentos>('empresas')
+  const [vista, setVista] = useState<VistaPagamentos>('instituicoes')
+  const [abaFicha, setAbaFicha] = useState<AbaFicha>('a-pagar')
+  const [instituicaoId, setInstituicaoId] = useState('')
   const [empresas, setEmpresas] = useState<EmpresaRecebedora[]>([])
   const [registos, setRegistos] = useState<PagamentoSaida[]>([])
   const [empresaForm, setEmpresaForm] = useState(emptyEmpresaRecebedoraForm)
@@ -157,7 +159,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       await persistEmpresas([created, ...empresas])
     }
     setEmpresaForm(emptyEmpresaRecebedoraForm())
-    flashOk(tr(safeT, 'pagamentosEmpresaGuardada', 'Empresa guardada'))
+    flashOk(tr(safeT, 'pagamentosInstituicaoGuardada', 'Instituição guardada'))
   }
 
   const apagarEmpresa = async (e: EmpresaRecebedora) => {
@@ -165,17 +167,16 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       setErro(tr(safeT, 'pagamentosEmpresaOficialBloqueada', 'Este destino oficial não pode ser apagado'))
       return
     }
-    const ok = window.confirm(
-      tr(safeT, 'pagamentosEmpresaConfirmApagar', 'Apagar esta empresa?')
-    )
+    const ok = window.confirm(tr(safeT, 'pagamentosInstituicaoConfirmApagar', 'Apagar esta instituição?'))
     if (!ok) return
     await persistEmpresas(empresas.filter((x) => x.id !== e.id))
     if (editingEmpresa?.id === e.id) {
       setEditingEmpresa(null)
       setEmpresaForm(emptyEmpresaRecebedoraForm())
     }
-    if (pagForm.empresaId === e.id) {
-      setPagForm((prev) => ({ ...prev, empresaId: '' }))
+    if (instituicaoId === e.id) {
+      setInstituicaoId('')
+      setVista('instituicoes')
     }
   }
 
@@ -186,7 +187,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     }
     const empresa = empresas.find((e) => e.id === pagForm.empresaId)
     if (!empresa) {
-      setErro(tr(safeT, 'pagamentosSemEmpresa', 'Cadastre primeiro a empresa que recebeu o dinheiro'))
+      setErro(tr(safeT, 'pagamentosSemInstituicao', 'Escolha primeiro a instituição'))
       return
     }
     if (editingPag) {
@@ -197,8 +198,14 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       const created = createPagamentoSaidaFromForm(pagForm, { empresaNome: empresa.nome })
       await persistRegistos([created, ...registos])
     }
-    setPagForm(emptyPagamentoSaidaForm(empresa.id))
+    const proximoStatus = pagForm.status === 'pago' ? 'pagos' : 'a-pagar'
+    setPagForm({
+      ...emptyPagamentoSaidaForm(empresa.id),
+      empresaId: empresa.id,
+      paraQuem: empresa.nome,
+    })
     flashOk(tr(safeT, 'pagamentosGuardado', 'Pagamento guardado'))
+    setAbaFicha(proximoStatus)
   }
 
   const handleAnexoFiles = async (files: FileList | null, papel: AnexoPagamentoPapel) => {
@@ -251,6 +258,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       setEditingPag(pago)
       setPagForm(pagamentoSaidaToForm(pago))
     }
+    setAbaFicha('pagos')
     flashOk(tr(safeT, 'pagamentosMarcadoPago', 'Pagamento marcado como pago e documentos arquivados'))
   }
 
@@ -260,7 +268,9 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     await persistRegistos(registos.filter((x) => x.id !== p.id))
     if (editingPag?.id === p.id) {
       setEditingPag(null)
-      setPagForm(emptyPagamentoSaidaForm())
+      const inst = empresas.find((e) => e.id === instituicaoId)
+      setPagForm(emptyPagamentoSaidaForm(instituicaoId))
+      if (inst) setPagForm((f) => ({ ...f, empresaId: inst.id, paraQuem: inst.nome }))
     }
   }
 
@@ -274,32 +284,41 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     return [...oficiais, ...outras]
   }, [empresas])
 
-  const mesesOpcoes = useMemo(() => mesesDisponiveisPagamentos(registos), [registos])
-  const registosVisiveis = useMemo(
-    () => pagamentosDoMes(registos, mesFiltro),
-    [registos, mesFiltro]
+  const instituicao = empresas.find((e) => e.id === instituicaoId) || null
+  const daInstituicao = useMemo(
+    () => registos.filter((p) => p.empresaId === instituicaoId),
+    [registos, instituicaoId]
   )
-  const gruposMes = useMemo(
-    () => agruparPagamentosPorMes(registosVisiveis),
-    [registosVisiveis]
+  const mesesOpcoes = useMemo(() => mesesDisponiveisPagamentos(daInstituicao), [daInstituicao])
+  const visiveisMes = useMemo(
+    () => pagamentosDoMes(daInstituicao, mesFiltro),
+    [daInstituicao, mesFiltro]
   )
-  const totaisInstituicao = useMemo(
-    () => totaisPorInstituicao(registosVisiveis),
-    [registosVisiveis]
-  )
-  const totalPagoFinal = useMemo(
-    () => somarValorPagamentos(registosVisiveis, true),
-    [registosVisiveis]
-  )
+  const aPagar = useMemo(() => visiveisMes.filter((p) => p.status !== 'pago'), [visiveisMes])
+  const pagos = useMemo(() => visiveisMes.filter((p) => p.status === 'pago'), [visiveisMes])
+  const gruposAPagar = useMemo(() => agruparPagamentosPorMes(aPagar), [aPagar])
+  const gruposPagos = useMemo(() => agruparPagamentosPorMes(pagos), [pagos])
+  const totalPagoInst = useMemo(() => somarValorPagamentos(daInstituicao, true), [daInstituicao])
+  const totalAPagarInst = useMemo(() => somarValorPagamentos(aPagar, false), [aPagar])
+  const totalPagoGeral = useMemo(() => somarValorPagamentos(registos, true), [registos])
   const localeMes = localePagamentos(localeLang)
 
-  const escolherDestinoOficial = (e: EmpresaRecebedora) => {
-    setPagForm((f) => ({
-      ...f,
+  const abrirInstituicao = (e: EmpresaRecebedora) => {
+    setInstituicaoId(e.id)
+    setVista('ficha')
+    setAbaFicha('a-pagar')
+    setEditingPag(null)
+    setPagForm({
+      ...emptyPagamentoSaidaForm(e.id),
       empresaId: e.id,
       paraQuem: e.nome,
-    }))
-    setAba('registos')
+    })
+    setErro('')
+  }
+
+  const voltarInstituicoes = () => {
+    setVista('instituicoes')
+    setEditingPag(null)
     setErro('')
   }
 
@@ -313,74 +332,123 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     fontSize: 14,
   }
 
+  const renderAnexos = (p: PagamentoSaida) =>
+    (p.anexos || []).length === 0 ? null : (
+      <div className="ns-pagamentos-anexos-list">
+        {(p.anexos || []).map((a) => (
+          <button key={a.id} type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
+            {a.papel === 'pago'
+              ? tr(safeT, 'pagamentosAnexoPagoChip', 'Pago')
+              : tr(safeT, 'pagamentosAnexoAPagarChip', 'A pagar')}
+            {': '}
+            {a.nome}
+          </button>
+        ))}
+      </div>
+    )
+
+  const renderGrupos = (grupos: ReturnType<typeof agruparPagamentosPorMes>, mostrarMarcarPago: boolean) =>
+    grupos.length === 0 ? (
+      <p className="ns-pagamentos-empty">{tr(safeT, 'pagamentosVazio', 'Ainda não há pagamentos')}</p>
+    ) : (
+      grupos.map((grupo) => (
+        <div key={grupo.mes} className="ns-pagamentos-mes">
+          <h3>
+            {rotuloMesPagamento(grupo.mes, localeMes, tr(safeT, 'pagamentosSemData', 'Sem data'))}
+            <span>
+              {' '}
+              · {tr(safeT, 'pagamentosTotalMes', 'Total do mês')} {fmtValor(grupo.totalGeral)}
+            </span>
+          </h3>
+          <ul className="ns-pagamentos-list">
+            {grupo.itens.map((p) => (
+              <li key={p.id}>
+                <div>
+                  <strong>{p.paraQuem}</strong>
+                  <span>
+                    {' '}
+                    · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
+                  </span>
+                  {renderAnexos(p)}
+                </div>
+                <div className="ns-pagamentos-row-actions">
+                  {mostrarMarcarPago && p.status !== 'pago' ? (
+                    <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
+                      {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      setEditingPag(p)
+                      setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
+                      setAbaFicha(p.status === 'pago' ? 'pagos' : 'a-pagar')
+                      setErro('')
+                    }}
+                  >
+                    {tr(safeT, 'pagamentosEditar', 'Editar pagamento')}
+                  </button>
+                  <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => apagarPagamento(p)}>
+                    {tr(safeT, 'pagamentosApagar', 'Apagar pagamento')}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    )
+
   return (
     <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 ns-pagamentos-root">
       <header className="ns-hub-page-head">
         <h1 className="ns-hub-page-head__title">{tr(safeT, 'pagamentosTitle', 'PAGAMENTOS')}</h1>
         <p className="ns-hub-page-head__sub">
-          {tr(safeT, 'pagamentosDesc', 'Empresas que receberam dinheiro e dados de pagamento')}
+          {tr(safeT, 'pagamentosInstituicoesDesc', 'Cadastro de instituições, itens a pagar e itens pagos')}
         </p>
       </header>
-
-      <div className="biblioteca-hub-tabs ns-pagamentos-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={aba === 'empresas'}
-          className={`biblioteca-hub-tab${aba === 'empresas' ? ' biblioteca-hub-tab--active' : ''}`}
-          onClick={() => setAba('empresas')}
-        >
-          {tr(safeT, 'pagamentosEmpresasTab', 'Empresas')}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={aba === 'registos'}
-          className={`biblioteca-hub-tab${aba === 'registos' ? ' biblioteca-hub-tab--active' : ''}`}
-          onClick={() => setAba('registos')}
-        >
-          {tr(safeT, 'pagamentosRegistosTab', 'Pagamentos')}
-        </button>
-      </div>
 
       {erro ? <p className="ns-pagamentos-msg ns-pagamentos-msg--err">{erro}</p> : null}
       {okMsg ? <p className="ns-pagamentos-msg ns-pagamentos-msg--ok">{okMsg}</p> : null}
 
-      {aba === 'empresas' ? (
-        <div className="ns-pagamentos-grid">
-          <section className="ns-pagamentos-card">
+      {vista === 'instituicoes' ? (
+        <>
+          <section className="ns-pagamentos-card ns-pagamentos-card--form">
             <h2>
               {editingEmpresa
-                ? tr(safeT, 'pagamentosEmpresaEditar', 'Editar empresa')
-                : tr(safeT, 'pagamentosEmpresaNova', 'Nova empresa')}
+                ? tr(safeT, 'pagamentosInstituicaoEditar', 'Editar instituição')
+                : tr(safeT, 'pagamentosInstituicaoNova', 'Cadastrar instituição')}
             </h2>
-            <label>
-              {tr(safeT, 'pagamentosEmpresaNome', 'Nome da empresa')} *
-              <input
-                style={inputStyle}
-                value={empresaForm.nome}
-                onChange={(e) => setEmpresaForm((f) => ({ ...f, nome: e.target.value }))}
-              />
-            </label>
-            <label>
-              {tr(safeT, 'pagamentosEmpresaNif', 'NIF')}
-              <input
-                style={inputStyle}
-                value={empresaForm.nif}
-                onChange={(e) => setEmpresaForm((f) => ({ ...f, nif: e.target.value }))}
-              />
-            </label>
-            <label>
-              {tr(safeT, 'pagamentosEmpresaNotas', 'Notas')}
-              <textarea
-                style={{ ...inputStyle, minHeight: 72, resize: 'vertical' }}
-                value={empresaForm.notas}
-                onChange={(e) => setEmpresaForm((f) => ({ ...f, notas: e.target.value }))}
-              />
-            </label>
+            <div className="ns-pagamentos-form-grid">
+              <label>
+                {tr(safeT, 'pagamentosInstituicaoNome', 'Nome da instituição')} *
+                <input
+                  style={inputStyle}
+                  value={empresaForm.nome}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, nome: e.target.value }))}
+                />
+              </label>
+              <label>
+                {tr(safeT, 'pagamentosEmpresaNif', 'NIF')}
+                <input
+                  style={inputStyle}
+                  value={empresaForm.nif}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, nif: e.target.value }))}
+                />
+              </label>
+              <label className="ns-pagamentos-form-grid__wide">
+                {tr(safeT, 'pagamentosEmpresaNotas', 'Notas')}
+                <textarea
+                  style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }}
+                  value={empresaForm.notas}
+                  onChange={(e) => setEmpresaForm((f) => ({ ...f, notas: e.target.value }))}
+                />
+              </label>
+            </div>
             <div className="ns-pagamentos-actions">
               <button type="button" className="btn-primary" onClick={guardarEmpresa}>
-                {tr(safeT, 'pagamentosEmpresaGuardar', 'Guardar empresa')}
+                {tr(safeT, 'pagamentosInstituicaoGuardar', 'Guardar instituição')}
               </button>
               {editingEmpresa ? (
                 <button
@@ -398,25 +466,51 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
             </div>
           </section>
 
-          <section className="ns-pagamentos-card">
-            <h2>{tr(safeT, 'pagamentosEmpresasOficiais', 'Destinos oficiais')}</h2>
-            <ul className="ns-pagamentos-list">
-              {empresasOrdenadas.filter((e) => isEmpresaRecebedoraOficial(e.id)).map((e) => (
-                <li key={e.id}>
-                  <div>
-                    <strong>{e.nome}</strong>
-                    {e.nif ? <span> · {e.nif}</span> : null}
-                    <span className="ns-pagamentos-oficial-tag">
-                      {tr(safeT, 'pagamentosEmpresaOficialTag', 'Oficial')}
-                    </span>
-                  </div>
+          <div className="ns-pagamentos-totais ns-pagamentos-totais--geral">
+            <div className="ns-pagamentos-total-final">
+              <span>{tr(safeT, 'pagamentosTotalFinal', 'Valor final (tudo somado)')}</span>
+              <strong>{fmtValor(totalPagoGeral)}</strong>
+            </div>
+          </div>
+
+          <h2 className="ns-pagamentos-section-title">
+            {tr(safeT, 'pagamentosInstituicoesLista', 'Instituições')}
+          </h2>
+          <div className="ns-pagamentos-inst-grid">
+            {empresasOrdenadas.map((e) => {
+              const itens = registos.filter((p) => p.empresaId === e.id)
+              const qtdAPagar = itens.filter((p) => p.status !== 'pago').length
+              const qtdPagos = itens.filter((p) => p.status === 'pago').length
+              const total = somarValorPagamentos(itens, true)
+              const oficial = isEmpresaRecebedoraOficial(e.id)
+              return (
+                <article key={e.id} className="ns-pagamentos-inst-card">
+                  <header>
+                    <h3>{e.nome}</h3>
+                    {oficial ? (
+                      <span className="ns-pagamentos-oficial-tag">
+                        {tr(safeT, 'pagamentosEmpresaOficialTag', 'Oficial')}
+                      </span>
+                    ) : null}
+                  </header>
+                  {e.nif ? <p className="ns-pagamentos-inst-meta">{e.nif}</p> : null}
+                  <dl className="ns-pagamentos-inst-stats">
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}</dt>
+                      <dd>{qtdAPagar}</dd>
+                    </div>
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}</dt>
+                      <dd>{qtdPagos}</dd>
+                    </div>
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosTotalPago', 'Total pago')}</dt>
+                      <dd>{fmtValor(total)}</dd>
+                    </div>
+                  </dl>
                   <div className="ns-pagamentos-row-actions">
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => escolherDestinoOficial(e)}
-                    >
-                      {tr(safeT, 'pagamentosPagarAgora', 'Registar pagamento')}
+                    <button type="button" className="btn-primary" onClick={() => abrirInstituicao(e)}>
+                      {tr(safeT, 'pagamentosAbrirInstituicao', 'Abrir instituição')}
                     </button>
                     <button
                       type="button"
@@ -427,447 +521,290 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                         setErro('')
                       }}
                     >
-                      {tr(safeT, 'pagamentosEmpresaEditar', 'Editar empresa')}
+                      {tr(safeT, 'pagamentosInstituicaoEditar', 'Editar instituição')}
                     </button>
+                    {!oficial ? (
+                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => apagarEmpresa(e)}>
+                        {tr(safeT, 'pagamentosInstituicaoApagar', 'Apagar instituição')}
+                      </button>
+                    ) : null}
                   </div>
-                </li>
-              ))}
-            </ul>
-            <h2 className="ns-pagamentos-card-sub">
-              {tr(safeT, 'pagamentosListaEmpresas', 'Empresas que receberam')}
-            </h2>
-            {empresasOrdenadas.filter((e) => !isEmpresaRecebedoraOficial(e.id)).length === 0 ? (
-              <p className="ns-pagamentos-empty">
-                {tr(safeT, 'pagamentosEmpresaVazia', 'Ainda não há empresas cadastradas')}
-              </p>
-            ) : (
-              <ul className="ns-pagamentos-list">
-                {empresasOrdenadas.filter((e) => !isEmpresaRecebedoraOficial(e.id)).map((e) => (
-                  <li key={e.id}>
-                    <div>
-                      <strong>{e.nome}</strong>
-                      {e.nif ? <span> · {e.nif}</span> : null}
-                    </div>
-                    <div className="ns-pagamentos-row-actions">
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => {
-                          setEditingEmpresa(e)
-                          setEmpresaForm(empresaRecebedoraToForm(e))
-                          setErro('')
-                        }}
-                      >
-                        {tr(safeT, 'pagamentosEmpresaEditar', 'Editar empresa')}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-primary ns-pagamentos-btn-ghost"
-                        onClick={() => apagarEmpresa(e)}
-                      >
-                        {tr(safeT, 'pagamentosEmpresaApagar', 'Apagar empresa')}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                </article>
+              )
+            })}
+          </div>
+        </>
+      ) : instituicao ? (
+        <>
+          <button type="button" className="ns-pagamentos-back" onClick={voltarInstituicoes}>
+            ← {tr(safeT, 'pagamentosVoltarInstituicoes', 'Voltar às instituições')}
+          </button>
+          <section className="ns-pagamentos-card ns-pagamentos-card--head">
+            <h2>{instituicao.nome}</h2>
+            <dl className="ns-pagamentos-inst-stats">
+              <div>
+                <dt>{tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}</dt>
+                <dd>{fmtValor(totalAPagarInst)}</dd>
+              </div>
+              <div>
+                <dt>{tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}</dt>
+                <dd>{fmtValor(totalPagoInst)}</dd>
+              </div>
+            </dl>
           </section>
-        </div>
-      ) : (
-        <div className="ns-pagamentos-grid">
-          <section className="ns-pagamentos-card">
-            <h2>
-              {editingPag
-                ? tr(safeT, 'pagamentosEditar', 'Editar pagamento')
-                : tr(safeT, 'pagamentosNovo', 'Novo pagamento')}
-            </h2>
-            <fieldset className="ns-pagamentos-metodos ns-pagamentos-oficiais">
-              <legend>{tr(safeT, 'pagamentosEmpresasOficiais', 'Destinos oficiais')}</legend>
-              <div className="ns-pagamentos-oficial-chips">
-                {empresasOrdenadas.filter((e) => isEmpresaRecebedoraOficial(e.id)).map((e) => (
+
+          <div className="biblioteca-hub-tabs ns-pagamentos-tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={abaFicha === 'a-pagar'}
+              className={`biblioteca-hub-tab${abaFicha === 'a-pagar' ? ' biblioteca-hub-tab--active' : ''}`}
+              onClick={() => setAbaFicha('a-pagar')}
+            >
+              {tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={abaFicha === 'pagos'}
+              className={`biblioteca-hub-tab${abaFicha === 'pagos' ? ' biblioteca-hub-tab--active' : ''}`}
+              onClick={() => setAbaFicha('pagos')}
+            >
+              {tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}
+            </button>
+          </div>
+
+          <div className="ns-pagamentos-ficha">
+            <section className="ns-pagamentos-card">
+              <h2>
+                {editingPag
+                  ? tr(safeT, 'pagamentosEditar', 'Editar pagamento')
+                  : abaFicha === 'pagos'
+                    ? tr(safeT, 'pagamentosNovoPago', 'Registar item pago')
+                    : tr(safeT, 'pagamentosNovoAPagar', 'Registar item a pagar')}
+              </h2>
+              <label>
+                {tr(safeT, 'pagamentosParaQuem', 'Para quem')} *
+                <input
+                  style={inputStyle}
+                  value={pagForm.paraQuem}
+                  onChange={(e) => setPagForm((f) => ({ ...f, paraQuem: e.target.value }))}
+                />
+              </label>
+              <fieldset className="ns-pagamentos-metodos">
+                <legend>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</legend>
+                {(['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[]).map((m) => (
+                  <label key={m} className="ns-pagamentos-radio">
+                    <input
+                      type="radio"
+                      name="pagamentos-metodo"
+                      checked={pagForm.metodo === m}
+                      onChange={() => setPagForm((f) => ({ ...f, metodo: m }))}
+                    />
+                    {metodoLabel(safeT, m)}
+                  </label>
+                ))}
+              </fieldset>
+              {pagForm.metodo === 'referencia' || pagForm.metodo === 'entidade-referencia' ? (
+                <label>
+                  {tr(safeT, 'pagamentosReferencia', 'Referência')} *
+                  <input
+                    style={inputStyle}
+                    value={pagForm.referencia}
+                    onChange={(e) => setPagForm((f) => ({ ...f, referencia: e.target.value }))}
+                  />
+                </label>
+              ) : null}
+              {pagForm.metodo === 'entidade-referencia' ? (
+                <label>
+                  {tr(safeT, 'pagamentosEntidade', 'Entidade')} *
+                  <input
+                    style={inputStyle}
+                    value={pagForm.entidade}
+                    onChange={(e) => setPagForm((f) => ({ ...f, entidade: e.target.value }))}
+                  />
+                </label>
+              ) : null}
+              {pagForm.metodo === 'transferencia' ? (
+                <>
+                  <label>
+                    {tr(safeT, 'pagamentosIban', 'IBAN / conta')} *
+                    <input
+                      style={inputStyle}
+                      value={pagForm.iban}
+                      onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    {tr(safeT, 'pagamentosBanco', 'Banco')}
+                    <input
+                      style={inputStyle}
+                      value={pagForm.banco}
+                      onChange={(e) => setPagForm((f) => ({ ...f, banco: e.target.value }))}
+                    />
+                  </label>
+                </>
+              ) : null}
+              <label>
+                {tr(safeT, 'pagamentosValor', 'Valor')} *
+                <input
+                  style={inputStyle}
+                  inputMode="decimal"
+                  value={pagForm.valor}
+                  onChange={(e) => setPagForm((f) => ({ ...f, valor: e.target.value }))}
+                />
+              </label>
+              <label>
+                {tr(safeT, 'pagamentosData', 'Data')} *
+                <input
+                  style={inputStyle}
+                  type="date"
+                  value={pagForm.dataPagamento}
+                  onChange={(e) => setPagForm((f) => ({ ...f, dataPagamento: e.target.value }))}
+                />
+              </label>
+              <label>
+                {tr(safeT, 'pagamentosDescricao', 'Descrição')}
+                <textarea
+                  style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }}
+                  value={pagForm.descricao}
+                  onChange={(e) => setPagForm((f) => ({ ...f, descricao: e.target.value }))}
+                />
+              </label>
+              <fieldset className="ns-pagamentos-metodos">
+                <legend>{tr(safeT, 'pagamentosEstado', 'Estado')}</legend>
+                <label className="ns-pagamentos-radio">
+                  <input
+                    type="radio"
+                    name="pagamentos-estado"
+                    checked={pagForm.status !== 'pago'}
+                    onChange={() => setPagForm((f) => ({ ...f, status: 'pendente' }))}
+                  />
+                  {tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}
+                </label>
+                <label className="ns-pagamentos-radio">
+                  <input
+                    type="radio"
+                    name="pagamentos-estado"
+                    checked={pagForm.status === 'pago'}
+                    onChange={() => setPagForm((f) => ({ ...f, status: 'pago' }))}
+                  />
+                  {tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}
+                </label>
+              </fieldset>
+              <div className="ns-pagamentos-anexos-block">
+                <strong>{tr(safeT, 'pagamentosAnexosAPagar', 'Documentos que devem ser pagos')}</strong>
+                <input
+                  ref={anexoAPagarRef}
+                  type="file"
+                  accept="application/pdf,image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    void handleAnexoFiles(e.target.files, 'a-pagar')
+                    e.target.value = ''
+                  }}
+                />
+                <button type="button" className="btn-primary" onClick={() => anexoAPagarRef.current?.click()}>
+                  {tr(safeT, 'pagamentosAnexarAPagar', 'Anexar PDF ou imagem a pagar')}
+                </button>
+                <ul className="ns-pagamentos-anexos-list">
+                  {pagForm.anexos.filter((a) => a.papel === 'a-pagar').map((a) => (
+                    <li key={a.id}>
+                      <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
+                        {a.nome}
+                      </button>
+                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                        {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="ns-pagamentos-anexos-block">
+                <strong>{tr(safeT, 'pagamentosAnexosPago', 'Documentos do pagamento pago')}</strong>
+                <input
+                  ref={anexoPagoRef}
+                  type="file"
+                  accept="application/pdf,image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    void handleAnexoFiles(e.target.files, 'pago')
+                    e.target.value = ''
+                  }}
+                />
+                <button type="button" className="btn-primary" onClick={() => anexoPagoRef.current?.click()}>
+                  {tr(safeT, 'pagamentosAnexarPago', 'Anexar comprovativo pago')}
+                </button>
+                <ul className="ns-pagamentos-anexos-list">
+                  {pagForm.anexos.filter((a) => a.papel === 'pago').map((a) => (
+                    <li key={a.id}>
+                      <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
+                        {a.nome}
+                      </button>
+                      <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
+                        {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="ns-pagamentos-actions">
+                <button type="button" className="btn-primary" onClick={guardarPagamento}>
+                  {tr(safeT, 'pagamentosGuardar', 'Guardar pagamento')}
+                </button>
+                {editingPag ? (
                   <button
-                    key={e.id}
                     type="button"
-                    className={`btn-primary ns-pagamentos-oficial-chip${
-                      pagForm.empresaId === e.id ? ' ns-pagamentos-oficial-chip--on' : ''
-                    }`}
+                    className="btn-primary ns-pagamentos-btn-ghost"
                     onClick={() => {
-                      setPagForm((f) => ({
-                        ...f,
-                        empresaId: e.id,
-                        paraQuem: e.nome,
-                      }))
+                      setEditingPag(null)
+                      setPagForm({
+                        ...emptyPagamentoSaidaForm(instituicao.id),
+                        empresaId: instituicao.id,
+                        paraQuem: instituicao.nome,
+                      })
                       setErro('')
                     }}
                   >
-                    {e.nome}
+                    {tr(safeT, 'pagamentosCancelar', 'Cancelar')}
                   </button>
-                ))}
+                ) : null}
               </div>
-            </fieldset>
-            <label>
-              {tr(safeT, 'pagamentosEmpresaDestino', 'Empresa que recebeu')} *
-              <select
-                style={inputStyle}
-                value={pagForm.empresaId}
-                onChange={(e) => {
-                  const id = e.target.value
-                  const emp = empresas.find((x) => x.id === id)
-                  setPagForm((f) => ({
-                    ...f,
-                    empresaId: id,
-                    paraQuem: f.paraQuem.trim() ? f.paraQuem : emp?.nome || '',
-                  }))
-                }}
-              >
-                <option value="">{tr(safeT, 'pagamentosEscolhaEmpresa', 'Escolha a empresa')}</option>
-                {empresasOrdenadas.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.nome}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {empresasOrdenadas.length === 0 ? (
-              <p className="ns-pagamentos-empty">
-                {tr(safeT, 'pagamentosSemEmpresa', 'Cadastre primeiro a empresa que recebeu o dinheiro')}
-              </p>
-            ) : null}
-            <label>
-              {tr(safeT, 'pagamentosParaQuem', 'Para quem')} *
-              <input
-                style={inputStyle}
-                value={pagForm.paraQuem}
-                onChange={(e) => setPagForm((f) => ({ ...f, paraQuem: e.target.value }))}
-              />
-            </label>
-            <fieldset className="ns-pagamentos-metodos">
-              <legend>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</legend>
-              {(['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[]).map((m) => (
-                <label key={m} className="ns-pagamentos-radio">
-                  <input
-                    type="radio"
-                    name="pagamentos-metodo"
-                    checked={pagForm.metodo === m}
-                    onChange={() => setPagForm((f) => ({ ...f, metodo: m }))}
-                  />
-                  {metodoLabel(safeT, m)}
-                </label>
-              ))}
-            </fieldset>
-            {pagForm.metodo === 'referencia' || pagForm.metodo === 'entidade-referencia' ? (
-              <label>
-                {tr(safeT, 'pagamentosReferencia', 'Referência')} *
-                <input
-                  style={inputStyle}
-                  value={pagForm.referencia}
-                  onChange={(e) => setPagForm((f) => ({ ...f, referencia: e.target.value }))}
-                />
-              </label>
-            ) : null}
-            {pagForm.metodo === 'entidade-referencia' ? (
-              <label>
-                {tr(safeT, 'pagamentosEntidade', 'Entidade')} *
-                <input
-                  style={inputStyle}
-                  value={pagForm.entidade}
-                  onChange={(e) => setPagForm((f) => ({ ...f, entidade: e.target.value }))}
-                />
-              </label>
-            ) : null}
-            {pagForm.metodo === 'transferencia' ? (
-              <>
-                <label>
-                  {tr(safeT, 'pagamentosIban', 'IBAN / conta')} *
-                  <input
-                    style={inputStyle}
-                    value={pagForm.iban}
-                    onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
-                  />
-                </label>
-                <label>
-                  {tr(safeT, 'pagamentosBanco', 'Banco')}
-                  <input
-                    style={inputStyle}
-                    value={pagForm.banco}
-                    onChange={(e) => setPagForm((f) => ({ ...f, banco: e.target.value }))}
-                  />
-                </label>
-              </>
-            ) : null}
-            <label>
-              {tr(safeT, 'pagamentosValor', 'Valor')} *
-              <input
-                style={inputStyle}
-                inputMode="decimal"
-                value={pagForm.valor}
-                onChange={(e) => setPagForm((f) => ({ ...f, valor: e.target.value }))}
-              />
-            </label>
-            <label>
-              {tr(safeT, 'pagamentosData', 'Data')} *
-              <input
-                style={inputStyle}
-                type="date"
-                value={pagForm.dataPagamento}
-                onChange={(e) => setPagForm((f) => ({ ...f, dataPagamento: e.target.value }))}
-              />
-            </label>
-            <label>
-              {tr(safeT, 'pagamentosDescricao', 'Descrição')}
-              <textarea
-                style={{ ...inputStyle, minHeight: 72, resize: 'vertical' }}
-                value={pagForm.descricao}
-                onChange={(e) => setPagForm((f) => ({ ...f, descricao: e.target.value }))}
-              />
-            </label>
-            <fieldset className="ns-pagamentos-metodos">
-              <legend>{tr(safeT, 'pagamentosEstado', 'Estado')}</legend>
-              <label className="ns-pagamentos-radio">
-                <input
-                  type="radio"
-                  name="pagamentos-estado"
-                  checked={pagForm.status === 'pendente'}
-                  onChange={() => setPagForm((f) => ({ ...f, status: 'pendente' }))}
-                />
-                {tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
-              </label>
-              <label className="ns-pagamentos-radio">
-                <input
-                  type="radio"
-                  name="pagamentos-estado"
-                  checked={pagForm.status === 'pago'}
-                  onChange={() => setPagForm((f) => ({ ...f, status: 'pago' }))}
-                />
-                {tr(safeT, 'pagamentosEstadoPago', 'Pago')}
-              </label>
-            </fieldset>
-            <div className="ns-pagamentos-anexos-block">
-              <strong>{tr(safeT, 'pagamentosAnexosAPagar', 'Documentos que devem ser pagos')}</strong>
-              <p className="ns-pagamentos-empty">
-                {tr(safeT, 'pagamentosAnexosAPagarHint', 'Anexe o PDF ou a imagem do documento a pagar.')}
-              </p>
-              <input
-                ref={anexoAPagarRef}
-                type="file"
-                accept="application/pdf,image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  void handleAnexoFiles(e.target.files, 'a-pagar')
-                  e.target.value = ''
-                }}
-              />
-              <button type="button" className="btn-primary" onClick={() => anexoAPagarRef.current?.click()}>
-                {tr(safeT, 'pagamentosAnexarAPagar', 'Anexar PDF ou imagem a pagar')}
-              </button>
-              <ul className="ns-pagamentos-anexos-list">
-                {pagForm.anexos.filter((a) => a.papel === 'a-pagar').map((a) => (
-                  <li key={a.id}>
-                    <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
-                      {a.nome}
-                    </button>
-                    <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
-                      {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="ns-pagamentos-anexos-block">
-              <strong>{tr(safeT, 'pagamentosAnexosPago', 'Documentos do pagamento pago')}</strong>
-              <p className="ns-pagamentos-empty">
-                {tr(
-                  safeT,
-                  'pagamentosAnexosPagoHint',
-                  'Quando o pagamento fica pago, os documentos passam para aqui. Também pode anexar o comprovativo.'
-                )}
-              </p>
-              <input
-                ref={anexoPagoRef}
-                type="file"
-                accept="application/pdf,image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  void handleAnexoFiles(e.target.files, 'pago')
-                  e.target.value = ''
-                }}
-              />
-              <button type="button" className="btn-primary" onClick={() => anexoPagoRef.current?.click()}>
-                {tr(safeT, 'pagamentosAnexarPago', 'Anexar comprovativo pago')}
-              </button>
-              <ul className="ns-pagamentos-anexos-list">
-                {pagForm.anexos.filter((a) => a.papel === 'pago').map((a) => (
-                  <li key={a.id}>
-                    <button type="button" className="ns-pagamentos-anexo-chip" onClick={() => verAnexo(a)}>
-                      {a.nome}
-                    </button>
-                    <button type="button" className="btn-primary ns-pagamentos-btn-ghost" onClick={() => removerAnexo(a.id)}>
-                      {tr(safeT, 'pagamentosAnexoRemover', 'Remover')}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="ns-pagamentos-actions">
-              <button type="button" className="btn-primary" onClick={guardarPagamento}>
-                {tr(safeT, 'pagamentosGuardar', 'Guardar pagamento')}
-              </button>
-              {editingPag ? (
-                <button
-                  type="button"
-                  className="btn-primary ns-pagamentos-btn-ghost"
-                  onClick={() => {
-                    setEditingPag(null)
-                    setPagForm(emptyPagamentoSaidaForm())
-                    setErro('')
-                  }}
-                >
-                  {tr(safeT, 'pagamentosCancelar', 'Cancelar')}
-                </button>
-              ) : null}
-            </div>
-          </section>
+            </section>
 
-          <section className="ns-pagamentos-card">
-            <h2>{tr(safeT, 'pagamentosListaRegistos', 'Pagamentos registados')}</h2>
-            {registos.length === 0 ? (
-              <p className="ns-pagamentos-empty">
-                {tr(safeT, 'pagamentosVazio', 'Ainda não há pagamentos')}
-              </p>
-            ) : (
-              <>
-                <label>
-                  {tr(safeT, 'pagamentosFiltroMes', 'Mês')}
-                  <select
-                    style={inputStyle}
-                    value={mesFiltro}
-                    onChange={(e) => setMesFiltro(e.target.value)}
-                  >
-                    <option value="todos">{tr(safeT, 'pagamentosTodosMeses', 'Todos os meses')}</option>
-                    {mesesOpcoes.map((mes) => (
-                      <option key={mes} value={mes}>
-                        {rotuloMesPagamento(
-                          mes,
-                          localeMes,
-                          tr(safeT, 'pagamentosSemData', 'Sem data')
-                        )}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="ns-pagamentos-totais">
+            <section className="ns-pagamentos-card">
+              <label>
+                {tr(safeT, 'pagamentosFiltroMes', 'Mês')}
+                <select style={inputStyle} value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
+                  <option value="todos">{tr(safeT, 'pagamentosTodosMeses', 'Todos os meses')}</option>
+                  {mesesOpcoes.map((mes) => (
+                    <option key={mes} value={mes}>
+                      {rotuloMesPagamento(mes, localeMes, tr(safeT, 'pagamentosSemData', 'Sem data'))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {abaFicha === 'a-pagar' ? (
+                <>
+                  <h2>{tr(safeT, 'pagamentosItensAPagar', 'Itens a pagar')}</h2>
+                  {renderGrupos(gruposAPagar, true)}
+                </>
+              ) : (
+                <>
+                  <h2>{tr(safeT, 'pagamentosItensPagos', 'Itens pagos')}</h2>
                   <div className="ns-pagamentos-total-final">
-                    <span>{tr(safeT, 'pagamentosTotalFinal', 'Valor final (tudo somado)')}</span>
-                    <strong>{fmtValor(totalPagoFinal)}</strong>
+                    <span>{tr(safeT, 'pagamentosTotalPago', 'Total pago')}</span>
+                    <strong>{fmtValor(somarValorPagamentos(pagos, true))}</strong>
                   </div>
-                  <h3>{tr(safeT, 'pagamentosTotalInstituicao', 'Total pago por instituição')}</h3>
-                  {totaisInstituicao.length === 0 ? (
-                    <p className="ns-pagamentos-empty">
-                      {tr(safeT, 'pagamentosVazio', 'Ainda não há pagamentos')}
-                    </p>
-                  ) : (
-                    <ul className="ns-pagamentos-totais-list">
-                      {totaisInstituicao.map((t) => (
-                        <li key={t.empresaId}>
-                          <span>{t.empresaNome}</span>
-                          <strong>{fmtValor(t.totalPago)}</strong>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                {gruposMes.map((grupo) => (
-                  <div key={grupo.mes} className="ns-pagamentos-mes">
-                    <h3>
-                      {rotuloMesPagamento(
-                        grupo.mes,
-                        localeMes,
-                        tr(safeT, 'pagamentosSemData', 'Sem data')
-                      )}
-                      <span>
-                        {' '}
-                        · {tr(safeT, 'pagamentosTotalMes', 'Total do mês')} {fmtValor(grupo.totalPago)}
-                      </span>
-                    </h3>
-                    <ul className="ns-pagamentos-totais-list ns-pagamentos-totais-list--mes">
-                      {grupo.porInstituicao.map((t) => (
-                        <li key={`${grupo.mes}-${t.empresaId}`}>
-                          <span>{t.empresaNome}</span>
-                          <strong>{fmtValor(t.totalPago)}</strong>
-                        </li>
-                      ))}
-                    </ul>
-                    <ul className="ns-pagamentos-list">
-                      {grupo.itens.map((p) => (
-                        <li key={p.id}>
-                          <div>
-                            <strong>{p.paraQuem}</strong>
-                            <span className={`ns-pagamentos-oficial-tag${p.status === 'pago' ? ' ns-pagamentos-status-pago' : ''}`}>
-                              {p.status === 'pago'
-                                ? tr(safeT, 'pagamentosEstadoPago', 'Pago')
-                                : tr(safeT, 'pagamentosEstadoPendente', 'A pagar')}
-                            </span>
-                            <span>
-                              {' '}
-                              · {p.empresaNome} · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
-                            </span>
-                            {(p.anexos || []).length > 0 ? (
-                              <div className="ns-pagamentos-anexos-list">
-                                {(p.anexos || []).map((a) => (
-                                  <button
-                                    key={a.id}
-                                    type="button"
-                                    className="ns-pagamentos-anexo-chip"
-                                    onClick={() => verAnexo(a)}
-                                  >
-                                    {a.papel === 'pago'
-                                      ? tr(safeT, 'pagamentosAnexoPagoChip', 'Pago')
-                                      : tr(safeT, 'pagamentosAnexoAPagarChip', 'A pagar')}
-                                    {': '}
-                                    {a.nome}
-                                  </button>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="ns-pagamentos-row-actions">
-                            {p.status !== 'pago' ? (
-                              <button type="button" className="btn-primary" onClick={() => marcarComoPago(p)}>
-                                {tr(safeT, 'pagamentosMarcarPago', 'Marcar como pago')}
-                              </button>
-                            ) : null}
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              onClick={() => {
-                                setEditingPag(p)
-                                setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
-                                setErro('')
-                              }}
-                            >
-                              {tr(safeT, 'pagamentosEditar', 'Editar pagamento')}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary ns-pagamentos-btn-ghost"
-                              onClick={() => apagarPagamento(p)}
-                            >
-                              {tr(safeT, 'pagamentosApagar', 'Apagar pagamento')}
-                            </button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </>
-            )}
-          </section>
-        </div>
-      )}
+                  {renderGrupos(gruposPagos, false)}
+                </>
+              )}
+            </section>
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

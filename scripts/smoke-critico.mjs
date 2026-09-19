@@ -1258,7 +1258,9 @@ try {
     pagSrc.includes('application/pdf') &&
     pagSrc.includes('marcarComoPago') &&
     pagSrc.includes('agruparPagamentosPorMes') &&
-    pagSrc.includes('totaisPorInstituicao') &&
+    pagSrc.includes('abrirInstituicao') &&
+    pagSrc.includes('pagamentosItensAPagar') &&
+    pagSrc.includes('pagamentosItensPagos') &&
     exists('app/modules/pagamentos/resumo.ts') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('agruparPagamentosPorMes') &&
     !fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('Date.now') &&
