@@ -63007,22 +63007,17 @@ A1;Peça exemplo;10`}
             ← {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
           </button>
         </div>
-        <div
-          className={`ns-dashboard-full-hero ns-hub-root__hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
-        >
-          <div className="ns-dashboard-full-hero__backdrop" aria-hidden>
-            <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--a" />
-            <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--b" />
-          </div>
+        <div className="ns-dashboard-full-hero ns-hub-root__hero ns-dashboard-full-hero--bar">
           <div className="ns-dashboard-full-hero__content">
             <div className="ns-dashboard-full-hero__brand">
               <div className="ns-dashboard-full-hero__logo">
-                <LogoComponent size={isCompactLayout ? 'small' : 'medium'} />
+                <LogoComponent size="small" />
               </div>
-              {hubEyebrow ? <span className="ns-dashboard-full-hero__badge">{hubEyebrow}</span> : null}
+              <div className="ns-dashboard-full-hero__copy">
+                {hubEyebrow ? <span className="ns-dashboard-full-hero__badge">{hubEyebrow}</span> : null}
+                <h1 className="ns-dashboard-full-title">{getDashboardMainHubTitle(hubId)}</h1>
+              </div>
             </div>
-            <h1 className="ns-dashboard-full-title">{getDashboardMainHubTitle(hubId)}</h1>
-            {hubIntro ? <p className="ns-dashboard-full-lead ns-hub-root__intro">{hubIntro}</p> : null}
           </div>
         </div>
         {rows.length === 0 ? (
@@ -69940,30 +69935,20 @@ A1;Peça exemplo;10`}
                 renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
                 <div className="ns-dashboard-full">
-              {/* Hero — identidade visual alinhada ao resto do painel */}
-              <div
-                className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
-              >
-                <div className="ns-dashboard-full-hero__backdrop" aria-hidden>
-                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--a" />
-                  <div className="ns-dashboard-full-hero__orb ns-dashboard-full-hero__orb--b" />
-                </div>
+              <div className="ns-dashboard-full-hero ns-dashboard-full-hero--bar">
                 <div className="ns-dashboard-full-hero__content">
                   <div className="ns-dashboard-full-hero__brand">
                     <div className="ns-dashboard-full-hero__logo">
-                      <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
+                      <LogoComponent size="small" />
                     </div>
-                    <span className="ns-dashboard-full-hero__badge">
-                      {(safeT as Record<string, string | undefined>)?.dashboardShowcaseBadge ||
-                        'Nonato Service · Gestão Técnica'}
-                    </span>
+                    <div className="ns-dashboard-full-hero__copy">
+                      <span className="ns-dashboard-full-hero__badge">
+                        {(safeT as Record<string, string | undefined>)?.dashboardShowcaseBadge ||
+                          'Nonato Service · Gestão Técnica'}
+                      </span>
+                      <h1 className="ns-dashboard-full-title">{safeT?.title || 'Gestão Técnica'}</h1>
+                    </div>
                   </div>
-                  <h1 className="ns-dashboard-full-title">{safeT?.title || 'Gestão Técnica'}</h1>
-                  <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Bem-vindo ao painel de controlo'}</p>
-                  <p className="ns-dashboard-full-lead">
-                    {safeT?.welcomeText2 ||
-                      'Utilize o menu lateral para aceder às funcionalidades disponíveis.'}
-                  </p>
                 </div>
               </div>
 

@@ -1254,14 +1254,15 @@ try {
 
 try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
+  const nmaDash = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
-    cssVisual.includes('Visual Pro v487') &&
-    cssVisual.includes('organização e hierarquia do programa') &&
-    !cssVisual.includes('.ns-dashboard-full-hero .ns-logo-in-box {\n    width: 96px')
+    cssVisual.includes('ns-dashboard-full-hero--bar') &&
+    nmaDash.includes('ns-dashboard-full-hero--bar') &&
+    !nmaDash.includes('ns-dashboard-full-welcome')
   ) {
-    ok('visual profissional do programa (hero centrado)')
+    ok('cabeçalho compacto do painel (sem cartão de apresentação)')
   } else {
-    fail('hero do dashboard ainda com o visual achatado')
+    fail('cabeçalho do painel ainda no modo apresentação')
   }
 } catch (e) {
   fail(`visual profissional: ${e && e.message ? e.message : e}`)

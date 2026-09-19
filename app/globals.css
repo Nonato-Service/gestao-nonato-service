@@ -52201,19 +52201,52 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   color: #f5e6b8;
 }
 
-.ns-dashboard-full-hero,
-.ns-hub-hero,
-.ns-hub-root__hero .ns-dashboard-full-hero__content,
-.ns-dashboard-full-hero__content,
-.ns-dashboard-full-hero__brand {
-  text-align: center;
+.ns-dashboard-full-hero--bar {
+  text-align: left;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #2a2a2a;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  box-shadow: none;
 }
-.ns-dashboard-full-hero__content,
-.ns-dashboard-full-hero__brand {
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__backdrop {
+  display: none;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__content,
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__brand {
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  margin-bottom: 0;
+  text-align: left;
 }
-.ns-dashboard-full-lead,
-.ns-hub-intro {
-  margin-left: auto;
-  margin-right: auto;
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.ns-dashboard-full-hero--bar .ns-logo-in-box {
+  width: 52px !important;
+  height: 52px !important;
+  padding: 4px;
+  border-radius: 12px;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-hero__badge {
+  padding: 3px 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.ns-dashboard-full-hero--bar .ns-dashboard-full-title {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  line-height: 1.25;
+  letter-spacing: 0;
+  background: none;
+  -webkit-text-fill-color: #f4f4f4;
+  color: #f4f4f4;
 }
