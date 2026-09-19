@@ -1,6 +1,7 @@
 /** Formulários vazios e mapeamento empresa / pagamento → form. */
 
 import { metodoPadraoPagamento } from './oficiais'
+import { dataLocalISOFromMs, normalizarDataPagamento } from './resumo'
 import type { AnexoPagamento, EmpresaRecebedora, PagamentoMetodo, PagamentoSaida, PagamentoSaidaStatus } from './tipos'
 
 export type EmpresaRecebedoraFormState = {
@@ -54,7 +55,7 @@ export function emptyPagamentoSaidaForm(opts: { nowMs: number; empresaId?: strin
     banco: '',
     contribuinte: '',
     valor: '',
-    dataPagamento: new Date(opts.nowMs).toISOString().slice(0, 10),
+    dataPagamento: dataLocalISOFromMs(opts.nowMs),
     descricao: '',
     status: 'pendente',
     anexos: [],
@@ -72,7 +73,7 @@ export function pagamentoSaidaToForm(p: PagamentoSaida): PagamentoSaidaFormState
     banco: p.banco || '',
     contribuinte: p.contribuinte || '',
     valor: p.valor > 0 ? String(p.valor) : '',
-    dataPagamento: p.dataPagamento || '',
+    dataPagamento: normalizarDataPagamento(p.dataPagamento) || p.dataPagamento || '',
     descricao: p.descricao || '',
     status: p.status || 'pendente',
     anexos: Array.isArray(p.anexos) ? [...p.anexos] : [],

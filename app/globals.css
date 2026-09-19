@@ -2749,6 +2749,44 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
   padding: 10px 0;
   color: rgba(255, 255, 255, 0.9);
 }
+.ns-pagamentos-item-data {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+.ns-pagamentos-item-data strong {
+  color: #c8f5d6;
+  font-size: 15px;
+  font-weight: 700;
+}
+.ns-pagamentos-ver {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ns-pagamentos-ver-dl {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.ns-pagamentos-ver-dl dt {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+.ns-pagamentos-ver-dl dd {
+  margin: 0;
+  color: #f4f4f4;
+}
+.ns-pagamentos-ver-data {
+  color: #c8f5d6 !important;
+  font-size: 22px;
+  font-weight: 700;
+}
 .ns-pagamentos-empty,
 .ns-pagamentos-msg {
   color: rgba(255, 255, 255, 0.72);

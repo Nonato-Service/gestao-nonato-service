@@ -1,6 +1,7 @@
 /** Validação e mapeamento puro de empresa recebedora e pagamento de saída. */
 
 import type { EmpresaRecebedoraFormState, PagamentoSaidaFormState } from './formState'
+import { normalizarDataPagamento } from './resumo'
 import type { AnexoPagamento, AnexoPagamentoPapel, EmpresaRecebedora, PagamentoSaida } from './tipos'
 
 export function isEmpresaRecebedoraFormValid(form: Pick<EmpresaRecebedoraFormState, 'nome'>): boolean {
@@ -142,7 +143,7 @@ export function createPagamentoSaidaFromForm(
     banco: form.banco.trim() || undefined,
     contribuinte: form.contribuinte.trim() || undefined,
     valor,
-    dataPagamento: form.dataPagamento.trim(),
+    dataPagamento: normalizarDataPagamento(form.dataPagamento) || form.dataPagamento.trim(),
     descricao: form.descricao.trim() || undefined,
     status: form.status || 'pendente',
     anexos,
@@ -216,6 +217,7 @@ export function normalizePagamentoSaida(raw: PagamentoSaida): PagamentoSaida {
   return {
     ...raw,
     status: raw.status === 'pago' ? 'pago' : 'pendente',
+    dataPagamento: normalizarDataPagamento(raw.dataPagamento) || raw.dataPagamento || '',
     anexos: Array.isArray(raw.anexos) ? raw.anexos : [],
   }
 }

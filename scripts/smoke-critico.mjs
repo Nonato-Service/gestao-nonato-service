@@ -1264,7 +1264,10 @@ try {
     pagSrc.includes('pagamentosSalvar') &&
     pagSrc.includes('ns-pagamentos-btn') &&
     pagSrc.includes('pagamentosAbrirCurto') &&
+    pagSrc.includes('pagamentosVisualizar') &&
+    pagSrc.includes('formatarDataPagamentoVisivel') &&
     pagFrom.includes('pagamentoPodeSerPago') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('formatarDataPagamentoVisivel') &&
     pagFrom.includes('erroValidacaoPagamentoSaida') &&
     exists('app/modules/pagamentos/resumo.ts') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('agruparPagamentosPorMes') &&

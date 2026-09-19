@@ -4,6 +4,30 @@ import type { PagamentoSaida } from './tipos'
 
 export const PAGAMENTOS_MES_SEM_DATA = 'sem-data'
 
+export function dataLocalISOFromMs(nowMs: number): string {
+  const d = new Date(nowMs)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+export function normalizarDataPagamento(raw: string): string {
+  const ymd = String(raw || '').trim().slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? ymd : ''
+}
+
+export function formatarDataPagamentoVisivel(data: string, locale: string, semData: string): string {
+  const ymd = normalizarDataPagamento(data)
+  if (!ymd) return semData
+  const [y, m, d] = ymd.split('-').map(Number)
+  return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
 export type TotalInstituicaoPagamento = {
   empresaId: string
   empresaNome: string

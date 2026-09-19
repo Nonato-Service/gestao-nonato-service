@@ -18,6 +18,7 @@ import {
   isPagamentoSaidaFormValid,
   pagamentoPodeSerPago,
   agruparPagamentosPorMes,
+  formatarDataPagamentoVisivel,
   mesesDisponiveisPagamentos,
   normalizePagamentoSaida,
   PAGAMENTOS_EMPRESAS_OFICIAIS,
@@ -97,6 +98,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   const [editingEmpresa, setEditingEmpresa] = useState<EmpresaRecebedora | null>(null)
   const [pagForm, setPagForm] = useState(() => emptyPagamentoSaidaForm())
   const [editingPag, setEditingPag] = useState<PagamentoSaida | null>(null)
+  const [visualizarPag, setVisualizarPag] = useState<PagamentoSaida | null>(null)
   const [erro, setErro] = useState('')
   const [okMsg, setOkMsg] = useState('')
   const [mesFiltro, setMesFiltro] = useState('todos')
@@ -338,6 +340,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     setVista('ficha')
     setAbaFicha('a-pagar')
     setEditingPag(null)
+    setVisualizarPag(null)
     setPagForm(pagamentoFormDaInstituicao(e))
     setErro('')
   }
@@ -345,6 +348,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   const voltarInstituicoes = () => {
     setVista('instituicoes')
     setEditingPag(null)
+    setVisualizarPag(null)
     setErro('')
   }
 
@@ -385,11 +389,31 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   <strong>{p.paraQuem}</strong>
                   <span>
                     {' '}
-                    · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)} · {p.dataPagamento}
+                    · {metodoLabel(safeT, p.metodo)} · {fmtValor(p.valor)}
                   </span>
+                  <div className="ns-pagamentos-item-data">
+                    <span>{tr(safeT, 'pagamentosDataEfetuada', 'Data do pagamento')}</span>
+                    <strong>
+                      {formatarDataPagamentoVisivel(
+                        p.dataPagamento,
+                        localeMes,
+                        tr(safeT, 'pagamentosSemData', 'Sem data')
+                      )}
+                    </strong>
+                  </div>
                   {renderAnexos(p)}
                 </div>
                 <div className="ns-pagamentos-row-actions">
+                  <button
+                    type="button"
+                    className="btn-primary ns-pagamentos-btn"
+                    onClick={() => {
+                      setVisualizarPag(normalizePagamentoSaida(p))
+                      setErro('')
+                    }}
+                  >
+                    {tr(safeT, 'pagamentosVisualizar', 'Visualizar')}
+                  </button>
                   {mostrarMarcarPago && p.status !== 'pago' ? (
                     <button type="button" className="btn-primary ns-pagamentos-btn" onClick={() => marcarComoPago(p)}>
                       {tr(safeT, 'pagamentosMarcarPagoCurto', 'Pago')}
@@ -400,6 +424,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                     className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
                     onClick={() => {
                       setEditingPag(p)
+                      setVisualizarPag(null)
                       setPagForm(pagamentoSaidaToForm(normalizePagamentoSaida(p)))
                       setAbaFicha(p.status === 'pago' ? 'pagos' : 'a-pagar')
                       setErro('')
@@ -651,7 +676,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 />
               </label>
               <label>
-                {tr(safeT, 'pagamentosData', 'Data')} *
+                {tr(safeT, 'pagamentosDataEfetuada', 'Data do pagamento')} *
                 <input
                   className={inputClass}
                   type="date"
@@ -859,6 +884,69 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
             </form>
 
             <section className="ns-pagamentos-card">
+              {visualizarPag ? (
+                <div className="ns-pagamentos-ver">
+                  <h2>{tr(safeT, 'pagamentosVisualizar', 'Visualizar')}</h2>
+                  <dl className="ns-pagamentos-ver-dl">
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosDataEfetuada', 'Data do pagamento')}</dt>
+                      <dd className="ns-pagamentos-ver-data">
+                        {formatarDataPagamentoVisivel(
+                          visualizarPag.dataPagamento,
+                          localeMes,
+                          tr(safeT, 'pagamentosSemData', 'Sem data')
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosParaQuem', 'Para quem')}</dt>
+                      <dd>{visualizarPag.paraQuem}</dd>
+                    </div>
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosValor', 'Valor')}</dt>
+                      <dd>{fmtValor(visualizarPag.valor)}</dd>
+                    </div>
+                    <div>
+                      <dt>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</dt>
+                      <dd>{metodoLabel(safeT, visualizarPag.metodo)}</dd>
+                    </div>
+                    {visualizarPag.referencia ? (
+                      <div>
+                        <dt>{tr(safeT, 'pagamentosReferencia', 'Referência')}</dt>
+                        <dd>{visualizarPag.referencia}</dd>
+                      </div>
+                    ) : null}
+                    {visualizarPag.entidade ? (
+                      <div>
+                        <dt>{tr(safeT, 'pagamentosEntidade', 'Entidade')}</dt>
+                        <dd>{visualizarPag.entidade}</dd>
+                      </div>
+                    ) : null}
+                    {visualizarPag.iban ? (
+                      <div>
+                        <dt>{tr(safeT, 'pagamentosIban', 'IBAN / conta')}</dt>
+                        <dd>{visualizarPag.iban}</dd>
+                      </div>
+                    ) : null}
+                    {visualizarPag.contribuinte ? (
+                      <div>
+                        <dt>{tr(safeT, 'pagamentosContribuinte', 'Contribuinte (NIF)')}</dt>
+                        <dd>{visualizarPag.contribuinte}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {renderAnexos(visualizarPag)}
+                  <div className="ns-pagamentos-actions">
+                    <button
+                      type="button"
+                      className="btn-primary ns-pagamentos-btn ns-pagamentos-btn-ghost"
+                      onClick={() => setVisualizarPag(null)}
+                    >
+                      {tr(safeT, 'pagamentosFecharVisualizar', 'Fechar')}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <label>
                 {tr(safeT, 'pagamentosFiltroMes', 'Mês')}
                 <select className={inputClass} value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
