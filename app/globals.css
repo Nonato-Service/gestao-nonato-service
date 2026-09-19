@@ -2622,17 +2622,7 @@ body {
   padding: 18px 16px 28px;
   word-spacing: normal;
   letter-spacing: normal;
-}
-.ns-pagamentos-root,
-.ns-pagamentos-root h1,
-.ns-pagamentos-root h2,
-.ns-pagamentos-root h3,
-.ns-pagamentos-root button,
-.ns-pagamentos-root label,
-.ns-pagamentos-root span,
-.ns-pagamentos-root p {
-  letter-spacing: normal;
-  word-spacing: normal;
+  color: #f4f4f4;
 }
 .ns-pagamentos-tabs {
   margin: 16px 0 18px;
@@ -2642,33 +2632,70 @@ body {
   grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.1fr);
   gap: 16px;
 }
+.ns-pagamentos-card,
+.ns-pagamentos-inst-card,
+.ns-pagamentos-totais {
+  background: linear-gradient(165deg, rgba(28, 28, 28, 0.94) 0%, rgba(12, 12, 12, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
 .ns-pagamentos-card {
-  background: #2a2a2a;
-  border: 1px solid #00ff00;
-  border-radius: 10px;
-  padding: 16px;
+  padding: 18px;
+}
+.ns-pagamentos-card h2,
+.ns-pagamentos-section-title,
+.ns-pagamentos-inst-card h3,
+.ns-pagamentos-totais h3,
+.ns-pagamentos-mes h3 {
+  color: #f4f4f4;
 }
 .ns-pagamentos-card h2 {
   margin: 0 0 14px;
-  color: #00ff00;
   font-size: 16px;
-  letter-spacing: 0.04em;
+  font-weight: 700;
 }
 .ns-pagamentos-card label {
   display: block;
   margin-bottom: 12px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
 }
-.ns-pagamentos-metodos {
-  border: 1px solid rgba(0, 255, 0, 0.35);
+.ns-pagamentos-input,
+.ns-pagamentos-root input[type='date'],
+.ns-pagamentos-root select,
+.ns-pagamentos-root textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4f4f4;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 10px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.ns-pagamentos-input--area {
+  min-height: 64px;
+  resize: vertical;
+}
+.ns-pagamentos-input:focus,
+.ns-pagamentos-root input[type='date']:focus,
+.ns-pagamentos-root select:focus,
+.ns-pagamentos-root textarea:focus {
+  outline: none;
+  border-color: rgba(0, 200, 83, 0.45);
+  box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.12);
+}
+.ns-pagamentos-metodos {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
   margin: 0 0 14px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.02);
 }
 .ns-pagamentos-metodos legend {
-  color: #00ff00;
+  color: rgba(180, 255, 200, 0.85);
   padding: 0 6px;
 }
 .ns-pagamentos-radio {
@@ -2686,7 +2713,10 @@ body {
 }
 .ns-pagamentos-btn-ghost {
   background: transparent !important;
-  color: #fff !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: none !important;
 }
 .ns-pagamentos-list {
   list-style: none;
@@ -2694,17 +2724,17 @@ body {
   padding: 0;
 }
 .ns-pagamentos-list li {
-  border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 10px 0;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.9);
 }
 .ns-pagamentos-empty,
 .ns-pagamentos-msg {
-  color: #fff;
+  color: rgba(255, 255, 255, 0.72);
   margin: 0 0 12px;
 }
-.ns-pagamentos-msg--err { color: #ff6b6b; }
-.ns-pagamentos-msg--ok { color: #00ff00; }
+.ns-pagamentos-msg--err { color: #f0a3a3; }
+.ns-pagamentos-msg--ok { color: #9be7b3; }
 .ns-pagamentos-card-sub {
   margin-top: 22px !important;
 }
@@ -2712,11 +2742,12 @@ body {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 7px;
-  border: 1px solid #00ff00;
+  border: 1px solid rgba(0, 200, 83, 0.35);
   border-radius: 999px;
-  color: #00ff00;
+  color: #9be7b3;
+  background: rgba(0, 200, 83, 0.1);
   font-size: 10px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .ns-pagamentos-oficial-chips {
@@ -2729,22 +2760,24 @@ body {
   color: #fff !important;
 }
 .ns-pagamentos-oficial-chip--on {
-  background: #00ff00 !important;
-  color: #000 !important;
+  background: rgba(0, 200, 83, 0.16) !important;
+  color: #e8fff0 !important;
+  border-color: rgba(0, 200, 83, 0.4) !important;
 }
 .ns-pagamentos-status-pago {
-  background: #00ff00;
-  color: #000 !important;
+  background: rgba(0, 200, 83, 0.16);
+  color: #c8f5d6 !important;
 }
 .ns-pagamentos-anexos-block {
   margin: 14px 0;
   padding: 12px;
-  border: 1px solid rgba(0, 255, 0, 0.35);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
 }
 .ns-pagamentos-anexos-block strong {
   display: block;
-  color: #00ff00;
+  color: rgba(255, 255, 255, 0.88);
   margin-bottom: 6px;
 }
 .ns-pagamentos-anexos-list {
@@ -2756,37 +2789,34 @@ body {
   gap: 8px;
 }
 .ns-pagamentos-anexo-chip {
-  background: #111;
-  color: #00ff00;
-  border: 1px solid #00ff00;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d7f5e2;
+  border: 1px solid rgba(0, 200, 83, 0.28);
   border-radius: 999px;
   padding: 6px 10px;
   cursor: pointer;
 }
 .ns-pagamentos-totais {
   margin: 14px 0 18px;
-  padding: 12px;
-  border: 1px solid #00ff00;
-  border-radius: 8px;
-  background: #111;
+  padding: 14px 16px;
 }
 .ns-pagamentos-totais h3,
 .ns-pagamentos-mes h3 {
   margin: 12px 0 8px;
-  color: #00ff00;
   font-size: 14px;
+  font-weight: 650;
 }
 .ns-pagamentos-total-final {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.88);
   font-size: 16px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(0, 255, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .ns-pagamentos-total-final strong {
-  color: #00ff00;
+  color: #c8f5d6;
 }
 .ns-pagamentos-totais-list {
   list-style: none;
@@ -2797,9 +2827,9 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.86);
   padding: 6px 0;
-  border-bottom: 1px solid rgba(0, 255, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .ns-pagamentos-totais-list--mes {
   margin-bottom: 8px;
@@ -2808,13 +2838,12 @@ body {
 .ns-pagamentos-mes {
   margin-top: 18px;
   padding-top: 8px;
-  border-top: 1px solid rgba(0, 255, 0, 0.25);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .ns-pagamentos-section-title {
-  color: #00ff00;
   font-size: 18px;
   margin: 22px 0 14px;
-  letter-spacing: normal;
+  font-weight: 750;
 }
 .ns-pagamentos-form-grid {
   display: grid;
@@ -2830,9 +2859,6 @@ body {
   gap: 14px;
 }
 .ns-pagamentos-inst-card {
-  background: #2a2a2a;
-  border: 1px solid #00ff00;
-  border-radius: 10px;
   padding: 16px;
 }
 .ns-pagamentos-inst-card header {
@@ -2844,11 +2870,11 @@ body {
 }
 .ns-pagamentos-inst-card h3 {
   margin: 0;
-  color: #00ff00;
   font-size: 16px;
+  font-weight: 700;
 }
 .ns-pagamentos-inst-meta {
-  color: #bbb;
+  color: rgba(255, 255, 255, 0.5);
   margin: 0 0 10px;
   font-size: 13px;
 }
@@ -2859,27 +2885,27 @@ body {
   margin: 10px 0 14px;
 }
 .ns-pagamentos-inst-stats div {
-  background: #111;
-  border: 1px solid rgba(0, 255, 0, 0.25);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 8px;
 }
 .ns-pagamentos-inst-stats dt,
 .ns-pagamentos-card--head dt {
-  color: #9aa;
+  color: rgba(255, 255, 255, 0.48);
   font-size: 11px;
   margin-bottom: 4px;
 }
 .ns-pagamentos-inst-stats dd,
 .ns-pagamentos-card--head dd {
   margin: 0;
-  color: #fff;
+  color: #f4f4f4;
   font-weight: 700;
 }
 .ns-pagamentos-back {
-  background: transparent;
-  color: #00ff00;
-  border: 1px solid #00ff00;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   padding: 8px 12px;
   margin-bottom: 14px;
@@ -2899,12 +2925,10 @@ body {
 }
 @media (max-width: 900px) {
   .ns-pagamentos-form-grid,
-  .ns-pagamentos-ficha {
+  .ns-pagamentos-ficha,
+  .ns-pagamentos-grid {
     grid-template-columns: 1fr;
   }
-}
-@media (max-width: 900px) {
-  .ns-pagamentos-grid { grid-template-columns: 1fr; }
 }
 
 .sidebar .sidebar-empresa-entry-sub {

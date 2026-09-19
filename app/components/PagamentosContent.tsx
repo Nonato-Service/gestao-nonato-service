@@ -322,15 +322,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
     setErro('')
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    background: '#111',
-    color: '#fff',
-    border: '1px solid #00ff00',
-    borderRadius: 6,
-    padding: '10px 12px',
-    fontSize: 14,
-  }
+  const inputClass = 'ns-pagamentos-input'
 
   const renderAnexos = (p: PagamentoSaida) =>
     (p.anexos || []).length === 0 ? null : (
@@ -424,7 +416,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosInstituicaoNome', 'Nome da instituição')} *
                 <input
-                  style={inputStyle}
+                  className={inputClass}
                   value={empresaForm.nome}
                   onChange={(e) => setEmpresaForm((f) => ({ ...f, nome: e.target.value }))}
                 />
@@ -432,7 +424,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosEmpresaNif', 'NIF')}
                 <input
-                  style={inputStyle}
+                  className={inputClass}
                   value={empresaForm.nif}
                   onChange={(e) => setEmpresaForm((f) => ({ ...f, nif: e.target.value }))}
                 />
@@ -440,7 +432,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label className="ns-pagamentos-form-grid__wide">
                 {tr(safeT, 'pagamentosEmpresaNotas', 'Notas')}
                 <textarea
-                  style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }}
+                  className={`${inputClass} ns-pagamentos-input--area`}
                   value={empresaForm.notas}
                   onChange={(e) => setEmpresaForm((f) => ({ ...f, notas: e.target.value }))}
                 />
@@ -586,7 +578,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosParaQuem', 'Para quem')} *
                 <input
-                  style={inputStyle}
+                  className={inputClass}
                   value={pagForm.paraQuem}
                   onChange={(e) => setPagForm((f) => ({ ...f, paraQuem: e.target.value }))}
                 />
@@ -609,7 +601,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 <label>
                   {tr(safeT, 'pagamentosReferencia', 'Referência')} *
                   <input
-                    style={inputStyle}
+                    className={inputClass}
                     value={pagForm.referencia}
                     onChange={(e) => setPagForm((f) => ({ ...f, referencia: e.target.value }))}
                   />
@@ -619,7 +611,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                 <label>
                   {tr(safeT, 'pagamentosEntidade', 'Entidade')} *
                   <input
-                    style={inputStyle}
+                    className={inputClass}
                     value={pagForm.entidade}
                     onChange={(e) => setPagForm((f) => ({ ...f, entidade: e.target.value }))}
                   />
@@ -630,7 +622,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   <label>
                     {tr(safeT, 'pagamentosIban', 'IBAN / conta')} *
                     <input
-                      style={inputStyle}
+                      className={inputClass}
                       value={pagForm.iban}
                       onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
                     />
@@ -638,7 +630,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   <label>
                     {tr(safeT, 'pagamentosBanco', 'Banco')}
                     <input
-                      style={inputStyle}
+                      className={inputClass}
                       value={pagForm.banco}
                       onChange={(e) => setPagForm((f) => ({ ...f, banco: e.target.value }))}
                     />
@@ -648,7 +640,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosValor', 'Valor')} *
                 <input
-                  style={inputStyle}
+                  className={inputClass}
                   inputMode="decimal"
                   value={pagForm.valor}
                   onChange={(e) => setPagForm((f) => ({ ...f, valor: e.target.value }))}
@@ -657,7 +649,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosData', 'Data')} *
                 <input
-                  style={inputStyle}
+                  className={inputClass}
                   type="date"
                   value={pagForm.dataPagamento}
                   onChange={(e) => setPagForm((f) => ({ ...f, dataPagamento: e.target.value }))}
@@ -666,7 +658,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
               <label>
                 {tr(safeT, 'pagamentosDescricao', 'Descrição')}
                 <textarea
-                  style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }}
+                  className={`${inputClass} ns-pagamentos-input--area`}
                   value={pagForm.descricao}
                   onChange={(e) => setPagForm((f) => ({ ...f, descricao: e.target.value }))}
                 />
@@ -777,7 +769,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
             <section className="ns-pagamentos-card">
               <label>
                 {tr(safeT, 'pagamentosFiltroMes', 'Mês')}
-                <select style={inputStyle} value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
+                <select className={inputClass} value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
                   <option value="todos">{tr(safeT, 'pagamentosTodosMeses', 'Todos os meses')}</option>
                   {mesesOpcoes.map((mes) => (
                     <option key={mes} value={mes}>
