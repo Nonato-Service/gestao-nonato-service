@@ -42,6 +42,8 @@ export type {
 export type { TotalInstituicaoPagamento, GrupoMesPagamento } from './resumo'
 export {
   PAGAMENTOS_MES_SEM_DATA,
+  compararNomePt,
+  ordenarEmpresasAlfabeto,
   dataLocalISOFromMs,
   normalizarDataPagamento,
   formatarDataPagamentoVisivel,

@@ -1,6 +1,14 @@
 /** Totais e agrupamento por mês / instituição — funções puras. */
 
-import type { PagamentoSaida } from './tipos'
+import type { EmpresaRecebedora, PagamentoSaida } from './tipos'
+
+export function compararNomePt(a: string, b: string): number {
+  return String(a || '').localeCompare(String(b || ''), 'pt', { sensitivity: 'base' })
+}
+
+export function ordenarEmpresasAlfabeto(list: EmpresaRecebedora[]): EmpresaRecebedora[] {
+  return [...(Array.isArray(list) ? list : [])].sort((a, b) => compararNomePt(a.nome, b.nome))
+}
 
 export const PAGAMENTOS_MES_SEM_DATA = 'sem-data'
 
@@ -133,7 +141,7 @@ export function agruparPagamentosPorMes(list: PagamentoSaida[]): GrupoMesPagamen
   }
   return mesesDisponiveisPagamentos(list).map((mes) => {
     const itens = (byMes.get(mes) || []).slice().sort((a, b) =>
-      String(b.dataPagamento || '').localeCompare(String(a.dataPagamento || ''))
+      compararNomePt(a.paraQuem || a.empresaNome, b.paraQuem || b.empresaNome)
     )
     return {
       mes,

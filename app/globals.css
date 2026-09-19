@@ -2975,6 +2975,9 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
   grid-template-columns: minmax(280px, 0.95fr) minmax(280px, 1.15fr);
   gap: 16px;
 }
+.ns-pagamentos-ficha--lista {
+  grid-template-columns: 1fr;
+}
 .ns-pagamentos-card--head .ns-pagamentos-inst-stats {
   grid-template-columns: 1fr 1fr;
   margin-bottom: 0;

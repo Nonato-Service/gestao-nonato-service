@@ -1268,6 +1268,10 @@ try {
     pagSrc.includes('formatarDataPagamentoVisivel') &&
     pagSrc.includes('mergePagamentosPorId') &&
     pagSrc.includes('registosRef') &&
+    pagSrc.includes('ordenarEmpresasAlfabeto') &&
+    pagSrc.includes("vista === 'editar'") &&
+    pagSrc.includes("vista === 'visualizar'") &&
+    pagSrc.includes('pagamentosNovoItem') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('mergePagamentosPorId') &&
     pagFrom.includes('pagamentoPodeSerPago') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('formatarDataPagamentoVisivel') &&

@@ -1,4 +1,4 @@
 {
-  "version": 504,
+  "version": 505,
   "_comment": "Fonte única da versão PWA. Incremente em cada deploy com alterações visíveis ao utilizador. Comandos: npm run pwa:bump | npm run pwa:sync"
 }
