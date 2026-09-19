@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v493'
+const CACHE_NAME = 'nonato-pwa-v494'
 
 const PRECACHE_ASSETS = [
   '/',
@@ -68,10 +68,11 @@ async function navigateResponse(request) {
   if (self.navigator.onLine) {
     try {
       const r = await fetch(request, { cache: 'no-cache' })
-      return putInCache(request, r)
+      if (r.ok) return putInCache(request, r)
     } catch {
-      return fromCache()
+      /* cair para cache */
     }
+    return fromCache()
   }
 
   const cached = await caches.match(request, { ignoreSearch: true })
@@ -94,7 +95,7 @@ async function networkFirstStatic(request) {
   if (self.navigator.onLine) {
     try {
       const r = await fetch(request, { cache: 'no-cache' })
-      return putInCache(request, r)
+      if (r.ok) return putInCache(request, r)
     } catch {
       /* cair para cache */
     }
@@ -103,10 +104,11 @@ async function networkFirstStatic(request) {
   if (cached) return cached
   try {
     const r = await fetch(request, { cache: 'no-cache' })
-    return putInCache(request, r)
+    if (r.ok) return putInCache(request, r)
   } catch {
-    return new Response('', { status: 503, statusText: 'Offline' })
+    /* offline */
   }
+  return new Response('', { status: 503, statusText: 'Offline' })
 }
 
 self.addEventListener('fetch', (event) => {

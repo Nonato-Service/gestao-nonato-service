@@ -1255,6 +1255,17 @@ try {
 try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
   const nmaDash = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const pageBoot = fs.readFileSync(path.join(root, 'app/page.tsx'), 'utf8')
+  const swBoot = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8')
+  if (
+    pageBoot.includes('reloadAppHard') &&
+    pageBoot.includes('BootStuck') &&
+    swBoot.includes('if (r.ok) return putInCache')
+  ) {
+    ok('arranque: retry se «A carregar» ficar preso + SW ignora 502')
+  } else {
+    fail('arranque preso sem botão de retry ou SW ainda aceita 502')
+  }
   if (
     nmaDash.includes('ns-dashboard-wordmark') &&
     nmaDash.includes('dashboardWordmarkLine') &&
