@@ -1256,15 +1256,15 @@ try {
   const cssVisual = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
   const nmaDash = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (
-    nmaDash.includes('ns-dashboard-full') &&
-    nmaDash.includes('ns-dashboard-stats') &&
+    nmaDash.includes('ns-dashboard-wordmark') &&
+    nmaDash.includes('dashboardWordmarkLine') &&
+    cssVisual.includes('.ns-dashboard-wordmark') &&
     !nmaDash.includes('ns-dashboard-full-hero--bar') &&
-    !nmaDash.includes('ns-dashboard-full-welcome') &&
-    !nmaDash.includes('main-dashboard-actions-bar__identity')
+    !nmaDash.includes('ns-dashboard-full-welcome')
   ) {
-    ok('painel sem faixa de apresentação no topo')
+    ok('assinatura do painel: Nonato Service · Gestão Técnica e Industrial')
   } else {
-    fail('faixa de apresentação ainda no topo do painel')
+    fail('assinatura do painel em falta ou ainda com logo/faixa')
   }
 } catch (e) {
   fail(`visual profissional: ${e && e.message ? e.message : e}`)

@@ -69923,6 +69923,18 @@ A1;Peça exemplo;10`}
                 renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
                 <div className="ns-dashboard-full">
+              <header className="ns-dashboard-wordmark">
+                <p className="ns-dashboard-wordmark__brand">
+                  {(safeT as { dashboardWordmarkBrand?: string }).dashboardWordmarkBrand ||
+                    safeT?.boaTrade ||
+                    'NONATO SERVICE'}
+                </p>
+                <h1 className="ns-dashboard-wordmark__line">
+                  {(safeT as { dashboardWordmarkLine?: string }).dashboardWordmarkLine ||
+                    'Gestão Técnica e Industrial'}
+                </h1>
+              </header>
+
               {/* Estatísticas rápidas — cartões uniformes, hover em CSS */}
               <div className="ns-dashboard-stats">
                 <div

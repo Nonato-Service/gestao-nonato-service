@@ -52208,3 +52208,28 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   letter-spacing: 0.01em;
   color: #f4f4f4;
 }
+
+.ns-dashboard-wordmark {
+  text-align: center;
+  margin: 4px 0 28px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+.ns-dashboard-wordmark__brand {
+  margin: 0 0 8px;
+  font-size: clamp(12px, 1.8vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #00ff00;
+}
+.ns-dashboard-wordmark__line {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f4f4f4;
+  line-height: 1.25;
+}
