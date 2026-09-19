@@ -113,7 +113,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       ) as Record<(typeof PAGAMENTOS_EMPRESAS_OFICIAIS)[number]['id'], string>
       const ensured = ensureEmpresasOficiaisPagamentos(loaded, { nomes: nomesOficiais })
       setEmpresas(ensured.list)
-      if (ensured.added > 0) {
+      if (ensured.added > 0 || ensured.changed > 0) {
         await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, ensured.list)
       }
       setRegistos(asArray<PagamentoSaida>(pagRaw).map(normalizePagamentoSaida))
@@ -181,6 +181,15 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
   }
 
   const guardarPagamento = async () => {
+    const valorNum = Number(String(pagForm.valor).replace(',', '.'))
+    if (!(valorNum > 0)) {
+      setErro(tr(safeT, 'pagamentosFaltaValor', 'Indique o valor para salvar'))
+      return
+    }
+    if (!pagForm.paraQuem.trim() || !pagForm.dataPagamento.trim()) {
+      setErro(tr(safeT, 'pagamentosInvalido', 'Preencha os campos obrigatórios'))
+      return
+    }
     if (!isPagamentoSaidaFormValid(pagForm)) {
       setErro(tr(safeT, 'pagamentosInvalido', 'Preencha os campos obrigatórios'))
       return
@@ -567,7 +576,13 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
           </div>
 
           <div className="ns-pagamentos-ficha">
-            <section className="ns-pagamentos-card">
+            <form
+              className="ns-pagamentos-card"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void guardarPagamento()
+              }}
+            >
               <h2>
                 {editingPag
                   ? tr(safeT, 'pagamentosEditar', 'Editar pagamento')
@@ -583,60 +598,6 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   onChange={(e) => setPagForm((f) => ({ ...f, paraQuem: e.target.value }))}
                 />
               </label>
-              <fieldset className="ns-pagamentos-metodos">
-                <legend>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</legend>
-                {(['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[]).map((m) => (
-                  <label key={m} className="ns-pagamentos-radio">
-                    <input
-                      type="radio"
-                      name="pagamentos-metodo"
-                      checked={pagForm.metodo === m}
-                      onChange={() => setPagForm((f) => ({ ...f, metodo: m }))}
-                    />
-                    {metodoLabel(safeT, m)}
-                  </label>
-                ))}
-              </fieldset>
-              {pagForm.metodo === 'referencia' || pagForm.metodo === 'entidade-referencia' ? (
-                <label>
-                  {tr(safeT, 'pagamentosReferencia', 'Referência')} *
-                  <input
-                    className={inputClass}
-                    value={pagForm.referencia}
-                    onChange={(e) => setPagForm((f) => ({ ...f, referencia: e.target.value }))}
-                  />
-                </label>
-              ) : null}
-              {pagForm.metodo === 'entidade-referencia' ? (
-                <label>
-                  {tr(safeT, 'pagamentosEntidade', 'Entidade')} *
-                  <input
-                    className={inputClass}
-                    value={pagForm.entidade}
-                    onChange={(e) => setPagForm((f) => ({ ...f, entidade: e.target.value }))}
-                  />
-                </label>
-              ) : null}
-              {pagForm.metodo === 'transferencia' ? (
-                <>
-                  <label>
-                    {tr(safeT, 'pagamentosIban', 'IBAN / conta')} *
-                    <input
-                      className={inputClass}
-                      value={pagForm.iban}
-                      onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
-                    />
-                  </label>
-                  <label>
-                    {tr(safeT, 'pagamentosBanco', 'Banco')}
-                    <input
-                      className={inputClass}
-                      value={pagForm.banco}
-                      onChange={(e) => setPagForm((f) => ({ ...f, banco: e.target.value }))}
-                    />
-                  </label>
-                </>
-              ) : null}
               <label>
                 {tr(safeT, 'pagamentosValor', 'Valor')} *
                 <input
@@ -655,6 +616,82 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   onChange={(e) => setPagForm((f) => ({ ...f, dataPagamento: e.target.value }))}
                 />
               </label>
+              <div className="ns-pagamentos-actions ns-pagamentos-salvar-row">
+                <button type="submit" className="btn-primary ns-pagamentos-btn-salvar">
+                  {tr(safeT, 'pagamentosSalvar', 'Salvar')}
+                </button>
+                {editingPag ? (
+                  <button
+                    type="button"
+                    className="btn-primary ns-pagamentos-btn-ghost"
+                    onClick={() => {
+                      setEditingPag(null)
+                      setPagForm({
+                        ...emptyPagamentoSaidaForm(instituicao.id),
+                        empresaId: instituicao.id,
+                        paraQuem: instituicao.nome,
+                      })
+                      setErro('')
+                    }}
+                  >
+                    {tr(safeT, 'pagamentosCancelar', 'Cancelar')}
+                  </button>
+                ) : null}
+              </div>
+              <fieldset className="ns-pagamentos-metodos">
+                <legend>{tr(safeT, 'pagamentosMetodo', 'Tipo de pagamento')}</legend>
+                {(['referencia', 'transferencia', 'entidade-referencia'] as PagamentoMetodo[]).map((m) => (
+                  <label key={m} className="ns-pagamentos-radio">
+                    <input
+                      type="radio"
+                      name="pagamentos-metodo"
+                      checked={pagForm.metodo === m}
+                      onChange={() => setPagForm((f) => ({ ...f, metodo: m }))}
+                    />
+                    {metodoLabel(safeT, m)}
+                  </label>
+                ))}
+              </fieldset>
+              {pagForm.metodo === 'referencia' || pagForm.metodo === 'entidade-referencia' ? (
+                <label>
+                  {tr(safeT, 'pagamentosReferencia', 'Referência')}
+                  <input
+                    className={inputClass}
+                    value={pagForm.referencia}
+                    onChange={(e) => setPagForm((f) => ({ ...f, referencia: e.target.value }))}
+                  />
+                </label>
+              ) : null}
+              {pagForm.metodo === 'entidade-referencia' ? (
+                <label>
+                  {tr(safeT, 'pagamentosEntidade', 'Entidade')}
+                  <input
+                    className={inputClass}
+                    value={pagForm.entidade}
+                    onChange={(e) => setPagForm((f) => ({ ...f, entidade: e.target.value }))}
+                  />
+                </label>
+              ) : null}
+              {pagForm.metodo === 'transferencia' ? (
+                <>
+                  <label>
+                    {tr(safeT, 'pagamentosIban', 'IBAN / conta')}
+                    <input
+                      className={inputClass}
+                      value={pagForm.iban}
+                      onChange={(e) => setPagForm((f) => ({ ...f, iban: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    {tr(safeT, 'pagamentosBanco', 'Banco')}
+                    <input
+                      className={inputClass}
+                      value={pagForm.banco}
+                      onChange={(e) => setPagForm((f) => ({ ...f, banco: e.target.value }))}
+                    />
+                  </label>
+                </>
+              ) : null}
               <label>
                 {tr(safeT, 'pagamentosDescricao', 'Descrição')}
                 <textarea
@@ -742,9 +779,9 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   ))}
                 </ul>
               </div>
-              <div className="ns-pagamentos-actions">
-                <button type="button" className="btn-primary" onClick={guardarPagamento}>
-                  {tr(safeT, 'pagamentosGuardar', 'Guardar pagamento')}
+              <div className="ns-pagamentos-actions ns-pagamentos-salvar-row">
+                <button type="submit" className="btn-primary ns-pagamentos-btn-salvar">
+                  {tr(safeT, 'pagamentosSalvar', 'Salvar')}
                 </button>
                 {editingPag ? (
                   <button
@@ -764,7 +801,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
                   </button>
                 ) : null}
               </div>
-            </section>
+            </form>
 
             <section className="ns-pagamentos-card">
               <label>

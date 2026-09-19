@@ -53,13 +53,7 @@ export function isPagamentoSaidaFormValid(
 ): boolean {
   if (!form.empresaId.trim() || !form.paraQuem.trim() || !form.dataPagamento.trim()) return false
   const valor = Number(String(form.valor).replace(',', '.'))
-  if (!(valor > 0)) return false
-  if (form.metodo === 'referencia') return Boolean(form.referencia.trim())
-  if (form.metodo === 'transferencia') return Boolean(form.iban.trim())
-  if (form.metodo === 'entidade-referencia') {
-    return Boolean(form.entidade.trim() && form.referencia.trim())
-  }
-  return false
+  return valor > 0
 }
 
 export type CreatePagamentoSaidaFromFormOpts = {

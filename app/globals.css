@@ -2711,6 +2711,12 @@ body {
   gap: 8px;
   margin-top: 8px;
 }
+.ns-pagamentos-salvar-row {
+  margin: 12px 0 16px;
+}
+.ns-pagamentos-btn-salvar {
+  min-width: 132px;
+}
 .ns-pagamentos-btn-ghost {
   background: transparent !important;
   color: rgba(255, 255, 255, 0.88) !important;

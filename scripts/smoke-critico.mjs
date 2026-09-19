@@ -1261,6 +1261,8 @@ try {
     pagSrc.includes('abrirInstituicao') &&
     pagSrc.includes('pagamentosItensAPagar') &&
     pagSrc.includes('pagamentosItensPagos') &&
+    pagSrc.includes('pagamentosSalvar') &&
+    pagFrom.includes('return valor > 0') &&
     exists('app/modules/pagamentos/resumo.ts') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('agruparPagamentosPorMes') &&
     !fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('Date.now') &&

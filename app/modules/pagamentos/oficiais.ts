@@ -20,7 +20,7 @@ export const PAGAMENTOS_EMPRESAS_OFICIAIS: readonly EmpresaRecebedoraOficialDef[
     id: 'pag-oficial-financas',
     tipo: 'financas',
     nomeKey: 'pagamentosEmpresaFinancas',
-    nomeFallback: 'Finanças',
+    nomeFallback: 'Autoridade Tributária',
   },
   {
     id: 'pag-oficial-seguranca-social',
@@ -51,15 +51,25 @@ export type EnsureEmpresasOficiaisPagamentosOpts = {
   nomes?: Partial<Record<EmpresaRecebedoraOficialId, string>>
 }
 
-/** Junta destinos oficiais em falta. Nunca remove nem substitui cadastros já guardados. */
+const NOMES_ANTIGOS_FINANCAS = new Set([
+  'Finanças',
+  'Hacienda',
+  'Finances',
+  'Finanze',
+  'Finanzen',
+  'Tax office',
+])
+
+/** Junta destinos oficiais em falta. Nunca remove cadastros; só actualiza o nome antigo de Finanças. */
 export function ensureEmpresasOficiaisPagamentos(
   existing: EmpresaRecebedora[],
   opts: EnsureEmpresasOficiaisPagamentosOpts
-): { list: EmpresaRecebedora[]; added: number } {
-  const list = Array.isArray(existing) ? [...existing] : []
+): { list: EmpresaRecebedora[]; added: number; changed: number } {
+  const list = Array.isArray(existing) ? existing.map((e) => ({ ...e })) : []
   const have = new Set(list.map((e) => e.id))
   const iso = new Date(opts.nowMs).toISOString()
   let added = 0
+  let changed = 0
   for (const def of PAGAMENTOS_EMPRESAS_OFICIAIS) {
     if (have.has(def.id)) continue
     const nome = (opts.nomes?.[def.id] || '').trim() || def.nomeFallback
@@ -72,5 +82,15 @@ export function ensureEmpresasOficiaisPagamentos(
     })
     added += 1
   }
-  return { list, added }
+  const nomeFinancas = (opts.nomes?.['pag-oficial-financas'] || '').trim() || 'Autoridade Tributária'
+  for (const item of list) {
+    if (item.id !== 'pag-oficial-financas') continue
+    const atual = (item.nome || '').trim()
+    if (NOMES_ANTIGOS_FINANCAS.has(atual) && atual !== nomeFinancas) {
+      item.nome = nomeFinancas
+      item.atualizadoEm = iso
+      changed += 1
+    }
+  }
+  return { list, added, changed }
 }
