@@ -51339,8 +51339,8 @@ html body .op-pro .op-pro__textarea::-webkit-input-placeholder {
    NS Ghost Buttons — sistema inteiro (override final)
    Garante botões transparentes por cor, inclusive inline legado.
    =================================================================== */
-html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn),
-html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn),
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):not(.ns-pagamentos-btn-apagar),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):not(.ns-pagamentos-btn-apagar),
 html body a.btn-primary {
   background: var(--ns-btn-green-bg) !important;
   background-color: var(--ns-btn-green-bg) !important;
@@ -51350,8 +51350,8 @@ html body a.btn-primary {
   box-shadow: none !important;
 }
 
-html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):hover:not(:disabled),
-html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):hover:not(:disabled),
+html body .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):not(.ns-pagamentos-btn-apagar):hover:not(:disabled),
+html body button.btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.agenda-tecnica-view-btn):not(.agenda-tecnica-view-btn--active):not(.agenda-painel-situacao-btn):not(.tab-glass-nav__tab):not(.proto-action-btn):not(.proto-cockpit-btn):not(.proto-arquivo-row__btn):not(.ns-pagamentos-btn-apagar):hover:not(:disabled),
 html body a.btn-primary:hover {
   background: var(--ns-btn-green-bg-hover) !important;
   background-color: var(--ns-btn-green-bg-hover) !important;
@@ -51359,6 +51359,26 @@ html body a.btn-primary:hover {
   color: var(--ns-btn-green-text-hover) !important;
   -webkit-text-fill-color: var(--ns-btn-green-text-hover) !important;
   filter: none !important;
+}
+
+html body .ns-pagamentos-root .btn-primary.ns-pagamentos-btn-apagar,
+html body button.btn-primary.ns-pagamentos-btn-apagar,
+html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn-apagar {
+  background: var(--ns-btn-red-bg) !important;
+  background-color: var(--ns-btn-red-bg) !important;
+  border: 1px solid var(--ns-btn-red-border) !important;
+  color: var(--ns-btn-red-text) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text) !important;
+  box-shadow: none !important;
+}
+
+html body .ns-pagamentos-root .btn-primary.ns-pagamentos-btn-apagar:hover:not(:disabled),
+html body button.btn-primary.ns-pagamentos-btn-apagar:hover:not(:disabled) {
+  background: var(--ns-btn-red-bg-hover) !important;
+  background-color: var(--ns-btn-red-bg-hover) !important;
+  border-color: var(--ns-btn-red-border-hover) !important;
+  color: var(--ns-btn-red-text-hover) !important;
+  -webkit-text-fill-color: var(--ns-btn-red-text-hover) !important;
 }
 
 html body .btn-danger:not(.sidebar-group-header),

@@ -1316,6 +1316,21 @@ try {
 }
 
 try {
+  const cssPag = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8')
+  if (
+    cssPag.includes(':not(.ns-pagamentos-btn-apagar)') &&
+    cssPag.includes('html body .ns-pagamentos-root .btn-primary.ns-pagamentos-btn-apagar') &&
+    cssPag.includes('var(--ns-btn-red-bg)')
+  ) {
+    ok('PAGAMENTOS: Apagar vermelho transparente (override final)')
+  } else {
+    fail('PAGAMENTOS: CSS do Apagar vermelho ausente ou tapado pelo verde')
+  }
+} catch (e) {
+  fail(`PAGAMENTOS Apagar CSS: ${e && e.message ? e.message : e}`)
+}
+
+try {
   const gateSrc = exists('app/components/SessaoGateDialog.tsx')
     ? fs.readFileSync(path.join(root, 'app/components/SessaoGateDialog.tsx'), 'utf8')
     : ''
