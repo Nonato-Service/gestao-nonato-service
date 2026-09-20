@@ -1025,7 +1025,11 @@ export default function RelatorioEspecialHub({
       ...prev,
       diasTrabalho: sortDiasTrabalhoEspecialCronologicamente([...(prev.diasTrabalho || []), dia]),
     }))
+    setDiasListaLimite((n) => Math.max(n, (form.diasTrabalho || []).length + 1))
     setDiaExpandido(dia.id)
+    window.setTimeout(() => {
+      document.getElementById(`re-dia-card-${dia.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
   }
 
   /**
@@ -3227,6 +3231,21 @@ export default function RelatorioEspecialHub({
             )}
           </button>
         ) : null}
+        {somenteLeitura ? null : (
+          <div className="relatorio-especial-dias-rodape">
+            <button type="button" className="btn-primary relatorio-equipamentos-block__add" onClick={adicionarDia}>
+              + {t.adicionarDia || 'Adicionar dia'}
+            </button>
+            <button
+              type="button"
+              className="btn-primary relatorio-especial-dias-rodape__salvar"
+              disabled={salvando}
+              onClick={() => void persistir()}
+            >
+              {salvando && acaoEmCurso === 'guardar' ? '…' : `💾 ${t.save || 'Guardar'}`}
+            </button>
+          </div>
+        )}
       </section>
       </BibliotecaHubPainelRecolhivel>
 

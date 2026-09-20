@@ -2457,11 +2457,11 @@ body {
 }
 
 .sidebar .sidebar-nav-chevron--entry {
-  font-size: 16px;
-  font-weight: 300;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1;
-  opacity: 0.88;
-  color: rgba(167, 243, 208, 0.85);
+  opacity: 1;
+  color: #fff;
   border: none;
   background: transparent;
   box-shadow: none;
@@ -3362,18 +3362,37 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
   text-shadow: none;
 }
 
+@keyframes sidebar-seta-pulso {
+  0%,
+  100% {
+    color: rgba(255, 255, 255, 0.22);
+    text-shadow: none;
+    transform: scale(0.86);
+    filter: none;
+  }
+  50% {
+    color: #ffffff;
+    text-shadow:
+      0 0 6px #ffffff,
+      0 0 14px rgba(0, 255, 0, 0.95),
+      0 0 24px rgba(0, 255, 0, 0.55);
+    transform: scale(1.22);
+    filter: brightness(1.35);
+  }
+}
+
 .sidebar .sidebar-group-header .sidebar-nav-chevron {
   flex-shrink: 0;
-  min-width: 26px;
-  height: 26px;
+  min-width: 28px;
+  height: 28px;
   margin-left: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0;
+  font-size: 15px;
   line-height: 1;
-  opacity: 0.92;
-  color: rgba(255, 255, 255, 0.72);
+  opacity: 1;
+  color: #fff;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -3381,21 +3400,17 @@ html body .app-compact-layout .ns-pagamentos-root .btn-primary.ns-pagamentos-btn
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-chevron::before {
-  content: '';
+  content: '▶';
   display: block;
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 6px solid currentColor;
-  transition: transform 0.2s ease, border 0.2s ease;
+  width: auto;
+  height: auto;
+  border: none;
+  animation: sidebar-seta-pulso 1.65s ease-in-out infinite;
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-chevron--expanded::before {
-  border-top: 6px solid currentColor;
-  border-right: 5px solid transparent;
-  border-bottom: 0;
-  border-left: 5px solid transparent;
+  content: '▼';
+  border: none;
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-label {
@@ -10607,23 +10622,25 @@ button.clientes-alfa-letra--toggle:hover {
   height: 30px;
   border-color: rgba(255, 255, 255, 0.22);
   background: rgba(255, 255, 255, 0.08);
-  animation: ui-expand-chevron-glow-box 1.85s ease-in-out infinite;
 }
 
+.sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry)::before,
 .sidebar .sidebar-nav-chevron--entry,
 .sidebar .sidebar-action-btn.sidebar-action-btn--row .sidebar-nav-chevron {
-  color: #fff;
-  animation: ui-expand-chevron-glow 1.85s ease-in-out infinite;
-  will-change: opacity, filter, text-shadow;
+  color: #fff !important;
+  opacity: 1 !important;
+  animation: sidebar-seta-pulso 1.35s ease-in-out infinite !important;
+  will-change: color, filter, text-shadow, transform;
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry)::before {
-  border-left-color: #fff;
+  content: '▶';
+  border: none !important;
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-chevron--expanded::before {
-  border-top-color: #fff;
-  border-left-color: transparent;
+  content: '▼';
+  border: none !important;
 }
 
 .ns-hub-card-icon--chevron {
@@ -10656,11 +10673,8 @@ button.clientes-alfa-letra--toggle:hover {
   .relatorio-especial-dia-card__chevron,
   .fg-checklist-pro__expand,
   .manuais-pro__expand,
-  .sidebar .sidebar-group-header .sidebar-nav-chevron:not(.sidebar-nav-chevron--entry),
-  .sidebar .sidebar-nav-chevron--entry,
-  .sidebar .sidebar-action-btn.sidebar-action-btn--row .sidebar-nav-chevron,
   .ns-hub-card-icon--chevron {
-    animation: none;
+    animation: none !important;
     opacity: 0.95;
     filter: none;
     box-shadow: none;
@@ -43277,6 +43291,20 @@ html body .relatorio-especial-root .relatorio-especial-dia-card__chevron {
   opacity: 1;
 }
 
+html body .relatorio-especial-root .relatorio-especial-dias-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+html body .relatorio-especial-root .relatorio-especial-dias-rodape__salvar {
+  min-height: 34px;
+  padding: 6px 14px;
+  font-weight: 700;
+}
 html body .relatorio-especial-root .relatorio-especial-dia-card__body {
   padding: 16px;
   background: rgba(0, 0, 0, 0.12);
