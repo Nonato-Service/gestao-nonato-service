@@ -1293,6 +1293,7 @@ try {
     nmaPag.includes('open-pagamentos') &&
     nmaPag.includes('PagamentosContent') &&
     nmaPag.includes('data-sidebar-zone="pagamentos"') &&
+    nmaPag.includes('sidebarGroupChevronClass(false)') &&
     mergePag.includes('pagamentos-default') &&
     mergePag.includes("group: 'pagamentos'") &&
     gruposPag.includes("buttonId === 'pagamentos-default'") &&

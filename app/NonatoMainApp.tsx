@@ -67998,6 +67998,7 @@ A1;Peça exemplo;10`}
                 </span>
               </span>
             </span>
+            <span className={sidebarGroupChevronClass(false)} aria-hidden />
             {String(pickTrChain(trCardDesc, ['pagamentosDesc']) || '').trim() ? (
               <span className="sidebar-tip-bubble" role="tooltip">
                 {pickTrChain(trCardDesc, ['pagamentosDesc']) || ''}
