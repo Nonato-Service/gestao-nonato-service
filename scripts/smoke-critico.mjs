@@ -1379,6 +1379,21 @@ try {
 }
 
 try {
+  const nmaCli = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  if (
+    nmaCli.includes("await loadData('nonato-clientes')") &&
+    nmaCli.includes("await saveData('nonato-clientes', mergedClientes, true, true)") &&
+    nmaCli.includes('mergeNonatoClientesDeferServerLocal(fromLoad, localNorm)')
+  ) {
+    ok('clientes: arranque funde e envia a lista maior ao servidor')
+  } else {
+    fail('clientes: arranque não envia a lista maior ao servidor')
+  }
+} catch (e) {
+  fail(`clientes sync arranque: ${e && e.message ? e.message : e}`)
+}
+
+try {
   const gateSrc = exists('app/components/SessaoGateDialog.tsx')
     ? fs.readFileSync(path.join(root, 'app/components/SessaoGateDialog.tsx'), 'utf8')
     : ''

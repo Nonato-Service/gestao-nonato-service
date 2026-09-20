@@ -8112,25 +8112,28 @@ export default function Dashboard() {
                   : {},
             }
           })
-      if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
-        const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
-        const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
-        const dedupedVsRaw = (savedClientes as Cliente[]).some((raw) => {
-          const n = base.find((c) => c.id === raw?.id)
-          if (!n) return false
-          return (raw?.equipamentos?.length || 0) !== (n.equipamentos?.length || 0)
-        })
-        setClientes(normalized)
-        // Só regravar se houve alteração real (códigos ou dedupe) — nunca em todo o boot.
-        if (codigosAlterados || dedupedVsRaw) {
-          saveData('nonato-clientes', normalized, true, false).catch(() => {})
+      {
+        const base = normalizeClienteEquipamentos(
+          Array.isArray(savedClientes) ? (savedClientes as Cliente[]) : []
+        )
+        const { lista: localNorm } = garantirCodigosClientes(base)
+        let mergedClientes = localNorm
+        try {
+          const fromLoad = await loadData('nonato-clientes')
+          if (Array.isArray(fromLoad) && fromLoad.length > 0) {
+            mergedClientes = garantirCodigosClientes(
+              normalizeClienteEquipamentos(
+                mergeNonatoClientesDeferServerLocal(fromLoad, localNorm) as Cliente[]
+              )
+            ).lista
+          }
+        } catch {
+          /* manter cópia local */
         }
-      } else if (savedClientes && Array.isArray(savedClientes)) {
-        const base = normalizeClienteEquipamentos(savedClientes as Cliente[])
-        const { lista: normalized, alterou: codigosAlterados } = garantirCodigosClientes(base)
-        setClientes(normalized)
-        if (codigosAlterados && normalized.length > 0) {
-          saveData('nonato-clientes', normalized, false).catch(() => {})
+        setClientes(mergedClientes)
+        // PC com mais clientes do que o Railway: enviar a união. A filha passa a ver os mesmos.
+        if (mergedClientes.length > 0) {
+          await saveData('nonato-clientes', mergedClientes, true, true)
         }
       }
 
