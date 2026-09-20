@@ -1359,6 +1359,12 @@ try {
   const i18nUsers = JSON.parse(fs.readFileSync(path.join(root, 'app/i18n/messages/pt-BR.json'), 'utf8'))
   if (
     mergeUsers.includes('export function mergeNonatoUsers') &&
+    mergeUsers.includes('nunca repor o que ele retirou') &&
+    !mergeUsers.includes('enabledMenuCount') &&
+    fs.readFileSync(path.join(root, 'app/modules/sidebar/menuPermissions.ts'), 'utf8').includes(
+      'return Boolean(menuItems?.[buttonId])'
+    ) &&
+    nmaUsers.includes('return Boolean(loginUser.menuItems?.[buttonId])') &&
     nmaUsers.includes("saveData('nonato-users', updatedUsers, true, true)") &&
     nmaUsers.includes('adminUsersSaveOk') &&
     i18nUsers.adminUsersSaveOk &&

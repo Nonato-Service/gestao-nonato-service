@@ -190,7 +190,7 @@ export function AdminUserFormPanel({
                 {tr(
                   safeT,
                   'adminUsersPermissionsSubtitleMenu',
-                  'Ative cada módulo e escolha os botões que aparecem na barra lateral. Os desativados ficam ocultos.'
+                  'Você escolhe o que este utilizador vê na barra. Pode adicionar ou retirar quando quiser; a escolha fica gravada e não volta sozinha.'
                 )}
               </p>
             </div>

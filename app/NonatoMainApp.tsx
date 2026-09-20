@@ -294,10 +294,8 @@ import {
   canAccessSidebarModule,
   ensureUserMenuPolicy,
   getButtonIdForAction,
-  hasLinkedMenuAccess,
   hasStrictMenuPolicy,
   normalizeMenuItems,
-  normalizeMenuItemsWithLegacyFallback,
   syncLegacyPermissionsFromMenuItems,
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -23185,32 +23183,11 @@ export default function Dashboard() {
     if (isDemoMode && DEMO_HIDDEN_ACTIONS.has(action)) return false
     if (loginUser.isAdmin) return true
 
-    if (action === 'open-orcamentos-pecas-especiais') {
-      const pecasButtonId = 'orcamentos-pecas-especiais-default'
-      const avulsoButtonId = 'orcamentos-avulso-default'
-      if (hasStrictMenuPolicy(loginUser.menuItems, loginUser.menuItemsConfigured)) {
-        if (Boolean(loginUser.menuItems?.[pecasButtonId])) return true
-        if (Boolean(loginUser.menuItems?.[avulsoButtonId])) return true
-        if (hasLinkedMenuAccess(loginUser.menuItems, pecasButtonId)) return true
-      } else if (Boolean(loginUser.permissions?.cadastroServicos)) {
-        return true
-      }
-    }
-
     if (hasStrictMenuPolicy(loginUser.menuItems, loginUser.menuItemsConfigured)) {
       const buttonId = getButtonIdForAction(action)
       if (buttonId) {
-        return canAccessSidebarMenuItem(
-          loginUser.menuItems,
-          false,
-          buttonId,
-          action,
-          () => false,
-          loginUser.menuItemsConfigured
-        )
+        return Boolean(loginUser.menuItems?.[buttonId])
       }
-      const permKey = actionToPermission[action]
-      if (permKey) return Boolean(loginUser.permissions?.[permKey])
       return false
     }
 

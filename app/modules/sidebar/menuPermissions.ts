@@ -313,18 +313,10 @@ export function ensureUserMenuPolicy<
   if (user.isAdmin) return user
   const configured = inferMenuItemsConfigured(user.menuItems, user.menuItemsConfigured)
   if (!configured) return user
-  const menuItems =
-    user.permissions != null
-      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, user.permissions)
-      : user.menuItems && Object.keys(user.menuItems).length > 0
-        ? Object.fromEntries(
-            Object.entries(user.menuItems).map(([key, value]) => [key, Boolean(value)])
-          )
-        : normalizeMenuItems(user.menuItems)
   return {
     ...user,
     menuItemsConfigured: true,
-    menuItems,
+    menuItems: normalizeMenuItems(user.menuItems),
   }
 }
 
@@ -431,8 +423,7 @@ export function canAccessSidebarMenuItem(
   if (isAdmin) return true
 
   if (hasStrictMenuPolicy(menuItems, menuItemsConfigured)) {
-    if (Boolean(menuItems?.[buttonId])) return true
-    return hasLinkedMenuAccess(menuItems, buttonId)
+    return Boolean(menuItems?.[buttonId])
   }
 
   const def = getMenuItemDef(buttonId)

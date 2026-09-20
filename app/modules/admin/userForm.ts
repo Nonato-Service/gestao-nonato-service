@@ -3,7 +3,7 @@
 import type { UserFormState } from './userFormState'
 import {
   buildMenuItemsFromLegacyPermissions,
-  normalizeMenuItemsWithLegacyFallback,
+  normalizeMenuItems,
 } from '../sidebar/menuPermissions'
 
 export type { UserFormState }
@@ -84,7 +84,7 @@ export function userToFormState(user: UserForForm, passwordField?: string): User
     isAdmin: user.isAdmin ?? false,
     permissions,
     menuItems: user.menuItemsConfigured
-      ? normalizeMenuItemsWithLegacyFallback(user.menuItems, permissions)
+      ? normalizeMenuItems(user.menuItems)
       : buildMenuItemsFromLegacyPermissions(permissions, user.menuItems),
     menuItemsConfigured: Boolean(user.menuItemsConfigured),
   }

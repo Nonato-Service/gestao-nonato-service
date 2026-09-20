@@ -1,4 +1,4 @@
-/** União de utilizadores por id — o registo mais recente ganha as permissões. */
+/** União de utilizadores por id — a última gravação do Administrador ganha (pode adicionar ou retirar). */
 
 import type { User } from './userTipos'
 
@@ -12,11 +12,7 @@ function userUpdatedMs(user: User | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-function enabledMenuCount(user: User | undefined): number {
-  if (!user?.menuItems || typeof user.menuItems !== 'object') return 0
-  return Object.values(user.menuItems).filter(Boolean).length
-}
-
+/** A escolha mais recente do Administrador prevalece — nunca repor o que ele retirou. */
 export function pickRicherUser(a: User, b: User): User {
   const ta = userUpdatedMs(a)
   const tb = userUpdatedMs(b)
@@ -24,7 +20,7 @@ export function pickRicherUser(a: User, b: User): User {
   const ca = Boolean(a.menuItemsConfigured)
   const cb = Boolean(b.menuItemsConfigured)
   if (ca !== cb) return cb ? b : a
-  return enabledMenuCount(b) >= enabledMenuCount(a) ? b : a
+  return a
 }
 
 export function mergeNonatoUsers(serverList: unknown, localList: unknown): User[] {
