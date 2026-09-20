@@ -1354,6 +1354,25 @@ try {
 }
 
 try {
+  const nmaUsers = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
+  const mergeUsers = fs.readFileSync(path.join(root, 'app/modules/admin/userMerge.ts'), 'utf8')
+  const i18nUsers = JSON.parse(fs.readFileSync(path.join(root, 'app/i18n/messages/pt-BR.json'), 'utf8'))
+  if (
+    mergeUsers.includes('export function mergeNonatoUsers') &&
+    nmaUsers.includes("saveData('nonato-users', updatedUsers, true, true)") &&
+    nmaUsers.includes('adminUsersSaveOk') &&
+    i18nUsers.adminUsersSaveOk &&
+    i18nUsers.adminUsersSaveFail
+  ) {
+    ok('utilizadores: permissões gravadas no servidor e fundidas por data')
+  } else {
+    fail('utilizadores: falta gravação/fusão de permissões')
+  }
+} catch (e) {
+  fail(`utilizadores permissões: ${e && e.message ? e.message : e}`)
+}
+
+try {
   const gateSrc = exists('app/components/SessaoGateDialog.tsx')
     ? fs.readFileSync(path.join(root, 'app/components/SessaoGateDialog.tsx'), 'utf8')
     : ''
@@ -7905,7 +7924,8 @@ try {
   if (
     shrinkPol.includes('export function mergeProtectedArrayById') &&
     shrinkPol.includes("'nonato-clientes'") &&
-    shrinkPol.includes("'nonato-pagamentos-registos'")
+    shrinkPol.includes("'nonato-pagamentos-registos'") &&
+    shrinkPol.includes("'nonato-users'")
   ) {
     ok('cadastro: merge por id em shrink (clientes)')
   } else {

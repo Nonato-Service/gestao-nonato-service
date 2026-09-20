@@ -4,6 +4,7 @@ export type { User, UserPermissions } from './userTipos'
 
 export type { UserFromFormMenuOpts, CreateUserFromFormOpts } from './userFromForm'
 export { createUserFromForm, updateUserFromForm } from './userFromForm'
+export { mergeNonatoUsers, pickRicherUser } from './userMerge'
 
 export type { UserFormState } from './userFormState'
 export type { UserForForm } from './userForm'

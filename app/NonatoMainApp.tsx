@@ -384,7 +384,6 @@ import type { User, UserFormState, PasswordEntry, PasswordFormState, LogoRelator
 import {
   createEmptyUserForm,
   userToFormState,
-  updateUserFromForm,
   emptyPasswordForm,
   isPasswordFormValid,
   passwordFormMissingField,
@@ -470,7 +469,7 @@ import {
 } from './utils/backupRestore'
 import { getZipDownloadHistory, pushZipDownloadHistory } from './lib/adminBackupRegistry'
 import { generatePassword, createPasswordFromForm } from './lib/adminPasswords'
-import { createUserFromForm } from './lib/adminUsers'
+import { createUserFromForm, updateUserFromForm } from './lib/adminUsers'
 import { createClienteFromForm } from './lib/clienteFromForm'
 import { createClientePrioritarioFromForm } from './lib/clientePrioritarioFromForm'
 import { createRelatorioEquipamentoFromForm } from './lib/relatorioEquipamentoFromForm'
@@ -11053,7 +11052,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!userForm.name || !userForm.email || !userForm.role) {
       alert(t.fillAllFields)
       return
@@ -11084,7 +11083,7 @@ export default function Dashboard() {
           : u
       )
       setUsers(updatedUsers)
-      saveData('nonato-users', updatedUsers)
+      const saved = await saveData('nonato-users', updatedUsers, true, true)
       setEditingUser(updatedUser)
       setUserForm(userToFormState(updatedUser, ''))
       if (loginUser?.id === updatedUser.id) {
@@ -11098,6 +11097,17 @@ export default function Dashboard() {
           })
         )
       }
+      if (saved) {
+        alert(
+          safeT?.adminUsersSaveOk ||
+            'Utilizador gravado no servidor. No outro aparelho: actualizar a PWA e voltar a entrar.'
+        )
+      } else {
+        alert(
+          safeT?.adminUsersSaveFail ||
+            'Não gravou no servidor. As opções ficam só neste aparelho até haver internet.'
+        )
+      }
     } else {
       const newUser: User = ensureUserMenuPolicy(
         createUserFromForm(userForm, {
@@ -11108,7 +11118,7 @@ export default function Dashboard() {
       )
       const updatedUsers = [...users, newUser]
       setUsers(updatedUsers)
-      saveData('nonato-users', updatedUsers)
+      const saved = await saveData('nonato-users', updatedUsers, true, true)
 
       // Salvar senha automaticamente no gestor de senhas
       if (userForm.password) {
@@ -11122,6 +11132,17 @@ export default function Dashboard() {
       }
       setEditingUser(newUser)
       setUserForm(userToFormState(newUser, ''))
+      if (saved) {
+        alert(
+          safeT?.adminUsersSaveOk ||
+            'Utilizador gravado no servidor. No outro aparelho: actualizar a PWA e voltar a entrar.'
+        )
+      } else {
+        alert(
+          safeT?.adminUsersSaveFail ||
+            'Não gravou no servidor. As opções ficam só neste aparelho até haver internet.'
+        )
+      }
     }
   }
 

@@ -39,6 +39,7 @@ import {
   pecasBibliotecaArraysDiffer,
 } from '../lib/mergePecasBiblioteca'
 import { mergeNonatoClientesDeferServerLocal } from '../lib/clienteMergeUtils'
+import { mergeNonatoUsers } from '../modules/admin/userMerge'
 import {
   mergeSidebarButtonsDeferLocal,
   repairSidebarButtonsFromCatalog,
@@ -747,6 +748,7 @@ const KEYS_AUTO_AWAIT_SERVER = new Set([
   'nonato-comprovantes-despesas',
   'nonato-agendamentos',
   'nonato-ordens-servico',
+  'nonato-users',
 ])
 const SYNC_QUEUE_IDB_KEY = 'nonato-sync-queue-mirror'
 const SIDEBAR_BUTTONS_KEY = 'nonato-sidebar-buttons'
@@ -3192,7 +3194,9 @@ export async function saveData(
       }
     }
     if (
-      (key === 'nonato-pagamentos-empresas' || key === 'nonato-pagamentos-registos') &&
+      (key === 'nonato-pagamentos-empresas' ||
+        key === 'nonato-pagamentos-registos' ||
+        key === 'nonato-users') &&
       Array.isArray(value)
     ) {
       try {
@@ -3313,7 +3317,8 @@ async function readLocalValueForLoad(
       key === RELATORIOS_ESPECIAIS_STORAGE_KEY ||
       key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY ||
       key === 'nonato-pagamentos-empresas' ||
-      key === 'nonato-pagamentos-registos') &&
+      key === 'nonato-pagamentos-registos' ||
+      key === 'nonato-users') &&
     parseJson
   ) {
     return readArrayBestOfLsIdb()
@@ -3517,6 +3522,20 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           Array.isArray(serverData)
         ) {
           const merged = mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)
+          writeLocalStorageValue(key, merged)
+          try {
+            await saveKv(key, merged)
+          } catch {
+            /* ignorar */
+          }
+          if (JSON.stringify(merged) !== JSON.stringify(serverData)) {
+            scheduleServerMigrationPush(key, merged)
+          }
+          return merged
+        }
+
+        if (key === 'nonato-users' && parseJson && Array.isArray(serverData)) {
+          const merged = mergeNonatoUsers(serverData, localSnapshot.parsed)
           writeLocalStorageValue(key, merged)
           try {
             await saveKv(key, merged)

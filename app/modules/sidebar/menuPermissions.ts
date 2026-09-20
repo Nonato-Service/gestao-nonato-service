@@ -32,7 +32,6 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Escolha quais opções aparecem dentro de Gestão Técnica.',
     icon: '🔧',
     items: [
-      { buttonId: 'gestores-default', action: 'open-gestores', labelKey: 'gestoresTitle', fallbackLabel: 'Gestores', legacyKey: 'gestores' },
       { buttonId: 'agenda-default', action: 'open-agenda', labelKey: 'agendaTitle', fallbackLabel: 'Agenda', legacyKey: 'agenda' },
       { buttonId: 'diario-pedidos-dia-default', action: 'open-diario-pedidos-dia', labelKey: 'diarioPedidosTitle', fallbackLabel: 'Diário de pedidos', legacyKey: 'agenda' },
       { buttonId: 'estado-visual-tecnico-default', action: 'open-estado-visual-tecnico', labelKey: 'estadoVisualTecnico', fallbackLabel: 'Estado visual do técnico', legacyKey: 'gestores' },
@@ -48,6 +47,7 @@ export const SIDEBAR_MENU_MODULES: SidebarMenuModuleDef[] = [
     fallbackDesc: 'Itens visíveis em Clientes e Fornecedores.',
     icon: '🤝',
     items: [
+      { buttonId: 'gestores-default', action: 'open-gestores', labelKey: 'gestoresTitle', fallbackLabel: 'Gestores / Técnicos', legacyKey: 'gestores' },
       { buttonId: 'clientes-default', action: 'open-clientes', labelKey: 'clientesTitle', fallbackLabel: 'Clientes', legacyKey: 'clientes' },
       { buttonId: 'fornecedores-default', action: 'open-fornecedores', labelKey: 'fornecedoresTitle', fallbackLabel: 'Fornecedores', legacyKey: 'fornecedores' },
     ],

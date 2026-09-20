@@ -32,6 +32,7 @@ export function createUserFromForm(
     permissions: opts.permissions ?? form.permissions,
     menuItems: opts.menuItems,
     menuItemsConfigured: opts.menuItemsConfigured,
+    updatedAt: new Date(opts.nowMs).toISOString(),
   }
 }
 
@@ -39,7 +40,7 @@ export function createUserFromForm(
 export function updateUserFromForm(
   existing: User,
   form: UserFormState,
-  opts: Omit<UserFromFormMenuOpts, 'id'>
+  opts: Omit<UserFromFormMenuOpts, 'id'> & { nowMs: number }
 ): User {
   return {
     ...existing,
@@ -53,5 +54,6 @@ export function updateUserFromForm(
     permissions: opts.permissions ?? form.permissions,
     menuItems: opts.menuItems,
     menuItemsConfigured: opts.menuItemsConfigured,
+    updatedAt: new Date(opts.nowMs).toISOString(),
   }
 }

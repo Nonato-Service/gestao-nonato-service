@@ -29,4 +29,6 @@ export type User = {
   menuItems?: Record<string, boolean>
   /** Quando true, só aparecem itens explicitamente activos em menuItems. */
   menuItemsConfigured?: boolean
+  /** ISO — para o servidor não ficar com permissões mais antigas. */
+  updatedAt?: string
 }
