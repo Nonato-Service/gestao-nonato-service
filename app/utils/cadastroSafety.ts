@@ -9,6 +9,7 @@ import {
   serverCadastroBundleIsEmpty,
 } from '../lib/criticalCadastroKeys'
 import { mergePecasBibliotecaArrays } from '../lib/mergePecasBiblioteca'
+import { mergeProtectedArrayById } from '../lib/cadastroShrinkPolicy'
 import { getKv, saveKv } from './manuaisIndexedDb'
 
 const BACKUP_KEY = 'nonato-cadastro-safety-backup'
@@ -38,6 +39,49 @@ function countPecasInRaw(raw: string | null | undefined): number {
     return Array.isArray(parsed) ? parsed.length : 0
   } catch {
     return 0
+  }
+}
+
+function countArrayPayload(value: unknown): number {
+  if (Array.isArray(value)) return value.length
+  if (typeof value === 'string') return countPecasInRaw(value)
+  return 0
+}
+
+function parseJsonArray(raw: string | null | undefined): unknown[] | null {
+  if (!raw?.trim()) return null
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+/** Nunca substituir um backup de lista maior por uma cópia menor. */
+function preferRicherCadastroRaw(current: string | undefined, incoming: string): string {
+  if (!current || !localStorageKeyHasMeaningfulCadastro(current)) return incoming
+  if (!localStorageKeyHasMeaningfulCadastro(incoming)) return current
+  const oldArr = parseJsonArray(current)
+  const newArr = parseJsonArray(incoming)
+  if (oldArr && newArr) {
+    if (newArr.length > oldArr.length) return incoming
+    if (oldArr.length > newArr.length) return current
+    return incoming.length >= current.length ? incoming : current
+  }
+  return incoming.length >= current.length ? incoming : current
+}
+
+function mergeArrayRawIfRicher(currentRaw: string | null | undefined, richerRaw: string): string | null {
+  const current = parseJsonArray(currentRaw)
+  const richer = parseJsonArray(richerRaw)
+  if (!richer || richer.length === 0) return null
+  if (!current || current.length === 0) return richerRaw
+  if (richer.length <= current.length) return null
+  try {
+    return JSON.stringify(mergeProtectedArrayById(current, richer))
+  } catch {
+    return richerRaw
   }
 }
 
@@ -148,32 +192,48 @@ async function readArrayBestOfLsIdbRaw(key: string): Promise<string | null> {
 /** Guarda cópia de segurança no IndexedDB antes de qualquer arranque / wipe / deploy. */
 export async function backupCriticalCadastroToIdb(): Promise<void> {
   if (typeof window === 'undefined') return
-  const backup: Record<string, string> = {}
+  let previous: Record<string, string> = {}
+  try {
+    const existing = (await getKv(BACKUP_KEY)) as Record<string, string> | null
+    if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
+      previous = existing
+    }
+  } catch {
+    /* ignorar */
+  }
+  const backup: Record<string, string> = { ...previous }
   for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     if (key === PECAS_BIBLIOTECA_KEY) {
       const raw = await readPecasBibliotecaRawForBackup()
-      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) {
+        backup[key] = preferRicherCadastroRaw(backup[key], raw)
+      }
       continue
     }
     if (key === CLIENTES_KEY) {
       const raw = await readClientesRawForBackup()
-      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) {
+        backup[key] = preferRicherCadastroRaw(backup[key], raw)
+      }
       continue
     }
     if (key === RELATORIOS_ESPECIAIS_KEY) {
       const raw = await readArrayBestOfLsIdbRaw(key)
-      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) backup[key] = raw
+      if (raw && localStorageKeyHasMeaningfulCadastro(raw)) {
+        backup[key] = preferRicherCadastroRaw(backup[key], raw)
+      }
       continue
     }
     const raw = localStorage.getItem(key)
     if (localStorageKeyHasMeaningfulCadastro(raw)) {
-      backup[key] = raw!
+      backup[key] = preferRicherCadastroRaw(backup[key], raw!)
       continue
     }
     try {
       const fromIdb = await getKv(key)
       if (serverKeyHasMeaningfulData(fromIdb)) {
-        backup[key] = typeof fromIdb === 'string' ? fromIdb : JSON.stringify(fromIdb)
+        const idbRaw = typeof fromIdb === 'string' ? fromIdb : JSON.stringify(fromIdb)
+        backup[key] = preferRicherCadastroRaw(backup[key], idbRaw)
       }
     } catch {
       /* ignorar */
@@ -204,14 +264,22 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
   let restored = 0
   for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
     const current = localStorage.getItem(key)
-    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(current)) {
-      /* cópia parcial — não bloquear reparo posterior */
-    } else if (localStorageKeyHasMeaningfulCadastro(current)) {
-      continue
-    }
     const fromBackup = backup[key]
     if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
     if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(current)) {
+      /* cópia parcial — não bloquear reparo posterior */
+    } else if (localStorageKeyHasMeaningfulCadastro(current)) {
+      const richer = mergeArrayRawIfRicher(current, fromBackup)
+      if (!richer) continue
+      try {
+        localStorage.setItem(key, richer)
+        restored++
+      } catch {
+        /* ignorar quota */
+      }
+      continue
+    }
     try {
       localStorage.setItem(key, fromBackup)
       restored++
@@ -290,15 +358,23 @@ export async function mergeSafetyBackupIntoServerData(
   let restored = 0
   const onlyIfBundleEmpty = serverCadastroBundleIsEmpty(serverData as Record<string, unknown>)
   for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
-    if (serverKeyHasMeaningfulData(merged[key])) continue
-    /** Chaves críticas: sempre tentar repor se vazias. Outras do backup: só se o bundle estiver vazio. */
+    const fromBackup = backup[key]
+    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
+    if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
+    /** Chaves críticas: sempre tentar repor se vazias ou se o backup for maior. */
     const isCritical =
       (NONATO_CRITICAL_CADASTRO_KEYS as readonly string[]).includes(key) ||
       key === 'nonato-fechamentos-relatorios'
     if (!isCritical && !onlyIfBundleEmpty) continue
-    const fromBackup = backup[key]
-    if (key === PECAS_BIBLIOTECA_KEY && isPecasBibliotecaBackupSuspeito(fromBackup)) continue
-    if (!localStorageKeyHasMeaningfulCadastro(fromBackup)) continue
+    if (serverKeyHasMeaningfulData(merged[key])) {
+      const serverArr = Array.isArray(merged[key]) ? (merged[key] as unknown[]) : null
+      const backupArr = parseJsonArray(fromBackup)
+      if (serverArr && backupArr && backupArr.length > serverArr.length) {
+        merged[key] = mergeProtectedArrayById(serverArr, backupArr)
+        restored++
+      }
+      continue
+    }
     try {
       merged[key] = JSON.parse(fromBackup)
       restored++
@@ -334,31 +410,42 @@ export async function recoverCriticalCadastroGapsFromIdbAndSnapshot(): Promise<n
 
   let restored = 0
   for (const key of NONATO_BACKUP_CADASTRO_KEYS) {
-    if (localStorageKeyHasMeaningfulCadastro(localStorage.getItem(key))) continue
+    const currentRaw = localStorage.getItem(key)
+    const currentLen = countArrayPayload(currentRaw)
 
-    let payload: unknown = null
+    const candidates: unknown[] = []
     const snapVal = snapshot?.[key]
-    if (serverKeyHasMeaningfulData(snapVal)) {
-      payload = snapVal
-    } else {
-      const fromBackup = backup?.[key]
-      if (localStorageKeyHasMeaningfulCadastro(fromBackup)) {
-        try {
-          payload = JSON.parse(fromBackup!)
-        } catch {
-          payload = fromBackup
-        }
-      } else {
-        try {
-          const fromIdb = await getKv(key)
-          if (serverKeyHasMeaningfulData(fromIdb)) payload = fromIdb
-        } catch {
-          /* ignorar */
-        }
+    if (serverKeyHasMeaningfulData(snapVal)) candidates.push(snapVal)
+    const fromBackup = backup?.[key]
+    if (localStorageKeyHasMeaningfulCadastro(fromBackup)) {
+      try {
+        candidates.push(JSON.parse(fromBackup!))
+      } catch {
+        candidates.push(fromBackup)
       }
     }
+    try {
+      const fromIdb = await getKv(key)
+      if (serverKeyHasMeaningfulData(fromIdb)) candidates.push(fromIdb)
+    } catch {
+      /* ignorar */
+    }
 
+    let payload: unknown = null
+    let bestLen = 0
+    for (const c of candidates) {
+      const n = countArrayPayload(c)
+      if (!payload || n > bestLen) {
+        payload = c
+        bestLen = n
+      }
+    }
     if (!serverKeyHasMeaningfulData(payload)) continue
+    if (currentLen > 0 && bestLen <= currentLen) continue
+    const currentArr = parseJsonArray(currentRaw)
+    if (currentArr && Array.isArray(payload) && bestLen > currentLen) {
+      payload = mergeProtectedArrayById(currentArr, payload)
+    }
     try {
       localStorage.setItem(key, JSON.stringify(payload))
       restored++

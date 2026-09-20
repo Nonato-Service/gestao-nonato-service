@@ -41,6 +41,8 @@ export const MERGE_ON_SHRINK_KEYS = new Set<string>([
   'nonato-faturas-pecas',
   'nonato-ordens-servico',
   'nonato-comprovantes-despesas',
+  'nonato-pagamentos-empresas',
+  'nonato-pagamentos-registos',
 ])
 
 export function incomingHasNewIds(existing: unknown[], incoming: unknown[]): boolean {

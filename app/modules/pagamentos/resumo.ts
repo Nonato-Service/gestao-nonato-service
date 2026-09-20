@@ -66,6 +66,62 @@ export function pagamentosDoMes(list: PagamentoSaida[], mes: string): PagamentoS
   return list.filter((p) => mesKeyPagamento(p.dataPagamento) === mes)
 }
 
+export function mergeEmpresasRecebedorasPorId(
+  local: EmpresaRecebedora[],
+  incoming: EmpresaRecebedora[]
+): EmpresaRecebedora[] {
+  const map = new Map<string, EmpresaRecebedora>()
+  for (const e of incoming) {
+    if (e && e.id) map.set(e.id, e)
+  }
+  for (const e of local) {
+    if (!e || !e.id) continue
+    const other = map.get(e.id)
+    if (!other || String(e.atualizadoEm || '') >= String(other.atualizadoEm || '')) {
+      map.set(e.id, e)
+    }
+  }
+  return [...map.values()]
+}
+
+export function normalizarNomeInstituicaoPagamento(nome: string): string {
+  return String(nome || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+export function pagamentosDaEmpresa(list: PagamentoSaida[], empresa: EmpresaRecebedora): PagamentoSaida[] {
+  const id = String(empresa?.id || '').trim()
+  const nome = normalizarNomeInstituicaoPagamento(empresa?.nome || '')
+  return (Array.isArray(list) ? list : []).filter((p) => {
+    if (id && String(p.empresaId || '').trim() === id) return true
+    return Boolean(nome) && normalizarNomeInstituicaoPagamento(p.empresaNome) === nome
+  })
+}
+
+export function religarPagamentosOrfaos(
+  list: PagamentoSaida[],
+  empresas: EmpresaRecebedora[]
+): PagamentoSaida[] {
+  const vis = Array.isArray(empresas) ? empresas : []
+  const byId = new Set(vis.map((e) => String(e.id || '').trim()).filter(Boolean))
+  const byNome = new Map<string, EmpresaRecebedora>()
+  for (const e of vis) {
+    const n = normalizarNomeInstituicaoPagamento(e.nome)
+    if (n && !byNome.has(n)) byNome.set(n, e)
+  }
+  return (Array.isArray(list) ? list : []).map((p) => {
+    const id = String(p.empresaId || '').trim()
+    if (id && byId.has(id)) return p
+    const hit = byNome.get(normalizarNomeInstituicaoPagamento(p.empresaNome))
+    if (!hit) return p
+    return { ...p, empresaId: hit.id, empresaNome: hit.nome }
+  })
+}
+
 export function mergePagamentosPorId(local: PagamentoSaida[], incoming: PagamentoSaida[]): PagamentoSaida[] {
   const map = new Map<string, PagamentoSaida>()
   for (const p of incoming) {

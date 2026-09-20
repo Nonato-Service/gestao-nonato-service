@@ -22,6 +22,9 @@ import {
   buildPagamentosPdfHtml,
   formatarDataPagamentoVisivel,
   mergePagamentosPorId,
+  mergeEmpresasRecebedorasPorId,
+  pagamentosDaEmpresa,
+  religarPagamentosOrfaos,
   mesesDisponiveisPagamentos,
   ordenarEmpresasAlfabeto,
   normalizePagamentoSaida,
@@ -127,7 +130,10 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
       ])
       if (cancelled) return
       loadedRef.current = true
-      const loaded = asArray<EmpresaRecebedora>(empRaw)
+      const loaded = mergeEmpresasRecebedorasPorId(
+        empresasRef.current,
+        asArray<EmpresaRecebedora>(empRaw)
+      )
       const nomesOficiais = Object.fromEntries(
         PAGAMENTOS_EMPRESAS_OFICIAIS.map((d) => [d.id, tr(safeT, d.nomeKey, d.nomeFallback)])
       ) as Record<(typeof PAGAMENTOS_EMPRESAS_OFICIAIS)[number]['id'], string>
@@ -138,7 +144,10 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
         await saveData(PAGAMENTOS_EMPRESAS_STORAGE_KEY, ensured.list)
       }
       const incoming = asListaPagamentos(pagRaw).map(normalizePagamentoSaida)
-      const merged = mergePagamentosPorId(registosRef.current, incoming)
+      const merged = religarPagamentosOrfaos(
+        mergePagamentosPorId(registosRef.current, incoming),
+        ensured.list
+      )
       registosRef.current = merged
       setRegistos(merged)
     })()
@@ -346,8 +355,8 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
 
   const instituicao = empresas.find((e) => e.id === instituicaoId) || null
   const daInstituicao = useMemo(
-    () => registos.filter((p) => p.empresaId === instituicaoId),
-    [registos, instituicaoId]
+    () => (instituicao ? pagamentosDaEmpresa(registos, instituicao) : []),
+    [registos, instituicao]
   )
   const mesesOpcoes = useMemo(() => mesesDisponiveisPagamentos(daInstituicao), [daInstituicao])
   const visiveisMes = useMemo(
@@ -653,7 +662,7 @@ export function PagamentosContent({ saveData, loadData, safeT, localeLang }: Pro
           <h2 className="ns-pagamentos-section-title">{tr(safeT, 'pagamentosInstituicoesLista', 'Instituições')}</h2>
           <div className="ns-pagamentos-inst-grid">
             {empresasOrdenadas.map((e) => {
-              const itens = registos.filter((p) => p.empresaId === e.id)
+              const itens = pagamentosDaEmpresa(registos, e)
               const aPagarItens = itens.filter((p) => p.status !== 'pago')
               const pagosItens = itens.filter((p) => p.status === 'pago')
               const totalAPagar = somarValorPagamentos(aPagarItens, false)

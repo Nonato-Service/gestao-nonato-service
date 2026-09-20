@@ -1267,6 +1267,9 @@ try {
     pagSrc.includes('pagamentosVisualizar') &&
     pagSrc.includes('formatarDataPagamentoVisivel') &&
     pagSrc.includes('mergePagamentosPorId') &&
+    pagSrc.includes('religarPagamentosOrfaos') &&
+    pagSrc.includes('pagamentosDaEmpresa') &&
+    pagSrc.includes('mergeEmpresasRecebedorasPorId') &&
     pagSrc.includes('registosRef') &&
     pagSrc.includes('ordenarEmpresasAlfabeto') &&
     pagSrc.includes("vista === 'editar'") &&
@@ -1282,6 +1285,8 @@ try {
     !fs.readFileSync(path.join(root, 'app/modules/pagamentos/pdfHtml.ts'), 'utf8').includes('Date.now') &&
     pagFrom.includes('marcarEmpresaRecebedoraApagada') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('mergePagamentosPorId') &&
+    fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('religarPagamentosOrfaos') &&
+    fs.readFileSync(path.join(root, 'app/lib/cadastroShrinkPolicy.ts'), 'utf8').includes("'nonato-pagamentos-registos'") &&
     pagFrom.includes('pagamentoPodeSerPago') &&
     fs.readFileSync(path.join(root, 'app/modules/pagamentos/resumo.ts'), 'utf8').includes('formatarDataPagamentoVisivel') &&
     pagFrom.includes('erroValidacaoPagamentoSaida') &&
@@ -1329,6 +1334,23 @@ try {
   }
 } catch (e) {
   fail(`PAGAMENTOS Apagar CSS: ${e && e.message ? e.message : e}`)
+}
+
+try {
+  const safetyPag = fs.readFileSync(path.join(root, 'app/utils/cadastroSafety.ts'), 'utf8')
+  const storagePag = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    safetyPag.includes('preferRicherCadastroRaw') &&
+    safetyPag.includes('mergeArrayRawIfRicher') &&
+    storagePag.includes("key === 'nonato-pagamentos-registos'") &&
+    storagePag.includes('mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)')
+  ) {
+    ok('PAGAMENTOS: backup/load nunca encolhe cadastro')
+  } else {
+    fail('PAGAMENTOS: falta fusão/backup que impede perda de valores')
+  }
+} catch (e) {
+  fail(`PAGAMENTOS proteção cadastro: ${e && e.message ? e.message : e}`)
 }
 
 try {
@@ -7882,7 +7904,8 @@ try {
   const shrinkPol = fs.readFileSync(path.join(root, 'app/lib/cadastroShrinkPolicy.ts'), 'utf8')
   if (
     shrinkPol.includes('export function mergeProtectedArrayById') &&
-    shrinkPol.includes("'nonato-clientes'")
+    shrinkPol.includes("'nonato-clientes'") &&
+    shrinkPol.includes("'nonato-pagamentos-registos'")
   ) {
     ok('cadastro: merge por id em shrink (clientes)')
   } else {

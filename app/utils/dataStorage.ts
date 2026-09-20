@@ -3191,6 +3191,16 @@ export async function saveData(
         console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
       }
     }
+    if (
+      (key === 'nonato-pagamentos-empresas' || key === 'nonato-pagamentos-registos') &&
+      Array.isArray(value)
+    ) {
+      try {
+        await saveKv(key, value)
+      } catch (idbErr) {
+        console.warn(`[saveData] espelho IndexedDB falhou para ${key}`, idbErr)
+      }
+    }
     if (key === RELATORIOS_SERVICO_KEY && Array.isArray(value)) {
       try {
         await saveKv(key, value)
@@ -3301,7 +3311,9 @@ async function readLocalValueForLoad(
       key === RELATORIOS_SERVICO_KEY ||
       key === CLIENTES_KEY ||
       key === RELATORIOS_ESPECIAIS_STORAGE_KEY ||
-      key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY) &&
+      key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY ||
+      key === 'nonato-pagamentos-empresas' ||
+      key === 'nonato-pagamentos-registos') &&
     parseJson
   ) {
     return readArrayBestOfLsIdb()
@@ -3487,6 +3499,24 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           Array.isArray(localSnapshot.parsed)
         ) {
           const merged = mergeNonatoClientesDeferServerLocal(serverData, localSnapshot.parsed)
+          writeLocalStorageValue(key, merged)
+          try {
+            await saveKv(key, merged)
+          } catch {
+            /* ignorar */
+          }
+          if (JSON.stringify(merged) !== JSON.stringify(serverData)) {
+            scheduleServerMigrationPush(key, merged)
+          }
+          return merged
+        }
+
+        if (
+          (key === 'nonato-pagamentos-empresas' || key === 'nonato-pagamentos-registos') &&
+          parseJson &&
+          Array.isArray(serverData)
+        ) {
+          const merged = mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)
           writeLocalStorageValue(key, merged)
           try {
             await saveKv(key, merged)
