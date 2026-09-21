@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v519'
+const CACHE_NAME = 'nonato-pwa-v520'
 
 const PRECACHE_ASSETS = [
   '/',
@@ -45,6 +45,18 @@ self.addEventListener('activate', (event) => {
         return Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
       })
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then((list) =>
+        Promise.all(
+          list.map((c) => {
+            try {
+              return c.navigate(c.url)
+            } catch {
+              return Promise.resolve()
+            }
+          })
+        )
+      )
   )
 })
 

@@ -3276,6 +3276,29 @@ export async function saveData(
   return serverOk
 }
 
+/** Junta o cadastro deste aparelho com o servidor e envia a união (clientes já no boot). */
+export async function pushLocalCadastroUnionToServer(): Promise<void> {
+  if (typeof window === 'undefined') return
+  const keys = [
+    'nonato-pagamentos-empresas',
+    'nonato-pagamentos-registos',
+    'nonato-users',
+    'nonato-fornecedores',
+    'nonato-equipamentos',
+    'nonato-gestores',
+    'nonato-tecnicos',
+  ] as const
+  for (const key of keys) {
+    try {
+      const merged = await loadData(key)
+      if (!Array.isArray(merged) || merged.length === 0) continue
+      await saveData(key, merged, true, true)
+    } catch {
+      /* próxima chave */
+    }
+  }
+}
+
 async function readLocalValueForLoad(
   key: string,
   parseJson: boolean

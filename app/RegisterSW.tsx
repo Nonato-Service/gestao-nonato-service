@@ -47,7 +47,22 @@ export function RegisterSW() {
       }
     }
 
+    const applyWaitingWorker = () => {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          if (!reg.waiting) return
+          userConfirmedUpdate.current = true
+          setUpdateReady(false)
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+          setTimeout(() => {
+            if (!reloadHandled.current) window.location.reload()
+          }, 800)
+        })
+        .catch(() => {})
+    }
+
     const markUpdateAvailable = () => {
+      applyWaitingWorker()
       if (isDismissedQuietly()) return
       setUpdateReady(true)
     }
@@ -55,13 +70,10 @@ export function RegisterSW() {
     const register = () => {
       navigator.serviceWorker
         .register(`/sw.js?v=${SW_VERSION}`, {
-          // iPad/tablet Safari tende a cachear o sw.js — isto força ir buscar versão nova
           updateViaCache: 'none',
         })
         .then((reg) => {
           setRegistration(reg)
-
-          // Não recarregar automaticamente — o utilizador escolhe «Atualizar» no banner.
           if (reg.waiting && navigator.serviceWorker.controller) {
             markUpdateAvailable()
             return
@@ -82,7 +94,6 @@ export function RegisterSW() {
     register()
 
     const onControllerChange = () => {
-      if (!userConfirmedUpdate.current) return
       if (reloadHandled.current) return
       reloadHandled.current = true
       window.location.reload()
@@ -91,7 +102,7 @@ export function RegisterSW() {
 
     const checkForUpdates = () => {
       const now = Date.now()
-      if (now - lastUpdateCheckAt.current < 5 * 60_000) return
+      if (now - lastUpdateCheckAt.current < 20_000) return
       if (!navigator.onLine) return
       lastUpdateCheckAt.current = now
       navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
@@ -103,36 +114,29 @@ export function RegisterSW() {
     window.addEventListener('keydown', markUserInput, true)
     window.addEventListener('pointerdown', markUserInput, true)
 
-    const applyWaitingWorker = () => {
-      navigator.serviceWorker.ready
-        .then((reg) => {
-          if (!reg.waiting) return
-          userConfirmedUpdate.current = true
-          setUpdateReady(false)
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' })
-        })
-        .catch(() => {})
-    }
-
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkForUpdates()
+        applyWaitingWorker()
         return
       }
-      // Sem banner: aplica a versão nova ao sair do ecrã, se não estiver a escrever.
-      if (Date.now() - lastInputAt.current < 120_000) return
       applyWaitingWorker()
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
 
-    const onPageShow = () => checkForUpdates()
+    const onPageShow = () => {
+      checkForUpdates()
+      applyWaitingWorker()
+    }
     window.addEventListener('pageshow', onPageShow)
     window.addEventListener('focus', onPageShow)
+    const pollTid = window.setInterval(checkForUpdates, 20_000)
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
     const teardownFlush = setupFlushSyncOnPageHide()
 
     return () => {
+      window.clearInterval(pollTid)
       document.removeEventListener('visibilitychange', onVisibilityChange)
       window.removeEventListener('pageshow', onPageShow)
       window.removeEventListener('focus', onPageShow)
@@ -155,17 +159,6 @@ export function RegisterSW() {
       return
     }
     window.location.reload()
-  }
-
-  const handleDismiss = () => {
-    try {
-      sessionStorage.setItem(SW_DISMISSED_SESSION_KEY, String(SW_VERSION))
-      localStorage.setItem(SW_DISMISSED_VERSION_LS, String(SW_VERSION))
-      localStorage.setItem(SW_DISMISSED_UNTIL_LS, String(Date.now() + 10 * 60 * 1000))
-    } catch {
-      /* ignorar */
-    }
-    setUpdateReady(false)
   }
 
   if (!updateReady) return null
@@ -201,17 +194,6 @@ export function RegisterSW() {
         )}
       </span>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="pwa-update-banner__btn pwa-update-banner__btn--later"
-          onClick={handleDismiss}
-          title={getStoredUiString(
-            'pwaUpdateBtnLaterTitle',
-            'Continuar com a versão actual e actualizar mais tarde'
-          )}
-        >
-          {getStoredUiString('pwaUpdateBtnLater', 'DEPOIS')}
-        </button>
         <button
           type="button"
           className="pwa-update-banner__btn pwa-update-banner__btn--update"

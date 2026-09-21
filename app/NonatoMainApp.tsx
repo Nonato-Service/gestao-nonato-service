@@ -46,6 +46,7 @@ import {
   pullServerUpdatesIfNewer,
   applySilentServerSync,
   getPendingSyncCount,
+  pushLocalCadastroUnionToServer,
 } from './utils/dataStorage'
 import { confirmBeforeLeaveUnsaved, hasUnsavedChanges, setUnsavedFormBaseline } from './utils/unsavedChangesGuard'
 import { useUnsavedFormGuard } from './hooks/useUnsavedFormGuard'
@@ -8149,6 +8150,7 @@ export default function Dashboard() {
         if (mergedClientes.length > 0 && mergedClientes.length >= localNorm.length) {
           await saveData('nonato-clientes', mergedClientes, true, true)
         }
+        await pushLocalCadastroUnionToServer()
       }
 
       // Carregar cliente prioritário

@@ -1384,7 +1384,8 @@ try {
     nmaCli.includes("await loadData('nonato-clientes')") &&
     nmaCli.includes("await saveData('nonato-clientes', mergedClientes, true, true)") &&
     nmaCli.includes('mergeNonatoClientesDeferServerLocal(fromLoad, localNorm)') &&
-    nmaCli.includes('mergedClientes.length >= localNorm.length')
+    nmaCli.includes('mergedClientes.length >= localNorm.length') &&
+    nmaCli.includes('await pushLocalCadastroUnionToServer()')
   ) {
     ok('clientes: arranque funde e envia a lista maior ao servidor')
   } else {
@@ -7994,20 +7995,22 @@ try {
   const swReg = fs.readFileSync(path.join(root, 'app/RegisterSW.tsx'), 'utf8')
   if (
     swReg.includes('applyWaitingWorker') &&
-    swReg.includes('SW_DISMISSED_UNTIL_LS') &&
-    swReg.includes('SW_DISMISSED_VERSION_LS') &&
-    swReg.includes('10 * 60 * 1000') &&
-    !swReg.includes('24 * 60 * 60 * 1000')
+    swReg.includes('window.setInterval(checkForUpdates, 20_000)') &&
+    !swReg.includes('pwaUpdateBtnLater') &&
+    swReg.includes('if (reloadHandled.current) return')
   ) {
-    ok('PWA: actualiza em silêncio ao sair do ecrã; DEPOIS só nesta versão (10 min)')
+    ok('PWA: aplica a versão nova sozinha e recarrega (sem DEPOIS)')
   } else {
-    fail('RegisterSW sem auto-apply / dismiss por versão')
+    fail('RegisterSW sem auto-apply imediato')
   }
   const swJs = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8')
-  if (/addEventListener\('install'[\s\S]{0,160}self\.skipWaiting\(\)/.test(swJs)) {
-    ok('PWA: service worker novo activa sem ficar preso em waiting')
+  if (
+    /addEventListener\('install'[\s\S]{0,160}self\.skipWaiting\(\)/.test(swJs) &&
+    swJs.includes('c.navigate(c.url)')
+  ) {
+    ok('PWA: service worker novo activa e recarrega as janelas abertas')
   } else {
-    fail('public/sw.js sem skipWaiting no install')
+    fail('public/sw.js sem skipWaiting/navigate no activate')
   }
   const dsLoad = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
   if (
