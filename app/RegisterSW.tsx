@@ -9,6 +9,7 @@ import { PWA_VERSION } from './lib/pwaVersion'
 const SW_VERSION = PWA_VERSION
 const SW_DISMISSED_SESSION_KEY = 'nonato-pwa-update-dismissed-v'
 const SW_DISMISSED_UNTIL_LS = 'nonato-pwa-update-dismissed-until'
+const SW_DISMISSED_VERSION_LS = 'nonato-pwa-update-dismissed-version'
 const UI_LANGUAGE_EVENT = 'nonato-ui-language'
 
 export function RegisterSW() {
@@ -37,6 +38,8 @@ export function RegisterSW() {
     const isDismissedQuietly = () => {
       try {
         if (sessionStorage.getItem(SW_DISMISSED_SESSION_KEY) === String(SW_VERSION)) return true
+        const dismissedVer = localStorage.getItem(SW_DISMISSED_VERSION_LS)
+        if (dismissedVer !== String(SW_VERSION)) return false
         const until = Number(localStorage.getItem(SW_DISMISSED_UNTIL_LS) || 0)
         return Number.isFinite(until) && until > Date.now()
       } catch {
@@ -157,7 +160,8 @@ export function RegisterSW() {
   const handleDismiss = () => {
     try {
       sessionStorage.setItem(SW_DISMISSED_SESSION_KEY, String(SW_VERSION))
-      localStorage.setItem(SW_DISMISSED_UNTIL_LS, String(Date.now() + 24 * 60 * 60 * 1000))
+      localStorage.setItem(SW_DISMISSED_VERSION_LS, String(SW_VERSION))
+      localStorage.setItem(SW_DISMISSED_UNTIL_LS, String(Date.now() + 10 * 60 * 1000))
     } catch {
       /* ignorar */
     }

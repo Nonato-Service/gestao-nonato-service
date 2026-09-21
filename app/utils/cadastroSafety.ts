@@ -288,19 +288,28 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
     }
   }
 
-  if (!localStorageKeyHasMeaningfulCadastro(localStorage.getItem(CLIENTES_KEY))) {
+  const idbRepairKeys = [
+    CLIENTES_KEY,
+    'nonato-pagamentos-empresas',
+    'nonato-pagamentos-registos',
+  ] as const
+  for (const key of idbRepairKeys) {
     try {
-      const fromIdb = (await getKv(CLIENTES_KEY)) as unknown
-      if (Array.isArray(fromIdb) && fromIdb.length > 0) {
-        try {
-          localStorage.setItem(CLIENTES_KEY, JSON.stringify(fromIdb))
-          restored++
-        } catch {
-          /* ignorar quota — dados permanecem no IndexedDB */
-        }
+      const fromIdb = (await getKv(key)) as unknown
+      if (!Array.isArray(fromIdb) || fromIdb.length === 0) continue
+      const current = localStorage.getItem(key)
+      const richer = mergeArrayRawIfRicher(current, JSON.stringify(fromIdb))
+      if (richer) {
+        localStorage.setItem(key, richer)
+        restored++
+        continue
+      }
+      if (!localStorageKeyHasMeaningfulCadastro(current)) {
+        localStorage.setItem(key, JSON.stringify(fromIdb))
+        restored++
       }
     } catch {
-      /* ignorar */
+      /* ignorar quota — dados permanecem no IndexedDB */
     }
   }
 

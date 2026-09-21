@@ -1383,7 +1383,8 @@ try {
   if (
     nmaCli.includes("await loadData('nonato-clientes')") &&
     nmaCli.includes("await saveData('nonato-clientes', mergedClientes, true, true)") &&
-    nmaCli.includes('mergeNonatoClientesDeferServerLocal(fromLoad, localNorm)')
+    nmaCli.includes('mergeNonatoClientesDeferServerLocal(fromLoad, localNorm)') &&
+    nmaCli.includes('mergedClientes.length >= localNorm.length')
   ) {
     ok('clientes: arranque funde e envia a lista maior ao servidor')
   } else {
@@ -7991,10 +7992,31 @@ try {
     fail('appAuth ainda com sessão só em ficheiro / 7 dias')
   }
   const swReg = fs.readFileSync(path.join(root, 'app/RegisterSW.tsx'), 'utf8')
-  if (swReg.includes('applyWaitingWorker') && swReg.includes('SW_DISMISSED_UNTIL_LS')) {
-    ok('PWA: actualiza em silêncio ao sair do ecrã; DEPOIS vale 24h')
+  if (
+    swReg.includes('applyWaitingWorker') &&
+    swReg.includes('SW_DISMISSED_UNTIL_LS') &&
+    swReg.includes('SW_DISMISSED_VERSION_LS') &&
+    swReg.includes('10 * 60 * 1000') &&
+    !swReg.includes('24 * 60 * 60 * 1000')
+  ) {
+    ok('PWA: actualiza em silêncio ao sair do ecrã; DEPOIS só nesta versão (10 min)')
   } else {
-    fail('RegisterSW sem auto-apply / dismiss 24h')
+    fail('RegisterSW sem auto-apply / dismiss por versão')
+  }
+  const swJs = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8')
+  if (/addEventListener\('install'[\s\S]{0,160}self\.skipWaiting\(\)/.test(swJs)) {
+    ok('PWA: service worker novo activa sem ficar preso em waiting')
+  } else {
+    fail('public/sw.js sem skipWaiting no install')
+  }
+  const dsLoad = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    dsLoad.includes('shouldPreferLocalOverServerOnLoad(key, serverData, localSnapshot.parsed)') &&
+    dsLoad.includes('mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)')
+  ) {
+    ok('loadData: nunca grava servidor mais curto por cima do cadastro local')
+  } else {
+    fail('loadData ainda pode sobrescrever cadastro local com lista menor')
   }
   const nmaPull = fs.readFileSync(path.join(root, 'app/NonatoMainApp.tsx'), 'utf8')
   if (nmaPull.includes('nonato-request-login')) {

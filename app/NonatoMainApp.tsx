@@ -8130,9 +8130,23 @@ export default function Dashboard() {
         } catch {
           /* manter cópia local */
         }
+        try {
+          const fromIdb = await getKv('nonato-clientes')
+          if (Array.isArray(fromIdb) && fromIdb.length > 0) {
+            mergedClientes = garantirCodigosClientes(
+              normalizeClienteEquipamentos(
+                mergeNonatoClientesDeferServerLocal(fromIdb, mergedClientes) as Cliente[]
+              )
+            ).lista
+          }
+        } catch {
+          /* ignorar */
+        }
+        // Nunca ficar com menos clientes do que este aparelho já tinha.
+        if (mergedClientes.length < localNorm.length) mergedClientes = localNorm
         setClientes(mergedClientes)
-        // PC com mais clientes do que o Railway: enviar a união. A filha passa a ver os mesmos.
-        if (mergedClientes.length > 0) {
+        // Só enviar se a união for pelo menos tão grande como o cadastro local (não gravar lista pobre).
+        if (mergedClientes.length > 0 && mergedClientes.length >= localNorm.length) {
           await saveData('nonato-clientes', mergedClientes, true, true)
         }
       }

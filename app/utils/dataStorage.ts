@@ -3302,24 +3302,18 @@ async function readLocalValueForLoad(
     }
     const best =
       fromLs && fromIdb
-        ? fromIdb.length >= fromLs.length
-          ? fromIdb
-          : fromLs
+        ? mergeArraysByIdDeferServerLocal(fromIdb, fromLs)
         : fromIdb || fromLs
     if (best) return { parsed: best, raw }
     return { parsed: null, raw: null }
   }
 
   if (
-    (key === PECAS_BIBLIOTECA_KEY ||
-      key === RELATORIOS_SERVICO_KEY ||
-      key === CLIENTES_KEY ||
-      key === RELATORIOS_ESPECIAIS_STORAGE_KEY ||
-      key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY ||
-      key === 'nonato-pagamentos-empresas' ||
-      key === 'nonato-pagamentos-registos' ||
-      key === 'nonato-users') &&
-    parseJson
+    parseJson &&
+    (NONATO_PROTECTED_ARRAY_KEYS.has(key) ||
+      NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key) ||
+      MERGE_ON_SHRINK_KEYS.has(key) ||
+      key === RELATORIOS_ESPECIAIS_DELETED_IDS_KEY)
   ) {
     return readArrayBestOfLsIdb()
   }
@@ -3383,7 +3377,9 @@ function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, lo
     return true
   }
   if (
-    (key === 'nonato-pagamentos-registos' || key === 'nonato-pagamentos-empresas') &&
+    (NONATO_PROTECTED_ARRAY_KEYS.has(key) ||
+      NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key) ||
+      MERGE_ON_SHRINK_KEYS.has(key)) &&
     Array.isArray(serverValue) &&
     Array.isArray(localParsed) &&
     localParsed.length > serverValue.length
@@ -3557,12 +3553,35 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           return localSnapshot.parsed
         }
 
-        // Servidor vazio/stale após deploy: não apagar o que já está neste aparelho
-        if (shouldPreferLocalOverServerOnLoad(key, serverData, localSnapshot.parsed)) {
-          if (localSnapshot.parsed !== null && localSnapshot.parsed !== undefined) {
-            scheduleServerMigrationPush(key, localSnapshot.parsed)
-            return localSnapshot.parsed
+        if (
+          parseJson &&
+          Array.isArray(serverData) &&
+          (NONATO_PROTECTED_ARRAY_KEYS.has(key) ||
+            NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key) ||
+            MERGE_ON_SHRINK_KEYS.has(key))
+        ) {
+          const merged = mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)
+          const localLen = Array.isArray(localSnapshot.parsed) ? localSnapshot.parsed.length : 0
+          const out =
+            merged.length >= localLen
+              ? merged
+              : Array.isArray(localSnapshot.parsed)
+                ? localSnapshot.parsed
+                : merged
+          writeLocalStorageValue(key, out)
+          try {
+            await saveKv(key, out)
+          } catch {
+            /* ignorar */
           }
+          if (JSON.stringify(out) !== JSON.stringify(serverData)) {
+            scheduleServerMigrationPush(key, out)
+          }
+          return out
+        }
+
+        if (shouldPreferLocalOverServerOnLoad(key, serverData, localSnapshot.parsed)) {
+          return localSnapshot.parsed
         }
 
         writeLocalStorageValue(key, serverData)
