@@ -749,6 +749,9 @@ const KEYS_AUTO_AWAIT_SERVER = new Set([
   'nonato-agendamentos',
   'nonato-ordens-servico',
   'nonato-users',
+  'nonato-pecas-stock',
+  'nonato-categorias-pecas-stock',
+  'nonato-subcategorias-pecas-stock',
 ])
 const SYNC_QUEUE_IDB_KEY = 'nonato-sync-queue-mirror'
 const SIDEBAR_BUTTONS_KEY = 'nonato-sidebar-buttons'
@@ -3196,7 +3199,10 @@ export async function saveData(
     if (
       (key === 'nonato-pagamentos-empresas' ||
         key === 'nonato-pagamentos-registos' ||
-        key === 'nonato-users') &&
+        key === 'nonato-users' ||
+        key === 'nonato-pecas-stock' ||
+        key === 'nonato-categorias-pecas-stock' ||
+        key === 'nonato-subcategorias-pecas-stock') &&
       Array.isArray(value)
     ) {
       try {
@@ -3287,6 +3293,9 @@ export async function pushLocalCadastroUnionToServer(): Promise<void> {
     'nonato-equipamentos',
     'nonato-gestores',
     'nonato-tecnicos',
+    'nonato-pecas-stock',
+    'nonato-categorias-pecas-stock',
+    'nonato-subcategorias-pecas-stock',
   ] as const
   for (const key of keys) {
     try {

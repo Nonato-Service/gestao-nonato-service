@@ -20,6 +20,7 @@ import {
   CATEGORIAS_PECAS_STOCK_STORAGE_KEY,
   SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
 } from '../modules/biblioteca/stockKeys'
+import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
 import {
   createCategoriaPecaFromForm,
   createEmptyPecaBibliotecaForm,
@@ -79,29 +80,44 @@ export function CadastroPecasStockContent({
 
   const persistPecas = useCallback(
     async (next: PecaBiblioteca[]) => {
-      setPecas(next)
-      await saveData(PECAS_STOCK_STORAGE_KEY, next)
+      const fromLoad = asArray<PecaBiblioteca>(await loadData(PECAS_STOCK_STORAGE_KEY))
+      const merged =
+        next.length < pecas.length
+          ? next
+          : mergeArraysByIdDeferServerLocal<PecaBiblioteca>(next, fromLoad)
+      setPecas(merged)
+      await saveData(PECAS_STOCK_STORAGE_KEY, merged)
     },
-    [saveData]
+    [saveData, loadData, pecas.length]
   )
   const persistCategorias = useCallback(
     async (next: CategoriaPeca[]) => {
-      setCategorias(next)
-      await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, next)
+      const fromLoad = asArray<CategoriaPeca>(await loadData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY))
+      const merged =
+        next.length < categorias.length
+          ? next
+          : mergeArraysByIdDeferServerLocal<CategoriaPeca>(next, fromLoad)
+      setCategorias(merged)
+      await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged)
     },
-    [saveData]
+    [saveData, loadData, categorias.length]
   )
   const persistSubs = useCallback(
     async (next: SubcategoriaPeca[]) => {
-      setSubcategorias(next)
-      await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, next)
+      const fromLoad = asArray<SubcategoriaPeca>(await loadData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY))
+      const merged =
+        next.length < subcategorias.length
+          ? next
+          : mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(next, fromLoad)
+      setSubcategorias(merged)
+      await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged)
     },
-    [saveData]
+    [saveData, loadData, subcategorias.length]
   )
 
   useEffect(() => {
     let alive = true
-    ;(async () => {
+    const carregar = async () => {
       const [p, c, s] = await Promise.all([
         loadData(PECAS_STOCK_STORAGE_KEY),
         loadData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY),
@@ -111,9 +127,22 @@ export function CadastroPecasStockContent({
       setPecas(asArray<PecaBiblioteca>(p))
       setCategorias(asArray<CategoriaPeca>(c))
       setSubcategorias(asArray<SubcategoriaPeca>(s))
-    })()
+    }
+    void carregar()
+    const onLocal = (ev: Event) => {
+      const key = (ev as CustomEvent<{ key?: string }>).detail?.key
+      if (
+        key === PECAS_STOCK_STORAGE_KEY ||
+        key === CATEGORIAS_PECAS_STOCK_STORAGE_KEY ||
+        key === SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY
+      ) {
+        void carregar()
+      }
+    }
+    window.addEventListener('nonato-data-local-changed', onLocal)
     return () => {
       alive = false
+      window.removeEventListener('nonato-data-local-changed', onLocal)
     }
   }, [loadData])
 

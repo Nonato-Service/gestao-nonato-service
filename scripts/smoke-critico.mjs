@@ -1213,6 +1213,8 @@ try {
     stockSrc.includes('PECAS_STOCK_STORAGE_KEY') &&
     stockSrc.includes("aba === 'biblioteca'") &&
     stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
+    stockSrc.includes('mergeArraysByIdDeferServerLocal') &&
+    stockSrc.includes('nonato-data-local-changed') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
     stockKeys.includes('nonato-pecas-stock') &&
@@ -1393,6 +1395,23 @@ try {
   }
 } catch (e) {
   fail(`clientes sync arranque: ${e && e.message ? e.message : e}`)
+}
+
+try {
+  const shrinkSrc = fs.readFileSync(path.join(root, 'app/lib/cadastroShrinkPolicy.ts'), 'utf8')
+  const dsStock = fs.readFileSync(path.join(root, 'app/utils/dataStorage.ts'), 'utf8')
+  if (
+    shrinkSrc.includes("'nonato-pecas-stock'") &&
+    dsStock.includes("'nonato-pecas-stock'") &&
+    dsStock.includes('pushLocalCadastroUnionToServer') &&
+    /const keys = \[[\s\S]*nonato-pecas-stock[\s\S]*\] as const/.test(dsStock)
+  ) {
+    ok('stock: peças do outro PC fundem e sobem ao servidor')
+  } else {
+    fail('stock: peças do outro computador ainda não entram na união')
+  }
+} catch (e) {
+  fail(`stock sync: ${e && e.message ? e.message : e}`)
 }
 
 try {

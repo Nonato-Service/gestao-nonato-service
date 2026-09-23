@@ -8,6 +8,7 @@ import {
 import {
   ALLOW_PROTECTED_SUBSET_SHRINK_KEYS,
   MERGE_ON_SHRINK_KEYS,
+  incomingHasNewIds,
   isIntentionalSubsetShrink,
   mergeProtectedArrayById,
 } from './cadastroShrinkPolicy'
@@ -147,6 +148,15 @@ export function resolveCadastroWriteValue(
   value: unknown,
   filePath: string
 ): CadastroWriteResolution {
+  const existing = Array.isArray(value) ? readExistingJsonArray(filePath) || [] : []
+  if (
+    MERGE_ON_SHRINK_KEYS.has(key) &&
+    Array.isArray(value) &&
+    existing.length > 0 &&
+    incomingHasNewIds(existing, value)
+  ) {
+    return { ok: true, value: mergeProtectedArrayById(existing, value) }
+  }
   const guard = assessServerCadastroWrite(key, value, filePath)
   if (guard.allowed) return { ok: true, value }
   if (
@@ -154,7 +164,6 @@ export function resolveCadastroWriteValue(
     MERGE_ON_SHRINK_KEYS.has(key) &&
     Array.isArray(value)
   ) {
-    const existing = readExistingJsonArray(filePath) || []
     return { ok: true, value: mergeProtectedArrayById(existing, value) }
   }
   return { ok: false, guard }

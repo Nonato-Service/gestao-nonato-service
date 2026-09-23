@@ -292,6 +292,9 @@ export async function restoreCriticalCadastroFromIdbIfNeeded(): Promise<number> 
     CLIENTES_KEY,
     'nonato-pagamentos-empresas',
     'nonato-pagamentos-registos',
+    'nonato-pecas-stock',
+    'nonato-categorias-pecas-stock',
+    'nonato-subcategorias-pecas-stock',
   ] as const
   for (const key of idbRepairKeys) {
     try {
