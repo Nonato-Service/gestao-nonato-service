@@ -673,13 +673,21 @@ export function CadastroPecasStockContent({
                         <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--name">
                           {peca.nome}
                         </td>
-                        <td className="biblioteca-pecas-hub__catalog-td">{peca.codigo}</td>
-                        <td className="biblioteca-pecas-hub__catalog-td">{cat || '—'}</td>
-                        <td className="biblioteca-pecas-hub__catalog-td">
-                          {peca.quantidade != null ? peca.quantidade : '—'}
+                        <td className="biblioteca-pecas-hub__catalog-td ns-stock-meta">
+                          <span className="ns-stock-meta-k">{tr(safeT, 'codigoPecaBiblioteca', 'Código')}</span>
+                          <span>{peca.codigo || '—'}</span>
                         </td>
-                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price">
-                          {peca.preco || '—'}
+                        <td className="biblioteca-pecas-hub__catalog-td ns-stock-meta">
+                          <span className="ns-stock-meta-k">{tr(safeT, 'categoriaPecaBiblioteca', 'Grupo')}</span>
+                          <span>{cat || '—'}</span>
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td ns-stock-meta">
+                          <span className="ns-stock-meta-k">{tr(safeT, 'cadastroPecasStockQtdCol', 'Qtd.')}</span>
+                          <span>{peca.quantidade != null ? peca.quantidade : '—'}</span>
+                        </td>
+                        <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price ns-stock-meta">
+                          <span className="ns-stock-meta-k">{tr(safeT, 'preco', 'Preço')}</span>
+                          <span className="ns-stock-meta-preco">{peca.preco || '—'}</span>
                         </td>
                         <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--actions">
                           <div className="biblioteca-pecas-hub__catalog-actions">

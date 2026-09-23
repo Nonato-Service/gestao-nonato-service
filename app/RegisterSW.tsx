@@ -93,6 +93,32 @@ export function RegisterSW() {
     }
     register()
 
+    // Se o servidor já tem uma versão mais nova do que este ecrã, recarrega uma vez.
+    const syncWithServerVersion = () => {
+      fetch('/api/health', { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          const remote = Number(data?.appVersion)
+          if (!Number.isFinite(remote) || remote <= Number(SW_VERSION)) return
+          const key = 'nonato-pwa-reload-for'
+          try {
+            if (sessionStorage.getItem(key) === String(remote)) return
+            sessionStorage.setItem(key, String(remote))
+          } catch {
+            /* segue o recarregamento */
+          }
+          const drop = navigator.serviceWorker.getRegistrations().then((regs) =>
+            Promise.all(regs.map((reg) => reg.unregister().catch(() => false)))
+          )
+          const wipe = 'caches' in window ? caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))) : Promise.resolve()
+          Promise.all([drop, wipe])
+            .catch(() => {})
+            .then(() => window.location.reload())
+        })
+        .catch(() => {})
+    }
+    syncWithServerVersion()
+
     const onControllerChange = () => {
       if (reloadHandled.current) return
       reloadHandled.current = true

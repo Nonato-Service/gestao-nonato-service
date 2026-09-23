@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // CACHE_NAME sincronizado a partir de pwa-version.json (npm run pwa:sync / prebuild)
-const CACHE_NAME = 'nonato-pwa-v522'
+const CACHE_NAME = 'nonato-pwa-v523'
 
 const PRECACHE_ASSETS = [
   '/',
@@ -80,7 +80,7 @@ async function navigateResponse(request) {
 
   if (self.navigator.onLine) {
     try {
-      const r = await fetch(request, { cache: 'no-cache' })
+      const r = await fetch(request, { cache: 'reload' })
       if (r.ok) return putInCache(request, r)
     } catch {
       /* cair para cache */
