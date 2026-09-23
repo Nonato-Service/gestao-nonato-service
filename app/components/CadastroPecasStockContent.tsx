@@ -433,8 +433,8 @@ export function CadastroPecasStockContent({
             {tr(safeT, 'novaPecaBiblioteca', 'Nova Peça')}
           </button>
 
-          <div className="biblioteca-pecas-form__field" style={{ maxWidth: 420, marginBottom: 18 }}>
-            <label className="biblioteca-pecas-form__label" htmlFor="stock-pecas-busca">
+          <div className="biblioteca-pecas-form__field ns-stock-busca" style={{ maxWidth: 420, marginBottom: 18 }}>
+            <label className="ns-stock-busca-label" htmlFor="stock-pecas-busca">
               {tr(safeT, 'cadastroPecasStockBusca', 'Procurar peça, código ou categoria')}
             </label>
             <input
@@ -446,7 +446,7 @@ export function CadastroPecasStockContent({
                 setBusca(e.target.value)
                 setListaLimite(LISTA_UI_LOTE)
               }}
-              placeholder={tr(safeT, 'cadastroPecasStockBusca', 'Procurar peça, código ou categoria')}
+              placeholder={tr(safeT, 'cadastroPecasStockBuscaPh', 'Nome, código ou categoria')}
             />
           </div>
 
@@ -627,8 +627,8 @@ export function CadastroPecasStockContent({
               {tr(safeT, 'cadastroPecasStockVazio', 'Ainda não há peças neste stock.')}
             </p>
           ) : (
-            <div className="biblioteca-pecas-hub__catalog-table-wrap">
-              <table className="biblioteca-pecas-hub__catalog-table" style={{ minWidth: 760 }}>
+            <div className="biblioteca-pecas-hub__catalog-table-wrap ns-stock-catalog-wrap">
+              <table className="biblioteca-pecas-hub__catalog-table ns-stock-catalog-table">
                 <thead>
                   <tr>
                     <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--thumb">
@@ -641,8 +641,8 @@ export function CadastroPecasStockContent({
                     <th className="biblioteca-pecas-hub__catalog-th">
                       {tr(safeT, 'categoriaPecaBiblioteca', 'Grupo')}
                     </th>
-                    <th className="biblioteca-pecas-hub__catalog-th">
-                      {tr(safeT, 'cadastroPecasStockQtd', 'Qtd.')}
+                    <th className="biblioteca-pecas-hub__catalog-th ns-stock-th-qtd">
+                      {tr(safeT, 'cadastroPecasStockQtdCol', 'Qtd.')}
                     </th>
                     <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right">
                       {tr(safeT, 'preco', 'Preço')}

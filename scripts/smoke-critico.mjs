@@ -1215,6 +1215,8 @@ try {
     stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
     stockSrc.includes('mergeArraysByIdDeferServerLocal') &&
     stockSrc.includes('nonato-data-local-changed') &&
+    stockSrc.includes('ns-stock-catalog-wrap') &&
+    stockSrc.includes('cadastroPecasStockQtdCol') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
     stockKeys.includes('nonato-pecas-stock') &&
