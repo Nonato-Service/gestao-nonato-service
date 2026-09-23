@@ -10669,6 +10669,7 @@ export default function Dashboard() {
             /* ignorar */
           }
         }
+        await pushLocalCadastroUnionToServer()
         dataBootstrapCompleteRef.current = true
         markDataBootstrapComplete()
         markWarmSessionComplete()

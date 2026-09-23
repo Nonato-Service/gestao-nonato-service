@@ -117,19 +117,35 @@ export function CadastroPecasStockContent({
 
   useEffect(() => {
     let alive = true
+    let seq = 0
+    let pushing = false
+    let lastPushed = 0
     const carregar = async () => {
+      const ticket = ++seq
       const [p, c, s] = await Promise.all([
         loadData(PECAS_STOCK_STORAGE_KEY),
         loadData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY),
         loadData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY),
       ])
-      if (!alive) return
-      setPecas(asArray<PecaBiblioteca>(p))
+      if (!alive || ticket !== seq) return
+      const incoming = asArray<PecaBiblioteca>(p)
+      setPecas((prev) => mergeArraysByIdDeferServerLocal<PecaBiblioteca>(incoming, prev))
       setCategorias(asArray<CategoriaPeca>(c))
       setSubcategorias(asArray<SubcategoriaPeca>(s))
+      if (incoming.length > lastPushed && !pushing) {
+        lastPushed = incoming.length
+        pushing = true
+        try {
+          const ok = await saveData(PECAS_STOCK_STORAGE_KEY, incoming, true, true)
+          if (!ok) lastPushed = 0
+        } finally {
+          pushing = false
+        }
+      }
     }
     void carregar()
     const onLocal = (ev: Event) => {
+      if (pushing) return
       const key = (ev as CustomEvent<{ key?: string }>).detail?.key
       if (
         key === PECAS_STOCK_STORAGE_KEY ||
@@ -139,12 +155,23 @@ export function CadastroPecasStockContent({
         void carregar()
       }
     }
+    const onShow = () => {
+      if (document.visibilityState === 'visible') void carregar()
+    }
     window.addEventListener('nonato-data-local-changed', onLocal)
+    window.addEventListener('focus', onShow)
+    document.addEventListener('visibilitychange', onShow)
+    const poll = window.setInterval(() => {
+      void carregar()
+    }, 20000)
     return () => {
       alive = false
+      window.clearInterval(poll)
       window.removeEventListener('nonato-data-local-changed', onLocal)
+      window.removeEventListener('focus', onShow)
+      document.removeEventListener('visibilitychange', onShow)
     }
-  }, [loadData])
+  }, [loadData, saveData])
 
   const filtradas = useMemo(() => {
     const q = busca.trim().toLowerCase()

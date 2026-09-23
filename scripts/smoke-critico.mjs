@@ -1389,7 +1389,8 @@ try {
     nmaCli.includes("await saveData('nonato-clientes', mergedClientes, true, true)") &&
     nmaCli.includes('mergeNonatoClientesDeferServerLocal(fromLoad, localNorm)') &&
     nmaCli.includes('mergedClientes.length >= localNorm.length') &&
-    nmaCli.includes('await pushLocalCadastroUnionToServer()')
+    nmaCli.includes('await pushLocalCadastroUnionToServer()') &&
+    nmaCli.indexOf('await pushLocalCadastroUnionToServer()', nmaCli.indexOf('setBlockImplicitServerPushDuringBootstrap(false)')) > 0
   ) {
     ok('clientes: arranque funde e envia a lista maior ao servidor')
   } else {
