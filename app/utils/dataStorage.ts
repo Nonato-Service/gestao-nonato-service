@@ -1210,6 +1210,28 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
   return requestPromise
 }
 
+/** Peças do stock levam fotos: 5s cortava o download e o outro PC ficava com uma lista incompleta. */
+function isSlowCadastroLoadKey(key: string): boolean {
+  return (
+    key === PECAS_BIBLIOTECA_KEY ||
+    key === MANUAIS_KEY ||
+    key === 'nonato-pecas-stock' ||
+    key === 'nonato-categorias-pecas-stock' ||
+    key === 'nonato-subcategorias-pecas-stock'
+  )
+}
+
+function parseServerCadastroPayload(data: unknown): unknown {
+  if (typeof data !== 'string') return data
+  const trimmed = data.trim()
+  if (!trimmed.startsWith('[') && !trimmed.startsWith('{')) return data
+  try {
+    return JSON.parse(trimmed) as unknown
+  } catch {
+    return data
+  }
+}
+
 async function fetchServerKeyPayload(key: string, timeoutMs: number): Promise<any | null> {
   const response = await dataApiFetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
     signal: createTimeoutSignal(timeoutMs),
@@ -1222,7 +1244,7 @@ async function fetchServerKeyPayload(key: string, timeoutMs: number): Promise<an
 
 async function forceLoadCadastroFromServer(key: string): Promise<any | null> {
   if (!isOnline()) return null
-  const slowKey = key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY
+  const slowKey = isSlowCadastroLoadKey(key)
   const timeoutMs = slowKey ? 120_000 : 15_000
   try {
     let data = await fetchServerKeyPayload(key, timeoutMs)
@@ -2045,8 +2067,8 @@ export async function loadFromServer(key: string): Promise<any | null> {
     if (!ok) return null
   }
 
-  const slowKey = key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY
-  const timeoutMs = slowKey ? 90_000 : 5000
+  const slowKey = isSlowCadastroLoadKey(key)
+  const timeoutMs = slowKey ? 120_000 : 15_000
 
   try {
     let data = await fetchServerKeyPayload(key, timeoutMs)
@@ -2064,7 +2086,7 @@ export async function loadFromServer(key: string): Promise<any | null> {
       return null
     }
     serverOffline = false
-    return data
+    return parseServerCadastroPayload(data)
   } catch (error: any) {
     if (
       error instanceof TypeError &&

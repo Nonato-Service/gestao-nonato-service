@@ -13,6 +13,14 @@ const MAX_DATA_URL_LEN = 960_000
  * Redimensiona e comprime uma imagem para data-URL JPEG,
  * limitando resolução e tamanho aproximado do payload.
  */
+/** Comprime fotos já gravadas (stock) quando o data-URL é grande demais para sincronizar. */
+export async function compressImageDataUrlIfNeeded(dataUrl: string): Promise<string> {
+  if (!dataUrl.startsWith('data:image/') || dataUrl.length <= MAX_DATA_URL_LEN) return dataUrl
+  const blob = await (await fetch(dataUrl)).blob()
+  const file = new File([blob], 'peca.jpg', { type: blob.type || 'image/jpeg' })
+  return compressImageFileToJpegDataUrl(file)
+}
+
 export async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
   const bmp = await createImageBitmap(file)
   try {

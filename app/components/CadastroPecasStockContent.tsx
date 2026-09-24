@@ -21,6 +21,7 @@ import {
   SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
 } from '../modules/biblioteca/stockKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
+import { compressImageDataUrlIfNeeded, compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
 import {
   createCategoriaPecaFromForm,
   createEmptyPecaBibliotecaForm,
@@ -129,14 +130,41 @@ export function CadastroPecasStockContent({
       ])
       if (!alive || ticket !== seq) return
       const incoming = asArray<PecaBiblioteca>(p)
-      setPecas((prev) => mergeArraysByIdDeferServerLocal<PecaBiblioteca>(incoming, prev))
+      let merged: PecaBiblioteca[] = incoming
+      setPecas((prev) => {
+        merged = mergeArraysByIdDeferServerLocal<PecaBiblioteca>(incoming, prev)
+        return merged
+      })
+      let fotosReduzidas = false
+      const leves: PecaBiblioteca[] = []
+      for (const peca of merged) {
+        const img = String(peca.imagem || '')
+        if (img.length > 960_000) {
+          try {
+            const nextImg = await compressImageDataUrlIfNeeded(img)
+            if (nextImg !== img) {
+              fotosReduzidas = true
+              leves.push({ ...peca, imagem: nextImg })
+              continue
+            }
+          } catch {
+            /* mantém a foto original */
+          }
+        }
+        leves.push(peca)
+      }
+      if (!alive || ticket !== seq) return
+      if (fotosReduzidas) {
+        merged = leves
+        setPecas(leves)
+      }
       setCategorias(asArray<CategoriaPeca>(c))
       setSubcategorias(asArray<SubcategoriaPeca>(s))
-      if (incoming.length > lastPushed && !pushing) {
-        lastPushed = incoming.length
+      if ((merged.length > lastPushed || fotosReduzidas) && !pushing) {
+        lastPushed = merged.length
         pushing = true
         try {
-          const ok = await saveData(PECAS_STOCK_STORAGE_KEY, incoming, true, true)
+          const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
           if (!ok) lastPushed = 0
         } finally {
           pushing = false
@@ -286,12 +314,9 @@ export function CadastroPecasStockContent({
 
   const onFoto = (file?: File) => {
     if (!file || !file.type.startsWith('image/')) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      const result = ev.target?.result
-      if (typeof result === 'string') setForm((prev) => ({ ...prev, imagem: result }))
-    }
-    reader.readAsDataURL(file)
+    void compressImageFileToJpegDataUrl(file)
+      .then((result) => setForm((prev) => ({ ...prev, imagem: result })))
+      .catch(() => {})
   }
 
   const tabClass = (id: AbaStock) =>

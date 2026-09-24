@@ -1407,6 +1407,8 @@ try {
     shrinkSrc.includes("'nonato-pecas-stock'") &&
     dsStock.includes("'nonato-pecas-stock'") &&
     dsStock.includes('pushLocalCadastroUnionToServer') &&
+    dsStock.includes('isSlowCadastroLoadKey') &&
+    dsStock.includes("'nonato-pecas-stock'") &&
     /const keys = \[[\s\S]*nonato-pecas-stock[\s\S]*\] as const/.test(dsStock)
   ) {
     ok('stock: peças do outro PC fundem e sobem ao servidor')
