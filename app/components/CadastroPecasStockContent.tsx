@@ -87,9 +87,15 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<PecaBiblioteca>(next, fromLoad)
       setPecas(merged)
-      await saveData(PECAS_STOCK_STORAGE_KEY, merged)
+      const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
+      if (!ok) {
+        setErro(
+          tr(safeT, 'cadastroPecasStockFalhaServidor', 'Não gravou no servidor. Volte a guardar com internet.')
+        )
+      }
+      return ok
     },
-    [saveData, loadData, pecas.length]
+    [saveData, loadData, pecas.length, safeT]
   )
   const persistCategorias = useCallback(
     async (next: CategoriaPeca[]) => {
@@ -99,7 +105,7 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<CategoriaPeca>(next, fromLoad)
       setCategorias(merged)
-      await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged)
+      await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
     },
     [saveData, loadData, categorias.length]
   )
@@ -111,7 +117,7 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(next, fromLoad)
       setSubcategorias(merged)
-      await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged)
+      await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
     },
     [saveData, loadData, subcategorias.length]
   )
@@ -269,9 +275,11 @@ export function CadastroPecasStockContent({
     }
     if (editing) {
       const actualizada = updatePecaBibliotecaFromForm(editing, payload)
-      await persistPecas(pecas.map((p) => (p.id === editing.id ? actualizada : p)))
+      const ok = await persistPecas(pecas.map((p) => (p.id === editing.id ? actualizada : p)))
+      if (!ok) return
     } else {
-      await persistPecas([...pecas, createPecaBibliotecaFromForm(payload)])
+      const ok = await persistPecas([...pecas, createPecaBibliotecaFromForm(payload)])
+      if (!ok) return
     }
     fecharForm()
   }

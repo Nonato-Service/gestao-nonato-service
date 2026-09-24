@@ -170,11 +170,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Carregar um arquivo específico
+    // Carregar um arquivo específico (JSON; se faltar ou for menor, ler .txt)
     const targetDir = resolveDataDirForKey(key, dataDir)
-    const filePath = path.join(targetDir, `${key}.json`)
-    
-    if (!fs.existsSync(filePath)) {
+    const tryParseFile = (filePath: string): unknown | null => {
+      if (!fs.existsSync(filePath)) return null
+      const content = fs.readFileSync(filePath, 'utf-8')
+      if (!content || !content.trim()) return null
+      try {
+        return JSON.parse(content)
+      } catch {
+        return null
+      }
+    }
+    const fromJson = tryParseFile(path.join(targetDir, `${key}.json`))
+    const fromTxt =
+      tryParseFile(path.join(targetDir, `${key}.txt`)) ?? tryParseFile(path.join(dataDir, `${key}.txt`))
+    let data: unknown = fromJson
+    if (Array.isArray(fromJson) && Array.isArray(fromTxt) && fromTxt.length > fromJson.length) {
+      data = fromTxt
+    } else if (fromJson == null && fromTxt != null) {
+      data = fromTxt
+    }
+    if (data == null) {
       return NextResponse.json(
         {
           success: true,
@@ -184,34 +201,7 @@ export async function GET(request: NextRequest) {
         { headers: jsonHeaders() }
       )
     }
-
-    const content = fs.readFileSync(filePath, 'utf-8')
-    // Verificar se o conteúdo não está vazio
-    if (!content || content.trim() === '') {
-      return NextResponse.json(
-        {
-          success: true,
-          data: null,
-          message: `Arquivo ${key} está vazio`,
-        },
-        { headers: jsonHeaders() }
-      )
-    }
-
-    try {
-      const data = JSON.parse(content)
-      return NextResponse.json({ success: true, data }, { headers: jsonHeaders() })
-    } catch (parseError: any) {
-      console.error(`Erro ao fazer parse do arquivo ${key}:`, parseError)
-      return NextResponse.json(
-        {
-          success: true,
-          data: null,
-          message: `Arquivo ${key} contém JSON inválido`,
-        },
-        { headers: jsonHeaders() }
-      )
-    }
+    return NextResponse.json({ success: true, data }, { headers: jsonHeaders() })
   } catch (error: any) {
     console.error('Erro ao carregar dados:', error)
     const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao carregar dados'

@@ -1217,6 +1217,8 @@ try {
     stockSrc.includes('nonato-data-local-changed') &&
     stockSrc.includes('ns-stock-catalog-wrap') &&
     stockSrc.includes('cadastroPecasStockQtdCol') &&
+    stockSrc.includes("saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)") &&
+    stockSrc.includes('cadastroPecasStockFalhaServidor') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
     stockKeys.includes('nonato-pecas-stock') &&
@@ -1414,6 +1416,12 @@ try {
     ok('stock: peças do outro PC fundem e sobem ao servidor')
   } else {
     fail('stock: peças do outro computador ainda não entram na união')
+  }
+  const loadRoute = fs.readFileSync(path.join(root, 'app/api/data/load/route.ts'), 'utf8')
+  if (loadRoute.includes('`${key}.txt`') && loadRoute.includes('fromTxt.length > fromJson.length')) {
+    ok('stock: load lê JSON e TXT e fica com a lista maior')
+  } else {
+    fail('load de cadastro ainda ignora .txt maior')
   }
 } catch (e) {
   fail(`stock sync: ${e && e.message ? e.message : e}`)
