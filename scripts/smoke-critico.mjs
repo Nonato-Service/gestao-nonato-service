@@ -1410,6 +1410,9 @@ try {
     dsStock.includes("'nonato-pecas-stock'") &&
     dsStock.includes('pushLocalCadastroUnionToServer') &&
     dsStock.includes('isSlowCadastroLoadKey') &&
+    dsStock.includes('isPecasStockCadastroKey') &&
+    dsStock.includes('isLargePecasStockJson') &&
+    dsStock.includes('forceServerPush') &&
     dsStock.includes("'nonato-pecas-stock'") &&
     /const keys = \[[\s\S]*nonato-pecas-stock[\s\S]*\] as const/.test(dsStock)
   ) {
@@ -1419,7 +1422,13 @@ try {
   }
   const loadRoute = fs.readFileSync(path.join(root, 'app/api/data/load/route.ts'), 'utf8')
   const loadTextRoute = fs.readFileSync(path.join(root, 'app/api/data/load-text/route.ts'), 'utf8')
-  if (loadRoute.includes('`${key}.txt`') && loadRoute.includes('fromTxt.length > fromJson.length')) {
+  const saveTextRoute = fs.readFileSync(path.join(root, 'app/api/data/save-text/route.ts'), 'utf8')
+  if (
+    loadRoute.includes('`${key}.txt`') &&
+    loadRoute.includes('fromTxt.length > fromJson.length') &&
+    loadRoute.includes("'nonato-pecas-stock'") &&
+    loadRoute.includes('parsed.length > current.length')
+  ) {
     ok('stock: load lê JSON e TXT e fica com a lista maior')
   } else {
     fail('load de cadastro ainda ignora .txt maior')
@@ -1429,7 +1438,9 @@ try {
     loadTextRoute.includes('nonato-logo') &&
     fs.readFileSync(path.join(root, 'app/api/data/save/route.ts'), 'utf8').includes(
       "'nonato-pecas-stock'"
-    )
+    ) &&
+    saveTextRoute.includes("'nonato-pecas-stock'") &&
+    saveTextRoute.includes('resolveCadastroWriteValue')
   ) {
     ok('stock: load-text também prefere lista maior e save limpa .txt')
   } else {

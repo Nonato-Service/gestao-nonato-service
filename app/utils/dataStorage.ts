@@ -1057,14 +1057,22 @@ async function _doSaveToServer(
      * O `/save` actualiza `.json` + regenera `nonato-pecas-biblioteca-lite`.
      */
     const isLargePecasBibliotecaJson = key === PECAS_BIBLIOTECA_KEY && payloadStr.length > 80000
+    /**
+     * Stock com fotos: payload grande falhava no `/save` (413/timeout) e ficava só no localStorage
+     * do escritório — o viajante via lista pequena. save-text (ramo stock) grava `.json` + apaga `.txt`.
+     */
+    const isLargePecasStockJson = isPecasStockCadastroKey(key) && payloadStr.length > 80000
     const useTextEndpoint =
       isLargeString ||
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
+      isLargePecasStockJson ||
       useSaveTextForLogo
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
-      (isLargeManuaisJson && typeof value === 'object') || isLargeLogosRelatoriosJson
+      (isLargeManuaisJson && typeof value === 'object') ||
+      isLargeLogosRelatoriosJson ||
+      (isLargePecasStockJson && typeof value === 'object')
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
     const payloadNeedsSlowUpload =
@@ -1072,6 +1080,7 @@ async function _doSaveToServer(
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
       isLargePecasBibliotecaJson ||
+      isLargePecasStockJson ||
       isLargeString ||
       (useSaveTextForLogo && typeof value === 'string' && value.length > 40000)
     const timeoutMs = opts?.timeoutMs ?? (payloadNeedsSlowUpload ? 180000 : 45000)
@@ -1210,15 +1219,18 @@ export async function saveToServer(key: string, value: any): Promise<boolean> {
   return requestPromise
 }
 
-/** Peças do stock levam fotos: 5s cortava o download e o outro PC ficava com uma lista incompleta. */
-function isSlowCadastroLoadKey(key: string): boolean {
+/** Peças do stock (e categorias): qualquer user com acesso ao cadastro — sync sem Admin. */
+function isPecasStockCadastroKey(key: string): boolean {
   return (
-    key === PECAS_BIBLIOTECA_KEY ||
-    key === MANUAIS_KEY ||
     key === 'nonato-pecas-stock' ||
     key === 'nonato-categorias-pecas-stock' ||
     key === 'nonato-subcategorias-pecas-stock'
   )
+}
+
+/** Peças do stock levam fotos: 5s cortava o download e o outro PC ficava com uma lista incompleta. */
+function isSlowCadastroLoadKey(key: string): boolean {
+  return key === PECAS_BIBLIOTECA_KEY || key === MANUAIS_KEY || isPecasStockCadastroKey(key)
 }
 
 function parseServerCadastroPayload(data: unknown): unknown {
@@ -3142,8 +3154,10 @@ export async function saveData(
   saveToLocalStorage = true,
   awaitServer = false
 ): Promise<boolean> {
+  /** Stock: sempre confirmar no servidor (escritório sem Admin). awaitServer explícito também nunca adia. */
+  const forceServerPush = awaitServer || isPecasStockCadastroKey(key)
   const effectiveAwaitServer =
-    awaitServer ||
+    forceServerPush ||
     (!shouldDeferImplicitServerPush() && KEYS_AUTO_AWAIT_SERVER.has(key))
   /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
   if (key === MANUAIS_KEY && typeof window !== 'undefined') {
@@ -3162,7 +3176,7 @@ export async function saveData(
       }
     }
     let manuaisServerOk = true
-    if (!shouldDeferImplicitServerPush()) {
+    if (forceServerPush || !shouldDeferImplicitServerPush()) {
       const p = saveToServer(key, value).catch(() => false)
       if (effectiveAwaitServer) manuaisServerOk = (await p) === true
     }
@@ -3186,7 +3200,7 @@ export async function saveData(
         /* ignorar */
       }
     }
-    if (!shouldDeferImplicitServerPush()) {
+    if (forceServerPush || !shouldDeferImplicitServerPush()) {
       const p = saveToServer(key, value).catch(() => false)
       if (effectiveAwaitServer) return (await p) === true
     }
@@ -3222,9 +3236,7 @@ export async function saveData(
       (key === 'nonato-pagamentos-empresas' ||
         key === 'nonato-pagamentos-registos' ||
         key === 'nonato-users' ||
-        key === 'nonato-pecas-stock' ||
-        key === 'nonato-categorias-pecas-stock' ||
-        key === 'nonato-subcategorias-pecas-stock') &&
+        isPecasStockCadastroKey(key)) &&
       Array.isArray(value)
     ) {
       try {
@@ -3280,9 +3292,9 @@ export async function saveData(
     }
   }
 
-  // Servidor — por defeito em segundo plano; `awaitServer` para alinhar revisão de sync (logos, etc.)
+  // Servidor — stock / awaitServer nunca adiados pelo bootstrap; resto em segundo plano.
   let serverOk = true
-  if (!shouldDeferImplicitServerPush()) {
+  if (forceServerPush || !shouldDeferImplicitServerPush()) {
     const p = saveToServer(key, value).catch(() => false)
     if (effectiveAwaitServer) {
       serverOk = (await p) === true
@@ -3465,7 +3477,15 @@ function writeLocalStorageValue(key: string, value: unknown): void {
 }
 
 function scheduleServerMigrationPush(key: string, value: unknown): void {
-  if (blockImplicitServerPushDuringBootstrap || serverOffline) return
+  // Stock: nunca adiar — escritório sem Admin depende disto para o viajante ver as peças.
+  if (!isPecasStockCadastroKey(key) && (blockImplicitServerPushDuringBootstrap || serverOffline)) return
+  if (serverOffline && !isPecasStockCadastroKey(key)) return
+  if (serverOffline) {
+    void checkServerOnline().then((ok) => {
+      if (ok) saveToServer(key, value).catch(() => {})
+    })
+    return
+  }
   saveToServer(key, value).catch(() => {})
 }
 

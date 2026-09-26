@@ -164,6 +164,28 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Stock: também no bootstrap — se `.txt` tiver mais peças que `.json`, adoptar o maior.
+      for (const stockKey of [
+        'nonato-pecas-stock',
+        'nonato-categorias-pecas-stock',
+        'nonato-subcategorias-pecas-stock',
+      ] as const) {
+        const txtPath = path.join(dataDir, `${stockKey}.txt`)
+        if (!fs.existsSync(txtPath)) continue
+        try {
+          const c = fs.readFileSync(txtPath, 'utf-8')
+          if (!c || !c.trim()) continue
+          const parsed = JSON.parse(c) as unknown
+          if (!Array.isArray(parsed)) continue
+          const current = allData[stockKey]
+          if (!Array.isArray(current) || parsed.length > current.length) {
+            allData[stockKey] = parsed
+          }
+        } catch (e) {
+          console.error(`Erro ao ler ${stockKey}.txt no bundle:`, e)
+        }
+      }
+
       return NextResponse.json(
         { success: true, data: allData, bootstrap: bootstrap || undefined },
         { headers: jsonHeaders() }

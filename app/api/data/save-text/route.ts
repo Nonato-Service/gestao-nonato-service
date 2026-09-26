@@ -6,7 +6,7 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { textFileContentUnchanged, writeTextFileAtomic, writeJsonFileAtomic } from '../writeIfChanged'
-import { assessServerCadastroTextWrite, assessServerCadastroWrite } from '../../../lib/serverCadastroGuard'
+import { assessServerCadastroTextWrite, assessServerCadastroWrite, resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
 
 export async function POST(request: NextRequest) {
@@ -84,6 +84,58 @@ export async function POST(request: NextRequest) {
         revision: meta.revision,
         updatedAt: meta.updatedAt,
         total: pecas.length,
+      })
+    }
+
+    /**
+     * Stock de peças (e categorias): sempre `.json` (como a biblioteca).
+     * Antes um `.txt` grande coexistia com `.json` pequeno — o bootstrap do /load lia só o JSON
+     * e o viajante ficava com 5 peças enquanto o escritório tinha 19 no browser.
+     */
+    if (
+      key === 'nonato-pecas-stock' ||
+      key === 'nonato-categorias-pecas-stock' ||
+      key === 'nonato-subcategorias-pecas-stock'
+    ) {
+      let stock: unknown = value
+      if (typeof value === 'string') {
+        try {
+          stock = JSON.parse(value)
+        } catch {
+          return NextResponse.json({ error: 'JSON de stock inválido' }, { status: 400 })
+        }
+      }
+      if (!Array.isArray(stock)) {
+        return NextResponse.json({ error: 'Stock de peças deve ser um array' }, { status: 400 })
+      }
+      const resolved = resolveCadastroWriteValue(key, stock, jsonGuardPath)
+      if (!resolved.ok) {
+        const guard = resolved.guard
+        return NextResponse.json(
+          {
+            error: 'cadastro_protected',
+            reason: guard.reason,
+            key,
+            existingCount: guard.existingCount,
+            newCount: guard.newCount,
+          },
+          { status: 409 }
+        )
+      }
+      writeJsonFileAtomic(jsonGuardPath, resolved.value)
+      try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+      } catch {
+        /* ignorar */
+      }
+      const meta = bumpSyncMeta(dataDir)
+      const total = Array.isArray(resolved.value) ? resolved.value.length : stock.length
+      return NextResponse.json({
+        success: true,
+        message: `Dados salvos com sucesso: ${key}`,
+        revision: meta.revision,
+        updatedAt: meta.updatedAt,
+        total,
       })
     }
 

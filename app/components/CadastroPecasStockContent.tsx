@@ -36,7 +36,13 @@ type Props = {
   closeTab: (id: string) => void
   voltarPaginaInicial: () => void
   logoSlot: React.ReactNode
-  saveData: (key: string, data: unknown) => Promise<boolean | void>
+  /** 3.º = localStorage; 4.º = await servidor (obrigatório no stock). */
+  saveData: (
+    key: string,
+    data: unknown,
+    saveToLocalStorage?: boolean,
+    awaitServer?: boolean
+  ) => Promise<boolean | void>
   loadData: (key: string) => Promise<unknown>
 }
 
@@ -87,13 +93,14 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<PecaBiblioteca>(next, fromLoad)
       setPecas(merged)
+      // true,true = local + aguardar servidor (qualquer user; sem Admin / sem «Enviar tudo»)
       const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
-      if (!ok) {
+      if (ok === false) {
         setErro(
           tr(safeT, 'cadastroPecasStockFalhaServidor', 'Não gravou no servidor. Volte a guardar com internet.')
         )
       }
-      return ok
+      return ok !== false
     },
     [saveData, loadData, pecas.length, safeT]
   )
@@ -105,9 +112,14 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<CategoriaPeca>(next, fromLoad)
       setCategorias(merged)
-      await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
+      const ok = await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
+      if (ok === false) {
+        setErro(
+          tr(safeT, 'cadastroPecasStockFalhaServidor', 'Não gravou no servidor. Volte a guardar com internet.')
+        )
+      }
     },
-    [saveData, loadData, categorias.length]
+    [saveData, loadData, categorias.length, safeT]
   )
   const persistSubs = useCallback(
     async (next: SubcategoriaPeca[]) => {
@@ -117,9 +129,14 @@ export function CadastroPecasStockContent({
           ? next
           : mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(next, fromLoad)
       setSubcategorias(merged)
-      await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
+      const ok = await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, merged, true, true)
+      if (ok === false) {
+        setErro(
+          tr(safeT, 'cadastroPecasStockFalhaServidor', 'Não gravou no servidor. Volte a guardar com internet.')
+        )
+      }
     },
-    [saveData, loadData, subcategorias.length]
+    [saveData, loadData, subcategorias.length, safeT]
   )
 
   useEffect(() => {
@@ -171,7 +188,7 @@ export function CadastroPecasStockContent({
         pushing = true
         try {
           const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
-          if (!ok) {
+          if (ok === false) {
             lastPushed = 0
             setErro(
               tr(
