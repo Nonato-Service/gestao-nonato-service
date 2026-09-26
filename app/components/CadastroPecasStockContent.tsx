@@ -85,6 +85,8 @@ export function CadastroPecasStockContent({
   const [galeriaCategoriaId, setGaleriaCategoriaId] = useState<string | null>(null)
   const [buscaGaleria, setBuscaGaleria] = useState('')
   const [mostrarPrecos, setMostrarPrecos] = useState(false)
+  /** Contagem bruta no servidor após GET (prova: se for 5, o escritório ainda não empurrou). */
+  const [serverPecasCount, setServerPecasCount] = useState<number | null>(null)
 
   const persistPecas = useCallback(
     async (next: PecaBiblioteca[]) => {
@@ -153,6 +155,9 @@ export function CadastroPecasStockContent({
         // GET servidor + união + push se local > server (escritório) / pull se server > local (viajante).
         const synced = await syncPecasStockCadastroOnOpen()
         if (!alive || ticket !== seq) return
+        if (typeof synced.serverPecasCount === 'number') {
+          setServerPecasCount(synced.serverPecasCount)
+        }
         let merged = asArray<PecaBiblioteca>(synced.pecas)
         setPecas((prev) => {
           merged = mergeArraysByIdDeferServerLocal<PecaBiblioteca>(merged, prev)
@@ -401,6 +406,19 @@ export function CadastroPecasStockContent({
                     'Cadastro para gravar e editar. Biblioteca para consultar o catálogo visual. Stock partilhado da empresa.'
                   )}
                 </p>
+                {serverPecasCount != null ? (
+                  <p
+                    className="biblioteca-pecas-hub__hero-tagline"
+                    style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}
+                    data-testid="cadastro-pecas-stock-server-count"
+                  >
+                    {tr(
+                      safeT,
+                      'cadastroPecasStockNoServidor',
+                      'Stock no servidor: {n}'
+                    ).replace('{n}', String(serverPecasCount))}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="biblioteca-pecas-hub__hero-actions">

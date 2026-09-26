@@ -1218,6 +1218,8 @@ try {
     stockSrc.includes('nonato-data-local-changed') &&
     stockSrc.includes('ns-stock-catalog-wrap') &&
     stockSrc.includes('cadastroPecasStockQtdCol') &&
+    stockSrc.includes('cadastroPecasStockNoServidor') &&
+    stockSrc.includes('serverPecasCount') &&
     stockSrc.includes("saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)") &&
     stockSrc.includes('cadastroPecasStockFalhaServidor') &&
     !stockSrc.includes('importacao') &&
@@ -1411,6 +1413,7 @@ try {
     dsStock.includes("'nonato-pecas-stock'") &&
     dsStock.includes('pushLocalCadastroUnionToServer') &&
     dsStock.includes('syncPecasStockCadastroOnOpen') &&
+    dsStock.includes('serverPecasCount') &&
     dsStock.includes('isSlowCadastroLoadKey') &&
     dsStock.includes('isPecasStockCadastroKey') &&
     dsStock.includes('isLargePecasStockJson') &&

@@ -3349,6 +3349,8 @@ export type PecasStockCadastroSyncResult = {
   subcategorias: unknown[]
   pushed: boolean
   pulled: boolean
+  /** Contagem bruta no servidor após GET (prova operacional; null se GET falhou). */
+  serverPecasCount: number | null
 }
 
 /**
@@ -3364,6 +3366,7 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
     subcategorias: [],
     pushed: false,
     pulled: false,
+    serverPecasCount: null,
   }
   if (typeof window === 'undefined') return empty
 
@@ -3405,6 +3408,9 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
       const localSnap = await readLocalValueForLoad(key, true)
       const localArr = Array.isArray(localSnap.parsed) ? (localSnap.parsed as unknown[]) : []
       const serverArr = await loadServerBest(key)
+      if (field === 'pecas') {
+        out.serverPecasCount = serverArr.length
+      }
       let merged = mergeArraysByIdDeferServerLocal(serverArr, localArr)
 
       if (merged.length > localArr.length) {
@@ -3428,6 +3434,9 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
         if (ok) {
           out.pushed = true
           const after = await loadServerBest(key)
+          if (field === 'pecas') {
+            out.serverPecasCount = after.length
+          }
           if (after.length > 0) {
             const next = mergeArraysByIdDeferServerLocal(after, merged)
             if (next.length > merged.length || next.length > localArr.length) {
