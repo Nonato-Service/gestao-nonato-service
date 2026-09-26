@@ -1412,6 +1412,7 @@ try {
     dsStock.includes('isSlowCadastroLoadKey') &&
     dsStock.includes('isPecasStockCadastroKey') &&
     dsStock.includes('isLargePecasStockJson') &&
+    dsStock.includes('isPecasStockJson') &&
     dsStock.includes('forceServerPush') &&
     dsStock.includes("'nonato-pecas-stock'") &&
     /const keys = \[[\s\S]*nonato-pecas-stock[\s\S]*\] as const/.test(dsStock)
@@ -1419,6 +1420,25 @@ try {
     ok('stock: peças do outro PC fundem e sobem ao servidor')
   } else {
     fail('stock: peças do outro computador ainda não entram na união')
+  }
+  const guardStock = fs.readFileSync(path.join(root, 'app/lib/serverCadastroGuard.ts'), 'utf8')
+  if (
+    guardStock.includes('PECAS_STOCK_UNION_KEYS') &&
+    guardStock.includes('mergeProtectedArrayById(existing, value)')
+  ) {
+    ok('stock: servidor faz sempre união das peças da empresa')
+  } else {
+    fail('stock: servidor ainda pode gravar lista parcial sem união')
+  }
+  const i18nStock = fs.readFileSync(path.join(root, 'app/i18n/messages/pt-BR.json'), 'utf8')
+  if (
+    i18nStock.includes('STOCK DA EMPRESA') &&
+    i18nStock.includes('Stock partilhado da empresa') &&
+    !i18nStock.includes('Só o seu stock')
+  ) {
+    ok('stock: textos falam em stock partilhado da empresa')
+  } else {
+    fail('stock: textos ainda sugerem stock só do utilizador')
   }
   const loadRoute = fs.readFileSync(path.join(root, 'app/api/data/load/route.ts'), 'utf8')
   const loadTextRoute = fs.readFileSync(path.join(root, 'app/api/data/load-text/route.ts'), 'utf8')

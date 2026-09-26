@@ -346,7 +346,7 @@ export const SIDEBAR_BUTTON_CATALOG: SidebarButtonMerge[] = [
   },
   {
     id: 'cadastro-pecas-stock-default',
-    name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+    name: 'CADASTRO DE PEÇAS DO STOCK DA EMPRESA',
     action: 'open-cadastro-pecas-stock',
     order: 7.25,
     translationKey: 'cadastroPecasStockTitle',

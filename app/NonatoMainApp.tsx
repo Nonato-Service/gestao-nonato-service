@@ -9824,7 +9824,7 @@ export default function Dashboard() {
       if (!hasCadastroPecasStock) {
         buttons.push({
           id: 'cadastro-pecas-stock-default',
-          name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+          name: 'CADASTRO DE PEÇAS DO STOCK DA EMPRESA',
           action: 'open-cadastro-pecas-stock',
           order: buttons.length,
           translationKey: 'cadastroPecasStockTitle',
@@ -10445,7 +10445,7 @@ export default function Dashboard() {
       if (!hasCadastroPecasStockAfter) {
         filteredButtons.push({
           id: 'cadastro-pecas-stock-default',
-          name: 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+          name: 'CADASTRO DE PEÇAS DO STOCK DA EMPRESA',
           action: 'open-cadastro-pecas-stock',
           order: filteredButtons.length,
           translationKey: 'cadastroPecasStockTitle',

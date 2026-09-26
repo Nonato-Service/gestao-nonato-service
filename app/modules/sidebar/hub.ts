@@ -87,7 +87,7 @@ export function getTabTitleForBundle(type: TabType, tRaw: Record<string, unknown
     'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
     'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
     'cadastro-pecas-stock':
-      t?.cadastroPecasStockTitle || 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK',
+      t?.cadastroPecasStockTitle || 'CADASTRO DE PEÇAS DO STOCK DA EMPRESA',
     'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
     'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
     agenda: t?.agenda || 'Agenda',

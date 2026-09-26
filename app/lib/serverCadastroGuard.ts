@@ -142,6 +142,12 @@ export function assessServerCadastroWrite(
   return { allowed: true }
 }
 
+const PECAS_STOCK_UNION_KEYS = new Set([
+  'nonato-pecas-stock',
+  'nonato-categorias-pecas-stock',
+  'nonato-subcategorias-pecas-stock',
+])
+
 /** Decide o valor a gravar: aceite, fundir com o disco, ou recusar. */
 export function resolveCadastroWriteValue(
   key: string,
@@ -149,6 +155,18 @@ export function resolveCadastroWriteValue(
   filePath: string
 ): CadastroWriteResolution {
   const existing = Array.isArray(value) ? readExistingJsonArray(filePath) || [] : []
+  /**
+   * Stock da empresa: sempre união por id (escritório + viagem).
+   * Nunca substituir a lista completa por um subset de outro login/aparelho.
+   */
+  if (PECAS_STOCK_UNION_KEYS.has(key) && Array.isArray(value)) {
+    if (existing.length === 0) {
+      const guardEmpty = assessServerCadastroWrite(key, value, filePath)
+      if (!guardEmpty.allowed) return { ok: false, guard: guardEmpty }
+      return { ok: true, value }
+    }
+    return { ok: true, value: mergeProtectedArrayById(existing, value) }
+  }
   if (
     MERGE_ON_SHRINK_KEYS.has(key) &&
     Array.isArray(value) &&

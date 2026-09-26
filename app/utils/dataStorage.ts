@@ -1058,21 +1058,22 @@ async function _doSaveToServer(
      */
     const isLargePecasBibliotecaJson = key === PECAS_BIBLIOTECA_KEY && payloadStr.length > 80000
     /**
-     * Stock com fotos: payload grande falhava no `/save` (413/timeout) e ficava só no localStorage
-     * do escritório — o viajante via lista pequena. save-text (ramo stock) grava `.json` + apaga `.txt`.
+     * Stock da empresa: SEMPRE save-text (ramo dedicado) — grava `.json`, apaga `.txt` obsoleto
+     * e faz união no servidor. Evita escritório com 19 e viagem com 5 por falha/413 no `/save`.
      */
-    const isLargePecasStockJson = isPecasStockCadastroKey(key) && payloadStr.length > 80000
+    const isPecasStockJson = isPecasStockCadastroKey(key) && typeof value === 'object'
+    const isLargePecasStockJson = isPecasStockJson && payloadStr.length > 80000
     const useTextEndpoint =
       isLargeString ||
       isLargeManuaisJson ||
       isLargeLogosRelatoriosJson ||
-      isLargePecasStockJson ||
+      isPecasStockJson ||
       useSaveTextForLogo
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
       (isLargeManuaisJson && typeof value === 'object') ||
       isLargeLogosRelatoriosJson ||
-      (isLargePecasStockJson && typeof value === 'object')
+      isPecasStockJson
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
     const payloadNeedsSlowUpload =

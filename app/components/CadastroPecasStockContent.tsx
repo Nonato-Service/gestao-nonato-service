@@ -158,6 +158,16 @@ export function CadastroPecasStockContent({
         merged = mergeArraysByIdDeferServerLocal<PecaBiblioteca>(incoming, prev)
         return merged
       })
+      let catsMerged = asArray<CategoriaPeca>(c)
+      setCategorias((prev) => {
+        catsMerged = mergeArraysByIdDeferServerLocal<CategoriaPeca>(asArray(c), prev)
+        return catsMerged
+      })
+      let subsMerged = asArray<SubcategoriaPeca>(s)
+      setSubcategorias((prev) => {
+        subsMerged = mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(asArray(s), prev)
+        return subsMerged
+      })
       let fotosReduzidas = false
       const leves: PecaBiblioteca[] = []
       for (const peca of merged) {
@@ -181,14 +191,21 @@ export function CadastroPecasStockContent({
         merged = leves
         setPecas(leves)
       }
-      setCategorias(asArray<CategoriaPeca>(c))
-      setSubcategorias(asArray<SubcategoriaPeca>(s))
-      if ((merged.length > lastPushed || fotosReduzidas) && !pushing) {
-        lastPushed = merged.length
+      // Stock partilhado da empresa: ao abrir, sobe a união (escritório → servidor → viagem).
+      const needPush =
+        !pushing && (merged.length > lastPushed || fotosReduzidas || (lastPushed === 0 && merged.length > 0))
+      if (needPush) {
+        lastPushed = Math.max(merged.length, 1)
         pushing = true
         try {
-          const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
-          if (ok === false) {
+          const okP = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
+          if (catsMerged.length > 0) {
+            await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, catsMerged, true, true)
+          }
+          if (subsMerged.length > 0) {
+            await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, subsMerged, true, true)
+          }
+          if (okP === false) {
             lastPushed = 0
             setErro(
               tr(
@@ -372,16 +389,16 @@ export function CadastroPecasStockContent({
               </div>
               <div className="biblioteca-pecas-hub__hero-head">
                 <p className="biblioteca-pecas-hub__eyebrow biblioteca-pecas-hub__hero-eyebrow">
-                  {tr(safeT, 'cadastroPecasStockDesc', 'Peças existentes no meu stock')}
+                  {tr(safeT, 'cadastroPecasStockDesc', 'Cadastro e biblioteca do stock da empresa.')}
                 </p>
                 <h1 className="biblioteca-pecas-hub__hero-title">
-                  {tr(safeT, 'cadastroPecasStockTitle', 'CADASTRO DE PEÇAS EXISTENTES NO MEU STOCK')}
+                  {tr(safeT, 'cadastroPecasStockTitle', 'CADASTRO DE PEÇAS DO STOCK DA EMPRESA')}
                 </h1>
                 <p className="biblioteca-pecas-hub__hero-tagline">
                   {tr(
                     safeT,
                     'cadastroPecasStockHint',
-                    'Só cadastro manual das peças que tem em stock. A biblioteca continua no outro botão.'
+                    'Cadastro para gravar e editar. Biblioteca para consultar o catálogo visual. Stock partilhado da empresa.'
                   )}
                 </p>
               </div>
