@@ -21,6 +21,7 @@ import {
   SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
 } from '../modules/biblioteca/stockKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
+import { syncPecasStockCadastroOnOpen } from '../utils/dataStorage'
 import { compressImageDataUrlIfNeeded, compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
 import {
   createCategoriaPecaFromForm,
@@ -142,62 +143,61 @@ export function CadastroPecasStockContent({
   useEffect(() => {
     let alive = true
     let seq = 0
-    let pushing = false
-    let lastPushed = 0
+    let syncing = false
+    let lastSyncedLen = 0
     const carregar = async () => {
+      if (syncing) return
       const ticket = ++seq
-      const [p, c, s] = await Promise.all([
-        loadData(PECAS_STOCK_STORAGE_KEY),
-        loadData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY),
-        loadData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY),
-      ])
-      if (!alive || ticket !== seq) return
-      const incoming = asArray<PecaBiblioteca>(p)
-      let merged: PecaBiblioteca[] = incoming
-      setPecas((prev) => {
-        merged = mergeArraysByIdDeferServerLocal<PecaBiblioteca>(incoming, prev)
-        return merged
-      })
-      let catsMerged = asArray<CategoriaPeca>(c)
-      setCategorias((prev) => {
-        catsMerged = mergeArraysByIdDeferServerLocal<CategoriaPeca>(asArray(c), prev)
-        return catsMerged
-      })
-      let subsMerged = asArray<SubcategoriaPeca>(s)
-      setSubcategorias((prev) => {
-        subsMerged = mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(asArray(s), prev)
-        return subsMerged
-      })
-      let fotosReduzidas = false
-      const leves: PecaBiblioteca[] = []
-      for (const peca of merged) {
-        const img = String(peca.imagem || '')
-        if (img.length > 960_000) {
-          try {
-            const nextImg = await compressImageDataUrlIfNeeded(img)
-            if (nextImg !== img) {
-              fotosReduzidas = true
-              leves.push({ ...peca, imagem: nextImg })
-              continue
+      syncing = true
+      try {
+        // GET servidor + união + push se local > server (escritório) / pull se server > local (viajante).
+        const synced = await syncPecasStockCadastroOnOpen()
+        if (!alive || ticket !== seq) return
+        let merged = asArray<PecaBiblioteca>(synced.pecas)
+        setPecas((prev) => {
+          merged = mergeArraysByIdDeferServerLocal<PecaBiblioteca>(merged, prev)
+          return merged
+        })
+        let catsMerged = asArray<CategoriaPeca>(synced.categorias)
+        setCategorias((prev) => {
+          catsMerged = mergeArraysByIdDeferServerLocal<CategoriaPeca>(catsMerged, prev)
+          return catsMerged
+        })
+        let subsMerged = asArray<SubcategoriaPeca>(synced.subcategorias)
+        setSubcategorias((prev) => {
+          subsMerged = mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(subsMerged, prev)
+          return subsMerged
+        })
+        let fotosReduzidas = false
+        const leves: PecaBiblioteca[] = []
+        for (const peca of merged) {
+          const img = String(peca.imagem || '')
+          if (img.length > 960_000) {
+            try {
+              const nextImg = await compressImageDataUrlIfNeeded(img)
+              if (nextImg !== img) {
+                fotosReduzidas = true
+                leves.push({ ...peca, imagem: nextImg })
+                continue
+              }
+            } catch {
+              /* mantém a foto original */
             }
-          } catch {
-            /* mantém a foto original */
           }
+          leves.push(peca)
         }
-        leves.push(peca)
-      }
-      if (!alive || ticket !== seq) return
-      if (fotosReduzidas) {
-        merged = leves
-        setPecas(leves)
-      }
-      // Stock partilhado da empresa: ao abrir, sobe a união (escritório → servidor → viagem).
-      const needPush =
-        !pushing && (merged.length > lastPushed || fotosReduzidas || (lastPushed === 0 && merged.length > 0))
-      if (needPush) {
-        lastPushed = Math.max(merged.length, 1)
-        pushing = true
-        try {
+        if (!alive || ticket !== seq) return
+        if (fotosReduzidas) {
+          merged = leves
+          setPecas(leves)
+        }
+        // Reforço: se sync não empurrou mas fotos encolheram ou união cresceu, gravar de novo.
+        const needExtraPush =
+          fotosReduzidas || (!synced.pushed && merged.length > lastSyncedLen && merged.length > 0)
+        if (needExtraPush || synced.pushed || synced.pulled) {
+          lastSyncedLen = Math.max(merged.length, lastSyncedLen, 1)
+        }
+        if (needExtraPush) {
           const okP = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
           if (catsMerged.length > 0) {
             await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, catsMerged, true, true)
@@ -206,7 +206,7 @@ export function CadastroPecasStockContent({
             await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, subsMerged, true, true)
           }
           if (okP === false) {
-            lastPushed = 0
+            lastSyncedLen = 0
             setErro(
               tr(
                 safeT,
@@ -215,14 +215,14 @@ export function CadastroPecasStockContent({
               )
             )
           }
-        } finally {
-          pushing = false
         }
+      } finally {
+        syncing = false
       }
     }
     void carregar()
     const onLocal = (ev: Event) => {
-      if (pushing) return
+      if (syncing) return
       const key = (ev as CustomEvent<{ key?: string }>).detail?.key
       if (
         key === PECAS_STOCK_STORAGE_KEY ||
@@ -248,7 +248,7 @@ export function CadastroPecasStockContent({
       window.removeEventListener('focus', onShow)
       document.removeEventListener('visibilitychange', onShow)
     }
-  }, [loadData, saveData])
+  }, [saveData, safeT])
 
   const filtradas = useMemo(() => {
     const q = busca.trim().toLowerCase()

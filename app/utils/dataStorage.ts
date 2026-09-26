@@ -3343,6 +3343,124 @@ export async function pushLocalCadastroUnionToServer(): Promise<void> {
   }
 }
 
+export type PecasStockCadastroSyncResult = {
+  pecas: unknown[]
+  categorias: unknown[]
+  subcategorias: unknown[]
+  pushed: boolean
+  pulled: boolean
+}
+
+/**
+ * Ao abrir o Cadastro de Peças do stock: GET forçado do servidor + união (local ∪ server).
+ * - Se a união > local → grava local (viajante puxa).
+ * - Se local > server → push automático da lista completa (escritório sem Admin / sem Guardar).
+ * - Após push, volta a ler o servidor para aplicar a união final no aparelho.
+ */
+export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastroSyncResult> {
+  const empty: PecasStockCadastroSyncResult = {
+    pecas: [],
+    categorias: [],
+    subcategorias: [],
+    pushed: false,
+    pulled: false,
+  }
+  if (typeof window === 'undefined') return empty
+
+  const specs = [
+    { key: 'nonato-pecas-stock' as const, field: 'pecas' as const },
+    { key: 'nonato-categorias-pecas-stock' as const, field: 'categorias' as const },
+    { key: 'nonato-subcategorias-pecas-stock' as const, field: 'subcategorias' as const },
+  ]
+
+  const out: PecasStockCadastroSyncResult = { ...empty }
+
+  const loadServerBest = async (key: string): Promise<unknown[]> => {
+    let best: unknown[] = []
+    try {
+      const fromText = await forceLoadCadastroFromServer(key)
+      if (Array.isArray(fromText)) best = fromText
+    } catch {
+      /* ignorar */
+    }
+    // Segunda leitura via /load — fica com a lista maior (json vs txt residual).
+    try {
+      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+        signal: createTimeoutSignal(120_000),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        if (result?.error !== 'auth_required' && Array.isArray(result?.data)) {
+          if (result.data.length > best.length) best = result.data
+        }
+      }
+    } catch {
+      /* ignorar */
+    }
+    return best
+  }
+
+  for (const { key, field } of specs) {
+    try {
+      const localSnap = await readLocalValueForLoad(key, true)
+      const localArr = Array.isArray(localSnap.parsed) ? (localSnap.parsed as unknown[]) : []
+      const serverArr = await loadServerBest(key)
+      let merged = mergeArraysByIdDeferServerLocal(serverArr, localArr)
+
+      if (merged.length > localArr.length) {
+        out.pulled = true
+        writeLocalStorageValue(key, merged)
+        try {
+          await saveKv(key, merged)
+        } catch {
+          /* ignorar */
+        }
+      }
+
+      const needPush =
+        merged.length > 0 &&
+        (localArr.length > serverArr.length ||
+          merged.length > serverArr.length ||
+          (serverArr.length === 0 && localArr.length > 0))
+
+      if (needPush) {
+        const ok = await saveData(key, merged, true, true)
+        if (ok) {
+          out.pushed = true
+          const after = await loadServerBest(key)
+          if (after.length > 0) {
+            const next = mergeArraysByIdDeferServerLocal(after, merged)
+            if (next.length > merged.length || next.length > localArr.length) {
+              out.pulled = true
+            }
+            merged = next
+            writeLocalStorageValue(key, merged)
+            try {
+              await saveKv(key, merged)
+            } catch {
+              /* ignorar */
+            }
+          }
+        }
+      } else if (serverArr.length > localArr.length) {
+        writeLocalStorageValue(key, merged)
+        try {
+          await saveKv(key, merged)
+        } catch {
+          /* ignorar */
+        }
+        out.pulled = true
+      }
+
+      out[field] = merged
+    } catch {
+      /* chave seguinte */
+    }
+  }
+
+  return out
+}
+
 async function readLocalValueForLoad(
   key: string,
   parseJson: boolean
@@ -3406,6 +3524,35 @@ async function readLocalValueForLoad(
 }
 
 function shouldPreferLocalOverServerOnLoad(key: string, serverValue: unknown, localParsed: unknown): boolean {
+  /**
+   * Stock da empresa: nunca preferir o local só porque é maior — o loadData já faz união
+   * e o ecrã faz GET+push ao abrir. Preferir local aqui bloqueava o viajante de receber a lista maior do servidor.
+   */
+  if (isPecasStockCadastroKey(key)) {
+    if (!serverKeyHasMeaningfulData(serverValue) && serverKeyHasMeaningfulData(localParsed)) {
+      return true
+    }
+    if (Array.isArray(serverValue) && serverValue.length === 0 && Array.isArray(localParsed) && localParsed.length > 0) {
+      return true
+    }
+    // Servidor maior → nunca preferir local (viajante com 5 não bloqueia as 19).
+    if (
+      Array.isArray(serverValue) &&
+      Array.isArray(localParsed) &&
+      serverValue.length > localParsed.length
+    ) {
+      return false
+    }
+    // Local maior → manter até o push ao abrir (escritório com 19).
+    if (
+      Array.isArray(serverValue) &&
+      Array.isArray(localParsed) &&
+      localParsed.length > serverValue.length
+    ) {
+      return true
+    }
+    return false
+  }
   if (!serverKeyHasMeaningfulData(serverValue) && serverKeyHasMeaningfulData(localParsed)) {
     return true
   }
@@ -3626,6 +3773,28 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           localSnapshot.parsed.length > 0
         ) {
           return localSnapshot.parsed
+        }
+
+        if (
+          isPecasStockCadastroKey(key) &&
+          parseJson &&
+          Array.isArray(serverData)
+        ) {
+          const merged = mergeArraysByIdDeferServerLocal(serverData, localSnapshot.parsed)
+          const localLen = Array.isArray(localSnapshot.parsed) ? localSnapshot.parsed.length : 0
+          writeLocalStorageValue(key, merged)
+          try {
+            await saveKv(key, merged)
+          } catch {
+            /* ignorar */
+          }
+          if (
+            merged.length > (Array.isArray(serverData) ? serverData.length : 0) ||
+            localLen > (Array.isArray(serverData) ? serverData.length : 0)
+          ) {
+            scheduleServerMigrationPush(key, merged)
+          }
+          return merged
         }
 
         if (

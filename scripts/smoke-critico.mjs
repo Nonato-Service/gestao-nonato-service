@@ -1214,6 +1214,7 @@ try {
     stockSrc.includes("aba === 'biblioteca'") &&
     stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
     stockSrc.includes('mergeArraysByIdDeferServerLocal') &&
+    stockSrc.includes('syncPecasStockCadastroOnOpen') &&
     stockSrc.includes('nonato-data-local-changed') &&
     stockSrc.includes('ns-stock-catalog-wrap') &&
     stockSrc.includes('cadastroPecasStockQtdCol') &&
@@ -1409,6 +1410,7 @@ try {
     shrinkSrc.includes("'nonato-pecas-stock'") &&
     dsStock.includes("'nonato-pecas-stock'") &&
     dsStock.includes('pushLocalCadastroUnionToServer') &&
+    dsStock.includes('syncPecasStockCadastroOnOpen') &&
     dsStock.includes('isSlowCadastroLoadKey') &&
     dsStock.includes('isPecasStockCadastroKey') &&
     dsStock.includes('isLargePecasStockJson') &&
