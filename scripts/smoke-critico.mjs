@@ -1418,10 +1418,22 @@ try {
     fail('stock: peças do outro computador ainda não entram na união')
   }
   const loadRoute = fs.readFileSync(path.join(root, 'app/api/data/load/route.ts'), 'utf8')
+  const loadTextRoute = fs.readFileSync(path.join(root, 'app/api/data/load-text/route.ts'), 'utf8')
   if (loadRoute.includes('`${key}.txt`') && loadRoute.includes('fromTxt.length > fromJson.length')) {
     ok('stock: load lê JSON e TXT e fica com a lista maior')
   } else {
     fail('load de cadastro ainda ignora .txt maior')
+  }
+  if (
+    loadTextRoute.includes('fromTxt.length > fromJson.length') &&
+    loadTextRoute.includes('nonato-logo') &&
+    fs.readFileSync(path.join(root, 'app/api/data/save/route.ts'), 'utf8').includes(
+      "'nonato-pecas-stock'"
+    )
+  ) {
+    ok('stock: load-text também prefere lista maior e save limpa .txt')
+  } else {
+    fail('load-text ainda pode devolver .txt menor que o .json do stock')
   }
 } catch (e) {
   fail(`stock sync: ${e && e.message ? e.message : e}`)

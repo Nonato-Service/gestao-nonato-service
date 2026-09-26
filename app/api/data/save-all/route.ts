@@ -60,6 +60,18 @@ export async function POST(request: NextRequest) {
           continue
         }
         writeJsonFileAtomic(filePath, resolved.value)
+        if (
+          key === 'nonato-pecas-stock' ||
+          key === 'nonato-categorias-pecas-stock' ||
+          key === 'nonato-subcategorias-pecas-stock'
+        ) {
+          try {
+            const txtPath = path.join(targetDir, `${key}.txt`)
+            if (fs.existsSync(txtPath)) fs.unlinkSync(txtPath)
+          } catch {
+            /* ignorar */
+          }
+        }
         saved.push(key)
         dirsWithContentChange.add(targetDir)
       } catch (error: any) {

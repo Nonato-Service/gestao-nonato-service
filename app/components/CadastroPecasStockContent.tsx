@@ -171,7 +171,16 @@ export function CadastroPecasStockContent({
         pushing = true
         try {
           const ok = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
-          if (!ok) lastPushed = 0
+          if (!ok) {
+            lastPushed = 0
+            setErro(
+              tr(
+                safeT,
+                'cadastroPecasStockFalhaServidor',
+                'Não gravou no servidor. Volte a guardar com internet.'
+              )
+            )
+          }
         } finally {
           pushing = false
         }

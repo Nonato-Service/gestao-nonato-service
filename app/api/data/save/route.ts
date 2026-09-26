@@ -102,8 +102,14 @@ export async function POST(request: NextRequest) {
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
-        // Logo em .json (pequeno ou vazio): remover .txt antigo para o bundle /load não preferir dados obsoletos.
-        if (key === 'nonato-logo' || key === 'nonato-logo-dashboard') {
+        // Remover .txt antigo para o load-text não preferir lista/blob obsoleto.
+        if (
+          key === 'nonato-logo' ||
+          key === 'nonato-logo-dashboard' ||
+          key === 'nonato-pecas-stock' ||
+          key === 'nonato-categorias-pecas-stock' ||
+          key === 'nonato-subcategorias-pecas-stock'
+        ) {
           try {
             const txtPath = path.join(targetDir, `${key}.txt`)
             if (fs.existsSync(txtPath)) fs.unlinkSync(txtPath)
