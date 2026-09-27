@@ -47,6 +47,7 @@ import {
   applySilentServerSync,
   getPendingSyncCount,
   pushLocalCadastroUnionToServer,
+  ensurePecasStockAutoSync,
 } from './utils/dataStorage'
 import { confirmBeforeLeaveUnsaved, hasUnsavedChanges, setUnsavedFormBaseline } from './utils/unsavedChangesGuard'
 import { useUnsavedFormGuard } from './hooks/useUnsavedFormGuard'
@@ -10691,6 +10692,10 @@ export default function Dashboard() {
         setSyncBootstrapPercent(0)
         const restoredCount = consumeCadastroRestoredNoticeCount()
         if (restoredCount > 0) setCadastroRestoredNotice(restoredCount)
+        // Stock peças: ao ligar/abrir o PC a app sincroniza sozinha (GET união + POST se local > server).
+        if (!bootstrapLoadErrored && typeof window !== 'undefined') {
+          void ensurePecasStockAutoSync({ force: true, reason: 'boot' })
+        }
       }
     } // Fim do try-catch e da função loadAllData
 

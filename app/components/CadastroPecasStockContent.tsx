@@ -21,7 +21,11 @@ import {
   SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
 } from '../modules/biblioteca/stockKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
-import { forceSyncPecasStockNow, syncPecasStockCadastroOnOpen } from '../utils/dataStorage'
+import {
+  ensurePecasStockAutoSync,
+  forceSyncPecasStockNow,
+  syncPecasStockCadastroOnOpen,
+} from '../utils/dataStorage'
 import { compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
 import {
   createCategoriaPecaFromForm,
@@ -66,7 +70,7 @@ function formatStockSyncError(
     return tr(
       t,
       'cadastroPecasStockDiscoCheio',
-      'Disco do servidor cheio. No Railway, aumente o volume ou liberte espaço em /data. Depois volte a «Sincronizar stock agora».'
+      'Disco do servidor cheio. No Railway, aumente o volume ou liberte espaço em /data. Depois volte a abrir a app (sincroniza sozinha).'
     )
   }
   return httpError
@@ -120,6 +124,9 @@ export function CadastroPecasStockContent({
         setErro(
           tr(safeT, 'cadastroPecasStockFalhaServidor', 'Não gravou no servidor. Volte a guardar com internet.')
         )
+      } else {
+        // Após guardar: push+pull automático (escritório envia sozinho; viajante recebe).
+        void ensurePecasStockAutoSync({ force: true, reason: 'after-save' })
       }
       return ok !== false
     },
@@ -193,8 +200,8 @@ export function CadastroPecasStockContent({
         })
         if (!alive || ticket !== seq) return
         lastSyncedLen = Math.max(merged.length, lastSyncedLen, 1)
-        const pushOk = synced.pushed
         const pushFail = synced.pushFailed
+        // Sucesso silencioso — toast só se falhar (disco cheio, rede, etc.).
         if (pushFail && !toastShownRef.current.failed) {
           toastShownRef.current.failed = true
           setSyncToastOk(false)
@@ -207,18 +214,8 @@ export function CadastroPecasStockContent({
           if (synced.httpError) {
             setErro(errMsg)
           }
-        } else if (pushOk && !toastShownRef.current.pushed) {
-          toastShownRef.current.pushed = true
+        } else if (!pushFail) {
           toastShownRef.current.failed = false
-          const n = Math.max(merged.length, synced.localPecasCount || 0)
-          const m =
-            typeof synced.serverPecasCount === 'number' ? synced.serverPecasCount : n
-          setSyncToastOk(true)
-          setSyncToast(
-            tr(safeT, 'cadastroPecasStockSyncAgoraToast', 'Enviadas {n} · Servidor agora {m}')
-              .replace('{n}', String(n))
-              .replace('{m}', String(m))
-          )
         }
       } finally {
         syncing = false
@@ -402,7 +399,7 @@ export function CadastroPecasStockContent({
                   {tr(
                     safeT,
                     'cadastroPecasStockHint',
-                    'Cadastro para gravar e editar. Biblioteca para consultar o catálogo visual. Stock partilhado da empresa.'
+                    'Cadastro para gravar e editar. Biblioteca para consultar. Ao abrir a app ou guardar uma peça, o stock actualiza sozinho.'
                   )}
                 </p>
                 {serverPecasCount != null ? (
@@ -440,16 +437,21 @@ export function CadastroPecasStockContent({
               </button>
               <button
                 type="button"
-                className="biblioteca-btn--green"
+                className="biblioteca-btn--purple"
                 disabled={pulling}
                 data-testid="cadastro-pecas-stock-sync-now"
+                title={tr(
+                  safeT,
+                  'cadastroPecasStockSyncAgoraTitle',
+                  'Opcional — a app já sincroniza ao abrir e ao guardar. Use só se precisar forçar.'
+                )}
                 style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  padding: '14px 22px',
-                  minHeight: 52,
-                  borderWidth: 2,
-                  letterSpacing: 0.2,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '8px 12px',
+                  minHeight: 36,
+                  opacity: 0.75,
+                  borderWidth: 1,
                 }}
                 onClick={async () => {
                   if (pulling) return
@@ -457,7 +459,6 @@ export function CadastroPecasStockContent({
                   setErro('')
                   try {
                     toastShownRef.current = {}
-                    // SEMPRE: POST lista local completa → GET + união → setState (contador PEÇAS).
                     const synced = await forceSyncPecasStockNow()
                     const next = asArray<PecaBiblioteca>(synced.pecas)
                     const cats = asArray<CategoriaPeca>(synced.categorias)
@@ -474,6 +475,7 @@ export function CadastroPecasStockContent({
                       setSyncToastOk(false)
                       setSyncToast(formatStockSyncError(synced.httpError, safeT))
                     } else {
+                      // Manual: feedback discreto; automático fica silencioso.
                       setSyncToastOk(true)
                       setSyncToast(
                         tr(
@@ -494,7 +496,7 @@ export function CadastroPecasStockContent({
                   }
                 }}
               >
-                {tr(safeT, 'cadastroPecasStockSyncAgora', 'Sincronizar stock agora')}
+                {tr(safeT, 'cadastroPecasStockSyncAgora', 'Sincronizar manualmente')}
               </button>
             </div>
           </div>

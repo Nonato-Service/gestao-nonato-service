@@ -1215,6 +1215,7 @@ try {
     stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
     stockSrc.includes('mergeArraysByIdDeferServerLocal') &&
     stockSrc.includes('forceSyncPecasStockNow') &&
+    stockSrc.includes('ensurePecasStockAutoSync') &&
     stockSrc.includes('cadastro-pecas-stock-sync-now') &&
     stockSrc.includes('cadastroPecasStockSyncAgora') &&
     stockSrc.includes('cadastroPecasStockSyncAgoraToast') &&
@@ -1236,6 +1237,7 @@ try {
     stockKeys.includes('nonato-pecas-stock') &&
     nmaStock.includes('open-cadastro-pecas-stock') &&
     nmaStock.includes('CadastroPecasStockContent') &&
+    nmaStock.includes('ensurePecasStockAutoSync') &&
     mergeStock.includes('cadastro-pecas-stock-default')
   ) {
     ok('cadastro de peças do stock (sem importação, dados isolados)')
@@ -1423,6 +1425,8 @@ try {
     dsStock.includes('pushLocalCadastroUnionToServer') &&
     dsStock.includes('syncPecasStockCadastroOnOpen') &&
     dsStock.includes('forceSyncPecasStockNow') &&
+    dsStock.includes('ensurePecasStockAutoSync') &&
+    dsStock.includes('setupPecasStockAutoSync') &&
     dsStock.includes('serverPecasCount') &&
     dsStock.includes('pushFailed') &&
     dsStock.includes('httpError') &&

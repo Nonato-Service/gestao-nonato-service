@@ -644,7 +644,7 @@ export function setupAutoSyncOnReconnect(): () => void {
     if (n > 0) void autoSyncPendingChanges()
   })
 
-  const run = () => {
+  const runPending = () => {
     if (isOnline()) void autoSyncPendingChanges()
     else {
       void probeServerReachable({ force: true }).then((ok) => {
@@ -653,7 +653,7 @@ export function setupAutoSyncOnReconnect(): () => void {
     }
   }
 
-  window.addEventListener('online', run)
+  window.addEventListener('online', runPending)
   // Intervalo mais longo; probe sem force (respeita cache) para não saturar a UI.
   const interval = window.setInterval(() => {
     if (getPendingSyncCount() === 0) return
@@ -671,9 +671,13 @@ export function setupAutoSyncOnReconnect(): () => void {
     if (ok) void autoSyncPendingChanges()
   })
 
+  // Stock peças: sync automático (throttled) ao online/foco — sem botão obrigatório.
+  const teardownStock = setupPecasStockAutoSync()
+
   return () => {
-    window.removeEventListener('online', run)
+    window.removeEventListener('online', runPending)
     window.clearInterval(interval)
+    teardownStock()
   }
 }
 
@@ -3697,6 +3701,73 @@ export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResul
   }
 
   return out
+}
+
+/** Throttle do sync automático de stock (boot / focus / online). */
+let pecasStockAutoSyncInFlight = false
+let pecasStockAutoSyncLastAt = 0
+const PECAS_STOCK_AUTO_SYNC_THROTTLE_MS = 45_000
+
+/**
+ * Sync automático do stock da empresa (GET união + POST se houver peças locais).
+ * Sem Admin, sem «Enviar tudo», sem clicar no botão — usado ao abrir o PC/app.
+ */
+export async function ensurePecasStockAutoSync(opts?: {
+  force?: boolean
+  reason?: string
+}): Promise<ForceSyncPecasStockResult | null> {
+  if (typeof window === 'undefined') return null
+  if (isNonatoDemoBuild()) return null
+  if (pecasStockAutoSyncInFlight) return null
+  const now = Date.now()
+  if (!opts?.force && now - pecasStockAutoSyncLastAt < PECAS_STOCK_AUTO_SYNC_THROTTLE_MS) {
+    return null
+  }
+  pecasStockAutoSyncInFlight = true
+  try {
+    const result = await forceSyncPecasStockNow()
+    pecasStockAutoSyncLastAt = Date.now()
+    try {
+      window.dispatchEvent(
+        new CustomEvent('nonato-pecas-stock-auto-synced', {
+          detail: { ...(result || {}), reason: opts?.reason || 'auto' },
+        })
+      )
+    } catch {
+      /* ignorar */
+    }
+    return result
+  } finally {
+    pecasStockAutoSyncInFlight = false
+  }
+}
+
+/**
+ * Ao focar a janela / voltar online: mesmo sync do stock (throttled).
+ * O boot chama `ensurePecasStockAutoSync({ force: true })` à parte.
+ */
+export function setupPecasStockAutoSync(): () => void {
+  if (typeof window === 'undefined') return () => {}
+
+  const run = () => {
+    if (document.visibilityState === 'hidden') return
+    if (!isOnline()) return
+    void ensurePecasStockAutoSync({ reason: 'focus-or-online' })
+  }
+
+  const onVisibility = () => {
+    if (document.visibilityState === 'visible') run()
+  }
+
+  window.addEventListener('online', run)
+  window.addEventListener('focus', run)
+  document.addEventListener('visibilitychange', onVisibility)
+
+  return () => {
+    window.removeEventListener('online', run)
+    window.removeEventListener('focus', run)
+    document.removeEventListener('visibilitychange', onVisibility)
+  }
 }
 
 async function readLocalValueForLoad(
