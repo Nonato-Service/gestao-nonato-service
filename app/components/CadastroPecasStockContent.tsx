@@ -21,7 +21,7 @@ import {
   SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY,
 } from '../modules/biblioteca/stockKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
-import { syncPecasStockCadastroOnOpen } from '../utils/dataStorage'
+import { forceSyncPecasStockNow, syncPecasStockCadastroOnOpen } from '../utils/dataStorage'
 import { compressImageDataUrlIfNeeded, compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
 import {
   createCategoriaPecaFromForm,
@@ -467,60 +467,59 @@ export function CadastroPecasStockContent({
                 type="button"
                 className="biblioteca-btn--green"
                 disabled={pulling}
-                data-testid="cadastro-pecas-stock-pull-server"
+                data-testid="cadastro-pecas-stock-sync-now"
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  padding: '14px 22px',
+                  minHeight: 52,
+                  borderWidth: 2,
+                  letterSpacing: 0.2,
+                }}
                 onClick={async () => {
                   if (pulling) return
                   setPulling(true)
                   setErro('')
                   try {
                     toastShownRef.current = {}
-                    const synced = await syncPecasStockCadastroOnOpen()
-                    if (typeof synced.serverPecasCount === 'number') {
-                      setServerPecasCount(synced.serverPecasCount)
-                    }
+                    // SEMPRE: POST lista local completa → GET + união → setState (contador PEÇAS).
+                    const synced = await forceSyncPecasStockNow()
                     const next = asArray<PecaBiblioteca>(synced.pecas)
-                    setPecas((prev) => mergeArraysByIdDeferServerLocal<PecaBiblioteca>(next, prev))
-                    setCategorias((prev) =>
-                      mergeArraysByIdDeferServerLocal<CategoriaPeca>(
-                        asArray<CategoriaPeca>(synced.categorias),
-                        prev
-                      )
-                    )
-                    setSubcategorias((prev) =>
-                      mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(
-                        asArray<SubcategoriaPeca>(synced.subcategorias),
-                        prev
-                      )
-                    )
-                    if (synced.pushFailed) {
+                    const cats = asArray<CategoriaPeca>(synced.categorias)
+                    const subs = asArray<SubcategoriaPeca>(synced.subcategorias)
+                    setPecas(next)
+                    setCategorias(cats)
+                    setSubcategorias(subs)
+                    if (typeof synced.serverCount === 'number') {
+                      setServerPecasCount(synced.serverCount)
+                    } else {
+                      setServerPecasCount(next.length)
+                    }
+                    if (synced.httpError) {
                       setSyncToastOk(false)
-                      setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
-                    } else if (synced.pushed) {
-                      setSyncToastOk(true)
-                      setSyncToast(
-                        tr(safeT, 'cadastroPecasStockEnviado', 'Stock enviado: {n}').replace(
-                          '{n}',
-                          String(Math.max(next.length, synced.localPecasCount || 0))
-                        )
-                      )
+                      setSyncToast(synced.httpError)
                     } else {
                       setSyncToastOk(true)
                       setSyncToast(
-                        tr(safeT, 'cadastroPecasStockActualizado', 'Stock actualizado do servidor').replace(
-                          '{n}',
-                          String(synced.serverPecasCount ?? next.length)
+                        tr(
+                          safeT,
+                          'cadastroPecasStockSyncAgoraToast',
+                          'Enviadas {n} · Servidor agora {m}'
                         )
+                          .replace('{n}', String(synced.sentCount))
+                          .replace('{m}', String(synced.serverCount ?? next.length))
                       )
                     }
-                  } catch {
+                  } catch (e: unknown) {
                     setSyncToastOk(false)
-                    setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
+                    const msg = e instanceof Error ? e.message : 'erro'
+                    setSyncToast(`HTTP exception (${msg})`)
                   } finally {
                     setPulling(false)
                   }
                 }}
               >
-                {tr(safeT, 'cadastroPecasStockActualizarServidor', 'Actualizar stock do servidor')}
+                {tr(safeT, 'cadastroPecasStockSyncAgora', 'Sincronizar stock agora')}
               </button>
             </div>
           </div>

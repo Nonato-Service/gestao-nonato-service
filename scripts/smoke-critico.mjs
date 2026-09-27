@@ -1214,6 +1214,10 @@ try {
     stockSrc.includes("aba === 'biblioteca'") &&
     stockSrc.includes('BibliotecaPecasGaleriaCategorias') &&
     stockSrc.includes('mergeArraysByIdDeferServerLocal') &&
+    stockSrc.includes('forceSyncPecasStockNow') &&
+    stockSrc.includes('cadastro-pecas-stock-sync-now') &&
+    stockSrc.includes('cadastroPecasStockSyncAgora') &&
+    stockSrc.includes('cadastroPecasStockSyncAgoraToast') &&
     stockSrc.includes('syncPecasStockCadastroOnOpen') &&
     stockSrc.includes('nonato-data-local-changed') &&
     stockSrc.includes('ns-stock-catalog-wrap') &&
@@ -1224,7 +1228,6 @@ try {
     stockSrc.includes('cadastroPecasStockFalhaServidor') &&
     stockSrc.includes('cadastroPecasStockEnviado') &&
     stockSrc.includes('cadastroPecasStockFalhaEnviar') &&
-    stockSrc.includes('cadastroPecasStockActualizarServidor') &&
     stockSrc.includes('cadastro-pecas-stock-sync-toast') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
@@ -1417,6 +1420,7 @@ try {
     dsStock.includes("'nonato-pecas-stock'") &&
     dsStock.includes('pushLocalCadastroUnionToServer') &&
     dsStock.includes('syncPecasStockCadastroOnOpen') &&
+    dsStock.includes('forceSyncPecasStockNow') &&
     dsStock.includes('serverPecasCount') &&
     dsStock.includes('pushFailed') &&
     dsStock.includes('waitForDataApiAuth') &&

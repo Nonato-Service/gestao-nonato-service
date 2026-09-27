@@ -3437,11 +3437,9 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
         }
       }
 
-      const needPush =
-        merged.length > 0 &&
-        (localArr.length > serverArr.length ||
-          merged.length > serverArr.length ||
-          (serverArr.length === 0 && localArr.length > 0))
+      // SEMPRE envia a lista completa se houver peças locais (servidor une).
+      // Antes só empurrava se local>server — falhava quando contagens iguais com IDs diferentes.
+      const needPush = merged.length > 0 && localArr.length > 0
 
       if (needPush) {
         const ok = await saveData(key, merged, true, true)
@@ -3484,6 +3482,237 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
       }
     } catch {
       /* chave seguinte */
+    }
+  }
+
+  return out
+}
+
+export type ForceSyncPecasStockResult = {
+  pecas: unknown[]
+  categorias: unknown[]
+  subcategorias: unknown[]
+  /** Peças enviadas neste POST (lista local completa). */
+  sentCount: number
+  /** Contagem no servidor após GET final (união). */
+  serverCount: number | null
+  /** Ex.: «HTTP 413 Payload Too Large» — null se OK. */
+  httpError: string | null
+  ok: boolean
+}
+
+/**
+ * Botão «Sincronizar stock agora»: SEMPRE POST save-text da lista local completa
+ * (servidor faz união), depois GET + união no aparelho. Sem Admin / sem «Enviar tudo».
+ */
+export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResult> {
+  const empty: ForceSyncPecasStockResult = {
+    pecas: [],
+    categorias: [],
+    subcategorias: [],
+    sentCount: 0,
+    serverCount: null,
+    httpError: null,
+    ok: false,
+  }
+  if (typeof window === 'undefined') return empty
+
+  const authed = await waitForDataApiAuth(20_000)
+  if (!authed) {
+    return { ...empty, httpError: 'HTTP 401 auth_required' }
+  }
+
+  const loadServerBest = async (key: string): Promise<unknown[]> => {
+    let best: unknown[] = []
+    try {
+      const fromText = await forceLoadCadastroFromServer(key)
+      if (Array.isArray(fromText)) best = fromText
+    } catch {
+      /* ignorar */
+    }
+    try {
+      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+        signal: createTimeoutSignal(120_000),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        if (result?.error !== 'auth_required' && Array.isArray(result?.data)) {
+          if (result.data.length > best.length) best = result.data
+        }
+      }
+    } catch {
+      /* ignorar */
+    }
+    return best
+  }
+
+  /** Comprime fotos grandes para caber no POST (evita 413 com 19 peças). */
+  const lightenStockPecas = async (arr: unknown[]): Promise<unknown[]> => {
+    const out: unknown[] = []
+    for (const raw of arr) {
+      if (!raw || typeof raw !== 'object') {
+        out.push(raw)
+        continue
+      }
+      const p = raw as { imagem?: string }
+      const img = typeof p.imagem === 'string' ? p.imagem : ''
+      if (img.length > 400_000 && img.startsWith('data:image/')) {
+        try {
+          const { compressImageDataUrlIfNeeded } = await import('../lib/diarioCompressImage')
+          let next = await compressImageDataUrlIfNeeded(img)
+          // Segunda passagem mais agressiva se ainda enorme
+          if (next.length > 500_000) {
+            next = await compressImageDataUrlIfNeeded(next)
+          }
+          out.push({ ...p, imagem: next })
+          continue
+        } catch {
+          /* mantém original */
+        }
+      }
+      out.push(raw)
+    }
+    return out
+  }
+
+  /**
+   * POST directo save-text — sempre, com lista completa.
+   * Devolve status HTTP exacto (não engolir 413/409/401).
+   */
+  const postStockComplete = async (
+    key: string,
+    value: unknown[]
+  ): Promise<{ ok: boolean; httpError: string | null; total?: number }> => {
+    if (value.length === 0) {
+      return { ok: true, httpError: null }
+    }
+    const payloadStr = JSON.stringify(value)
+    const body = JSON.stringify({ key, value: payloadStr })
+    const doFetch = () =>
+      dataApiFetch(`${API_BASE}/save-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: createTimeoutSignal(180_000),
+      })
+    let response: Response
+    try {
+      response = await doFetch()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'network'
+      return { ok: false, httpError: `HTTP network (${msg})` }
+    }
+    if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+      await new Promise((r) => setTimeout(r, 800))
+      try {
+        response = await doFetch()
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'network'
+        return { ok: false, httpError: `HTTP network (${msg})` }
+      }
+    }
+    let detail = ''
+    let total: number | undefined
+    try {
+      const json = (await response.json()) as {
+        error?: string
+        reason?: string
+        message?: string
+        total?: number
+      }
+      if (typeof json?.total === 'number') total = json.total
+      if (json?.error) detail = String(json.error)
+      else if (json?.reason) detail = String(json.reason)
+      else if (json?.message) detail = String(json.message)
+      if (response.ok) applyRevisionFromSaveResponse(json)
+    } catch {
+      /* sem JSON */
+    }
+    if (response.ok) {
+      markServerReachable()
+      return { ok: true, httpError: null, total }
+    }
+    const statusText = (response.statusText || '').trim()
+    const httpError = `HTTP ${response.status}${statusText ? ` ${statusText}` : ''}${
+      detail ? ` — ${detail}` : ''
+    }`
+    return { ok: false, httpError }
+  }
+
+  const specs = [
+    { key: 'nonato-pecas-stock' as const, field: 'pecas' as const },
+    { key: 'nonato-categorias-pecas-stock' as const, field: 'categorias' as const },
+    { key: 'nonato-subcategorias-pecas-stock' as const, field: 'subcategorias' as const },
+  ]
+
+  const out: ForceSyncPecasStockResult = { ...empty, ok: true }
+
+  for (const { key, field } of specs) {
+    try {
+      const localSnap = await readLocalValueForLoad(key, true)
+      let localArr = Array.isArray(localSnap.parsed) ? (localSnap.parsed as unknown[]) : []
+
+      if (field === 'pecas' && localArr.length > 0) {
+        localArr = await lightenStockPecas(localArr)
+        writeLocalStorageValue(key, localArr)
+        try {
+          await saveKv(key, localArr)
+        } catch {
+          /* ignorar */
+        }
+      }
+
+      if (field === 'pecas') {
+        out.sentCount = localArr.length
+      }
+
+      // SEMPRE POST da lista completa (servidor une por id — local=5 + server=19 → 19).
+      if (localArr.length > 0) {
+        let post = await postStockComplete(key, localArr)
+        // 413: comprimir ainda mais e repetir uma vez
+        if (
+          !post.ok &&
+          field === 'pecas' &&
+          post.httpError &&
+          /HTTP 413\b/.test(post.httpError)
+        ) {
+          const stripped = localArr.map((raw) => {
+            if (!raw || typeof raw !== 'object') return raw
+            const p = raw as { imagem?: string }
+            const img = typeof p.imagem === 'string' ? p.imagem : ''
+            if (img.length > 80_000) return { ...p, imagem: '' }
+            return raw
+          })
+          post = await postStockComplete(key, stripped as unknown[])
+        }
+        if (!post.ok && field === 'pecas') {
+          out.ok = false
+          out.httpError = post.httpError
+          // Mesmo com falha de POST, tenta GET+união para o viajante recuperar.
+        }
+      }
+
+      const serverArr = await loadServerBest(key)
+      if (field === 'pecas') {
+        out.serverCount = serverArr.length
+      }
+      const merged = mergeArraysByIdDeferServerLocal(serverArr, localArr)
+      writeLocalStorageValue(key, merged)
+      try {
+        await saveKv(key, merged)
+      } catch {
+        /* ignorar */
+      }
+      out[field] = merged
+      if (field === 'pecas' && out.serverCount == null) {
+        out.serverCount = merged.length
+      }
+    } catch (e: unknown) {
+      if (field === 'pecas') {
+        out.ok = false
+        const msg = e instanceof Error ? e.message : 'erro'
+        out.httpError = out.httpError || `HTTP exception (${msg})`
+      }
     }
   }
 
