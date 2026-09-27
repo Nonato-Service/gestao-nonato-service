@@ -22,7 +22,7 @@ import {
 } from '../modules/biblioteca/stockKeys'
 import { mergeArraysByIdDeferServerLocal } from '../lib/mergeArraysById'
 import { forceSyncPecasStockNow, syncPecasStockCadastroOnOpen } from '../utils/dataStorage'
-import { compressImageDataUrlIfNeeded, compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
+import { compressImageFileToJpegDataUrl } from '../lib/diarioCompressImage'
 import {
   createCategoriaPecaFromForm,
   createEmptyPecaBibliotecaForm,
@@ -177,72 +177,31 @@ export function CadastroPecasStockContent({
           subsMerged = mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(subsMerged, prev)
           return subsMerged
         })
-        let fotosReduzidas = false
-        const leves: PecaBiblioteca[] = []
-        for (const peca of merged) {
-          const img = String(peca.imagem || '')
-          if (img.length > 960_000) {
-            try {
-              const nextImg = await compressImageDataUrlIfNeeded(img)
-              if (nextImg !== img) {
-                fotosReduzidas = true
-                leves.push({ ...peca, imagem: nextImg })
-                continue
-              }
-            } catch {
-              /* mantém a foto original */
-            }
-          }
-          leves.push(peca)
-        }
         if (!alive || ticket !== seq) return
-        if (fotosReduzidas) {
-          merged = leves
-          setPecas(leves)
-        }
-        // Reforço: se sync não empurrou mas fotos encolheram ou união cresceu, gravar de novo.
-        const needExtraPush =
-          fotosReduzidas || (!synced.pushed && merged.length > lastSyncedLen && merged.length > 0)
-        if (needExtraPush || synced.pushed || synced.pulled) {
-          lastSyncedLen = Math.max(merged.length, lastSyncedLen, 1)
-        }
-        let pushOk = synced.pushed
-        let pushFail = synced.pushFailed
-        if (needExtraPush) {
-          const okP = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
-          if (catsMerged.length > 0) {
-            await saveData(CATEGORIAS_PECAS_STOCK_STORAGE_KEY, catsMerged, true, true)
-          }
-          if (subsMerged.length > 0) {
-            await saveData(SUBCATEGORIAS_PECAS_STOCK_STORAGE_KEY, subsMerged, true, true)
-          }
-          if (okP === false) {
-            lastSyncedLen = 0
-            pushFail = true
-            pushOk = false
-            setErro(
-              tr(
-                safeT,
-                'cadastroPecasStockFalhaEnviar',
-                'Falha ao enviar stock'
-              )
-            )
-          } else {
-            pushOk = true
-            pushFail = false
-          }
-        }
+        lastSyncedLen = Math.max(merged.length, lastSyncedLen, 1)
+        const pushOk = synced.pushed
+        const pushFail = synced.pushFailed
         if (pushFail && !toastShownRef.current.failed) {
           toastShownRef.current.failed = true
           setSyncToastOk(false)
-          setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
+          setSyncToast(
+            synced.httpError ||
+              tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock')
+          )
+          if (synced.httpError) {
+            setErro(synced.httpError)
+          }
         } else if (pushOk && !toastShownRef.current.pushed) {
           toastShownRef.current.pushed = true
           toastShownRef.current.failed = false
           const n = Math.max(merged.length, synced.localPecasCount || 0)
+          const m =
+            typeof synced.serverPecasCount === 'number' ? synced.serverPecasCount : n
           setSyncToastOk(true)
           setSyncToast(
-            tr(safeT, 'cadastroPecasStockEnviado', 'Stock enviado: {n}').replace('{n}', String(n))
+            tr(safeT, 'cadastroPecasStockSyncAgoraToast', 'Enviadas {n} · Servidor agora {m}')
+              .replace('{n}', String(n))
+              .replace('{m}', String(m))
           )
         }
       } finally {

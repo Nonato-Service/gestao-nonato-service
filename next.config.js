@@ -69,6 +69,10 @@ const nextConfig = {
   // Melhorar o carregamento de scripts
   experimental: {
     optimizePackageImports: ['react', 'react-dom'],
+    // POST save-text com fotos de stock (base64) — evitar corte prematuro em Server Actions.
+    serverActions: {
+      bodySizeLimit: '32mb',
+    },
   },
   // Configurações para melhorar o carregamento
   compiler: {

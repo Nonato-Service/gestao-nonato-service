@@ -1035,6 +1035,28 @@ async function _doSaveToServer(
     notifyBlock('pecas')
     return 'blocked'
   }
+  // Stock: mesmo caminho resiliente do botão «Sincronizar» (compressão + 413 + chunks).
+  if (isPecasStockCadastroKey(key) && Array.isArray(value) && value.length > 0) {
+    try {
+      let arr = value as unknown[]
+      if (key === 'nonato-pecas-stock') {
+        arr = await lightenStockPecasForSync(arr)
+      }
+      const post = await pushPecasStockResilient(key, arr, key === 'nonato-pecas-stock')
+      if (post.ok) return 'ok'
+      if (post.httpError && /401|auth_required/i.test(post.httpError)) {
+        dispatchSaveAuthRequired()
+        return 'auth'
+      }
+      if (post.httpError && (/HTTP 409\b/.test(post.httpError) || /cadastro_protected/i.test(post.httpError))) {
+        notifyBlock('shrink')
+        return 'blocked'
+      }
+      return 'fail'
+    } catch {
+      return 'fail'
+    }
+  }
   try {
     const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
     const isLargeString =
@@ -3355,137 +3377,8 @@ export type PecasStockCadastroSyncResult = {
   localPecasCount: number
   /** Contagem bruta no servidor após GET (prova operacional; null se GET falhou). */
   serverPecasCount: number | null
-}
-
-/**
- * Ao abrir o Cadastro de Peças do stock: GET forçado do servidor + união (local ∪ server).
- * - Qualquer user autenticado pode gravar (não exige Admin) — API só pede sessão.
- * - Se a união > local → grava local (viajante puxa).
- * - Se local > server → push automático da lista completa (escritório sem Admin / sem Guardar).
- * - Após push, volta a ler o servidor para aplicar a união final no aparelho.
- */
-export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastroSyncResult> {
-  const empty: PecasStockCadastroSyncResult = {
-    pecas: [],
-    categorias: [],
-    subcategorias: [],
-    pushed: false,
-    pulled: false,
-    pushFailed: false,
-    localPecasCount: 0,
-    serverPecasCount: null,
-  }
-  if (typeof window === 'undefined') return empty
-
-  // Sem sessão o save devolve 401 e o push falhava em silêncio (escritório sem Admin).
-  const authed = await waitForDataApiAuth(20_000)
-  if (!authed) {
-    empty.pushFailed = true
-    return empty
-  }
-
-  const specs = [
-    { key: 'nonato-pecas-stock' as const, field: 'pecas' as const },
-    { key: 'nonato-categorias-pecas-stock' as const, field: 'categorias' as const },
-    { key: 'nonato-subcategorias-pecas-stock' as const, field: 'subcategorias' as const },
-  ]
-
-  const out: PecasStockCadastroSyncResult = { ...empty }
-
-  const loadServerBest = async (key: string): Promise<unknown[]> => {
-    let best: unknown[] = []
-    try {
-      const fromText = await forceLoadCadastroFromServer(key)
-      if (Array.isArray(fromText)) best = fromText
-    } catch {
-      /* ignorar */
-    }
-    // Segunda leitura via /load — fica com a lista maior (json vs txt residual).
-    try {
-      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
-        signal: createTimeoutSignal(120_000),
-      })
-      if (response.ok) {
-        const result = await response.json()
-        if (result?.error !== 'auth_required' && Array.isArray(result?.data)) {
-          if (result.data.length > best.length) best = result.data
-        }
-      }
-    } catch {
-      /* ignorar */
-    }
-    return best
-  }
-
-  for (const { key, field } of specs) {
-    try {
-      const localSnap = await readLocalValueForLoad(key, true)
-      const localArr = Array.isArray(localSnap.parsed) ? (localSnap.parsed as unknown[]) : []
-      const serverArr = await loadServerBest(key)
-      if (field === 'pecas') {
-        out.serverPecasCount = serverArr.length
-      }
-      let merged = mergeArraysByIdDeferServerLocal(serverArr, localArr)
-
-      if (merged.length > localArr.length) {
-        out.pulled = true
-        writeLocalStorageValue(key, merged)
-        try {
-          await saveKv(key, merged)
-        } catch {
-          /* ignorar */
-        }
-      }
-
-      // SEMPRE envia a lista completa se houver peças locais (servidor une).
-      // Antes só empurrava se local>server — falhava quando contagens iguais com IDs diferentes.
-      const needPush = merged.length > 0 && localArr.length > 0
-
-      if (needPush) {
-        const ok = await saveData(key, merged, true, true)
-        if (ok) {
-          out.pushed = true
-          out.pushFailed = false
-          const after = await loadServerBest(key)
-          if (field === 'pecas') {
-            out.serverPecasCount = after.length
-          }
-          if (after.length > 0) {
-            const next = mergeArraysByIdDeferServerLocal(after, merged)
-            if (next.length > merged.length || next.length > localArr.length) {
-              out.pulled = true
-            }
-            merged = next
-            writeLocalStorageValue(key, merged)
-            try {
-              await saveKv(key, merged)
-            } catch {
-              /* ignorar */
-            }
-          }
-        } else if (field === 'pecas') {
-          out.pushFailed = true
-        }
-      } else if (serverArr.length > localArr.length) {
-        writeLocalStorageValue(key, merged)
-        try {
-          await saveKv(key, merged)
-        } catch {
-          /* ignorar */
-        }
-        out.pulled = true
-      }
-
-      out[field] = merged
-      if (field === 'pecas') {
-        out.localPecasCount = merged.length
-      }
-    } catch {
-      /* chave seguinte */
-    }
-  }
-
-  return out
+  /** Ex.: «HTTP 413 Payload Too Large» — null se OK ou sem push. */
+  httpError: string | null
 }
 
 export type ForceSyncPecasStockResult = {
@@ -3501,9 +3394,217 @@ export type ForceSyncPecasStockResult = {
   ok: boolean
 }
 
+async function loadPecasStockServerBest(key: string): Promise<unknown[]> {
+  let best: unknown[] = []
+  try {
+    const fromText = await forceLoadCadastroFromServer(key)
+    if (Array.isArray(fromText)) best = fromText
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
+      signal: createTimeoutSignal(120_000),
+    })
+    if (response.ok) {
+      const result = await response.json()
+      if (result?.error !== 'auth_required' && Array.isArray(result?.data)) {
+        if (result.data.length > best.length) best = result.data
+      }
+    }
+  } catch {
+    /* ignorar */
+  }
+  return best
+}
+
+/** Comprime fotos base64 para caber no POST (evita 413 com 5–19 peças). */
+async function lightenStockPecasForSync(arr: unknown[]): Promise<unknown[]> {
+  const out: unknown[] = []
+  const { compressStockImageDataUrlForSync } = await import('../lib/diarioCompressImage')
+  for (const raw of arr) {
+    if (!raw || typeof raw !== 'object') {
+      out.push(raw)
+      continue
+    }
+    const p = raw as { imagem?: string }
+    const img = typeof p.imagem === 'string' ? p.imagem : ''
+    if (img.length > 80_000 && img.startsWith('data:image/')) {
+      try {
+        const next = await compressStockImageDataUrlForSync(img, 160_000)
+        out.push({ ...p, imagem: next })
+        continue
+      } catch {
+        /* mantém original */
+      }
+    }
+    out.push(raw)
+  }
+  return out
+}
+
+/** Omite fotos enormes (metadados sobem; servidor preserva foto rica no merge). */
+function stripStockPecasLargeImages(arr: unknown[], maxKeep = 40_000): unknown[] {
+  return arr.map((raw) => {
+    if (!raw || typeof raw !== 'object') return raw
+    const p = raw as Record<string, unknown>
+    const img = typeof p.imagem === 'string' ? p.imagem : ''
+    if (img.length > maxKeep) {
+      const { imagem: _drop, ...rest } = p
+      return rest
+    }
+    return raw
+  })
+}
+
 /**
- * Botão «Sincronizar stock agora»: SEMPRE POST save-text da lista local completa
- * (servidor faz união), depois GET + união no aparelho. Sem Admin / sem «Enviar tudo».
+ * POST directo save-text — devolve status HTTP exacto (não engolir 413/409/401).
+ */
+async function postPecasStockSaveText(
+  key: string,
+  value: unknown[]
+): Promise<{ ok: boolean; httpError: string | null; total?: number }> {
+  if (value.length === 0) {
+    return { ok: true, httpError: null }
+  }
+  const payloadStr = JSON.stringify(value)
+  const body = JSON.stringify({ key, value: payloadStr })
+  const doFetch = () =>
+    dataApiFetch(`${API_BASE}/save-text`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      signal: createTimeoutSignal(180_000),
+    })
+  let response: Response
+  try {
+    response = await doFetch()
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'network'
+    return { ok: false, httpError: `HTTP network (${msg})` }
+  }
+  if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+    await new Promise((r) => setTimeout(r, 800))
+    try {
+      response = await doFetch()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'network'
+      return { ok: false, httpError: `HTTP network (${msg})` }
+    }
+  }
+  let detail = ''
+  let total: number | undefined
+  try {
+    const json = (await response.json()) as {
+      error?: string
+      reason?: string
+      message?: string
+      total?: number
+    }
+    if (typeof json?.total === 'number') total = json.total
+    if (json?.error) detail = String(json.error)
+    else if (json?.reason) detail = String(json.reason)
+    else if (json?.message) detail = String(json.message)
+    if (response.ok) applyRevisionFromSaveResponse(json)
+  } catch {
+    /* sem JSON */
+  }
+  if (response.ok) {
+    markServerReachable()
+    return { ok: true, httpError: null, total }
+  }
+  const statusText = (response.statusText || '').trim()
+  const httpError = `HTTP ${response.status}${statusText ? ` ${statusText}` : ''}${
+    detail ? ` — ${detail}` : ''
+  }`
+  return { ok: false, httpError }
+}
+
+/**
+ * Envia stock: 1) lista completa comprimida → 2) sem fotos grandes → 3) chunks de 3.
+ * Servidor faz união parcial (nunca perde as 19 do escritório).
+ */
+async function pushPecasStockResilient(
+  key: string,
+  value: unknown[],
+  isPecas: boolean
+): Promise<{ ok: boolean; httpError: string | null }> {
+  if (value.length === 0) return { ok: true, httpError: null }
+
+  let post = await postPecasStockSaveText(key, value)
+  if (post.ok) return { ok: true, httpError: null }
+
+  const is413 =
+    !!post.httpError &&
+    (/HTTP 413\b/.test(post.httpError) || /too large/i.test(post.httpError) || /payload/i.test(post.httpError))
+  const tryChunk = isPecas && (is413 || /HTTP network/i.test(post.httpError || ''))
+
+  if (isPecas && is413) {
+    const stripped = stripStockPecasLargeImages(value)
+    post = await postPecasStockSaveText(key, stripped)
+    if (post.ok) return { ok: true, httpError: null }
+  }
+
+  if (tryChunk) {
+    const CHUNK = 3
+    let lastErr = post.httpError
+    for (let i = 0; i < value.length; i += CHUNK) {
+      const slice = value.slice(i, i + CHUNK)
+      let chunkPost = await postPecasStockSaveText(key, slice)
+      if (!chunkPost.ok && chunkPost.httpError && /HTTP 413\b/.test(chunkPost.httpError)) {
+        chunkPost = await postPecasStockSaveText(key, stripStockPecasLargeImages(slice))
+      }
+      if (!chunkPost.ok) {
+        lastErr = chunkPost.httpError
+        return { ok: false, httpError: lastErr }
+      }
+    }
+    return { ok: true, httpError: null }
+  }
+
+  return { ok: false, httpError: post.httpError }
+}
+
+/**
+ * Ao abrir o Cadastro de Peças do stock: GET + união + push resiliente (fotos/413).
+ * Devolve httpError exacto para o toast (nunca só «Falha ao enviar stock»).
+ */
+export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastroSyncResult> {
+  const empty: PecasStockCadastroSyncResult = {
+    pecas: [],
+    categorias: [],
+    subcategorias: [],
+    pushed: false,
+    pulled: false,
+    pushFailed: false,
+    localPecasCount: 0,
+    serverPecasCount: null,
+    httpError: null,
+  }
+  if (typeof window === 'undefined') return empty
+
+  const authed = await waitForDataApiAuth(20_000)
+  if (!authed) {
+    return { ...empty, pushFailed: true, httpError: 'HTTP 401 auth_required' }
+  }
+
+  const forced = await forceSyncPecasStockNow()
+  return {
+    pecas: forced.pecas,
+    categorias: forced.categorias,
+    subcategorias: forced.subcategorias,
+    pushed: forced.ok && forced.sentCount > 0,
+    pulled: true,
+    pushFailed: !forced.ok,
+    localPecasCount: Array.isArray(forced.pecas) ? forced.pecas.length : 0,
+    serverPecasCount: forced.serverCount,
+    httpError: forced.httpError,
+  }
+}
+
+/**
+ * Botão «Sincronizar stock agora»: POST resiliente (compressão + strip + chunks),
+ * depois GET + união. Sem Admin / sem «Enviar tudo».
  */
 export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResult> {
   const empty: ForceSyncPecasStockResult = {
@@ -3522,123 +3623,6 @@ export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResul
     return { ...empty, httpError: 'HTTP 401 auth_required' }
   }
 
-  const loadServerBest = async (key: string): Promise<unknown[]> => {
-    let best: unknown[] = []
-    try {
-      const fromText = await forceLoadCadastroFromServer(key)
-      if (Array.isArray(fromText)) best = fromText
-    } catch {
-      /* ignorar */
-    }
-    try {
-      const response = await dataApiFetch(`${API_BASE}/load?key=${encodeURIComponent(key)}`, {
-        signal: createTimeoutSignal(120_000),
-      })
-      if (response.ok) {
-        const result = await response.json()
-        if (result?.error !== 'auth_required' && Array.isArray(result?.data)) {
-          if (result.data.length > best.length) best = result.data
-        }
-      }
-    } catch {
-      /* ignorar */
-    }
-    return best
-  }
-
-  /** Comprime fotos grandes para caber no POST (evita 413 com 19 peças). */
-  const lightenStockPecas = async (arr: unknown[]): Promise<unknown[]> => {
-    const out: unknown[] = []
-    for (const raw of arr) {
-      if (!raw || typeof raw !== 'object') {
-        out.push(raw)
-        continue
-      }
-      const p = raw as { imagem?: string }
-      const img = typeof p.imagem === 'string' ? p.imagem : ''
-      if (img.length > 400_000 && img.startsWith('data:image/')) {
-        try {
-          const { compressImageDataUrlIfNeeded } = await import('../lib/diarioCompressImage')
-          let next = await compressImageDataUrlIfNeeded(img)
-          // Segunda passagem mais agressiva se ainda enorme
-          if (next.length > 500_000) {
-            next = await compressImageDataUrlIfNeeded(next)
-          }
-          out.push({ ...p, imagem: next })
-          continue
-        } catch {
-          /* mantém original */
-        }
-      }
-      out.push(raw)
-    }
-    return out
-  }
-
-  /**
-   * POST directo save-text — sempre, com lista completa.
-   * Devolve status HTTP exacto (não engolir 413/409/401).
-   */
-  const postStockComplete = async (
-    key: string,
-    value: unknown[]
-  ): Promise<{ ok: boolean; httpError: string | null; total?: number }> => {
-    if (value.length === 0) {
-      return { ok: true, httpError: null }
-    }
-    const payloadStr = JSON.stringify(value)
-    const body = JSON.stringify({ key, value: payloadStr })
-    const doFetch = () =>
-      dataApiFetch(`${API_BASE}/save-text`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-        signal: createTimeoutSignal(180_000),
-      })
-    let response: Response
-    try {
-      response = await doFetch()
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'network'
-      return { ok: false, httpError: `HTTP network (${msg})` }
-    }
-    if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
-      await new Promise((r) => setTimeout(r, 800))
-      try {
-        response = await doFetch()
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : 'network'
-        return { ok: false, httpError: `HTTP network (${msg})` }
-      }
-    }
-    let detail = ''
-    let total: number | undefined
-    try {
-      const json = (await response.json()) as {
-        error?: string
-        reason?: string
-        message?: string
-        total?: number
-      }
-      if (typeof json?.total === 'number') total = json.total
-      if (json?.error) detail = String(json.error)
-      else if (json?.reason) detail = String(json.reason)
-      else if (json?.message) detail = String(json.message)
-      if (response.ok) applyRevisionFromSaveResponse(json)
-    } catch {
-      /* sem JSON */
-    }
-    if (response.ok) {
-      markServerReachable()
-      return { ok: true, httpError: null, total }
-    }
-    const statusText = (response.statusText || '').trim()
-    const httpError = `HTTP ${response.status}${statusText ? ` ${statusText}` : ''}${
-      detail ? ` — ${detail}` : ''
-    }`
-    return { ok: false, httpError }
-  }
-
   const specs = [
     { key: 'nonato-pecas-stock' as const, field: 'pecas' as const },
     { key: 'nonato-categorias-pecas-stock' as const, field: 'categorias' as const },
@@ -3653,7 +3637,7 @@ export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResul
       let localArr = Array.isArray(localSnap.parsed) ? (localSnap.parsed as unknown[]) : []
 
       if (field === 'pecas' && localArr.length > 0) {
-        localArr = await lightenStockPecas(localArr)
+        localArr = await lightenStockPecasForSync(localArr)
         writeLocalStorageValue(key, localArr)
         try {
           await saveKv(key, localArr)
@@ -3666,33 +3650,15 @@ export async function forceSyncPecasStockNow(): Promise<ForceSyncPecasStockResul
         out.sentCount = localArr.length
       }
 
-      // SEMPRE POST da lista completa (servidor une por id — local=5 + server=19 → 19).
       if (localArr.length > 0) {
-        let post = await postStockComplete(key, localArr)
-        // 413: comprimir ainda mais e repetir uma vez
-        if (
-          !post.ok &&
-          field === 'pecas' &&
-          post.httpError &&
-          /HTTP 413\b/.test(post.httpError)
-        ) {
-          const stripped = localArr.map((raw) => {
-            if (!raw || typeof raw !== 'object') return raw
-            const p = raw as { imagem?: string }
-            const img = typeof p.imagem === 'string' ? p.imagem : ''
-            if (img.length > 80_000) return { ...p, imagem: '' }
-            return raw
-          })
-          post = await postStockComplete(key, stripped as unknown[])
-        }
+        const post = await pushPecasStockResilient(key, localArr, field === 'pecas')
         if (!post.ok && field === 'pecas') {
           out.ok = false
           out.httpError = post.httpError
-          // Mesmo com falha de POST, tenta GET+união para o viajante recuperar.
         }
       }
 
-      const serverArr = await loadServerBest(key)
+      const serverArr = await loadPecasStockServerBest(key)
       if (field === 'pecas') {
         out.serverCount = serverArr.length
       }

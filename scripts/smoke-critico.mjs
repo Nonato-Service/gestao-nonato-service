@@ -1226,8 +1226,10 @@ try {
     stockSrc.includes('serverPecasCount') &&
     stockSrc.includes("saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)") &&
     stockSrc.includes('cadastroPecasStockFalhaServidor') &&
-    stockSrc.includes('cadastroPecasStockEnviado') &&
+    (stockSrc.includes('cadastroPecasStockEnviado') ||
+      stockSrc.includes('cadastroPecasStockSyncAgoraToast')) &&
     stockSrc.includes('cadastroPecasStockFalhaEnviar') &&
+    stockSrc.includes('synced.httpError') &&
     stockSrc.includes('cadastro-pecas-stock-sync-toast') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
@@ -1423,6 +1425,9 @@ try {
     dsStock.includes('forceSyncPecasStockNow') &&
     dsStock.includes('serverPecasCount') &&
     dsStock.includes('pushFailed') &&
+    dsStock.includes('httpError') &&
+    dsStock.includes('pushPecasStockResilient') &&
+    dsStock.includes('lightenStockPecasForSync') &&
     dsStock.includes('waitForDataApiAuth') &&
     dsStock.includes('isSlowCadastroLoadKey') &&
     dsStock.includes('isPecasStockCadastroKey') &&
@@ -1439,7 +1444,8 @@ try {
   const guardStock = fs.readFileSync(path.join(root, 'app/lib/serverCadastroGuard.ts'), 'utf8')
   if (
     guardStock.includes('PECAS_STOCK_UNION_KEYS') &&
-    guardStock.includes('mergeProtectedArrayById(existing, value)')
+    guardStock.includes('mergeStockArraysPreferRicherImage') &&
+    shrinkSrc.includes('mergeStockArraysPreferRicherImage')
   ) {
     ok('stock: servidor faz sempre união das peças da empresa')
   } else {
@@ -4465,6 +4471,7 @@ try {
     !compressMod.includes('document.createElement') &&
     !compressMod.includes('createImageBitmap') &&
     libCompress.includes('document.createElement') &&
+    libCompress.includes('compressStockImageDataUrlForSync') &&
     nma.includes("from './lib/diarioCompressImage'")
   ) {
     ok('NonatoMainApp comprime imagens do diário via lib')

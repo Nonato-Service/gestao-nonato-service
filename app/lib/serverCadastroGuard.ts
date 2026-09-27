@@ -11,6 +11,7 @@ import {
   incomingHasNewIds,
   isIntentionalSubsetShrink,
   mergeProtectedArrayById,
+  mergeStockArraysPreferRicherImage,
 } from './cadastroShrinkPolicy'
 
 export type ServerCadastroGuardResult =
@@ -165,7 +166,8 @@ export function resolveCadastroWriteValue(
       if (!guardEmpty.allowed) return { ok: false, guard: guardEmpty }
       return { ok: true, value }
     }
-    return { ok: true, value: mergeProtectedArrayById(existing, value) }
+    // União parcial OK (chunks / metadados sem fotos) — nunca apagar foto rica do disco.
+    return { ok: true, value: mergeStockArraysPreferRicherImage(existing, value) }
   }
   if (
     MERGE_ON_SHRINK_KEYS.has(key) &&

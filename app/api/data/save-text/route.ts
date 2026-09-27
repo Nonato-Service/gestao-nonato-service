@@ -9,6 +9,18 @@ import { textFileContentUnchanged, writeTextFileAtomic, writeJsonFileAtomic } fr
 import { assessServerCadastroTextWrite, assessServerCadastroWrite, resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
 
+/**
+ * Stock de peças (e categorias): sempre `.json` (como a biblioteca).
+ * Qualquer sessão autenticada pode gravar (não exige Admin) — união no servidor.
+ * Antes um `.txt` grande coexistia com `.json` pequeno — o bootstrap do /load lia só o JSON
+ * e o viajante ficava com 5 peças enquanto o escritório tinha 19 no browser.
+ * Aceita merge parcial (chunks / sem fotos) — união por id + preferir foto rica.
+ */
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+/** Railway/proxy: permitir corpos grandes (fotos base64 comprimidas). */
+export const maxDuration = 120
+
 export async function POST(request: NextRequest) {
   try {
     const authDenied = rejectUnauthenticatedProductionAccess(request)

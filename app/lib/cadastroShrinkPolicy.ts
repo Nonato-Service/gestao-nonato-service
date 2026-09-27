@@ -75,6 +75,53 @@ export function mergeProtectedArrayById(existing: unknown[], incoming: unknown[]
   return [...byId.values(), ...semId]
 }
 
+function imagemLen(item: unknown): number {
+  if (!item || typeof item !== 'object') return 0
+  const img = (item as { imagem?: unknown }).imagem
+  return typeof img === 'string' ? img.length : 0
+}
+
+/**
+ * Stock: união por id, mas se o incoming omitir/esvaziar foto e o disco já tiver,
+ * preserva a foto do servidor (fallback 413 envia metadados sem dataURL).
+ */
+export function mergeStockArraysPreferRicherImage(
+  existing: unknown[],
+  incoming: unknown[]
+): unknown[] {
+  const byId = new Map<string, unknown>()
+  const semId: unknown[] = []
+  for (const item of existing) {
+    const id = itemId(item)
+    if (id) byId.set(id, item)
+    else semId.push(item)
+  }
+  for (const item of incoming) {
+    const id = itemId(item)
+    if (!id) {
+      semId.push(item)
+      continue
+    }
+    const prev = byId.get(id)
+    if (!prev || typeof prev !== 'object' || typeof item !== 'object') {
+      byId.set(id, item)
+      continue
+    }
+    const merged = { ...(prev as Record<string, unknown>), ...(item as Record<string, unknown>) }
+    const prevImg = imagemLen(prev)
+    const nextImg = imagemLen(item)
+    // Incoming sem foto (ou muito mais curta) → manter foto do servidor.
+    if (prevImg > 0 && nextImg === 0) {
+      merged.imagem = (prev as { imagem?: unknown }).imagem
+    } else if (prevImg > nextImg * 2 && nextImg > 0 && nextImg < 40_000) {
+      // Incoming veio muito comprimido vs disco rico — preferir o mais completo.
+      merged.imagem = (prev as { imagem?: unknown }).imagem
+    }
+    byId.set(id, merged)
+  }
+  return [...byId.values(), ...semId]
+}
+
 /**
  * Todos os IDs novos existiam na lista antiga — exclusão intencional, não substituição parcial.
  * Lista vazia NÃO conta: wipe total exige tombstones / outro fluxo — nunca apagar o servidor com `[]`.
