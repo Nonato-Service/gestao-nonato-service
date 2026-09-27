@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
 import path from 'path'
 import { assertApiAuthorized } from '../../apiSecurity'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
@@ -9,6 +8,12 @@ import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
 import { resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
+import {
+  cleanupDataVolume,
+  diskFullApiPayload,
+  dropCompanionTxtAfterJsonSave,
+  isEnospcError,
+} from '../diskCleanup'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,6 +47,11 @@ export async function POST(request: NextRequest) {
       )
     }
     ensureDataDir()
+    try {
+      cleanupDataVolume(dataDir)
+    } catch {
+      /* ignorar */
+    }
     const body = await request.json()
     const { key, value } = body
 
@@ -103,23 +113,14 @@ export async function POST(request: NextRequest) {
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
-        // Remover .txt antigo para o load-text não preferir lista/blob obsoleto.
-        if (
-          key === 'nonato-logo' ||
-          key === 'nonato-logo-dashboard' ||
-          key === 'nonato-pecas-stock' ||
-          key === 'nonato-categorias-pecas-stock' ||
-          key === 'nonato-subcategorias-pecas-stock'
-        ) {
-          try {
-            const txtPath = path.join(targetDir, `${key}.txt`)
-            if (fs.existsSync(txtPath)) fs.unlinkSync(txtPath)
-          } catch {
-            /* ignorar */
-          }
+        // Remover .txt antigo (stock/biblioteca/logos) para não duplicar espaço nem confundir o load.
+        dropCompanionTxtAfterJsonSave(targetDir, key)
+        if (key === 'nonato-pecas-biblioteca') {
+          dropCompanionTxtAfterJsonSave(targetDir, 'nonato-pecas-biblioteca-lite')
         }
       }
     } catch (e) {
+      if (isEnospcError(e)) throw e
       console.error('bumpSyncMeta (save):', e)
     }
 
@@ -130,10 +131,13 @@ export async function POST(request: NextRequest) {
     }, { headers: jsonHeaders() })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)
+    if (isEnospcError(error)) {
+      return NextResponse.json(diskFullApiPayload(error), { status: 507, headers: jsonHeaders() })
+    }
     const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao salvar dados'
     return NextResponse.json(
       { error: 'Erro ao salvar dados', details: msg },
-      { status: 500 }
+      { status: 500, headers: jsonHeaders() }
     )
   }
 }

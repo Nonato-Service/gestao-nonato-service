@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
 import path from 'path'
 import { assertApiAuthorized } from '../../apiSecurity'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
@@ -8,6 +7,12 @@ import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, writeJsonFileAtomic } from '../writeIfChanged'
 import { resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
+import {
+  cleanupDataVolume,
+  diskFullApiPayload,
+  dropCompanionTxtAfterJsonSave,
+  isEnospcError,
+} from '../diskCleanup'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +29,11 @@ export async function POST(request: NextRequest) {
     }
     ensureDataDir()
     ensureDemoDataDir(dataDir)
+    try {
+      cleanupDataVolume(dataDir)
+    } catch {
+      /* ignorar */
+    }
     const allData = await request.json()
 
     if (!allData || typeof allData !== 'object') {
@@ -60,22 +70,17 @@ export async function POST(request: NextRequest) {
           continue
         }
         writeJsonFileAtomic(filePath, resolved.value)
-        if (
-          key === 'nonato-pecas-stock' ||
-          key === 'nonato-categorias-pecas-stock' ||
-          key === 'nonato-subcategorias-pecas-stock'
-        ) {
-          try {
-            const txtPath = path.join(targetDir, `${key}.txt`)
-            if (fs.existsSync(txtPath)) fs.unlinkSync(txtPath)
-          } catch {
-            /* ignorar */
-          }
+        dropCompanionTxtAfterJsonSave(targetDir, key)
+        if (key === 'nonato-pecas-biblioteca') {
+          dropCompanionTxtAfterJsonSave(targetDir, 'nonato-pecas-biblioteca-lite')
         }
         saved.push(key)
         dirsWithContentChange.add(targetDir)
       } catch (error: any) {
         console.error(`Erro ao salvar ${key}:`, error)
+        if (isEnospcError(error)) {
+          return NextResponse.json(diskFullApiPayload(error), { status: 507 })
+        }
         errors.push(`${key}: ${error.message}`)
       }
     }
@@ -110,6 +115,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao salvar todos os dados:', error)
+    if (isEnospcError(error)) {
+      return NextResponse.json(diskFullApiPayload(error), { status: 507 })
+    }
     return NextResponse.json(
       { error: 'Erro ao salvar dados: ' + error.message },
       { status: 500 }

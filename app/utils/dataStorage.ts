@@ -3483,7 +3483,7 @@ async function postPecasStockSaveText(
     const msg = e instanceof Error ? e.message : 'network'
     return { ok: false, httpError: `HTTP network (${msg})` }
   }
-  if (!response.ok && [500, 502, 503, 504].includes(response.status)) {
+  if (!response.ok && [500, 502, 503, 504, 507].includes(response.status)) {
     await new Promise((r) => setTimeout(r, 800))
     try {
       response = await doFetch()
@@ -3494,14 +3494,17 @@ async function postPecasStockSaveText(
   }
   let detail = ''
   let total: number | undefined
+  let code = ''
   try {
     const json = (await response.json()) as {
       error?: string
       reason?: string
       message?: string
       total?: number
+      code?: string
     }
     if (typeof json?.total === 'number') total = json.total
+    if (json?.code) code = String(json.code)
     if (json?.error) detail = String(json.error)
     else if (json?.reason) detail = String(json.reason)
     else if (json?.message) detail = String(json.message)
@@ -3512,6 +3515,17 @@ async function postPecasStockSaveText(
   if (response.ok) {
     markServerReachable()
     return { ok: true, httpError: null, total }
+  }
+  const diskFull =
+    code === 'disk_full' ||
+    response.status === 507 ||
+    /ENOSPC|no space left on device|Disco do servidor cheio/i.test(detail)
+  if (diskFull) {
+    return {
+      ok: false,
+      httpError:
+        'HTTP 507 — Disco do servidor cheio. Liberte espaço no volume Railway ou aumente o volume. Depois sincronize o stock de novo.',
+    }
   }
   const statusText = (response.statusText || '').trim()
   const httpError = `HTTP ${response.status}${statusText ? ` ${statusText}` : ''}${

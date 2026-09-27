@@ -81,6 +81,46 @@ O Railway vai começar a fazer o deploy. Aguarde alguns minutos. O projeto usa `
    (O app usa esta variável; o Railway pode também definir `RAILWAY_VOLUME_MOUNT_PATH` automaticamente.)
 8. O Railway vai fazer um novo deploy. Aguarde.
 
+> **Nota:** Em alguns projectos o volume aparece como `/data`. O importante é que **`DATA_DIR`** (e o Mount Path) apontem **para a mesma pasta**. O erro `ENOSPC: no space left on device, open '/data/…'` significa que **esse volume está cheio**.
+
+---
+
+## 6b. Disco cheio (ENOSPC) — aumentar volume ou libertar espaço
+
+Se o toast mostrar **«Disco do servidor cheio»** ou `ENOSPC: no space left on device`:
+
+### A) Aumentar o volume (recomendado)
+
+1. Abra o projecto em **https://railway.app**
+2. Clique no **serviço** da app
+3. Separador **Settings** → secção **Volumes**
+4. Clique no volume (ex.: `dados`)
+5. Aumente o **Size** (ex.: de 1 GB → 5 GB ou mais) e guarde
+6. Aguarde o redeploy / remount (1–3 minutos)
+7. No browser, actualize a PWA e em **Cadastro de Peças do Stock** clique **Sincronizar stock agora**
+
+### B) Ver o que ocupa espaço e limpar lixo
+
+1. Com a app aberta e autenticada, no browser (ou curl) chame:
+   - `GET /api/data/disk-cleanup` — lista os **maiores ficheiros** e o espaço livre (`diskFreeMb`)
+   - `POST /api/data/disk-cleanup` — apaga órfãos `*.tmp*`, `*.bak` e pares `.txt` redundantes de stock/biblioteca
+2. Ou abra `GET /api/health` e veja `persistence.largestFiles` / `persistence.diskFreeMb`
+3. Se `nonato-pecas-biblioteca.json` for enorme (fotos Homag em base64), o volume enche depressa — ver secção abaixo.
+
+### C) Depois de haver espaço
+
+Volte ao **Cadastro de Peças do Stock** → **Sincronizar stock agora**. O local pode ter mais peças que o servidor (ex.: 5 vs 4); com espaço livre o envio deve concluir.
+
+---
+
+## 6c. Biblioteca Homag / fotos grandes
+
+A biblioteca de peças (`nonato-pecas-biblioteca.json`) e o stock (`nonato-pecas-stock.json`) podem guardar **fotos em base64**. Com milhares de peças Homag isso ocupa **centenas de MB** no volume.
+
+- O app grava a biblioteca/stock em **`.json`** e tenta **apagar o `.txt` gémeo** para não duplicar.
+- Existe também `nonato-pecas-biblioteca-lite.json` (sem imagens pesadas) para consultas leves.
+- Se o disco encher por fotos: aumente o volume (6b) ou reduza imagens duplicadas no cadastro; o sync do stock comprime/faz chunks quando o payload é grande.
+
 ---
 
 ## 7. Obter o URL do app
@@ -145,3 +185,4 @@ Se o deploy falhar por falta de memória (ex.: "Killed" nos logs):
   2. Se aparecer **"Killed"** ou **"JavaScript heap out of memory"**: no Railway → **Variables** → adicione **`NODE_OPTIONS`** = **`--max-old-space-size=384`** (ou **`256`** no plano gratuito) e faça **Redeploy**.  
   3. Se for outro erro (dependência, Node, etc.), use a mensagem dos logs para corrigir. O projeto já usa `nixpacks.toml` com limite de memória no build.
 - **Dados desaparecem:** Confirme que o Volume está com Mount Path **`/app/data`** e que a variável **`DATA_DIR`** = **`/app/data`**.
+- **Disco cheio / ENOSPC / «Disco do servidor cheio»:** O volume Railway encheu. Siga a secção **6b** (aumentar Size do volume ou `POST /api/data/disk-cleanup`). Depois sincronize o stock de novo.

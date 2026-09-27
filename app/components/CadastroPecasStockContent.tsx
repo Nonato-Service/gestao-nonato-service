@@ -58,6 +58,20 @@ function tr(t: Record<string, string | undefined>, key: string, fallback: string
   return typeof v === 'string' && v.trim() ? v : fallback
 }
 
+function formatStockSyncError(
+  httpError: string,
+  t: Record<string, string | undefined>
+): string {
+  if (/disk_full|ENOSPC|no space left|Disco do servidor cheio|HTTP 507/i.test(httpError)) {
+    return tr(
+      t,
+      'cadastroPecasStockDiscoCheio',
+      'Disco do servidor cheio. No Railway, aumente o volume ou liberte espaço em /data. Depois volte a «Sincronizar stock agora».'
+    )
+  }
+  return httpError
+}
+
 function codigoNorm(v: string): string {
   return v.trim().toLowerCase()
 }
@@ -184,12 +198,14 @@ export function CadastroPecasStockContent({
         if (pushFail && !toastShownRef.current.failed) {
           toastShownRef.current.failed = true
           setSyncToastOk(false)
-          setSyncToast(
+          const errMsg = formatStockSyncError(
             synced.httpError ||
-              tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock')
+              tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'),
+            safeT
           )
+          setSyncToast(errMsg)
           if (synced.httpError) {
-            setErro(synced.httpError)
+            setErro(errMsg)
           }
         } else if (pushOk && !toastShownRef.current.pushed) {
           toastShownRef.current.pushed = true
@@ -456,7 +472,7 @@ export function CadastroPecasStockContent({
                     }
                     if (synced.httpError) {
                       setSyncToastOk(false)
-                      setSyncToast(synced.httpError)
+                      setSyncToast(formatStockSyncError(synced.httpError, safeT))
                     } else {
                       setSyncToastOk(true)
                       setSyncToast(

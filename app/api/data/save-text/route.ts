@@ -8,6 +8,12 @@ import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { textFileContentUnchanged, writeTextFileAtomic, writeJsonFileAtomic } from '../writeIfChanged'
 import { assessServerCadastroTextWrite, assessServerCadastroWrite, resolveCadastroWriteValue } from '../../../lib/serverCadastroGuard'
 import { buildPecasBibliotecaLite } from '../../../lib/pecasBibliotecaLite'
+import {
+  cleanupDataVolume,
+  diskFullApiPayload,
+  dropCompanionTxtAfterJsonSave,
+  isEnospcError,
+} from '../diskCleanup'
 
 /**
  * Stock de peças (e categorias): sempre `.json` (como a biblioteca).
@@ -34,6 +40,11 @@ export async function POST(request: NextRequest) {
     }
     ensureDataDir()
     ensureDemoDataDir(dataDir)
+    try {
+      cleanupDataVolume(dataDir)
+    } catch {
+      /* ignorar */
+    }
     const body = await request.json()
     const { key, value } = body
 
@@ -84,6 +95,8 @@ export async function POST(request: NextRequest) {
       } catch (liteErr) {
         console.warn('[Nonato API save-text] Falha ao gerar lite de peças:', liteErr)
       }
+      dropCompanionTxtAfterJsonSave(targetDir, key)
+      dropCompanionTxtAfterJsonSave(targetDir, 'nonato-pecas-biblioteca-lite')
       try {
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
       } catch {
@@ -136,6 +149,7 @@ export async function POST(request: NextRequest) {
         )
       }
       writeJsonFileAtomic(jsonGuardPath, resolved.value)
+      dropCompanionTxtAfterJsonSave(targetDir, key)
       try {
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
       } catch {
@@ -200,6 +214,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (e) {
+      if (isEnospcError(e)) throw e
       console.error('bumpSyncMeta (save-text):', e)
     }
 
@@ -210,6 +225,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)
+    if (isEnospcError(error)) {
+      return NextResponse.json(diskFullApiPayload(error), { status: 507 })
+    }
     return NextResponse.json(
       { error: 'Erro ao salvar dados: ' + error.message },
       { status: 500 }

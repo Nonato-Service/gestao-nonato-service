@@ -59,6 +59,71 @@ try {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
   }
+  // Libertar órfãos .tmp / .bak e .txt gémeos de stock/biblioteca (ENOSPC no Railway).
+  let freed = 0;
+  let deleted = 0;
+  const walkDirs = [dataDir];
+  try {
+    for (const ent of fs.readdirSync(dataDir, { withFileTypes: true })) {
+      if (ent.isDirectory()) walkDirs.push(path.join(dataDir, ent.name));
+    }
+  } catch (_) {
+    /* ignorar */
+  }
+  const jsonSotKeys = [
+    'nonato-pecas-stock',
+    'nonato-categorias-pecas-stock',
+    'nonato-subcategorias-pecas-stock',
+    'nonato-pecas-biblioteca',
+    'nonato-pecas-biblioteca-lite',
+  ];
+  for (const dir of walkDirs) {
+    let names = [];
+    try {
+      names = fs.readdirSync(dir);
+    } catch (_) {
+      continue;
+    }
+    for (const name of names) {
+      const full = path.join(dir, name);
+      let st;
+      try {
+        st = fs.statSync(full);
+      } catch (_) {
+        continue;
+      }
+      if (!st.isFile()) continue;
+      const isTmp = name.includes('.tmp-') || /\.tmp$/i.test(name);
+      const isBak = name.endsWith('.bak');
+      let dropTxt = false;
+      for (const key of jsonSotKeys) {
+        if (name === `${key}.txt`) {
+          const jsonSide = path.join(dir, `${key}.json`);
+          if (fs.existsSync(jsonSide)) {
+            try {
+              if (fs.statSync(jsonSide).size > 2) dropTxt = true;
+            } catch (_) {
+              /* ignorar */
+            }
+          }
+          break;
+        }
+      }
+      if (!isTmp && !isBak && !dropTxt) continue;
+      try {
+        freed += st.size;
+        fs.unlinkSync(full);
+        deleted += 1;
+      } catch (_) {
+        /* ignorar */
+      }
+    }
+  }
+  if (deleted > 0) {
+    console.log(
+      `[start-server] Cleanup disco: ${deleted} ficheiro(s), ~${(freed / (1024 * 1024)).toFixed(1)} MB`
+    );
+  }
   const files = fs.readdirSync(dataDir).filter((f) => f.endsWith('.json') || f.endsWith('.txt'));
   console.log('[start-server] DATA_DIR:', dataDir);
   console.log('[start-server] Ficheiros de dados:', files.length);

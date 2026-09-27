@@ -1474,18 +1474,38 @@ try {
   } else {
     fail('load de cadastro ainda ignora .txt maior')
   }
+  const saveRouteSrc = fs.readFileSync(path.join(root, 'app/api/data/save/route.ts'), 'utf8')
+  const diskCleanupSrc = fs.readFileSync(path.join(root, 'app/api/data/diskCleanup.ts'), 'utf8')
   if (
     loadTextRoute.includes('fromTxt.length > fromJson.length') &&
     loadTextRoute.includes('nonato-logo') &&
-    fs.readFileSync(path.join(root, 'app/api/data/save/route.ts'), 'utf8').includes(
-      "'nonato-pecas-stock'"
-    ) &&
+    saveRouteSrc.includes('dropCompanionTxtAfterJsonSave') &&
+    diskCleanupSrc.includes("'nonato-pecas-stock'") &&
+    diskCleanupSrc.includes('cleanupOrphanTmpFiles') &&
     saveTextRoute.includes("'nonato-pecas-stock'") &&
-    saveTextRoute.includes('resolveCadastroWriteValue')
+    saveTextRoute.includes('resolveCadastroWriteValue') &&
+    saveTextRoute.includes('diskFullApiPayload') &&
+    saveTextRoute.includes('isEnospcError')
   ) {
-    ok('stock: load-text também prefere lista maior e save limpa .txt')
+    ok('stock: load-text prefere lista maior; save limpa .txt; ENOSPC → disco cheio')
   } else {
     fail('load-text ainda pode devolver .txt menor que o .json do stock')
+  }
+  const healthSrc = fs.readFileSync(path.join(root, 'app/api/health/route.ts'), 'utf8')
+  const diskCleanupRoute = fs.readFileSync(
+    path.join(root, 'app/api/data/disk-cleanup/route.ts'),
+    'utf8'
+  )
+  if (
+    healthSrc.includes('largestFiles') &&
+    healthSrc.includes('diskFreeBytes') &&
+    healthSrc.includes('cleanupDataVolume') &&
+    diskCleanupRoute.includes('cleanupDataVolume') &&
+    fs.existsSync(path.join(root, 'app/api/data/diskCleanup.ts'))
+  ) {
+    ok('disco: health lista maiores ficheiros + disk-cleanup endpoint')
+  } else {
+    fail('falta diagnóstico de disco (health / disk-cleanup)')
   }
 } catch (e) {
   fail(`stock sync: ${e && e.message ? e.message : e}`)

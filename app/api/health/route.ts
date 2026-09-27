@@ -3,6 +3,11 @@ import fs from 'fs'
 import path from 'path'
 import { PWA_VERSION } from '../../lib/pwaVersion'
 import { DATA_DIR, ensureDataDir } from '../data/shared'
+import {
+  cleanupDataVolume,
+  getDiskFreeBytes,
+  listLargestDataFiles,
+} from '../data/diskCleanup'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -40,11 +45,30 @@ function hasBibliotecaFile(): boolean {
 
 export async function GET() {
   const dataDir = DATA_DIR
+  let cleanedOnHealth: { deletedCount: number; freedApproxMb: number } | undefined
+  try {
+    ensureDataDir()
+    const cleaned = cleanupDataVolume(DATA_DIR)
+    if (cleaned.deleted.length > 0) {
+      cleanedOnHealth = {
+        deletedCount: cleaned.deleted.length,
+        freedApproxMb: Math.round((cleaned.freedApproxBytes / (1024 * 1024)) * 10) / 10,
+      }
+      console.log(
+        `[health] cleanup disco: ${cleaned.deleted.length} ficheiro(s), ~${cleanedOnHealth.freedApproxMb} MB`
+      )
+    }
+  } catch (e) {
+    console.warn('[health] cleanup falhou:', e)
+  }
+
   const fileCount = countJsonFiles()
   const clientesPersistidos = hasClientesFile()
   const bibliotecaPersistida = hasBibliotecaFile()
   const volumeMount = process.env.RAILWAY_VOLUME_MOUNT_PATH || null
   const dataDirEnv = process.env.DATA_DIR || null
+  const diskFreeBytes = getDiskFreeBytes(DATA_DIR)
+  const largestFiles = listLargestDataFiles(DATA_DIR, 12)
 
   const persistenceOk =
     (clientesPersistidos && bibliotecaPersistida) ||
@@ -61,6 +85,9 @@ export async function GET() {
   } else if (clientesPersistidos && !bibliotecaPersistida) {
     hint =
       'Clientes OK mas biblioteca de peças ausente ou muito pequena — envie nonato-pecas-biblioteca.json ao volume.'
+  } else if (diskFreeBytes != null && diskFreeBytes < 8 * 1024 * 1024) {
+    hint =
+      'AVISO: pouco espaço livre no volume — aumente o volume no Railway ou apague órfãos via POST /api/data/disk-cleanup.'
   }
 
   const gitSha =
@@ -84,6 +111,11 @@ export async function GET() {
         dataDirEnv,
         persistenceOk,
         hint,
+        diskFreeBytes,
+        diskFreeMb:
+          diskFreeBytes != null ? Math.round((diskFreeBytes / (1024 * 1024)) * 10) / 10 : null,
+        largestFiles,
+        cleanedOnHealth,
       },
     }),
     {
