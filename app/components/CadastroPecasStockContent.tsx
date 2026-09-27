@@ -87,6 +87,10 @@ export function CadastroPecasStockContent({
   const [mostrarPrecos, setMostrarPrecos] = useState(false)
   /** Contagem bruta no servidor após GET (prova: se for 5, o escritório ainda não empurrou). */
   const [serverPecasCount, setServerPecasCount] = useState<number | null>(null)
+  const [syncToast, setSyncToast] = useState('')
+  const [syncToastOk, setSyncToastOk] = useState(true)
+  const [pulling, setPulling] = useState(false)
+  const toastShownRef = React.useRef<{ pushed?: boolean; failed?: boolean }>({})
 
   const persistPecas = useCallback(
     async (next: PecaBiblioteca[]) => {
@@ -202,6 +206,8 @@ export function CadastroPecasStockContent({
         if (needExtraPush || synced.pushed || synced.pulled) {
           lastSyncedLen = Math.max(merged.length, lastSyncedLen, 1)
         }
+        let pushOk = synced.pushed
+        let pushFail = synced.pushFailed
         if (needExtraPush) {
           const okP = await saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)
           if (catsMerged.length > 0) {
@@ -212,14 +218,32 @@ export function CadastroPecasStockContent({
           }
           if (okP === false) {
             lastSyncedLen = 0
+            pushFail = true
+            pushOk = false
             setErro(
               tr(
                 safeT,
-                'cadastroPecasStockFalhaServidor',
-                'Não gravou no servidor. Volte a guardar com internet.'
+                'cadastroPecasStockFalhaEnviar',
+                'Falha ao enviar stock'
               )
             )
+          } else {
+            pushOk = true
+            pushFail = false
           }
+        }
+        if (pushFail && !toastShownRef.current.failed) {
+          toastShownRef.current.failed = true
+          setSyncToastOk(false)
+          setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
+        } else if (pushOk && !toastShownRef.current.pushed) {
+          toastShownRef.current.pushed = true
+          toastShownRef.current.failed = false
+          const n = Math.max(merged.length, synced.localPecasCount || 0)
+          setSyncToastOk(true)
+          setSyncToast(
+            tr(safeT, 'cadastroPecasStockEnviado', 'Stock enviado: {n}').replace('{n}', String(n))
+          )
         }
       } finally {
         syncing = false
@@ -439,8 +463,85 @@ export function CadastroPecasStockContent({
               >
                 {tr(safeT, 'gerenciarCategorias', 'Gerenciar Categorias')}
               </button>
+              <button
+                type="button"
+                className="biblioteca-btn--green"
+                disabled={pulling}
+                data-testid="cadastro-pecas-stock-pull-server"
+                onClick={async () => {
+                  if (pulling) return
+                  setPulling(true)
+                  setErro('')
+                  try {
+                    toastShownRef.current = {}
+                    const synced = await syncPecasStockCadastroOnOpen()
+                    if (typeof synced.serverPecasCount === 'number') {
+                      setServerPecasCount(synced.serverPecasCount)
+                    }
+                    const next = asArray<PecaBiblioteca>(synced.pecas)
+                    setPecas((prev) => mergeArraysByIdDeferServerLocal<PecaBiblioteca>(next, prev))
+                    setCategorias((prev) =>
+                      mergeArraysByIdDeferServerLocal<CategoriaPeca>(
+                        asArray<CategoriaPeca>(synced.categorias),
+                        prev
+                      )
+                    )
+                    setSubcategorias((prev) =>
+                      mergeArraysByIdDeferServerLocal<SubcategoriaPeca>(
+                        asArray<SubcategoriaPeca>(synced.subcategorias),
+                        prev
+                      )
+                    )
+                    if (synced.pushFailed) {
+                      setSyncToastOk(false)
+                      setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
+                    } else if (synced.pushed) {
+                      setSyncToastOk(true)
+                      setSyncToast(
+                        tr(safeT, 'cadastroPecasStockEnviado', 'Stock enviado: {n}').replace(
+                          '{n}',
+                          String(Math.max(next.length, synced.localPecasCount || 0))
+                        )
+                      )
+                    } else {
+                      setSyncToastOk(true)
+                      setSyncToast(
+                        tr(safeT, 'cadastroPecasStockActualizado', 'Stock actualizado do servidor').replace(
+                          '{n}',
+                          String(synced.serverPecasCount ?? next.length)
+                        )
+                      )
+                    }
+                  } catch {
+                    setSyncToastOk(false)
+                    setSyncToast(tr(safeT, 'cadastroPecasStockFalhaEnviar', 'Falha ao enviar stock'))
+                  } finally {
+                    setPulling(false)
+                  }
+                }}
+              >
+                {tr(safeT, 'cadastroPecasStockActualizarServidor', 'Actualizar stock do servidor')}
+              </button>
             </div>
           </div>
+          {syncToast ? (
+            <p
+              role="status"
+              data-testid="cadastro-pecas-stock-sync-toast"
+              style={{
+                margin: '8px 0 0',
+                padding: '8px 12px',
+                borderRadius: 6,
+                border: `1px solid ${syncToastOk ? '#00ff00' : '#ff6666'}`,
+                color: syncToastOk ? '#00ff00' : '#ff8888',
+                background: '#1a1a1a',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {syncToast}
+            </p>
+          ) : null}
 
           <div
             className="biblioteca-pecas-hub__hero-kpis"

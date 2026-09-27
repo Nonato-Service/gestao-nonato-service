@@ -1222,6 +1222,10 @@ try {
     stockSrc.includes('serverPecasCount') &&
     stockSrc.includes("saveData(PECAS_STOCK_STORAGE_KEY, merged, true, true)") &&
     stockSrc.includes('cadastroPecasStockFalhaServidor') &&
+    stockSrc.includes('cadastroPecasStockEnviado') &&
+    stockSrc.includes('cadastroPecasStockFalhaEnviar') &&
+    stockSrc.includes('cadastroPecasStockActualizarServidor') &&
+    stockSrc.includes('cadastro-pecas-stock-sync-toast') &&
     !stockSrc.includes('importacao') &&
     !stockSrc.includes('beforeinstallprompt') &&
     stockKeys.includes('nonato-pecas-stock') &&
@@ -1414,6 +1418,8 @@ try {
     dsStock.includes('pushLocalCadastroUnionToServer') &&
     dsStock.includes('syncPecasStockCadastroOnOpen') &&
     dsStock.includes('serverPecasCount') &&
+    dsStock.includes('pushFailed') &&
+    dsStock.includes('waitForDataApiAuth') &&
     dsStock.includes('isSlowCadastroLoadKey') &&
     dsStock.includes('isPecasStockCadastroKey') &&
     dsStock.includes('isLargePecasStockJson') &&

@@ -27,6 +27,7 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: jsonHeaders() })
 }
 
+/** Gravação de cadastro: qualquer user autenticado (incl. stock peças sem Admin). */
 export async function POST(request: NextRequest) {
   try {
     const denied = assertApiAuthorized(request)

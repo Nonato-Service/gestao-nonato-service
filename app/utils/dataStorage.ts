@@ -3349,12 +3349,17 @@ export type PecasStockCadastroSyncResult = {
   subcategorias: unknown[]
   pushed: boolean
   pulled: boolean
+  /** Tentou push e o servidor recusou / rede falhou (não engolir). */
+  pushFailed: boolean
+  /** Contagem local de peças após união (para toast «Stock enviado: N»). */
+  localPecasCount: number
   /** Contagem bruta no servidor após GET (prova operacional; null se GET falhou). */
   serverPecasCount: number | null
 }
 
 /**
  * Ao abrir o Cadastro de Peças do stock: GET forçado do servidor + união (local ∪ server).
+ * - Qualquer user autenticado pode gravar (não exige Admin) — API só pede sessão.
  * - Se a união > local → grava local (viajante puxa).
  * - Se local > server → push automático da lista completa (escritório sem Admin / sem Guardar).
  * - Após push, volta a ler o servidor para aplicar a união final no aparelho.
@@ -3366,9 +3371,18 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
     subcategorias: [],
     pushed: false,
     pulled: false,
+    pushFailed: false,
+    localPecasCount: 0,
     serverPecasCount: null,
   }
   if (typeof window === 'undefined') return empty
+
+  // Sem sessão o save devolve 401 e o push falhava em silêncio (escritório sem Admin).
+  const authed = await waitForDataApiAuth(20_000)
+  if (!authed) {
+    empty.pushFailed = true
+    return empty
+  }
 
   const specs = [
     { key: 'nonato-pecas-stock' as const, field: 'pecas' as const },
@@ -3433,6 +3447,7 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
         const ok = await saveData(key, merged, true, true)
         if (ok) {
           out.pushed = true
+          out.pushFailed = false
           const after = await loadServerBest(key)
           if (field === 'pecas') {
             out.serverPecasCount = after.length
@@ -3450,6 +3465,8 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
               /* ignorar */
             }
           }
+        } else if (field === 'pecas') {
+          out.pushFailed = true
         }
       } else if (serverArr.length > localArr.length) {
         writeLocalStorageValue(key, merged)
@@ -3462,6 +3479,9 @@ export async function syncPecasStockCadastroOnOpen(): Promise<PecasStockCadastro
       }
 
       out[field] = merged
+      if (field === 'pecas') {
+        out.localPecasCount = merged.length
+      }
     } catch {
       /* chave seguinte */
     }

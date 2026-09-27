@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
 
     /**
      * Stock de peças (e categorias): sempre `.json` (como a biblioteca).
+     * Qualquer sessão autenticada pode gravar (não exige Admin) — união no servidor.
      * Antes um `.txt` grande coexistia com `.json` pequeno — o bootstrap do /load lia só o JSON
      * e o viajante ficava com 5 peças enquanto o escritório tinha 19 no browser.
      */
