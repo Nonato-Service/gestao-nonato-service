@@ -5,6 +5,28 @@ export function normalizeServicoValorStored(v: unknown): number {
   return toMoneyNumber(v)
 }
 
+/**
+ * Quantidade de linha do fechamento (JSON/localStorage pode vir string).
+ * Aceita vírgula europeia via parseMoneyInput — nunca devolve NaN.
+ */
+export function normalizeFechamentoQuantidade(v: unknown): number {
+  return toMoneyNumber(v)
+}
+
+/**
+ * Rótulo de qty na UI/PDF do fechamento — seguro se qty for string/null
+ * (evita crash TypeError em `.toFixed` ao editar tarifas com dados legados).
+ */
+export function formatFechamentoQuantidadeLabel(
+  quantidade: unknown,
+  tipoCobranca?: string | null
+): string {
+  const q = normalizeFechamentoQuantidade(quantidade)
+  if (tipoCobranca === 'hora') return `${q.toFixed(2)} h`
+  if (tipoCobranca === 'km') return `${q.toFixed(0)} km`
+  return String(q)
+}
+
 /** Exibição nos cartões/listas do cadastro: 14.087,50 (pt-PT). */
 export function formatServicoValorExibicao(v: unknown): string {
   return formatMoneyNumber(v)

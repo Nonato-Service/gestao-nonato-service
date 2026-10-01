@@ -14,6 +14,8 @@ export {
 
 export {
   normalizeServicoValorStored,
+  normalizeFechamentoQuantidade,
+  formatFechamentoQuantidadeLabel,
   formatServicoValorExibicao,
   parseServicoValorInput,
   servicoValorToInputString,

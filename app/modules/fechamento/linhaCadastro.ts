@@ -1,6 +1,6 @@
 import type { FechamentoItem, ServicoCadastroFechamentoMin } from './tipos'
 import { tipoLinhaFechamentoFixa } from './tipos'
-import { normalizeServicoValorStored } from './servicoValor'
+import { normalizeServicoValorStored, normalizeFechamentoQuantidade } from './servicoValor'
 import { servicoCodParaExibicao, servicoDescricaoLegivelFechamento } from './servicoRotulos'
 
 /** Restringe o cadastro ao grupo escolhido no fechamento (ex.: HTT 70 € vs 95 € por grupo). */
@@ -184,7 +184,7 @@ export function enriquecerLinhaFechamentoComCadastro(
   }
   if (!svc) return item
   const valorUnit = normalizeServicoValorStored(svc.valor)
-  const qty = item.quantidade || 0
+  const qty = normalizeFechamentoQuantidade(item.quantidade)
   const valorUnitStored = normalizeServicoValorStored(item.valorUnitario)
   /**
    * Se o serviço guardado é de outro grupo (ex.: HTT 50 → grupo HTT 70),

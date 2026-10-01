@@ -900,6 +900,8 @@ import {
   type ServicoCadastroFechamentoMin,
   type FechamentoIvaOpcoesRelatorio,
   normalizeServicoValorStored,
+  normalizeFechamentoQuantidade,
+  formatFechamentoQuantidadeLabel,
   formatServicoValorExibicao,
   TEMPLATE_SERVICOS_PADRAO,
   buildRelatorioCobrancaGruposOpcoes,
@@ -16054,7 +16056,7 @@ export default function Dashboard() {
           .toString()
           .replace(/</g, '&lt;')
         const desc = (item.descricao || '').replace(/</g, '&lt;')
-        const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+        const qtd = formatFechamentoQuantidadeLabel(item.quantidade, item.tipoCobranca)
         const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
         return `<tr><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px">${desc}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:12px 14px;border:1.5px solid #94a3b8;font-size:12px;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
       },
@@ -25061,12 +25063,7 @@ export default function Dashboard() {
                   const rows = grupo.itens.map(item => {
                   const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
                   const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
-                  const qtd =
-                    item.tipoCobranca === 'hora'
-                      ? item.quantidade.toFixed(2) + ' h'
-                      : item.tipoCobranca === 'km'
-                        ? item.quantidade.toFixed(0) + ' km'
-                        : String(item.quantidade)
+                  const qtd = formatFechamentoQuantidadeLabel(item.quantidade, item.tipoCobranca)
                   const linTot = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
                   return (
                     <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
@@ -45874,7 +45871,7 @@ A1;Peça exemplo;10`}
               const descHtml = infoExtra
                 ? `${desc}<div style="font-size:10px;color:#888;margin-top:4px;font-style:italic">${infoExtra}</div>`
                 : desc
-              const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+              const qtd = formatFechamentoQuantidadeLabel(item.quantidade, item.tipoCobranca)
               const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
               const vuLinha =
                 item.origem === 'manual' || item.id.startsWith('peca-') || item.id.startsWith('m')
@@ -46719,7 +46716,7 @@ A1;Peça exemplo;10`}
                         })()
                         const totalExibir = (() => {
                           if (eDiarias && !cobrarDiaria) return 0
-                          const q = item.quantidade || 0
+                          const q = normalizeFechamentoQuantidade(item.quantidade)
                           if (
                             item.tipoCobranca === 'hora' ||
                             item.tipoCobranca === 'km' ||
@@ -46730,7 +46727,7 @@ A1;Peça exemplo;10`}
                             return Math.round(q * valorUnitExibir * 100) / 100
                           }
                           if (eManual && (item.tipoCobranca === 'unidade' || item.tipoCobranca === 'valor-fixo')) {
-                            return Math.round((item.quantidade || 0) * normalizeServicoValorStored(item.valorUnitario) * 100) / 100
+                            return Math.round(q * normalizeServicoValorStored(item.valorUnitario) * 100) / 100
                           }
                           return normalizeServicoValorStored(item.valorTotal)
                         })()
@@ -46770,19 +46767,16 @@ A1;Peça exemplo;10`}
                           <td style={{ textAlign: 'right' }}>
                             {eCampoEditavel ? (
                               <input
-                                type="number"
-                                step={
-                                  eManual && item.tipoCobranca === 'unidade'
-                                    ? '1'
-                                    : item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias'
-                                      ? '1'
-                                      : '0.01'
+                                type="text"
+                                inputMode="decimal"
+                                value={
+                                  normalizeFechamentoQuantidade(item.quantidade) === 0
+                                    ? ''
+                                    : String(normalizeFechamentoQuantidade(item.quantidade))
                                 }
-                                min={0}
-                                value={item.quantidade === 0 ? '' : item.quantidade}
                                 onChange={(e) =>
                                   atualizarItem(item.id, {
-                                    quantidade: normalizeServicoValorStored(e.target.value),
+                                    quantidade: normalizeFechamentoQuantidade(e.target.value),
                                   })
                                 }
                                 className="fechamento-itens-qty-input"
@@ -46790,27 +46784,26 @@ A1;Peça exemplo;10`}
                                 placeholder="0"
                                 title={(safeT as any)?.quantidade || 'Quantidade'}
                               />
-                            ) : item.tipoCobranca === 'hora' ? (
-                              item.quantidade.toFixed(2) + ' h'
-                            ) : item.tipoCobranca === 'km' ? (
-                              item.quantidade.toFixed(0) + ' km'
                             ) : (
-                              item.quantidade
+                              formatFechamentoQuantidadeLabel(item.quantidade, item.tipoCobranca)
                             )}
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             {eCampoEditavel ? (
                               <input
-                                type="number"
-                                step="0.01"
-                                min={0}
-                                value={item.valorUnitario === 0 ? '' : item.valorUnitario}
+                                type="text"
+                                inputMode="decimal"
+                                value={
+                                  normalizeServicoValorStored(item.valorUnitario) === 0
+                                    ? ''
+                                    : String(normalizeServicoValorStored(item.valorUnitario))
+                                }
                                 onChange={(e) =>
                                   atualizarItem(item.id, {
                                     valorUnitario: normalizeServicoValorStored(e.target.value),
                                   })
                                 }
-                                className={item.valorUnitario <= 0 ? 'fechamento-item-input--warn-val fechamento-itens-val-input' : 'fechamento-itens-val-input'}
+                                className={normalizeServicoValorStored(item.valorUnitario) <= 0 ? 'fechamento-item-input--warn-val fechamento-itens-val-input' : 'fechamento-itens-val-input'}
                                 style={{ width: '92px', textAlign: 'right' }}
                                 placeholder={(safeT as any)?.inserirValorEuro || 'Valor €'}
                                 title={(safeT as any)?.inserirValorEuro || 'Valor €'}
@@ -46821,10 +46814,13 @@ A1;Peça exemplo;10`}
                               </span>
                             ) : (
                               <input
-                                type="number"
-                                step="0.01"
-                                min={0}
-                                value={item.valorUnitario === 0 ? '' : item.valorUnitario}
+                                type="text"
+                                inputMode="decimal"
+                                value={
+                                  normalizeServicoValorStored(item.valorUnitario) === 0
+                                    ? ''
+                                    : String(normalizeServicoValorStored(item.valorUnitario))
+                                }
                                 onChange={(e) =>
                                   atualizarItem(item.id, {
                                     valorUnitario: normalizeServicoValorStored(e.target.value),

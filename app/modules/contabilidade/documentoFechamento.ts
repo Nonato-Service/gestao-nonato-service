@@ -1,5 +1,10 @@
 import type { FechamentoItem } from '../fechamento'
-import { linhaFechamentoOmiteCobrar, htmlGruposFechamentoPdf, FECHAMENTO_PDF_PRINT_CSS_GRUPOS } from '../fechamento'
+import {
+  linhaFechamentoOmiteCobrar,
+  htmlGruposFechamentoPdf,
+  FECHAMENTO_PDF_PRINT_CSS_GRUPOS,
+  formatFechamentoQuantidadeLabel,
+} from '../fechamento'
 import { formatMoneyEUR } from '../financeiro/money'
 import { CONTAB_PRINT_WINDOW_STYLES } from './estilosPrint'
 import { escAttr, preEsc, valDash } from './escape'
@@ -52,12 +57,7 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
     const desc = (i.descricao || '').trim() || '—'
     const infoExtra = (i.infoAdicional || '').trim()
     const descCompleta = infoExtra ? `${desc} (${infoExtra})` : desc
-    const qtd =
-      i.tipoCobranca === 'hora'
-        ? `${i.quantidade.toFixed(2)} h`
-        : i.tipoCobranca === 'km'
-          ? `${i.quantidade.toFixed(0)} km`
-          : String(i.quantidade)
+    const qtd = formatFechamentoQuantidadeLabel(i.quantidade, i.tipoCobranca)
     const vl = i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal
     return `  • ${cod} — ${descCompleta} | ${qtd} × ${formatMoneyEUR(i.valorUnitario)} = ${formatMoneyEUR(vl)}`
   })
@@ -141,13 +141,7 @@ export function buildHtmlFechamentoContabilidade(input: BuildHtmlFechamentoConta
     renderLinha: (item) => {
       const cod = escAttr(resolveItemCod(item))
       const desc = escAttr((item.descricao || '').trim() || '—')
-      const qtd = escAttr(
-        item.tipoCobranca === 'hora'
-          ? `${item.quantidade.toFixed(2)} h`
-          : item.tipoCobranca === 'km'
-            ? `${item.quantidade.toFixed(0)} km`
-            : String(item.quantidade)
-      )
+      const qtd = escAttr(formatFechamentoQuantidadeLabel(item.quantidade, item.tipoCobranca))
       const totalLinha = linhaFechamentoOmiteCobrar(item) ? 0 : item.valorTotal
       return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${formatMoneyEUR(item.valorUnitario)}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${formatMoneyEUR(totalLinha)}</td></tr>`
     },
