@@ -275,9 +275,9 @@
 }
 
 /*
- * Gaveta mobile (≤1024): botões SEMPRE visíveis/tocáveis a scale 1.
- * Pan/pinch DESACTIVADO. Abrir/fechar com left (nunca transform) —
- * transform no #mobile-pan-root ou na gaveta partia position:fixed.
+ * Gaveta mobile (≤1024): ☰ + drawer em portal (document.body), fora do #mobile-pan-root.
+ * Pinch-zoom no conteúdo pode usar transform no pan-root; menu continua tocável.
+ * Abrir/fechar da gaveta com left (nunca depender de transform no ancestral).
  */
 @media (max-width: 1024px) {
   .app-compact-layout .sidebar {

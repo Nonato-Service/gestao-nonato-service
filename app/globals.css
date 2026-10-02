@@ -339,26 +339,45 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Contentor legado (#mobile-pan-root): pan/pinch CUSTOM desactivado — scale sempre 1.
- * NÃO usar transform:none !important aqui: qualquer transform no ancestral
- * parte position:fixed da gaveta/hamburger (containing block). */
+/* Telemóvel: contentor para zoom/arrastar com 2 dedos (Android Chrome, ex. Armor 33 Pro).
+ * ☰ + gaveta estão em portal em document.body (fora deste root) — transform aqui NÃO parte o menu. */
 .mobile-pan-root {
   min-height: 100dvh;
   width: 100%;
 }
 
 @media (max-width: 1024px) {
-  #mobile-pan-root,
-  .mobile-pan-root {
-    /* Sem transform — JS (MobileBrowserZoomPan) limpa residual; fixed da sidebar fica no viewport */
-    transform-origin: unset;
-    will-change: auto;
-    touch-action: pan-x pan-y !important;
+  html.mobile-browser-zoomed .mobile-pan-root {
+    /* Pan/pinch tratados em JS; não bloquear filhos interactivos (botões). */
+    touch-action: none;
+    overflow: visible;
+  }
+
+  /* Antes: * { touch-action: none } matava toques em botões após zoom. */
+  html.mobile-browser-zoomed .mobile-pan-root
+    :is(
+      button,
+      a,
+      input,
+      select,
+      textarea,
+      label,
+      summary,
+      [role='button'],
+      [role='tab'],
+      [role='menuitem'],
+      .sidebar button,
+      .sidebar a,
+      .sidebar-item,
+      .tab-bar button,
+      .ns-boot-progress,
+      .biblioteca-hub-toolbar__status-btn
+    ) {
+    touch-action: manipulation !important;
   }
 
   html.mobile-browser-zoomed .mobile-pan-root,
   body.mobile-browser-zoomed .mobile-pan-root {
-    touch-action: pan-x pan-y !important;
     overflow: visible;
   }
 
