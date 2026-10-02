@@ -76,13 +76,21 @@
     max-width: 100% !important;
   }
 
-  .mobile-app-header,
+  /* NUNCA esconder .mobile-app-header só por ≥769px — compacto vai até 1024px.
+   * Só esconder no desktop real (sem .app-compact-layout). */
+  .app-layout:not(.app-compact-layout) .mobile-app-header,
   .app-layout:not(.app-compact-layout) .mobile-sticky-toolbar,
   .app-layout:not(.app-compact-layout) .clientes-module-toolbar,
   .app-layout:not(.app-compact-layout) .fornecedores-module-toolbar,
   .app-layout:not(.app-compact-layout) .clientes-hub-page .clientes-module-toolbar,
   .app-layout:not(.app-compact-layout) .clientes-cadastro-page .clientes-module-toolbar,
   .app-layout:not(.app-compact-layout) .clientes-detalhe-page .clientes-module-toolbar {
+    display: none !important;
+  }
+
+  /* FAB portal: nunca em desktop */
+  .app-layout:not(.app-compact-layout) ~ .ns-mobile-menu-fab,
+  body:not(:has(.app-compact-layout)) .ns-mobile-menu-fab {
     display: none !important;
   }
 
@@ -319,17 +327,39 @@
     visibility: visible !important;
   }
 
-  .mobile-menu-toggle {
+  .mobile-menu-toggle,
+  .ns-mobile-menu-fab {
     display: flex !important;
     visibility: visible !important;
     pointer-events: auto !important;
     opacity: 1 !important;
-    z-index: 2147483646 !important;
+    z-index: 2147483647 !important;
   }
 
-  .mobile-sidebar-backdrop {
+  .mobile-sidebar-backdrop,
+  .ns-mobile-menu-portal-backdrop {
     z-index: 2147483000 !important;
     pointer-events: auto !important;
+  }
+
+  /* Host portal da gaveta — full viewport, sem layout flex do app */
+  .ns-mobile-drawer-host {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 2147483500 !important;
+  }
+
+  .ns-mobile-drawer-host .sidebar {
+    pointer-events: none !important;
+  }
+
+  .ns-mobile-drawer-host .sidebar.sidebar-mobile-open {
+    pointer-events: auto !important;
+    background: #2a2a2a !important;
   }
 
   .app-compact-layout .sidebar .sidebar-brand,
@@ -480,5 +510,85 @@
     width: min(98vw, 640px) !important;
     max-width: 98vw !important;
     max-height: min(94dvh, 900px) !important;
+  }
+}
+
+/* ========== ☰ FAB portal (document.body) — à prova de pan-root / transform / display:none ========== */
+button.ns-mobile-menu-fab,
+.ns-mobile-menu-fab {
+  position: fixed !important;
+  top: max(8px, env(safe-area-inset-top, 0px)) !important;
+  left: max(8px, env(safe-area-inset-left, 0px)) !important;
+  z-index: 2147483647 !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(0, 255, 0, 0.55) !important;
+  background: #2a2a2a !important;
+  color: #00ff00 !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  -webkit-transform: none !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.55) !important;
+}
+
+.ns-mobile-menu-fab-spacer {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ns-mobile-menu-portal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+/* Gaveta portaled: lista completa + scroll + fundo sistema */
+.ns-mobile-drawer-host .sidebar.sidebar-mobile-open {
+  background: #2a2a2a !important;
+  color: #fff !important;
+  overflow: hidden !important;
+}
+
+.ns-mobile-drawer-host .sidebar.sidebar-mobile-open .sidebar-scroll-inner {
+  overflow-y: scroll !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-height: none !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  pointer-events: auto !important;
+}
+
+/* Nunca esconder o FAB por media query errada */
+@media (max-width: 1024px) {
+  button.ns-mobile-menu-fab,
+  .ns-mobile-menu-fab {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
   }
 }

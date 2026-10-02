@@ -28834,7 +28834,9 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 /* Telemóvel: ☰ SEMPRE visível/clicável (nunca esconder — utilizador ficava preso sem menu) */
-.app-layout.app-layout-entry-focus.app-compact-layout:not(.app-layout-workspace-open) .mobile-menu-toggle {
+.app-layout.app-layout-entry-focus.app-compact-layout:not(.app-layout-workspace-open) .mobile-menu-toggle,
+.app-layout.app-layout-entry-focus.app-compact-layout:not(.app-layout-workspace-open) .ns-mobile-menu-fab,
+button.ns-mobile-menu-fab {
   visibility: visible !important;
   pointer-events: auto !important;
   opacity: 1 !important;

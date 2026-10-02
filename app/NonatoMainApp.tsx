@@ -67681,16 +67681,34 @@ A1;Peça exemplo;10`}
           )}
         </div>
       )}
-      {isCompactLayout && mobileMenuOpen && (
-        <div
-          className="mobile-sidebar-backdrop"
-          onClick={() => setMobileMenuOpen(false)}
-          onKeyDown={(e) => e.key === 'Escape' && setMobileMenuOpen(false)}
-          role="button"
-          tabIndex={0}
-          aria-label="Fechar menu"
-        />
-      )}
+      {/* ☰ + backdrop FORA de #mobile-pan-root — portal para document.body (fixed real no viewport) */}
+      {isCompactLayout &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <>
+            {mobileMenuOpen ? (
+              <div
+                className="mobile-sidebar-backdrop ns-mobile-menu-portal-backdrop"
+                onClick={() => setMobileMenuOpen(false)}
+                onKeyDown={(e) => e.key === 'Escape' && setMobileMenuOpen(false)}
+                role="button"
+                tabIndex={0}
+                aria-label="Fechar menu"
+              />
+            ) : null}
+            <button
+              type="button"
+              className="ns-mobile-menu-fab"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? (safeT?.close || 'Fechar') : (safeT?.menu || 'Menu')}
+              data-ns-mobile-menu-fab="1"
+            >
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+          </>,
+          document.body
+        )}
       {isCompactLayout && (
         <header
           className="mobile-app-header"
@@ -67698,15 +67716,8 @@ A1;Peça exemplo;10`}
             top: isDemoMode ? 44 : 0
           }}
         >
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? (safeT?.close || 'Fechar') : (safeT?.menu || 'Menu')}
-          >
-            {mobileMenuOpen ? '✕' : '☰'}
-          </button>
+          {/* Espaço do ☰ (FAB portal) — evita título por baixo do botão fixo */}
+          <span className="ns-mobile-menu-fab-spacer" aria-hidden="true" />
           <span className="mobile-app-header-title" title={activeOpenTabDisplayTitle ?? undefined}>
             {activeOpenTabDisplayTitle ?? 'NONATO SERVICE'}
           </span>
@@ -67736,7 +67747,17 @@ A1;Peça exemplo;10`}
           </div>
         </header>
       )}
-      {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
+      {/* Sidebar — em compacto: portal para body (fora do pan-root); host mantém .app-compact-layout para o CSS da gaveta */}
+      {(sidebarPortalNodes =>
+        isCompactLayout && typeof document !== 'undefined'
+          ? createPortal(
+              <div className="ns-mobile-drawer-host app-compact-layout" data-ns-mobile-drawer-portal="1">
+                {sidebarPortalNodes}
+              </div>,
+              document.body
+            )
+          : sidebarPortalNodes
+      )(
       <div
         ref={sidebarRootRef}
         className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard && !mobileMenuOpen ? ' sidebar--hidden-entry' : ''}`}
@@ -69740,6 +69761,7 @@ A1;Peça exemplo;10`}
           }}
         />
       </div>
+      )}
 
       {/* Área Principal */}
       <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
