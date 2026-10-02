@@ -339,25 +339,25 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Contentor legado (#mobile-pan-root): pan/pinch CUSTOM desactivado — scale sempre 1. */
+/* Contentor legado (#mobile-pan-root): pan/pinch CUSTOM desactivado — scale sempre 1.
+ * NÃO usar transform:none !important aqui: qualquer transform no ancestral
+ * parte position:fixed da gaveta/hamburger (containing block). */
 .mobile-pan-root {
   min-height: 100dvh;
   width: 100%;
 }
 
 @media (max-width: 1024px) {
-  /* Militar: nunca transformar a UI no telemóvel (sidebar ficava «invisível» a 100%). */
   #mobile-pan-root,
   .mobile-pan-root {
-    transform: none !important;
-    transform-origin: unset !important;
-    will-change: auto !important;
+    /* Sem transform — JS (MobileBrowserZoomPan) limpa residual; fixed da sidebar fica no viewport */
+    transform-origin: unset;
+    will-change: auto;
     touch-action: pan-x pan-y !important;
   }
 
   html.mobile-browser-zoomed .mobile-pan-root,
   body.mobile-browser-zoomed .mobile-pan-root {
-    transform: none !important;
     touch-action: pan-x pan-y !important;
     overflow: visible;
   }
@@ -7124,7 +7124,8 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   position: fixed;
   left: 0;
   right: 0;
-  z-index: 2080;
+  /* Acima do backdrop da gaveta — ☰/✕ sempre tocável */
+  z-index: 2147483640;
   height: 52px;
   padding: 0 12px;
   padding-left: max(12px, env(safe-area-inset-left));
@@ -7134,12 +7135,16 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   background: linear-gradient(180deg, #3a3a3a 0%, #363636 100%);
   border-bottom: 1px solid rgba(0, 200, 83, 0.35);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  pointer-events: auto !important;
+  visibility: visible !important;
 }
 .app-layout:has(.app-top-bar) .mobile-app-header {
   top: 44px !important;
 }
 .mobile-menu-toggle {
   flex-shrink: 0;
+  position: relative;
+  z-index: 2147483646;
   width: 46px;
   height: 46px;
   min-width: 46px;
@@ -7151,10 +7156,13 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   -webkit-tap-highlight-color: transparent;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 .mobile-header-right-actions {
   margin-left: auto;
@@ -7493,10 +7501,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
 .mobile-sidebar-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 2147482990;
+  z-index: 2147483000;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
+  pointer-events: auto !important;
 }
 
 @media (max-width: 1024px) {
@@ -7514,16 +7523,18 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .app-compact-layout .sidebar {
     position: fixed !important;
     top: 0 !important;
-    left: 0 !important;
-    width: min(100vw - 16px, 320px) !important;
-    min-width: min(100vw - 16px, 320px) !important;
-    max-width: min(100vw - 16px, 320px) !important;
+    bottom: 0 !important;
+    /* Abrir/fechar com left (NÃO transform) — transform no ancestral/filho partia fixed */
+    left: calc(-1 * min(90vw, 320px) - 24px) !important;
+    right: auto !important;
+    width: min(90vw, 320px) !important;
+    min-width: min(90vw, 320px) !important;
+    max-width: min(90vw, 320px) !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
-    z-index: 2090 !important;
-    transform: translate3d(-105%, 0, 0) !important;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    /* hidden (não visible+hidden-x): evita clip estranho e força scroll no filho */
+    z-index: 2147483500 !important;
+    transform: none !important;
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
     overflow: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain;
@@ -7535,6 +7546,8 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     flex-shrink: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
   }
   .app-compact-layout .sidebar .sidebar-scroll-inner {
     flex: 1 1 auto !important;
@@ -7552,7 +7565,12 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
   }
   .app-compact-layout .sidebar.sidebar-mobile-open {
-    transform: translate3d(0, 0, 0) !important;
+    left: 0 !important;
+    transform: none !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    display: flex !important;
   }
   /* Não fixar altura do logo (88–100px cortava imagem/vídeo no tablet na gaveta) */
   .app-compact-layout .sidebar > div:first-child.sidebar-brand,
@@ -28647,11 +28665,24 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 @media (max-width: 1024px) {
-  .app-compact-layout .sidebar.sidebar--hidden-entry {
+  .app-compact-layout .sidebar.sidebar--hidden-entry:not(.sidebar-mobile-open) {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
     transform: none !important;
+  }
+
+  /* Menu aberto: nunca display:none — override do hidden-entry */
+  .app-compact-layout .sidebar.sidebar-mobile-open.sidebar--hidden-entry {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: none !important;
+    left: 0 !important;
+    width: min(90vw, 320px) !important;
+    min-width: min(90vw, 320px) !important;
+    max-width: min(90vw, 320px) !important;
+    opacity: 1 !important;
   }
 }
 
@@ -28802,11 +28833,12 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   background: linear-gradient(180deg, var(--ns-entry-bg-1) 0%, var(--ns-entry-bg-0) 100%);
 }
 
-/* Telemóvel: sem botão ☰ na entrada (evita gaveta vazia); o menu volta após «Entrar no sistema» */
+/* Telemóvel: ☰ SEMPRE visível/clicável (nunca esconder — utilizador ficava preso sem menu) */
 .app-layout.app-layout-entry-focus.app-compact-layout:not(.app-layout-workspace-open) .mobile-menu-toggle {
-  visibility: hidden !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  display: flex !important;
 }
 
 /* —— Hub «Biblioteca de peças»: abas (Cadastro, Biblioteca, Editar, Categorias, Importação) —— */

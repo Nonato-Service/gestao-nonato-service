@@ -2141,11 +2141,10 @@ export default function Dashboard() {
   const [bottomTabsSavedOrder, setBottomTabsSavedOrder] = useState<string[] | null>(null)
   const bottomTabsScrollRef = useRef<HTMLDivElement>(null)
   const [bottomTabsScrollHints, setBottomTabsScrollHints] = useState({ left: false, right: false })
-  /** Sem abas e painel ainda não expandido: esconder sidebar na vista de entrada. */
-  const hideSidebarForEntryDashboard = !activeTabId && !dashboardWorkspaceExpanded
-  useEffect(() => {
-    if (hideSidebarForEntryDashboard) setMobileMenuOpen(false)
-  }, [hideSidebarForEntryDashboard])
+  /** Sem abas e painel ainda não expandido: vista de entrada (☰ continua a abrir a gaveta). */
+  const isEntryDashboardFocus = !activeTabId && !dashboardWorkspaceExpanded
+  const hideSidebarForEntryDashboard = isEntryDashboardFocus && !mobileMenuOpen
+  // Não fechar o menu à força na entrada — ☰ tem de abrir a gaveta mesmo sem aba activa.
   useEffect(() => {
     if (hideSidebarForEntryDashboard) setSidebarTipFlyout(null)
   }, [hideSidebarForEntryDashboard])
@@ -67549,7 +67548,7 @@ A1;Peça exemplo;10`}
 
   return (
     <div
-      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${isMobileOrTablet ? ' app-touch-device' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}${dashboardWorkspaceExpanded ? ' app-layout-workspace-open' : ''}`}
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${isMobileOrTablet ? ' app-touch-device' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${isEntryDashboardFocus ? ' app-layout-entry-focus' : ''}${dashboardWorkspaceExpanded ? ' app-layout-workspace-open' : ''}`}
       style={{
         display: 'flex',
         minHeight: '100dvh',
@@ -67740,8 +67739,8 @@ A1;Peça exemplo;10`}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
       <div
         ref={sidebarRootRef}
-        className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
-        aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
+        className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard && !mobileMenuOpen ? ' sidebar--hidden-entry' : ''}`}
+        aria-hidden={hideSidebarForEntryDashboard && !mobileMenuOpen ? true : undefined}
         onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
         onMouseOver={hideSidebarForEntryDashboard ? undefined : handleSidebarTipMouseOver}
         onPointerDownCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
