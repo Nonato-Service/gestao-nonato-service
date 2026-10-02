@@ -266,6 +266,136 @@
   }
 }
 
+/*
+ * Gaveta mobile (≤1024): botões SEMPRE visíveis/tocáveis sem pinch-zoom.
+ * Problema: logo alto + overflow conflituoso faziam .sidebar-scroll-inner colapsar;
+ * o zoom em #mobile-pan-root só “revelava” o menu — ao voltar a 100% sumia outra vez.
+ */
+@media (max-width: 1024px) {
+  .app-compact-layout .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(100vw - 16px, 320px) !important;
+    min-width: min(100vw - 16px, 320px) !important;
+    max-width: min(100vw - 16px, 320px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    /* overflow hidden (não visible+hidden-x): scroll fica no .sidebar-scroll-inner */
+    overflow: hidden !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    z-index: 2090 !important;
+    box-sizing: border-box !important;
+    padding: 10px 8px max(16px, env(safe-area-inset-bottom, 0px)) !important;
+    padding-top: max(10px, env(safe-area-inset-top, 0px)) !important;
+  }
+
+  .app-compact-layout .sidebar.sidebar-mobile-open {
+    transform: translate3d(0, 0, 0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+  }
+
+  .app-compact-layout .sidebar .sidebar-brand,
+  .app-compact-layout .sidebar > div:first-child.sidebar-brand,
+  .app-compact-layout .sidebar .sidebar-brand.sidebar-brand--has-media,
+  .app-compact-layout .sidebar > div:first-child.sidebar-brand.sidebar-brand--has-media {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    height: min(12vh, 96px) !important;
+    min-height: 56px !important;
+    max-height: min(12vh, 96px) !important;
+    margin-bottom: 8px !important;
+  }
+
+  .app-compact-layout .sidebar .ns-sync-traffic--sidebar-embed {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    max-height: 72px !important;
+    overflow: hidden !important;
+  }
+
+  .app-compact-layout .sidebar .sidebar-scroll-inner {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+    padding-bottom: 12px !important;
+  }
+
+  .app-compact-layout .sidebar .sidebar-footer {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 8px !important;
+  }
+
+  /* Alvos de toque ≥44px + texto legível sem zoom */
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-scroll-inner button,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-scroll-inner .sidebar-group-header,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-scroll-inner .sidebar-action-btn,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-footer button {
+    min-height: 44px !important;
+    padding: 10px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-nav-label-text,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-empresa-entry-title,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-protocolos-entry-title {
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-nav-label-sub,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-empresa-entry-sub,
+  .app-compact-layout .sidebar.sidebar-mobile-open .sidebar-protocolos-entry-sub {
+    font-size: 12px !important;
+    white-space: normal !important;
+  }
+
+  .app-compact-layout .sidebar .sidebar-action-buttons {
+    overflow: visible !important;
+  }
+
+  .app-compact-layout .sidebar .sidebar-action-buttons > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Telefone estreito: menu quase ecrã inteiro */
+@media (max-width: 480px) {
+  .app-compact-layout .sidebar,
+  .app-compact-layout .sidebar.sidebar-mobile-open {
+    width: min(100vw - 8px, 100%) !important;
+    min-width: min(100vw - 8px, 100%) !important;
+    max-width: min(100vw - 8px, 100%) !important;
+  }
+}
+
 /* Telemóvel pequeno (Armor 33 Pro portrait ~360–412px) */
 @media (max-width: 480px) and (pointer: coarse) {
   .app-compact-layout {

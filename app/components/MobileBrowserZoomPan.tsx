@@ -348,6 +348,9 @@ export function MobileBrowserZoomPan() {
       }
     }
 
+    const isSidebarDrawerOpen = () =>
+      Boolean(document.querySelector('.sidebar.sidebar-mobile-open'))
+
     const onTouchStart = (e: TouchEvent) => {
       if (!isTouchMobile()) return
       if (!panRoot()) return
@@ -356,6 +359,20 @@ export function MobileBrowserZoomPan() {
       const scale = scaleRef.current
       const inScrollArea = isNativeScrollTarget(e.target)
       const surface = resolveZoomSurface(e.target)
+      const targetEl = e.target instanceof Element ? e.target : null
+      const inOpenSidebar = Boolean(targetEl?.closest('.sidebar.sidebar-mobile-open'))
+
+      // Menu aberto: não aplicar pinch na app — o scroll nativo da gaveta basta.
+      if (isSidebarDrawerOpen() || inOpenSidebar) {
+        if (scale > ZOOM_ACTIVE_SCALE) resetView()
+        if (e.touches.length >= 2 && inOpenSidebar) {
+          gestureRef.current = null
+          return
+        }
+        if (e.touches.length === 1 && (inScrollArea || inOpenSidebar) && scale <= ZOOM_ACTIVE_SCALE) {
+          return
+        }
+      }
 
       if (e.touches.length >= 2) {
         armTwoFingerGesture(e)
@@ -516,6 +533,33 @@ export function MobileBrowserZoomPan() {
       }
     }
 
+    /**
+     * Menu lateral aberto: voltar ao zoom 100%.
+     * Sem isto, o utilizador precisava de pinçar para “ver” botões cortados e, ao diminuir, sumiam.
+     */
+    const resetIfSidebarOpen = () => {
+      const open = document.querySelector('.sidebar.sidebar-mobile-open')
+      if (open && scaleRef.current > ZOOM_ACTIVE_SCALE) {
+        resetView()
+      }
+    }
+
+    const sidebarObserver =
+      typeof MutationObserver !== 'undefined'
+        ? new MutationObserver(() => {
+            resetIfSidebarOpen()
+          })
+        : null
+
+    const observeSidebars = () => {
+      if (!sidebarObserver) return
+      document.querySelectorAll('.sidebar').forEach((el) => {
+        sidebarObserver.observe(el, { attributes: true, attributeFilter: ['class'] })
+      })
+    }
+    observeSidebars()
+    const bootObserveTimer = window.setTimeout(observeSidebars, 800)
+
     document.addEventListener('touchstart', onTouchStart, { passive: false, capture: true })
     document.addEventListener('touchmove', onTouchMove, { passive: false, capture: true })
     document.addEventListener('touchend', onTouchEnd, { capture: true })
@@ -527,6 +571,8 @@ export function MobileBrowserZoomPan() {
 
     return () => {
       if (rafApplyRef.current) cancelAnimationFrame(rafApplyRef.current)
+      window.clearTimeout(bootObserveTimer)
+      sidebarObserver?.disconnect()
       document.removeEventListener('touchstart', onTouchStart, true)
       document.removeEventListener('touchmove', onTouchMove, true)
       document.removeEventListener('touchend', onTouchEnd, true)

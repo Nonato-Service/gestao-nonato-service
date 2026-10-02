@@ -4850,8 +4850,8 @@ html.app-compact-layout-early body {
 html.app-compact-layout-early .app-layout:not(.app-compact-layout) .sidebar {
   position: fixed !important;
   transform: translate3d(-105%, 0, 0) !important;
-  width: min(100vw - 4px, 360px) !important;
-  min-width: min(100vw - 4px, 360px) !important;
+  width: min(100vw - 16px, 320px) !important;
+  min-width: min(100vw - 16px, 320px) !important;
   z-index: 2090 !important;
 }
 html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-column {
@@ -4968,8 +4968,8 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-col
     font-size: 15px !important;
   }
   .app-compact-layout .sidebar.sidebar-mobile-open {
-    width: min(100vw - 6px, 340px) !important;
-    min-width: min(100vw - 6px, 340px) !important;
+    width: min(100vw - 16px, 320px) !important;
+    min-width: min(100vw - 16px, 320px) !important;
   }
   .bottom-tabs-bar {
     left: 0 !important;
@@ -7528,16 +7528,16 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: min(100vw - 4px, 360px) !important;
-    min-width: min(100vw - 4px, 360px) !important;
-    max-width: min(100vw - 4px, 360px) !important;
+    width: min(100vw - 16px, 320px) !important;
+    min-width: min(100vw - 16px, 320px) !important;
+    max-width: min(100vw - 16px, 320px) !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
     z-index: 2090 !important;
     transform: translate3d(-105%, 0, 0) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
+    /* hidden (não visible+hidden-x): evita clip estranho e força scroll no filho */
+    overflow: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain;
     padding: 10px 6px 18px !important;
@@ -7550,12 +7550,13 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     flex-direction: column !important;
   }
   .app-compact-layout .sidebar .sidebar-scroll-inner {
-    flex: 1 !important;
+    flex: 1 1 auto !important;
     min-height: 0 !important;
-    overflow-y: auto !important;
+    overflow-y: scroll !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
   }
   .app-compact-layout .sidebar .sidebar-footer {
     flex-shrink: 0 !important;
@@ -7570,8 +7571,8 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .app-compact-layout .sidebar > div:first-child.sidebar-brand,
   .app-compact-layout .sidebar .sidebar-brand {
     height: auto !important;
-    min-height: 88px !important;
-    max-height: min(34vh, 220px) !important;
+    min-height: 56px !important;
+    max-height: min(12vh, 96px) !important;
     flex-shrink: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -7579,9 +7580,9 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
   .app-compact-layout .sidebar > div:first-child.sidebar-brand.sidebar-brand--has-media,
   .app-compact-layout .sidebar .sidebar-brand.sidebar-brand--has-media {
-    height: min(34vh, 220px) !important;
-    max-height: min(34vh, 220px) !important;
-    min-height: min(88px, min(34vh, 220px)) !important;
+    height: min(12vh, 96px) !important;
+    max-height: min(12vh, 96px) !important;
+    min-height: min(56px, min(12vh, 96px)) !important;
     align-items: stretch !important;
   }
   .app-compact-layout .main-app-column {
