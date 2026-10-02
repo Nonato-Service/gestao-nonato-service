@@ -267,15 +267,15 @@
 }
 
 /*
- * Gaveta mobile (≤1024): botões SEMPRE visíveis/tocáveis sem pinch-zoom.
- * Problema: logo alto + overflow conflituoso faziam .sidebar-scroll-inner colapsar;
- * o zoom em #mobile-pan-root só “revelava” o menu — ao voltar a 100% sumia outra vez.
+ * Gaveta mobile (≤1024): botões SEMPRE visíveis/tocáveis a scale 1.
+ * Pan/pinch custom em #mobile-pan-root DESACTIVADO — nunca depender de zoom para ver o menu.
  */
 @media (max-width: 1024px) {
   .app-compact-layout .sidebar {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
+    right: auto !important;
     bottom: 0 !important;
     width: min(100vw - 16px, 320px) !important;
     min-width: min(100vw - 16px, 320px) !important;
@@ -285,14 +285,20 @@
     min-height: 100dvh !important;
     display: flex !important;
     flex-direction: column !important;
-    /* overflow hidden (não visible+hidden-x): scroll fica no .sidebar-scroll-inner */
+    /* overflow hidden: scroll nativo só em .sidebar-scroll-inner */
     overflow: hidden !important;
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
-    z-index: 2090 !important;
+    /* Acima de overlays/tabs; abaixo só de modais críticos se existirem */
+    z-index: 2147483000 !important;
     box-sizing: border-box !important;
     padding: 10px 8px max(16px, env(safe-area-inset-bottom, 0px)) !important;
     padding-top: max(10px, env(safe-area-inset-top, 0px)) !important;
+    will-change: auto !important;
+    /* Fechada: fora do ecrã (não forçar translate 0 aqui — senão o menu fica sempre aberto) */
+    transform: translate3d(-105%, 0, 0) !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
   }
 
   .app-compact-layout .sidebar.sidebar-mobile-open {
