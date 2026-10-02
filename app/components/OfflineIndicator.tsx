@@ -298,37 +298,14 @@ export function OfflineIndicator() {
 
   return (
     <>
-      {!online ? (
-        <div
-          role="alert"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 10000,
-            padding: '10px 16px',
-            fontSize: 14,
-            fontWeight: 600,
-            textAlign: 'center',
-            backgroundColor: '#b71c1c',
-            color: '#fff',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-          }}
-        >
-          {getStoredUiString(
-            'offlineModeBanner',
-            'Modo offline — alterações serão enviadas quando voltar a ligar.'
-          )}
-        </div>
-      ) : null}
       <div
+        className="offline-sync-chip"
         role="status"
         style={{
           position: 'fixed',
-          bottom: 16,
-          right: 16,
-          zIndex: 9999,
+          bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+          right: 'max(16px, env(safe-area-inset-right, 0px))',
+          zIndex: 2050,
           padding: '10px 16px',
           borderRadius: 8,
           fontSize: 13,
@@ -340,6 +317,8 @@ export function OfflineIndicator() {
           maxWidth: 'min(92vw, 360px)',
           backgroundColor: bg,
           color: '#fff',
+          minHeight: 44,
+          pointerEvents: 'auto',
           cursor: pendingCount > 0 || showFailed || !online || Boolean(authMsg) ? 'pointer' : undefined,
         }}
         onClick={() => {

@@ -187,20 +187,30 @@ export function RegisterSW() {
     window.location.reload()
   }
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.classList.toggle('has-pwa-update-banner', updateReady)
+    return () => {
+      document.body.classList.remove('has-pwa-update-banner')
+    }
+  }, [updateReady])
+
   if (!updateReady) return null
   return (
     <div
       className="pwa-update-banner"
+      role="status"
       style={{
         position: 'fixed',
-        top: 0,
         left: 0,
         right: 0,
-        zIndex: 10000,
+        bottom: 0,
+        top: 'auto',
+        zIndex: 2060,
         background: 'linear-gradient(135deg, #00aa00 0%, #006600 100%)',
         color: '#fff',
         padding: '14px 20px',
-        paddingTop: 'calc(14px + env(safe-area-inset-top, 0px))',
+        paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
         paddingLeft: 'calc(20px + env(safe-area-inset-left, 0px))',
         paddingRight: 'calc(20px + env(safe-area-inset-right, 0px))',
         display: 'flex',
@@ -208,7 +218,7 @@ export function RegisterSW() {
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: 12,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.4)',
         fontSize: 15,
         fontWeight: 600,
       }}

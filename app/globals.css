@@ -5919,11 +5919,27 @@ body {
   }
 }
 
-/* Banner PWA — safe-area (notch) + botões com contraste legível */
+/* Banner PWA — safe-area (notch) + botões com contraste legível; no fundo para não tapar o menu */
 html body .pwa-update-banner {
-  padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important;
+  top: auto !important;
+  bottom: 0 !important;
+  z-index: 2060 !important;
+  padding-top: 14px !important;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
   padding-left: calc(20px + env(safe-area-inset-left, 0px)) !important;
   padding-right: calc(20px + env(safe-area-inset-right, 0px)) !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Com banner PWA: reservar espaço no fim do scroll (não empurrar o header) */
+body.has-pwa-update-banner .app-has-bottom-tabs .tab-inner-scroll,
+body:has(.pwa-update-banner) .app-has-bottom-tabs .tab-inner-scroll {
+  padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
+  scroll-padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+}
+body.has-pwa-update-banner .offline-sync-chip,
+body:has(.pwa-update-banner) .offline-sync-chip {
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 html body .pwa-update-banner button.pwa-update-banner__btn {
@@ -7005,10 +7021,10 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   .mobile-menu-toggle,
   .mobile-header-action-btn,
   .mobile-refresh-toggle {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     font-size: 18px !important;
   }
 
@@ -7748,8 +7764,12 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     width: 100% !important;
     max-width: 100% !important;
   }
-  /* Modais quase full-screen */
+  /* Modais quase full-screen — scrollável no telemóvel (teclado / formulários longos) */
   .app-compact-layout .modal-overlay {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
       max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
   }
@@ -7757,6 +7777,9 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     width: min(96vw, 640px) !important;
     max-width: 96vw !important;
     max-height: min(92dvh, 900px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain;
   }
   /* Hubs com abas horizontais (Biblioteca, etc.) */
   .app-compact-layout .biblioteca-hub-tablist,
@@ -7828,7 +7851,11 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
   .app-compact-layout .ns-table-scroll,
   .app-compact-layout .fechamento-relatorios-servicos-table-host,
-  .app-compact-layout .biblioteca-relatorios-tabela-wrap {
+  .app-compact-layout .biblioteca-relatorios-tabela-wrap,
+  .app-compact-layout .cadastro-valores-v2__table-wrap,
+  .app-compact-layout .cadastro-valores-v2__table-wrap--pro,
+  .app-compact-layout .biblioteca-pecas-hub__catalog-table-wrap,
+  .app-compact-layout .ns-stock-catalog-wrap {
     display: block;
     width: 100%;
     max-width: 100%;
@@ -7838,7 +7865,10 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   }
   .app-compact-layout .ns-table-scroll > table,
   .app-compact-layout .fechamento-relatorios-servicos-table-host > table,
-  .app-compact-layout .biblioteca-relatorios-tabela-wrap > table {
+  .app-compact-layout .biblioteca-relatorios-tabela-wrap > table,
+  .app-compact-layout .cadastro-valores-v2__table-wrap > table,
+  .app-compact-layout .cadastro-valores-v2__table-wrap--pro > table,
+  .app-compact-layout .biblioteca-pecas-hub__catalog-table-wrap > table {
     display: table !important;
     width: max-content;
     min-width: 100%;
@@ -52894,3 +52924,58 @@ html body .agenda-tecnica-page button.agenda-painel-situacao-btn > .agenda-paine
   background: transparent !important;
   box-shadow: none !important;
 }
+
+/* ========== Usabilidade telemóvel / tablet (PWA) — polimento cirúrgico ========== */
+@media (max-width: 1024px) {
+  /* Overlay de modais: scroll próprio + teclado iOS não “prende” o formulário */
+  .modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain;
+    padding: max(10px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px))
+      max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px)) !important;
+  }
+  .modal {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-height: min(92dvh, calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  /* Chip offline: não tapar o dock de abas */
+  .app-has-bottom-tabs .offline-sync-chip {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Alvos de toque críticos no header compacto */
+  .mobile-menu-toggle,
+  .mobile-header-action-btn,
+  .mobile-refresh-toggle {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* Paisagem baixa: manter ≥44px nos botões do menu (antes 42px) */
+@media (max-width: 1024px) and (max-height: 520px) {
+  .mobile-menu-toggle,
+  .mobile-refresh-toggle,
+  .mobile-header-action-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* Stock em cartões no telemóvel: não forçar scroll horizontal no wrapper de cartões */
+@media (max-width: 1024px) {
+  .app-compact-layout .ns-stock-catalog-wrap {
+    overflow-x: visible !important;
+  }
+  .app-compact-layout .ns-stock-catalog-wrap .ns-stock-catalog-table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
