@@ -48,7 +48,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var w=window.innerWidth||document.documentElement.clientWidth||1025;if(w<=1024){document.documentElement.classList.add('app-compact-layout-early');}if(w<=768){document.documentElement.classList.add('app-phone-layout');}}catch(e){}})();`,
+            __html: `(function(){try{var w=window.innerWidth||document.documentElement.clientWidth||1025;var coarse=false;try{coarse=window.matchMedia('(pointer: coarse)').matches}catch(_e){}if(w<=1024||(coarse&&w<=1366)){document.documentElement.classList.add('app-compact-layout-early');document.documentElement.classList.add('ns-compact-shell');if(document.body)document.body.classList.add('ns-compact-shell');}if(w<=768){document.documentElement.classList.add('app-phone-layout');}}catch(e){}})();`,
           }}
         />
         <meta charSet="utf-8" />

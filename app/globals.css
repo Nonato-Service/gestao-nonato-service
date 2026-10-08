@@ -4836,6 +4836,7 @@ div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
   --ns-bp-phone: 480px;
   --ns-bp-tablet: 1024px;
   --ns-bp-compact: 1024px;
+  --ns-bp-touch-compact: 1366px;
   --ns-bp-desktop: 1025px;
 }
 
@@ -4848,7 +4849,7 @@ html, body {
 
 /*
  * Antes da hidratação React: script em layout.tsx aplica .app-compact-layout-early no <html>
- * quando largura ≤1024 — evita flash de sidebar desktop no telemóvel/tablet.
+ * quando largura ≤1024 ou (pointer:coarse e ≤1366) — evita flash de sidebar desktop no telemóvel/tablet.
  */
 html.app-compact-layout-early body {
   overscroll-behavior: none;
@@ -4860,9 +4861,11 @@ html.app-compact-layout-early .app-layout:not(.app-compact-layout) .sidebar {
   min-width: min(100vw - 16px, 320px) !important;
   z-index: 2090 !important;
 }
-html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-column {
+html.app-compact-layout-early .app-layout:not(.app-compact-layout) .main-app-column,
+html.ns-compact-shell .app-layout:not(.app-compact-layout) .main-app-column {
   width: 100% !important;
   max-width: 100vw !important;
+  margin-left: 0 !important;
 }
 
 /* Telemóvel (até 768px) — fallback legado só se NÃO for layout compacto (gaveta) */
@@ -7527,47 +7530,50 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
   pointer-events: auto !important;
 }
 
-@media (max-width: 1024px) {
-  html:not(.mobile-browser-zoomed),
-  html:not(.mobile-browser-zoomed) body {
-    overscroll-behavior: none !important;
-    overscroll-behavior-y: none !important;
-  }
-  html.mobile-browser-zoomed,
-  html.mobile-browser-zoomed body,
-  body.mobile-browser-zoomed {
-    overscroll-behavior: auto !important;
-    overscroll-behavior-y: auto !important;
-  }
-  .app-compact-layout .sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    /* Abrir/fechar com left (NÃO transform) — transform no ancestral/filho partia fixed */
-    left: calc(-1 * min(90vw, 320px) - 24px) !important;
-    right: auto !important;
-    width: min(90vw, 320px) !important;
-    min-width: min(90vw, 320px) !important;
-    max-width: min(90vw, 320px) !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    z-index: 2147483500 !important;
-    transform: none !important;
-    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    overflow: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain;
-    padding: 10px 6px 18px !important;
-    padding-top: max(10px, env(safe-area-inset-top)) !important;
-    padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55) !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    pointer-events: none !important;
-    visibility: hidden !important;
-  }
+/* Compacto (classe JS): telemóvel + tablet incl. landscape >1024 — não limitar a max-width:1024 */
+html.app-compact-layout-early:not(.mobile-browser-zoomed),
+html.app-compact-layout-early:not(.mobile-browser-zoomed) body,
+body.ns-compact-shell:not(.mobile-browser-zoomed),
+html:has(.app-compact-layout):not(.mobile-browser-zoomed),
+html:has(.app-compact-layout):not(.mobile-browser-zoomed) body {
+  overscroll-behavior: none !important;
+  overscroll-behavior-y: none !important;
+}
+html.mobile-browser-zoomed,
+html.mobile-browser-zoomed body,
+body.mobile-browser-zoomed {
+  overscroll-behavior: auto !important;
+  overscroll-behavior-y: auto !important;
+}
+.app-compact-layout .sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  /* Abrir/fechar com left (NÃO transform) — transform no ancestral/filho partia fixed */
+  left: calc(-1 * min(90vw, 320px) - 24px) !important;
+  right: auto !important;
+  width: min(90vw, 320px) !important;
+  min-width: min(90vw, 320px) !important;
+  max-width: min(90vw, 320px) !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  z-index: 2147483500 !important;
+  transform: none !important;
+  transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
+  padding: 10px 6px 18px !important;
+  padding-top: max(10px, env(safe-area-inset-top)) !important;
+  padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55) !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
   .app-compact-layout .sidebar .sidebar-scroll-inner {
     flex: 1 1 auto !important;
     min-height: 0 !important;
@@ -7937,7 +7943,6 @@ html body .pwa-update-banner button.pwa-update-banner__btn--update:hover {
     width: 100% !important;
     max-width: 100% !important;
   }
-}
 
 /* Telemóvel estreito: grelhas de 2–4 colunas passam a 1 coluna */
 @media (max-width: 768px) {
@@ -28667,8 +28672,11 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
 }
 
 /* Vista de entrada resumida: ocultar barra lateral (classe no .sidebar — ganha a .app-compact-layout .sidebar { display:flex!important }) */
-.app-layout.app-layout-entry-focus > .sidebar.sidebar--hidden-entry,
-.sidebar.sidebar--hidden-entry {
+/* Desktop: esconder sidebar na página inicial. NÃO aplicar a .sidebar solto —
+ * no tablet a gaveta vai para portal (fora de .app-layout) e display:none global
+ * impedia o ☰ de reabrir o menu. */
+.app-layout.app-layout-entry-focus:not(.app-compact-layout) > .sidebar.sidebar--hidden-entry,
+.app-layout:not(.app-compact-layout) .sidebar.sidebar--hidden-entry {
   display: none !important;
   width: 0 !important;
   min-width: 0 !important;
@@ -28683,26 +28691,26 @@ select.biblioteca-relatorios-toolbar__modelo.relatorio-servico-pdf-modelo-select
   flex: 0 0 0 !important;
 }
 
-@media (max-width: 1024px) {
-  .app-compact-layout .sidebar.sidebar--hidden-entry:not(.sidebar-mobile-open) {
-    display: none !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    transform: none !important;
-  }
+/* Compacto/tablet: gaveta fechada fica off-screen; aberta SEMPRE flex (incl. landscape >1024) */
+.app-compact-layout .sidebar.sidebar--hidden-entry:not(.sidebar-mobile-open) {
+  /* left/visibility já escondem — evitar display:none que partia o portal */
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: none !important;
+}
 
-  /* Menu aberto: nunca display:none — override do hidden-entry */
-  .app-compact-layout .sidebar.sidebar-mobile-open.sidebar--hidden-entry {
-    display: flex !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    transform: none !important;
-    left: 0 !important;
-    width: min(90vw, 320px) !important;
-    min-width: min(90vw, 320px) !important;
-    max-width: min(90vw, 320px) !important;
-    opacity: 1 !important;
-  }
+/* Menu aberto: nunca display:none — override do hidden-entry */
+.app-compact-layout .sidebar.sidebar-mobile-open.sidebar--hidden-entry,
+.ns-mobile-drawer-host .sidebar.sidebar-mobile-open.sidebar--hidden-entry {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  left: 0 !important;
+  width: min(90vw, 320px) !important;
+  min-width: min(90vw, 320px) !important;
+  max-width: min(90vw, 320px) !important;
+  opacity: 1 !important;
 }
 
 .app-layout.app-layout-entry-focus > .main-app-column {

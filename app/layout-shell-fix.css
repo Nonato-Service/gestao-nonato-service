@@ -4,8 +4,10 @@
  */
 
 :root {
-  --ns-bp-compact: 768px;
-  --ns-bp-desktop: 769px;
+  /* Alinhado a JS: ≤1024 sempre; touch até 1366 (tablet landscape). Desktop real = sem .app-compact-layout */
+  --ns-bp-compact: 1024px;
+  --ns-bp-touch-compact: 1366px;
+  --ns-bp-desktop: 1025px;
   --ns-sidebar-width-desktop: 296px;
   --ns-sidebar-width-narrow: 248px;
   --ns-bottom-tabs-reserve-desktop: 84px;
@@ -88,9 +90,9 @@
     display: none !important;
   }
 
-  /* FAB portal: nunca em desktop */
-  .app-layout:not(.app-compact-layout) ~ .ns-mobile-menu-fab,
-  body:not(:has(.app-compact-layout)) .ns-mobile-menu-fab {
+  /* FAB portal: nunca em desktop real (sem shell compacto / sem gaveta) */
+  html:not(.app-compact-layout-early):not(.ns-compact-shell) body:not(:has(.app-compact-layout)) .ns-mobile-menu-fab,
+  body:not(.ns-compact-shell):not(:has(.app-compact-layout)) .ns-mobile-menu-fab {
     display: none !important;
   }
 
@@ -275,12 +277,13 @@
 }
 
 /*
- * Gaveta mobile (≤1024): ☰ + drawer em portal (document.body), fora do #mobile-pan-root.
+ * Gaveta mobile/tablet: ☰ + drawer em portal (document.body), fora do #mobile-pan-root.
+ * Activada pela classe .app-compact-layout (JS: ≤1024 ou touch ≤1366) — NÃO limitar a max-width:1024
+ * senão tablet landscape fica sem CSS da gaveta / ☰.
  * Pinch-zoom no conteúdo pode usar transform no pan-root; menu continua tocável.
  * Abrir/fechar da gaveta com left (nunca depender de transform no ancestral).
  */
-@media (max-width: 1024px) {
-  .app-compact-layout .sidebar {
+.app-compact-layout .sidebar {
     position: fixed !important;
     top: 0 !important;
     bottom: 0 !important;
@@ -439,11 +442,10 @@
     overflow: visible !important;
   }
 
-  .app-compact-layout .sidebar .sidebar-action-buttons > button {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
+.app-compact-layout .sidebar .sidebar-action-buttons > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
 }
 
 /* Telefone estreito: menu quase ecrã inteiro (90vw) */
@@ -582,13 +584,24 @@ button.ns-mobile-menu-fab,
   pointer-events: auto !important;
 }
 
-/* Nunca esconder o FAB por media query errada */
-@media (max-width: 1024px) {
-  button.ns-mobile-menu-fab,
-  .ns-mobile-menu-fab {
-    display: flex !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    opacity: 1 !important;
-  }
+/* Nunca esconder o FAB no shell compacto (tablet landscape incluído) */
+html.app-compact-layout-early button.ns-mobile-menu-fab,
+html.app-compact-layout-early .ns-mobile-menu-fab,
+html.ns-compact-shell button.ns-mobile-menu-fab,
+html.ns-compact-shell .ns-mobile-menu-fab,
+body.ns-compact-shell button.ns-mobile-menu-fab,
+body.ns-compact-shell .ns-mobile-menu-fab,
+body:has(.app-compact-layout) button.ns-mobile-menu-fab,
+body:has(.app-compact-layout) .ns-mobile-menu-fab {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+/* Com FAB portal: ☰ do header fica como reserva de espaço (evita dois ☰ visíveis) */
+body:has(.ns-mobile-menu-fab) .mobile-app-header .mobile-menu-toggle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  /* mantém 48px de espaço à esquerda do título */
 }

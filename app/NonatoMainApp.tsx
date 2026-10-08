@@ -5623,16 +5623,33 @@ export default function Dashboard() {
     createEmptyRelatorioServicoForm()
   )
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
-  /** ≤1024px: menu em gaveta + header mobile (telemóvel e tablet). Telefone estreito = ≤768. */
+  /**
+   * Menu em gaveta + header mobile:
+   * - sempre ≤1024 (telemóvel / tablet retrato)
+   * - ecrãs touch (pointer:coarse) até 1366 (tablet landscape / iPad Pro)
+   * Telefone estreito = ≤768.
+   */
   const COMPACT_LAYOUT_MAX_PX = 1024
+  const TOUCH_COMPACT_LAYOUT_MAX_PX = 1366
   const PHONE_LAYOUT_MAX_PX = 768
-  const [isCompactLayout, setIsCompactLayout] = useState(() => {
+  const detectCompactLayout = () => {
     if (typeof window === 'undefined') return false
+    const w = window.innerWidth
+    if (w <= COMPACT_LAYOUT_MAX_PX) return true
+    try {
+      if (window.matchMedia('(pointer: coarse)').matches && w <= TOUCH_COMPACT_LAYOUT_MAX_PX) {
+        return true
+      }
+    } catch {
+      /* ignore */
+    }
+    /* Fallback: script early no <head> já marcou tablet/telemóvel */
     return (
-      window.innerWidth <= COMPACT_LAYOUT_MAX_PX ||
-      document.documentElement.classList.contains('app-compact-layout-early')
+      document.documentElement.classList.contains('app-compact-layout-early') &&
+      w <= TOUCH_COMPACT_LAYOUT_MAX_PX
     )
-  })
+  }
+  const [isCompactLayout, setIsCompactLayout] = useState(() => detectCompactLayout())
   const canvasAssinaturaRef = useRef<HTMLCanvasElement>(null)
   const [mostrarCanvasAssinatura, setMostrarCanvasAssinatura] = useState(false)
   const isDrawingRef = useRef(false)
@@ -6049,16 +6066,22 @@ export default function Dashboard() {
     const q = () => {
       if (typeof window === 'undefined') return
       const w = window.innerWidth
-      const compact = w <= COMPACT_LAYOUT_MAX_PX
+      const compact = detectCompactLayout()
       const phone = w <= PHONE_LAYOUT_MAX_PX
       setIsCompactLayout(compact)
       document.documentElement.classList.toggle('app-compact-layout-early', compact)
+      document.documentElement.classList.toggle('ns-compact-shell', compact)
       document.documentElement.classList.toggle('app-phone-layout', phone)
+      document.body.classList.toggle('ns-compact-shell', compact)
       if (!compact) setMobileMenuOpen(false)
     }
     q()
     window.addEventListener('resize', q)
-    return () => window.removeEventListener('resize', q)
+    window.addEventListener('orientationchange', q)
+    return () => {
+      window.removeEventListener('resize', q)
+      window.removeEventListener('orientationchange', q)
+    }
   }, [])
 
   useEffect(() => {
@@ -67716,8 +67739,17 @@ A1;Peça exemplo;10`}
             top: isDemoMode ? 44 : 0
           }}
         >
-          {/* Espaço do ☰ (FAB portal) — evita título por baixo do botão fixo */}
-          <span className="ns-mobile-menu-fab-spacer" aria-hidden="true" />
+          {/* ☰ no header (fallback) + spacer alinhado ao FAB portal — tablet/WebView */}
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? (safeT?.close || 'Fechar') : (safeT?.menu || 'Menu')}
+            data-ns-mobile-menu-header="1"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
           <span className="mobile-app-header-title" title={activeOpenTabDisplayTitle ?? undefined}>
             {activeOpenTabDisplayTitle ?? 'NONATO SERVICE'}
           </span>
