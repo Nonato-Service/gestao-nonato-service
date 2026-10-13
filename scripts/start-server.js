@@ -128,19 +128,43 @@ try {
   console.log('[start-server] DATA_DIR:', dataDir);
   console.log('[start-server] Ficheiros de dados:', files.length);
   if (files.length < 3) {
-    console.warn(
-      '[start-server] AVISO: poucos ficheiros em DATA_DIR — configure volume Railway e DATA_DIR (ex.: /data ou /app/data).'
-    );
+    if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+      console.warn(
+        '[start-server] AVISO: poucos ficheiros em DATA_DIR — configure volume Railway e DATA_DIR (ex.: /data ou /app/data).'
+      );
+    } else {
+      console.warn(
+        '[start-server] AVISO: poucos ficheiros em DATA_DIR — pasta nova/vazia (OK no primeiro arranque local).'
+      );
+    }
   }
 } catch (e) {
   console.warn('[start-server] Não foi possível verificar DATA_DIR:', e);
 }
 
 const useStandalone = Boolean(standaloneServer);
+const buildIdPath = path.join(appRoot, '.next', 'BUILD_ID');
+const hasProductionBuild = fs.existsSync(buildIdPath);
+const onRailway = Boolean(
+  process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_VOLUME_MOUNT_PATH
+);
+/** Hub local sem build: usar next/dev em vez de falhar com production-start-no-build-id. */
+const useDevFallback =
+  !useStandalone && !hasProductionBuild && !onRailway && fs.existsSync(nextBin);
+
 if (useStandalone) {
   console.log('[start-server] Modo: standalone (menos memória)', standaloneServer);
 } else if (!fs.existsSync(nextBin)) {
   console.error('[start-server] Next.js não encontrado. Execute npm ci && npm run build.');
+  process.exit(1);
+} else if (useDevFallback) {
+  console.warn(
+    '[start-server] Sem .next/BUILD_ID — a iniciar next/dev (hub local). Para produção: npm run build'
+  );
+} else if (!hasProductionBuild) {
+  console.error(
+    '[start-server] Sem build de produção (.next/BUILD_ID). Execute npm run build antes de npm start.'
+  );
   process.exit(1);
 } else {
   console.log('[start-server] Modo: next start');
@@ -148,11 +172,15 @@ if (useStandalone) {
 
 const childEnv = {
   ...process.env,
-  NODE_ENV: process.env.NODE_ENV || 'production',
+  NODE_ENV: useDevFallback ? 'development' : process.env.NODE_ENV || 'production',
   NODE_OPTIONS: runtimeNodeOptions,
   PORT: String(port),
   HOSTNAME: '0.0.0.0',
 };
+
+const nextArgs = useDevFallback
+  ? ['dev', '-H', '0.0.0.0', '-p', String(port)]
+  : ['start', '-H', '0.0.0.0', '-p', String(port)];
 
 const child = useStandalone
   ? spawn(process.execPath, [standaloneServer], {
@@ -160,7 +188,7 @@ const child = useStandalone
       cwd: standaloneCwd,
       env: childEnv,
     })
-  : spawn(process.execPath, [nextBin, 'start', '-H', '0.0.0.0', '-p', String(port)], {
+  : spawn(process.execPath, [nextBin, ...nextArgs], {
       stdio: 'inherit',
       cwd: appRoot,
       env: childEnv,

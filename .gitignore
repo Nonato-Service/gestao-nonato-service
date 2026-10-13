@@ -46,6 +46,9 @@ _command-history/ConsoleHost_history.txt
 /data/*.txt
 /data/demo/
 
+# hub local PC+tablet (INICIAR-NONATO-LOCAL.bat) — nunca commitar cadastros
+/data-local/
+
 # backups de código (evitar commit de pastas grandes)
 /backups
 /data/_pre-homag-merge-*/
