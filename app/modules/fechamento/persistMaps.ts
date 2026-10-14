@@ -4,6 +4,40 @@ import {
   type FechamentoIvaOpcoesRelatorio,
 } from './iva'
 
+/**
+ * Alinha IDs omitidos com as linhas actuais do fechamento.
+ * - Descarta IDs obsoletos (ex.: `km` após migração para `km__g_…`).
+ * - Se todas as linhas (ou todas as fixas) ficariam escondidas, limpa omitidos
+ *   para a tabela de cobrança não aparecer vazia («não aparece nada»).
+ */
+export function alinharOmitidosFechamentoComItensAtuais(
+  omitidos: string[] | undefined | null,
+  itensAtuais: { id: string }[]
+): { omitidos: string[]; mudou: boolean; restaurouTudo: boolean } {
+  const raw = Array.isArray(omitidos)
+    ? omitidos.filter((x): x is string => typeof x === 'string' && !!x.trim())
+    : []
+  if (raw.length === 0) return { omitidos: [], mudou: false, restaurouTudo: false }
+
+  const idsAtuais = new Set(itensAtuais.map((i) => String(i.id)))
+  const aligned = raw.filter((id) => idsAtuais.has(id))
+  const omitSet = new Set(aligned)
+  const visiveis = itensAtuais.filter((i) => !omitSet.has(i.id))
+  const fixos = itensAtuais.filter((i) => isLinhaFechamentoFixaId(i.id))
+  const fixosVisiveis = fixos.filter((i) => !omitSet.has(i.id))
+
+  if (itensAtuais.length > 0 && visiveis.length === 0) {
+    return { omitidos: [], mudou: true, restaurouTudo: true }
+  }
+  if (fixos.length > 0 && fixosVisiveis.length === 0) {
+    return { omitidos: [], mudou: true, restaurouTudo: true }
+  }
+
+  const mudou =
+    aligned.length !== raw.length || aligned.some((id, i) => id !== raw[i])
+  return { omitidos: aligned, mudou, restaurouTudo: false }
+}
+
 /** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
 export const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 /** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */

@@ -942,6 +942,7 @@ import {
   normalizeFechamentoItensOmitidosMap,
   normalizeFechamentoIvaPorRelatorioMap,
   normalizeFechamentoGrupoPorRelatorioMap,
+  alinharOmitidosFechamentoComItensAtuais,
   mesclarComprovantesEmItensFechamento,
   emptyServicoCadastroFormState,
   servicoCadastroToFormState,
@@ -4733,6 +4734,8 @@ export default function Dashboard() {
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
   /** Por relatório: ids das linhas fixas (ht, km, …) retiradas da cobrança no fechamento (persistido) */
   const [fechamentoItensOmitidosPorRelatorio, setFechamentoItensOmitidosPorRelatorio] = useState<Record<string, string[]>>({})
+  /** Evita loop ao persistir alinhamento automático de linhas omitidas (tabela vazia). */
+  const fechamentoOmitidosAlignSigRef = useRef<string>('')
   /** IDs de relatórios cujo fechamento foi guardado na Biblioteca (saem da lista principal de Relatório de Serviço). */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
   /** Fechamento na biblioteca: etapa e pagamento (com/sem fatura) */
@@ -14055,6 +14058,16 @@ export default function Dashboard() {
       if (same) return prev
       const next = { ...prev, [rid]: itens }
       void saveData('nonato-fechamentos-relatorios', next)
+      return next
+    })
+    // Evita cobrança especial com tabela vazia (omitidos obsoletos / todas as linhas retiradas).
+    setFechamentoItensOmitidosPorRelatorio((prev) => {
+      const aligned = alinharOmitidosFechamentoComItensAtuais(prev[rid], itens)
+      if (!aligned.mudou) return prev
+      const next = { ...prev }
+      if (aligned.omitidos.length > 0) next[rid] = aligned.omitidos
+      else delete next[rid]
+      void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
       return next
     })
 
@@ -45732,9 +45745,37 @@ A1;Peça exemplo;10`}
           (fechamentoPersistKey && fechamentosRelatorios[fechamentoPersistKey]) || []
         const itensParaExibir = relatorioSelecionado ? buildItensParaExibirFromSalvos(salvosParaEsteRelatorio) : []
         const temLinhasManuaisFechamento = itensParaExibir.some(isLinhaManualFechamento)
-        const omitidosRelatorio = fechamentoPersistKey
-          ? (fechamentoItensOmitidosPorRelatorio[fechamentoPersistKey] ?? [])
-          : []
+        const omitAlignFechamento = alinharOmitidosFechamentoComItensAtuais(
+          fechamentoPersistKey
+            ? (fechamentoItensOmitidosPorRelatorio[fechamentoPersistKey] ?? [])
+            : [],
+          itensParaExibir
+        )
+        const omitidosRelatorio = omitAlignFechamento.omitidos
+        if (omitAlignFechamento.mudou && fechamentoPersistKey) {
+          const ridAlign = fechamentoPersistKey
+          const nextOmitList = omitAlignFechamento.omitidos
+          const sigAlign = `${ridAlign}|${nextOmitList.join(',')}|${omitAlignFechamento.restaurouTudo ? 1 : 0}`
+          if (fechamentoOmitidosAlignSigRef.current !== sigAlign) {
+            fechamentoOmitidosAlignSigRef.current = sigAlign
+            Promise.resolve().then(() => {
+              setFechamentoItensOmitidosPorRelatorio((prev) => {
+                const cur = prev[ridAlign] || []
+                if (
+                  cur.length === nextOmitList.length &&
+                  cur.every((x, i) => x === nextOmitList[i])
+                ) {
+                  return prev
+                }
+                const next = { ...prev }
+                if (nextOmitList.length > 0) next[ridAlign] = nextOmitList
+                else delete next[ridAlign]
+                void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
+                return next
+              })
+            })
+          }
+        }
         const omitSetFechamento = new Set(omitidosRelatorio)
         const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
         const gruposFechamentoExibir = agruparItensFechamentoPorCliente(itensVisiveisFechamento)
@@ -45764,6 +45805,16 @@ A1;Peça exemplo;10`}
             const next = { ...prev }
             if (cur.length > 0) next[rid] = cur
             else delete next[rid]
+            void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
+            return next
+          })
+        }
+        const restaurarTodasLinhasTemplateFechamento = () => {
+          if (!fechamentoPersistKey) return
+          setFechamentoItensOmitidosPorRelatorio((prev) => {
+            if (!(fechamentoPersistKey in prev)) return prev
+            const next = { ...prev }
+            delete next[fechamentoPersistKey]
             void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
             return next
           })
@@ -46957,6 +47008,22 @@ A1;Peça exemplo;10`}
                       <span style={{ fontSize: '12px', color: '#ffcc80', fontWeight: 600 }}>
                         {(safeT as any)?.fechamentoLinhasRetiradas || 'Linhas retiradas da cobrança:'}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => restaurarTodasLinhasTemplateFechamento()}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          borderRadius: '8px',
+                          border: '2px solid #00ff00',
+                          background: 'rgba(0, 255, 0, 0.18)',
+                          color: '#00ff00',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoRestaurarTodasLinhas || 'Restaurar todas as linhas'}
+                      </button>
                       {omitidosRelatorio.map(oid => (
                         <button
                           key={oid}

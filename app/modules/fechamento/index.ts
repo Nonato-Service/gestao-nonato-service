@@ -137,6 +137,7 @@ export {
   normalizeFechamentoItensOmitidosMap,
   normalizeFechamentoIvaPorRelatorioMap,
   normalizeFechamentoGrupoPorRelatorioMap,
+  alinharOmitidosFechamentoComItensAtuais,
 } from './persistMaps'
 
 export {

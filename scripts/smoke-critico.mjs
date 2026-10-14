@@ -247,11 +247,21 @@ try {
   if (
     idx.includes('RESUMO_COBRANCA_DECISAO_KEY') &&
     idx.includes('normalizeFechamentoItensOmitidosMap') &&
-    idx.includes('normalizeFechamentoIvaPorRelatorioMap')
+    idx.includes('normalizeFechamentoIvaPorRelatorioMap') &&
+    idx.includes('alinharOmitidosFechamentoComItensAtuais')
   ) {
     ok('módulo fechamento exporta persistMaps')
   } else {
     fail('módulo fechamento sem persistMaps (keys/normalize)')
+  }
+  const persistMapsSrc = fs.readFileSync(path.join(root, 'app/modules/fechamento/persistMaps.ts'), 'utf8')
+  if (
+    persistMapsSrc.includes('alinharOmitidosFechamentoComItensAtuais') &&
+    persistMapsSrc.includes('restaurouTudo')
+  ) {
+    ok('persistMaps alinha omitidos e evita tabela vazia')
+  } else {
+    fail('persistMaps sem alinharOmitidosFechamentoComItensAtuais')
   }
   if (idx.includes('mesclarComprovantesEmItensFechamento')) {
     ok('módulo fechamento exporta comprovantesMerge')
