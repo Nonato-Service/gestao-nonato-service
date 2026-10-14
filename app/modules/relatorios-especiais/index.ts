@@ -115,6 +115,33 @@ export {
 } from './fechamentoCobranca'
 
 export type {
+  IntervaloCobrancaEspecial,
+  DiaCobrancaEspecialResumo,
+} from './fechamentoIntervalos'
+export {
+  FECHAMENTO_INTERVALO_SEP,
+  normalizarDataChaveCobranca,
+  criarIntervaloCobrancaEspecialVazio,
+  listarDiasCobrancaRelatorioEspecial,
+  intervaloCobrancaValido,
+  filtrarDiasPorIntervaloCobranca,
+  relatorioEspecialComDiasDoIntervalo,
+  datasCobertasPeloIntervalo,
+  intervalosCobrancaSobrepostos,
+  buildChaveFechamentoIntervalo,
+  isChaveFechamentoIntervalo,
+  parseChaveFechamentoIntervalo,
+  parentIdFechamentoPersistKey,
+  relatorioTemFechamentoCompletoNaBiblioteca,
+  relatorioTemFechamentoNaBiblioteca,
+  listarChavesIntervaloFechamento,
+  formatDataCobrancaUi,
+  rotuloIntervaloCobrancaEspecial,
+  intervaloFromDiasSelecionados,
+  numeroRelatorioComIntervalo,
+} from './fechamentoIntervalos'
+
+export type {
   EquipamentoGrupoFechamentoEspecial,
   GrupoFechamentoEspecial,
   ContextoVinculoClienteRelatorioEspecial,

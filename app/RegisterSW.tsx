@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { setupAutoSyncOnReconnect, setupFlushSyncOnPageHide } from './utils/dataStorage'
 import { getStoredUiString } from './translations'
 import { PWA_VERSION } from './lib/pwaVersion'
+import { isNonatoLocalHubMode } from './lib/localHubMode'
 
 // Versão centralizada em pwa-version.json — sincronizada em prebuild/predev (npm run pwa:bump)
 const SW_VERSION = PWA_VERSION
@@ -156,7 +157,9 @@ export function RegisterSW() {
     }
     window.addEventListener('pageshow', onPageShow)
     window.addEventListener('focus', onPageShow)
-    const pollTid = window.setInterval(checkForUpdates, 20_000)
+    // Hub local (next/dev): menos polling — UI fresca pelo dev server; PWA update só quando há SW novo.
+    const pollMs = isNonatoLocalHubMode() ? 120_000 : 20_000
+    const pollTid = window.setInterval(checkForUpdates, pollMs)
 
     const teardownAutoSync = setupAutoSyncOnReconnect()
     const teardownFlush = setupFlushSyncOnPageHide()

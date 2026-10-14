@@ -1025,9 +1025,11 @@ import {
 } from './lib/pecaCodigoBusca'
 import { buscarPecaBibliotecaNoServidor } from './lib/buscarPecaBibliotecaRemoto'
 import { wrapRelatorioServicoPrintDocument } from './lib/relatorioServicoPdfShell'
+import { isNonatoLocalHubMode } from './lib/localHubMode'
 import RelatorioEspecialHub from './components/RelatorioEspecialHub'
 import {
   type RelatorioEspecial,
+  type IntervaloCobrancaEspecial,
   RELATORIOS_ESPECIAIS_STORAGE_KEY,
   RELATORIOS_ESPECIAIS_DELETED_IDS_KEY,
   adaptRelatorioEspecialParaFechamentoShape,
@@ -1039,6 +1041,21 @@ import {
   mergeDeletedIds,
   normalizeDeletedIds,
   dedupeRelatoriosEspeciais,
+  listarDiasCobrancaRelatorioEspecial,
+  criarIntervaloCobrancaEspecialVazio,
+  intervaloCobrancaValido,
+  relatorioEspecialComDiasDoIntervalo,
+  intervalosCobrancaSobrepostos,
+  buildChaveFechamentoIntervalo,
+  parseChaveFechamentoIntervalo,
+  parentIdFechamentoPersistKey,
+  relatorioTemFechamentoCompletoNaBiblioteca,
+  relatorioTemFechamentoNaBiblioteca,
+  listarChavesIntervaloFechamento,
+  rotuloIntervaloCobrancaEspecial,
+  intervaloFromDiasSelecionados,
+  numeroRelatorioComIntervalo,
+  formatDataCobrancaUi,
 } from './modules/relatorios-especiais'
 import type {
   ChecklistItemTemplate,
@@ -5512,6 +5529,12 @@ export default function Dashboard() {
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
   const [modalNotaExcluida, setModalNotaExcluida] = useState<ItemRelatorioExcluidoArquivo | null>(null)
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
+  /** Relatório especial: cobrança completa (omissão) ou várias notas por intervalo de dias. */
+  const [fechamentoCobrancaModo, setFechamentoCobrancaModo] = useState<'completo' | 'intervalos'>('completo')
+  const [fechamentoCobrancaIntervalos, setFechamentoCobrancaIntervalos] = useState<IntervaloCobrancaEspecial[]>([])
+  const [fechamentoCobrancaIntervaloAtivoId, setFechamentoCobrancaIntervaloAtivoId] = useState<string | null>(null)
+  /** Selecção temporária de dias na lista para criar um intervalo. */
+  const [fechamentoCobrancaDiasPick, setFechamentoCobrancaDiasPick] = useState<string[]>([])
   /** Edição de despesas aberta a partir da Biblioteca (mantém o relatório na Biblioteca até guardar). */
   const [fechamentoEditandoDespesasBibliotecaId, setFechamentoEditandoDespesasBibliotecaId] = useState<string | null>(null)
   const [relatorioServicoEditandoBibliotecaId, setRelatorioServicoEditandoBibliotecaId] = useState<string | null>(null)
@@ -6146,16 +6169,27 @@ export default function Dashboard() {
     if (serverAutoPullInFlightRef.current) return
     if (typeof navigator !== 'undefined' && !navigator.onLine) return
     if (!dataBootstrapCompleteRef.current) return
+    const localHubQuiet = isNonatoLocalHubMode()
     serverAutoPullInFlightRef.current = true
     try {
       setServerAutoPullActive(true)
       const pulled = await pullServerUpdatesIfNewer()
       if (pulled.status === 'risk') {
+        // Hub local: não pintar amarelo «envie ao servidor» — dados ficam no PC.
+        if (localHubQuiet) {
+          syncAutoRiskSkipRef.current = false
+          setSyncAutoSyncFailed(false)
+          return
+        }
         syncAutoRiskSkipRef.current = true
         setSyncAutoSyncFailed(true)
         return
       }
       if (pulled.status === 'offline') {
+        if (localHubQuiet) {
+          setSyncAutoSyncFailed(false)
+          return
+        }
         syncAutoFailStreakRef.current += 1
         if (syncAutoFailStreakRef.current >= 4) {
           syncAutoRiskSkipRef.current = false
@@ -6164,6 +6198,10 @@ export default function Dashboard() {
         return
       }
       if (pulled.status === 'fail') {
+        if (localHubQuiet) {
+          setSyncAutoSyncFailed(false)
+          return
+        }
         syncAutoFailStreakRef.current += 1
         if (syncAutoFailStreakRef.current >= 2) {
           syncAutoRiskSkipRef.current = false
@@ -13766,6 +13804,13 @@ export default function Dashboard() {
   }
 
   /** Grava fechamento + marca na Biblioteca (primeira vez ou alteração). */
+  const resetFechamentoCobrancaIntervalosUi = () => {
+    setFechamentoCobrancaModo('completo')
+    setFechamentoCobrancaIntervalos([])
+    setFechamentoCobrancaIntervaloAtivoId(null)
+    setFechamentoCobrancaDiasPick([])
+  }
+
   const persistirFechamentoNaBiblioteca = async (
     relatorioId: string,
     itens: FechamentoItem[],
@@ -13773,81 +13818,91 @@ export default function Dashboard() {
       fecharRelatorio?: boolean
       irBiblioteca?: boolean
       silencioso?: boolean
+      /** Após nota de período: manter o relatório aberto para criar outra nota. */
+      manterSelecaoIntervalos?: boolean
       iva?: FechamentoIvaOpcoesRelatorio
     }
   ) => {
+    const persistKey = String(relatorioId || '').trim()
+    const parentId = parentIdFechamentoPersistKey(persistKey) || persistKey
     const nextFech: Record<string, FechamentoItem[]> = {
       ...fechamentosRelatorios,
-      [relatorioId]: itens,
+      [persistKey]: itens,
     }
-    const nextGuard = fechamentosGuardadosBibliotecaIds.includes(relatorioId)
+    const nextGuard = fechamentosGuardadosBibliotecaIds.includes(persistKey)
       ? fechamentosGuardadosBibliotecaIds
-      : [...fechamentosGuardadosBibliotecaIds, relatorioId]
+      : [...fechamentosGuardadosBibliotecaIds, persistKey]
 
     setFechamentosRelatorios(nextFech)
     setFechamentosGuardadosBibliotecaIds(nextGuard)
     await saveData('nonato-fechamentos-relatorios', nextFech)
     await saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
 
-    const ivaSnap = normalizarFechamentoIvaOpcoes(opts?.iva ?? fechamentoIvaPorRelatorioId[relatorioId] ?? FECHAMENTO_IVA_PADRAO)
+    const ivaSnap = normalizarFechamentoIvaOpcoes(opts?.iva ?? fechamentoIvaPorRelatorioId[persistKey] ?? FECHAMENTO_IVA_PADRAO)
     setFechamentoIvaPorRelatorioId(prev => {
-      const cur = prev[relatorioId]
+      const cur = prev[persistKey]
       const same =
         cur &&
         cur.incluirIva === ivaSnap.incluirIva &&
         cur.taxaIva === ivaSnap.taxaIva
       if (same) return prev
-      const next = { ...prev, [relatorioId]: ivaSnap }
+      const next = { ...prev, [persistKey]: ivaSnap }
       void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next)
       return next
     })
 
-    const relAtual = relatoriosServico.find((r) => r.id === relatorioId)
+    const relAtual = relatoriosServico.find((r) => r.id === parentId)
     if (relAtual && !relAtual.servicoConcluido) {
       const relatoriosAtualizados = relatoriosServico.map((r) =>
-        r.id === relatorioId ? { ...r, servicoConcluido: true } : r
+        r.id === parentId ? { ...r, servicoConcluido: true } : r
       )
       setRelatoriosServico(relatoriosAtualizados)
       await saveData('nonato-relatorios-servico', relatoriosAtualizados)
     } else {
-      const relEsp = relatoriosEspeciais.find((r) => r.id === relatorioId)
+      const relEsp = relatoriosEspeciais.find((r) => r.id === parentId)
       if (relEsp && !relEsp.servicoConcluido) {
         const especiaisAtualizados = relatoriosEspeciais.map((r) =>
-          r.id === relatorioId ? { ...r, servicoConcluido: true } : r
+          r.id === parentId ? { ...r, servicoConcluido: true } : r
         )
         setRelatoriosEspeciais(especiaisAtualizados)
         await saveData(RELATORIOS_ESPECIAIS_STORAGE_KEY, especiaisAtualizados, true, false)
       }
     }
 
-    const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const fluxoAtual = fechamentoFluxoFinanceiroPorRelatorioId[persistKey]
     const temFluxo =
       fluxoAtual &&
       typeof fluxoAtual === 'object' &&
       !Array.isArray(fluxoAtual)
     if (!temFluxo) {
-      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+      setFechamentoEtapaFinanceira(persistKey, 'controlo_pagamento', {
         modo: 'com_fatura',
         pagamento: 'pendente',
       })
     }
 
     setFechamentoEditandoDespesasBibliotecaId(null)
-    setFechamentoRelatorioSelecionadoId(null)
+    if (opts?.manterSelecaoIntervalos) {
+      setFechamentoCobrancaIntervaloAtivoId(null)
+      setFechamentoCobrancaDiasPick([])
+    } else {
+      setFechamentoRelatorioSelecionadoId(null)
+      resetFechamentoCobrancaIntervalosUi()
+    }
 
-    if (opts?.fecharRelatorio !== false) {
+    if (opts?.fecharRelatorio !== false && !opts?.manterSelecaoIntervalos) {
       sairDaTelaRelatoriosServico()
       setOpenTabs((prev) => prev.filter((t) => t.type !== 'relatorio-servico'))
     }
 
-    if (opts?.irBiblioteca !== false) {
+    if (opts?.irBiblioteca !== false && !opts?.manterSelecaoIntervalos) {
       abrirSeparadorBibliotecaRelatorios()
     }
 
-    if (!opts?.silencioso) {
+    if (!opts?.silencioso && !opts?.manterSelecaoIntervalos) {
       const jaEstava =
-        fechamentosGuardadosBibliotecaIds.includes(relatorioId) ||
-        fechamentoEditandoDespesasBibliotecaId === relatorioId
+        fechamentosGuardadosBibliotecaIds.includes(persistKey) ||
+        fechamentoEditandoDespesasBibliotecaId === persistKey
       alert(
         jaEstava
           ? (safeT as any)?.fechamentoAtualizadoNaBiblioteca ||
@@ -13857,9 +13912,9 @@ export default function Dashboard() {
       )
     }
 
-    const relBiblioteca = relatoriosServico.find((r) => r.id === relatorioId)
+    const relBiblioteca = relatoriosServico.find((r) => r.id === parentId)
     const pedidosAprovados = aprovarPedidosOrcamentoRelatorio(pedidosOrcamento, {
-      relatorioId,
+      relatorioId: parentId,
       numeroRelatorio: relBiblioteca?.numero,
     })
     if (pedidosAprovados !== pedidosOrcamento) {
@@ -13872,7 +13927,7 @@ export default function Dashboard() {
         ? orcamentosExistentesData
         : []
       const orcsAprovados = aprovarOrcamentosGeradosRelatorio(orcamentosExistentes as any[], {
-        relatorioId,
+        relatorioId: parentId,
         numeroRelatorio: relBiblioteca?.numero,
       })
       if (orcsAprovados !== orcamentosExistentes) {
@@ -13882,6 +13937,25 @@ export default function Dashboard() {
   }
 
   const handleEditarDespesasNaBiblioteca = (relatorioId: string) => {
+    const parsedIv = parseChaveFechamentoIntervalo(relatorioId)
+    if (parsedIv?.parentId) {
+      const parentId = parsedIv.parentId
+      setFechamentoEditandoDespesasBibliotecaId(relatorioId)
+      setFechamentoRelatorioSelecionadoId(parentId)
+      setFechamentoCobrancaModo('intervalos')
+      const iv: IntervaloCobrancaEspecial = {
+        id: `iv-edit-${Date.now().toString(36)}`,
+        dataInicio: parsedIv.dataInicio || '',
+        dataFim: parsedIv.dataFim || '',
+        diaIds: parsedIv.diaIds && parsedIv.diaIds.length > 0 ? [...parsedIv.diaIds] : undefined,
+      }
+      setFechamentoCobrancaIntervalos([iv])
+      setFechamentoCobrancaIntervaloAtivoId(iv.id)
+      setFechamentoCobrancaDiasPick([])
+      openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+      return
+    }
+    resetFechamentoCobrancaIntervalosUi()
     setFechamentoEditandoDespesasBibliotecaId(relatorioId)
     setFechamentoRelatorioSelecionadoId(relatorioId)
     openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
@@ -13912,6 +13986,8 @@ export default function Dashboard() {
     /** Evita race após guardar relatório especial antes do re-render. */
     relatorioEspecial?: RelatorioEspecial | null
     relatorioServico?: RelatorioServico | null
+    /** Relatório especial: abrir já em cobrança completa ou por períodos. */
+    modoCobranca?: 'completo' | 'intervalos'
   }) => {
     const rid = opts.relatorioId
     if (!rid) return
@@ -13983,8 +14059,32 @@ export default function Dashboard() {
     })
 
     setFechamentoEditandoDespesasBibliotecaId(null)
+    resetFechamentoCobrancaIntervalosUi()
+    if (relEsp && opts.modoCobranca === 'intervalos') {
+      const diasLista = listarDiasCobrancaRelatorioEspecial(relEsp)
+      const iv = criarIntervaloCobrancaEspecialVazio({
+        nowMs: Date.now(),
+        random: Math.random,
+        dataInicio: diasLista[0]?.dataChave,
+        dataFim: diasLista[diasLista.length - 1]?.dataChave,
+      })
+      setFechamentoCobrancaModo('intervalos')
+      setFechamentoCobrancaIntervalos([iv])
+      setFechamentoCobrancaIntervaloAtivoId(iv.id)
+      setFechamentoCobrancaDiasPick([])
+    }
     setFechamentoRelatorioSelecionadoId(rid)
     openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
+    if (relEsp) {
+      // Destaca o modo de cobrança (completa / por períodos) no topo do fechamento.
+      queueMicrotask(() => {
+        window.setTimeout(() => {
+          document
+            .getElementById('fechamento-esp-cobranca-periodos-topo')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }, 180)
+      })
+    }
     if (opts.fecharFormulario) {
       fecharFormularioRelatorioServico()
     }
@@ -19528,7 +19628,9 @@ export default function Dashboard() {
   const getResumoCobrancaVisualClass = (
     relatorioId: string | undefined
   ): 'laranja' | 'azul' | 'verde' | 'biblioteca' => {
-    if (relatorioId && fechamentosGuardadosBibliotecaIds.includes(relatorioId)) return 'biblioteca'
+    if (relatorioId && relatorioTemFechamentoNaBiblioteca(relatorioId, fechamentosGuardadosBibliotecaIds)) {
+      return 'biblioteca'
+    }
     if (relatorioId && resumoCobrancaDecisaoPorRelatorio[relatorioId] === 'nao') return 'verde'
     if (relatorioId && resumoCobrancaDecisaoPorRelatorio[relatorioId] === 'sim') return 'azul'
     return 'laranja'
@@ -19539,7 +19641,7 @@ export default function Dashboard() {
       alert((safeT as any)?.resumoCobrancaSalvarPrimeiro || 'Guarde o relatório primeiro para registar a decisão de cobrança no resumo.')
       return
     }
-    if (fechamentosGuardadosBibliotecaIds.includes(relatorioId)) return
+    if (relatorioTemFechamentoNaBiblioteca(relatorioId, fechamentosGuardadosBibliotecaIds)) return
     const d = resumoCobrancaDecisaoPorRelatorio[relatorioId]
     if (d === 'nao' || d === 'sim') return
     const msg =
@@ -36551,7 +36653,7 @@ export default function Dashboard() {
                     {(safeT as any)?.bibliotecaSyncOffline || 'Servidor indisponível — verifique ligação ou login.'}
                   </p>
                 )}
-                {bibliotecaNovidadesServidor > 0 ? (
+                {bibliotecaNovidadesServidor > 0 && !isNonatoLocalHubMode() ? (
                   <div className="biblioteca-pecas-hub__warn-banner" style={{ marginTop: 10, marginBottom: 0 }}>
                     <div className="biblioteca-pecas-hub__warn-banner-title">
                       {(safeT as any)?.bibliotecaSyncNovidadesTitulo || 'Novidades no servidor'}
@@ -38085,10 +38187,11 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {(bibliotecaNovidadesServidor > 0 ||
-                    bibliotecaLocaisAFrente > 0 ||
-                    bibliotecaUltimaSyncServidor ||
-                    bibliotecaServidorMeta) && (
+                  {!isNonatoLocalHubMode() &&
+                    (bibliotecaNovidadesServidor > 0 ||
+                      bibliotecaLocaisAFrente > 0 ||
+                      bibliotecaUltimaSyncServidor ||
+                      bibliotecaServidorMeta) && (
                     <div
                       className={`biblioteca-hub-toolbar__status${
                         bibliotecaNovidadesServidor > 0 || bibliotecaLocaisAFrente > 0
@@ -45492,7 +45595,7 @@ A1;Peça exemplo;10`}
               pdfLogoHtml={getLogoHtmlForReport()}
               empresaNome={(fichaCadastral.nomeEmpresa || 'Nonato Service').trim()}
               abrirEnvioDocumentoCliente={abrirEnvioDocumentoCliente}
-              onAbrirFechamentoCobranca={(relatorioId, _numero, relAtualizado) => {
+              onAbrirFechamentoCobranca={(relatorioId, _numero, relAtualizado, optsCobranca) => {
                 const relEsp =
                   relAtualizado && relAtualizado.id === relatorioId
                     ? relAtualizado
@@ -45502,6 +45605,7 @@ A1;Peça exemplo;10`}
                   clienteId: relEsp?.clienteId,
                   clienteNome: relEsp?.cliente,
                   relatorioEspecial: relEsp || null,
+                  modoCobranca: optsCobranca?.modoCobranca,
                 })
               }}
               getResumoCobrancaFase={(relatorioId) => getResumoCobrancaVisualClass(relatorioId)}
@@ -45548,10 +45652,43 @@ A1;Peça exemplo;10`}
         const relatorioSelecionadoServico = fechamentoRelatorioSelecionadoId
           ? relatoriosServico.find((r) => r.id === fechamentoRelatorioSelecionadoId) || null
           : null
-        const relatorioSelecionado: RelatorioServico | null = relatorioEspecialSelecionado
+        const isFechamentoRelatorioEspecial = Boolean(relatorioEspecialSelecionado)
+        const diasCobrancaEspLista = listarDiasCobrancaRelatorioEspecial(relatorioEspecialSelecionado)
+        const intervaloCobrancaAtivo =
+          isFechamentoRelatorioEspecial && fechamentoCobrancaModo === 'intervalos'
+            ? fechamentoCobrancaIntervalos.find((iv) => iv.id === fechamentoCobrancaIntervaloAtivoId) || null
+            : null
+        const intervaloCobrancaAtivoOk = intervaloCobrancaValido(intervaloCobrancaAtivo)
+        const relatorioEspecialParaItens =
+          relatorioEspecialSelecionado && intervaloCobrancaAtivoOk && intervaloCobrancaAtivo
+            ? relatorioEspecialComDiasDoIntervalo(relatorioEspecialSelecionado, intervaloCobrancaAtivo)
+            : relatorioEspecialSelecionado
+        const relatorioSelecionadoBase: RelatorioServico | null = relatorioEspecialSelecionado
           ? (adaptRelatorioEspecialParaFechamentoShape(relatorioEspecialSelecionado) as RelatorioServico)
           : relatorioSelecionadoServico
-        const isFechamentoRelatorioEspecial = Boolean(relatorioEspecialSelecionado)
+        const localeDatasCobranca = localeForLongDatetime(selectedLanguage)
+        const relatorioSelecionado: RelatorioServico | null =
+          relatorioSelecionadoBase &&
+          intervaloCobrancaAtivoOk &&
+          intervaloCobrancaAtivo &&
+          isFechamentoRelatorioEspecial
+            ? {
+                ...relatorioSelecionadoBase,
+                numero: numeroRelatorioComIntervalo(relatorioSelecionadoBase.numero, intervaloCobrancaAtivo, {
+                  locale: localeDatasCobranca,
+                  diasCount: (relatorioEspecialParaItens?.diasTrabalho || []).length,
+                  labelDias: (safeT as any)?.fechamentoEspIntervaloNDias || '{n} dias',
+                }),
+              }
+            : relatorioSelecionadoBase
+        const fechamentoPersistKey =
+          relatorioEspecialSelecionado && intervaloCobrancaAtivoOk && intervaloCobrancaAtivo
+            ? buildChaveFechamentoIntervalo(relatorioEspecialSelecionado.id, intervaloCobrancaAtivo)
+            : relatorioSelecionado?.id || ''
+        const sobreposicoesIntervalosEsp =
+          isFechamentoRelatorioEspecial && fechamentoCobrancaModo === 'intervalos'
+            ? intervalosCobrancaSobrepostos(relatorioEspecialSelecionado, fechamentoCobrancaIntervalos)
+            : []
         const clienteRelatorioFechamento = relatorioSelecionado
           ? findClienteByRelatorio(clientes, relatorioSelecionado)
           : undefined
@@ -45575,8 +45712,11 @@ A1;Peça exemplo;10`}
               labels: labelsFechamentoCobrancaUi,
               servicos: servicos as ServicoCadastroFechamentoMin[],
               grupoId: fechamentoGrupoIdAtual,
-              relatorioEspecial: relatorioEspecialSelecionado,
-              getRelatorioEspecial: (id: string) => relatoriosEspeciais.find((e) => e.id === id),
+              relatorioEspecial: relatorioEspecialParaItens,
+              getRelatorioEspecial: (id: string) =>
+                id === relatorioEspecialSelecionado?.id && relatorioEspecialParaItens
+                  ? relatorioEspecialParaItens
+                  : relatoriosEspeciais.find((e) => e.id === id),
               clientes,
               equipamentosArmazem: equipamentos,
             })
@@ -45588,10 +45728,13 @@ A1;Peça exemplo;10`}
             grupoId: fechamentoGrupoIdAtual,
           })
         }
-        const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
+        const salvosParaEsteRelatorio =
+          (fechamentoPersistKey && fechamentosRelatorios[fechamentoPersistKey]) || []
         const itensParaExibir = relatorioSelecionado ? buildItensParaExibirFromSalvos(salvosParaEsteRelatorio) : []
         const temLinhasManuaisFechamento = itensParaExibir.some(isLinhaManualFechamento)
-        const omitidosRelatorio = relatorioSelecionado ? (fechamentoItensOmitidosPorRelatorio[relatorioSelecionado.id] ?? []) : []
+        const omitidosRelatorio = fechamentoPersistKey
+          ? (fechamentoItensOmitidosPorRelatorio[fechamentoPersistKey] ?? [])
+          : []
         const omitSetFechamento = new Set(omitidosRelatorio)
         const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
         const gruposFechamentoExibir = agruparItensFechamentoPorCliente(itensVisiveisFechamento)
@@ -45602,10 +45745,10 @@ A1;Peça exemplo;10`}
         const labelLinhaFechamentoFixa = (id: string) =>
           labelLinhaFechamentoFixaModulo(id, safeT as Record<string, string | undefined>)
         const retirarLinhaTemplateFechamento = (itemId: string) => {
-          if (!relatorioSelecionado) return
+          if (!fechamentoPersistKey) return
           if (!isLinhaFechamentoFixaId(itemId)) return
           setFechamentoItensOmitidosPorRelatorio(prev => {
-            const rid = relatorioSelecionado.id
+            const rid = fechamentoPersistKey
             const cur = [...(prev[rid] || [])]
             if (!cur.includes(itemId)) cur.push(itemId)
             const next = { ...prev, [rid]: cur }
@@ -45614,9 +45757,9 @@ A1;Peça exemplo;10`}
           })
         }
         const restaurarLinhaTemplateFechamento = (itemId: string) => {
-          if (!relatorioSelecionado) return
+          if (!fechamentoPersistKey) return
           setFechamentoItensOmitidosPorRelatorio(prev => {
-            const rid = relatorioSelecionado.id
+            const rid = fechamentoPersistKey
             const cur = (prev[rid] || []).filter(x => x !== itemId)
             const next = { ...prev }
             if (cur.length > 0) next[rid] = cur
@@ -45632,16 +45775,33 @@ A1;Peça exemplo;10`}
             fechamentoGrupoIdAtual
           )
         const patchFechamentoGrupoLocal = (grupoId: string) => {
-          if (!relatorioSelecionado || !grupoId) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !grupoId || !fechamentoPersistKey) return
+          const ridParent = relatorioSelecionado.id
+          const rid = fechamentoPersistKey
           setFechamentoGrupoPorRelatorioId((prev) => {
-            const next = { ...prev, [rid]: grupoId }
+            const next = { ...prev, [ridParent]: grupoId }
             void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, next)
             return next
           })
           setFechamentosRelatorios((prev) => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
-            const q = quantidadesFechamentoCobrancaRelatorio(relatorioSelecionado)
+            const q = isFechamentoRelatorioEspecial && relatorioEspecialParaItens
+              ? (() => {
+                  const base = buildItensFechamentoBaseRelatorioEspecial(relatorioEspecialParaItens, labelsFechamentoCobrancaUi)
+                  const byTipo: Record<string, number> = {}
+                  for (const it of base) {
+                    const t = tipoLinhaFechamentoFixa(it.id)
+                    if (t && !it.grupoKey) byTipo[t] = it.quantidade
+                  }
+                  return {
+                    ht: byTipo.ht ?? 0,
+                    km: byTipo.km ?? 0,
+                    diarias: byTipo.diarias ?? 0,
+                    hida: byTipo.hida ?? 0,
+                    hret: byTipo.hret ?? 0,
+                  }
+                })()
+              : quantidadesFechamentoCobrancaRelatorio(relatorioSelecionado)
             const qtyById: Record<string, number> = {
               ht: q.ht,
               km: q.km,
@@ -45678,7 +45838,7 @@ A1;Peça exemplo;10`}
           })
         }
         const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (linhaFechamentoOmiteCobrar(i) ? 0 : i.valorTotal), 0)
-        const ridFechIva = relatorioSelecionado?.id
+        const ridFechIva = fechamentoPersistKey || relatorioSelecionado?.id
         const ivaOptsFech = ridFechIva
           ? resolveFechamentoIvaOpcoes(
               ridFechIva,
@@ -45704,8 +45864,8 @@ A1;Peça exemplo;10`}
           })
         }
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
-          if (!relatorioSelecionado) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !fechamentoPersistKey) return
+          const rid = fechamentoPersistKey
           setFechamentosRelatorios(prev => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
             const idx = list.findIndex(i => i.id === id)
@@ -45750,8 +45910,8 @@ A1;Peça exemplo;10`}
           })
         }
         const adicionarItemManual = (grupoKey?: string, grupoLabel?: string) => {
-          if (!relatorioSelecionado) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !fechamentoPersistKey) return
+          const rid = fechamentoPersistKey
           const gk = String(grupoKey || '').trim()
           const gl = String(grupoLabel || '').trim()
           const novo: FechamentoItem = {
@@ -45774,10 +45934,10 @@ A1;Peça exemplo;10`}
           })
         }
         const adicionarPecasInstaladasFechamento = () => {
-          if (!relatorioSelecionado) return
+          if (!relatorioSelecionado || !fechamentoPersistKey) return
           const pecas = relatorioSelecionado.pecasInstaladas || []
           if (pecas.length === 0) return
-          const rid = relatorioSelecionado.id
+          const rid = fechamentoPersistKey
           const listAtual = buildItensParaExibirFromSalvos(fechamentosRelatorios[rid])
           const idsExistentes = new Set(listAtual.map((i) => i.id))
           const pecasNovas = pecas.filter((p, idx) => !idsExistentes.has(`peca-${p.id || idx}`))
@@ -45808,8 +45968,8 @@ A1;Peça exemplo;10`}
           )
         }
         const confirmarModalPecasFechamento = () => {
-          if (!relatorioSelecionado || !modalPecasFechamentoLinhas?.length) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !modalPecasFechamentoLinhas?.length || !fechamentoPersistKey) return
+          const rid = fechamentoPersistKey
           const novosItens: FechamentoItem[] = modalPecasFechamentoLinhas.map((linha) => {
             const qtd = linha.quantidade > 0 ? linha.quantidade : 1
             const vu = Math.max(0, linha.valorUnitario || 0)
@@ -45836,8 +45996,8 @@ A1;Peça exemplo;10`}
         }
         const temPecasInstaladasNoRelatorio = (relatorioSelecionado?.pecasInstaladas?.length ?? 0) > 0
         const removerItem = (id: string) => {
-          if (!relatorioSelecionado) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !fechamentoPersistKey) return
+          const rid = fechamentoPersistKey
           setFechamentosRelatorios(prev => {
             const list = buildItensParaExibirFromSalvos(prev[rid])
             const nova = list.filter(i => i.id !== id)
@@ -45847,8 +46007,21 @@ A1;Peça exemplo;10`}
           })
         }
         const handleSalvarFechamentoNaBiblioteca = async () => {
-          if (!relatorioSelecionado) return
-          const rid = relatorioSelecionado.id
+          if (!relatorioSelecionado || !fechamentoPersistKey) return
+          if (
+            isFechamentoRelatorioEspecial &&
+            fechamentoCobrancaModo === 'intervalos' &&
+            !intervaloCobrancaAtivoOk
+          ) {
+            alert(
+              (safeT as any)?.fechamentoEspIntervaloAtiveAntes ||
+                'Active um intervalo válido (datas início e fim, ou dias seleccionados) antes de guardar esta nota.'
+            )
+            return
+          }
+          const rid = fechamentoPersistKey
+          const modoIntervalosActivo =
+            isFechamentoRelatorioEspecial && fechamentoCobrancaModo === 'intervalos' && intervaloCobrancaAtivoOk
           const jaNaBiblioteca =
             fechamentosGuardadosBibliotecaIds.includes(rid) ||
             fechamentoEditandoDespesasBibliotecaId === rid
@@ -45862,7 +46035,20 @@ A1;Peça exemplo;10`}
           const itensSnap = [...itensVisiveisFechamento]
           const totalSnap = fechTotIva.comIva
           const cliSnap = relSnap.clienteId ? clientes.find(c => c.id === relSnap.clienteId) : undefined
-          await persistirFechamentoNaBiblioteca(rid, itensSnap, { iva: ivaOptsFech })
+          let manterSelecaoIntervalos = false
+          if (modoIntervalosActivo && !jaNaBiblioteca) {
+            manterSelecaoIntervalos = window.confirm(
+              (safeT as any)?.fechamentoEspCriarOutraNota ||
+                'Após guardar esta nota de período, deseja criar outra agora?\n\nOK = Continuar neste relatório (definir outro intervalo)\nCancelar = Ir à Biblioteca'
+            )
+          }
+          await persistirFechamentoNaBiblioteca(rid, itensSnap, {
+            iva: ivaOptsFech,
+            manterSelecaoIntervalos,
+            irBiblioteca: !manterSelecaoIntervalos,
+            fecharRelatorio: !manterSelecaoIntervalos,
+            silencioso: manterSelecaoIntervalos,
+          })
           if (contabilidadeConfig.enviarFechamentoContabilidadeAuto && totalSnap > 0.0001) {
             queueMicrotask(() => abrirFechamentoParaContabilidade(relSnap, itensSnap, cliSnap))
           }
@@ -46068,8 +46254,9 @@ A1;Peça exemplo;10`}
           })
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
+        /** Só sai da lista pendente com cobrança completa; notas por período permitem criar mais. */
         const especiaisPendentesFechamentoLista = relatoriosEspeciais.filter(
-          (r) => !fechamentosGuardadosBibliotecaIds.includes(r.id)
+          (r) => !relatorioTemFechamentoCompletoNaBiblioteca(r.id, fechamentosGuardadosBibliotecaIds)
         )
         const confirmarOsFechamento = () => {
           const raw = fechamentoOsConsultaInput.trim()
@@ -46113,12 +46300,18 @@ A1;Peça exemplo;10`}
           if (pareceEspecial) {
             const espPend = encontrarRelatorioEspecialPorOsInput(especiaisPendentesFechamentoLista, raw)
             if (espPend) {
+              resetFechamentoCobrancaIntervalosUi()
               abrirEncontrado(espPend.id)
               return
             }
             const espBib = encontrarRelatorioEspecialPorOsInput(relatoriosEspeciais, raw)
-            if (espBib && fechamentosGuardadosBibliotecaIds.includes(espBib.id)) {
+            if (espBib && relatorioTemFechamentoCompletoNaBiblioteca(espBib.id, fechamentosGuardadosBibliotecaIds)) {
               tentarEditarBiblioteca(espBib.id, espBib.numero, espBib.cliente)
+              return
+            }
+            if (espBib && listarChavesIntervaloFechamento(espBib.id, fechamentosGuardadosBibliotecaIds).length > 0) {
+              const firstKey = listarChavesIntervaloFechamento(espBib.id, fechamentosGuardadosBibliotecaIds)[0]
+              tentarEditarBiblioteca(firstKey, espBib.numero, espBib.cliente)
               return
             }
             alert(
@@ -46136,6 +46329,7 @@ A1;Peça exemplo;10`}
           }
           const espPend = encontrarRelatorioEspecialPorOsInput(especiaisPendentesFechamentoLista, raw)
           if (espPend) {
+            resetFechamentoCobrancaIntervalosUi()
             abrirEncontrado(espPend.id)
             return
           }
@@ -46145,8 +46339,13 @@ A1;Peça exemplo;10`}
             return
           }
           const espBib = encontrarRelatorioEspecialPorOsInput(relatoriosEspeciais, raw)
-          if (espBib && fechamentosGuardadosBibliotecaIds.includes(espBib.id)) {
+          if (espBib && relatorioTemFechamentoCompletoNaBiblioteca(espBib.id, fechamentosGuardadosBibliotecaIds)) {
             tentarEditarBiblioteca(espBib.id, espBib.numero, espBib.cliente)
+            return
+          }
+          if (espBib && listarChavesIntervaloFechamento(espBib.id, fechamentosGuardadosBibliotecaIds).length > 0) {
+            const firstKey = listarChavesIntervaloFechamento(espBib.id, fechamentosGuardadosBibliotecaIds)[0]
+            tentarEditarBiblioteca(firstKey, espBib.numero, espBib.cliente)
             return
           }
           alert((safeT as any)?.fechamentoOsNaoEncontrado || 'Nenhum relatório pendente encontrado com esse número de OS.')
@@ -46260,6 +46459,7 @@ A1;Peça exemplo;10`}
                         setFechamentoRelatorioSelecionadoId(null)
                         setFechamentoEditandoDespesasBibliotecaId(null)
                         setFechamentoOsConsultaInput('')
+                        resetFechamentoCobrancaIntervalosUi()
                       }}
                       style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}
                     >
@@ -46336,9 +46536,10 @@ A1;Peça exemplo;10`}
 
             {!relatorioSelecionado ? (
               <div style={{ display: 'grid', gap: '16px' }}>
-                {relatoriosServico.length === 0 ? (
+                {relatoriosServico.length === 0 && especiaisPendentesFechamentoLista.length === 0 ? (
                   <p style={{ color: '#888' }}>{(safeT as any)?.nenhumRelatorioServico || 'Nenhum relatório de serviço. Crie e gere relatórios em Relatório de Serviço.'}</p>
-                ) : relatoriosPendentesFechamentoLista.length === 0 ? (
+                ) : relatoriosPendentesFechamentoLista.length === 0 &&
+                  especiaisPendentesFechamentoLista.length === 0 ? (
                   <div style={{ padding: '20px', backgroundColor: '#252525', borderRadius: '12px', border: '1px solid rgba(0,200,83,0.25)' }}>
                     <p style={{ color: '#ccc', margin: '0 0 12px' }}>{(safeT as any)?.todosFechamentosNaBiblioteca || 'Todos os relatórios com fechamento estão na Biblioteca de Relatórios. Para alterar despesas, abra a Biblioteca e use «Editar despesas».'}</p>
                     <button type="button" className="btn-primary" onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} style={{ padding: '10px 18px', borderRadius: '10px' }}>
@@ -46404,7 +46605,9 @@ A1;Peça exemplo;10`}
               </div>
             ) : (
               <>
-                {fechamentoEditandoDespesasBibliotecaId === relatorioSelecionado.id && (
+                {(fechamentoEditandoDespesasBibliotecaId === relatorioSelecionado.id ||
+                  (fechamentoPersistKey &&
+                    fechamentoEditandoDespesasBibliotecaId === fechamentoPersistKey)) && (
                   <div
                     role="status"
                     style={{
@@ -46452,6 +46655,137 @@ A1;Peça exemplo;10`}
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.data || 'Data'}</span><br/><span style={{ color: '#ccc', fontSize: '14px' }}>{relatorioSelecionado.data}</span></div>
                   </div>
                 </div>
+
+                {isFechamentoRelatorioEspecial ? (
+                  <div
+                    id="fechamento-esp-cobranca-periodos-topo"
+                    role="region"
+                    aria-label={(safeT as any)?.fechamentoEspIntervalosTitulo || 'Cobrança por períodos'}
+                    style={{
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 45,
+                      marginBottom: 18,
+                      padding: '16px 18px',
+                      borderRadius: 12,
+                      border: '3px solid #00ff00',
+                      background: 'rgba(0, 28, 8, 0.98)',
+                      boxShadow: '0 0 28px rgba(0, 255, 0, 0.28)',
+                    }}
+                  >
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#00ff00', marginBottom: 6, letterSpacing: 0.02 }}>
+                      {(safeT as any)?.fechamentoEspIntervalosTitulo || 'Cobrança por períodos (várias notas)'}
+                    </div>
+                    <p style={{ margin: '0 0 12px', fontSize: 13, lineHeight: 1.45, color: 'rgba(226, 232, 240, 0.95)' }}>
+                      {(safeT as any)?.fechamentoEspPeriodosHintTopo ||
+                        'Escolha o modo de cobrança. Datas de início/fim ficam também junto aos totais e ao botão Guardar (mais abaixo).'}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFechamentoCobrancaModo('completo')
+                          setFechamentoCobrancaIntervaloAtivoId(null)
+                          setFechamentoCobrancaDiasPick([])
+                        }}
+                        style={{
+                          padding: '14px 20px',
+                          borderRadius: 10,
+                          border: fechamentoCobrancaModo === 'completo' ? '3px solid #00ff00' : '2px solid #555',
+                          background: fechamentoCobrancaModo === 'completo' ? 'rgba(0, 255, 0, 0.22)' : '#1a1a1a',
+                          color: fechamentoCobrancaModo === 'completo' ? '#00ff00' : '#ddd',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: 15,
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoEspCobrancaCompleta || 'Cobrança completa (todos os dias)'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFechamentoCobrancaModo('intervalos')
+                          setFechamentoCobrancaIntervalos((prev) => {
+                            if (prev.length > 0) return prev
+                            const iv = criarIntervaloCobrancaEspecialVazio({
+                              nowMs: Date.now(),
+                              random: Math.random,
+                              dataInicio: diasCobrancaEspLista[0]?.dataChave,
+                              dataFim: diasCobrancaEspLista[diasCobrancaEspLista.length - 1]?.dataChave,
+                            })
+                            setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                            return [iv]
+                          })
+                        }}
+                        style={{
+                          padding: '14px 20px',
+                          borderRadius: 10,
+                          border: fechamentoCobrancaModo === 'intervalos' ? '3px solid #00ff00' : '2px solid #555',
+                          background: fechamentoCobrancaModo === 'intervalos' ? 'rgba(0, 255, 0, 0.22)' : '#1a1a1a',
+                          color: fechamentoCobrancaModo === 'intervalos' ? '#00ff00' : '#ddd',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: 15,
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoEspCobrancaPorPeriodos || 'Por períodos (várias notas)'}
+                      </button>
+                    </div>
+                    {fechamentoCobrancaModo === 'intervalos' && fechamentoCobrancaIntervalos.length > 0 ? (
+                      <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {fechamentoCobrancaIntervalos.map((iv, idx) => (
+                          <div
+                            key={iv.id}
+                            style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 12,
+                              alignItems: 'center',
+                              padding: '10px 12px',
+                              borderRadius: 8,
+                              border: '1px solid rgba(0,255,0,0.35)',
+                              background: 'rgba(0,0,0,0.35)',
+                            }}
+                          >
+                            <strong style={{ color: '#fff', fontSize: 13 }}>
+                              {((safeT as any)?.fechamentoEspNotaN || 'Nota {n}').replace(/\{n\}/g, String(idx + 1))}
+                            </strong>
+                            <label style={{ fontSize: 13, color: '#bbf7d0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {(safeT as any)?.fechamentoEspDataInicio || 'Início'}
+                              <input
+                                type="date"
+                                value={iv.dataInicio || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  setFechamentoCobrancaIntervalos((prev) =>
+                                    prev.map((x) => (x.id === iv.id ? { ...x, dataInicio: v } : x))
+                                  )
+                                  setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                                }}
+                                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #00ff00', background: '#111', color: '#fff', fontSize: 14 }}
+                              />
+                            </label>
+                            <label style={{ fontSize: 13, color: '#bbf7d0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              {(safeT as any)?.fechamentoEspDataFim || 'Fim'}
+                              <input
+                                type="date"
+                                value={iv.dataFim || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  setFechamentoCobrancaIntervalos((prev) =>
+                                    prev.map((x) => (x.id === iv.id ? { ...x, dataFim: v } : x))
+                                  )
+                                  setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                                }}
+                                style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid #00ff00', background: '#111', color: '#fff', fontSize: 14 }}
+                              />
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div
                   style={{
@@ -47032,18 +47366,350 @@ A1;Peça exemplo;10`}
                     </div>
                   </div>
                   {relatorioSelecionado &&
-                  (fechamentosGuardadosBibliotecaIds.includes(relatorioSelecionado.id) ||
-                    fechamentoEditandoDespesasBibliotecaId === relatorioSelecionado.id) ? (
+                  fechamentoPersistKey &&
+                  (fechamentosGuardadosBibliotecaIds.includes(fechamentoPersistKey) ||
+                    fechamentoEditandoDespesasBibliotecaId === fechamentoPersistKey) ? (
                     <div style={{ marginTop: 16, marginBottom: 8 }}>
-                      {renderBarraFluxoFechamento(relatorioSelecionado.id)}
+                      {renderBarraFluxoFechamento(fechamentoPersistKey)}
                     </div>
                   ) : null}
+                {isFechamentoRelatorioEspecial ? (
+                  <div
+                    id="fechamento-esp-cobranca-periodos"
+                    style={{
+                      marginTop: 8,
+                      marginBottom: 18,
+                      padding: '16px 18px',
+                      borderRadius: 12,
+                      border: '2px solid #00ff00',
+                      background: 'linear-gradient(165deg, rgba(10, 28, 14, 0.95), rgba(8, 18, 10, 0.98))',
+                      boxShadow: '0 0 22px rgba(0, 255, 0, 0.16)',
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#00ff00', marginBottom: 4 }}>
+                      {(safeT as any)?.fechamentoEspIntervalosTitulo || 'Cobrança por períodos (várias notas)'}
+                    </div>
+                    <p style={{ margin: '0 0 12px', fontSize: 12, lineHeight: 1.45, color: 'rgba(226, 232, 240, 0.88)', maxWidth: 760 }}>
+                      {(safeT as any)?.fechamentoEspIntervalosIntro ||
+                        'Por omissão cobra todos os dias. Em «Por períodos», cada intervalo [início → fim] inclusivo gera uma nota separada (totais só desses dias). Se dois períodos tocam no mesmo dia, escolha Y-1 / Y para não duplicar.'}
+                    </p>
+                    {listarChavesIntervaloFechamento(
+                      relatorioEspecialSelecionado?.id,
+                      fechamentosGuardadosBibliotecaIds
+                    ).length > 0 ? (
+                      <p style={{ margin: '0 0 12px', fontSize: 12, lineHeight: 1.4, color: '#7dd3fc', maxWidth: 760 }}>
+                        {(safeT as any)?.fechamentoEspPendenteComNotas ||
+                          'Este relatório já tem nota(s) de período na Biblioteca — pode criar mais períodos ou editar as existentes.'}
+                      </p>
+                    ) : null}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFechamentoCobrancaModo('completo')
+                          setFechamentoCobrancaIntervaloAtivoId(null)
+                          setFechamentoCobrancaDiasPick([])
+                        }}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: 8,
+                          border: fechamentoCobrancaModo === 'completo' ? '2px solid #00ff00' : '1px solid #555',
+                          background: fechamentoCobrancaModo === 'completo' ? 'rgba(0, 255, 0, 0.15)' : 'transparent',
+                          color: fechamentoCobrancaModo === 'completo' ? '#00ff00' : '#888',
+                          cursor: 'pointer',
+                          fontWeight: fechamentoCobrancaModo === 'completo' ? 700 : 500,
+                          fontSize: 13,
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoEspCobrancaCompleta || 'Cobrança completa (todos os dias)'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFechamentoCobrancaModo('intervalos')
+                          setFechamentoCobrancaIntervalos((prev) => {
+                            if (prev.length > 0) return prev
+                            const iv = criarIntervaloCobrancaEspecialVazio({
+                              nowMs: Date.now(),
+                              random: Math.random,
+                              dataInicio: diasCobrancaEspLista[0]?.dataChave,
+                              dataFim: diasCobrancaEspLista[diasCobrancaEspLista.length - 1]?.dataChave,
+                            })
+                            setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                            return [iv]
+                          })
+                        }}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: 8,
+                          border: fechamentoCobrancaModo === 'intervalos' ? '2px solid #00ff00' : '1px solid #555',
+                          background: fechamentoCobrancaModo === 'intervalos' ? 'rgba(0, 255, 0, 0.15)' : 'transparent',
+                          color: fechamentoCobrancaModo === 'intervalos' ? '#00ff00' : '#888',
+                          cursor: 'pointer',
+                          fontWeight: fechamentoCobrancaModo === 'intervalos' ? 700 : 500,
+                          fontSize: 13,
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoEspCobrancaPorPeriodos || 'Por períodos (várias notas)'}
+                      </button>
+                    </div>
+                    {fechamentoCobrancaModo === 'intervalos' ? (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                          {fechamentoCobrancaIntervalos.map((iv, idx) => {
+                            const ativo = iv.id === fechamentoCobrancaIntervaloAtivoId
+                            const ok = intervaloCobrancaValido(iv)
+                            const nDias = ok
+                              ? relatorioEspecialComDiasDoIntervalo(relatorioEspecialSelecionado!, iv).diasTrabalho
+                                  .length
+                              : 0
+                            const jaGuardado =
+                              ok &&
+                              fechamentosGuardadosBibliotecaIds.includes(
+                                buildChaveFechamentoIntervalo(relatorioEspecialSelecionado!.id, iv)
+                              )
+                            return (
+                              <div
+                                key={iv.id}
+                                style={{
+                                  padding: '12px 14px',
+                                  borderRadius: 10,
+                                  border: ativo ? '1px solid rgba(0, 255, 0, 0.55)' : '1px solid rgba(255,255,255,0.12)',
+                                  background: ativo ? 'rgba(0, 255, 0, 0.08)' : 'rgba(0,0,0,0.25)',
+                                }}
+                              >
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 8 }}>
+                                  <strong style={{ color: '#fff', fontSize: 13 }}>
+                                    {((safeT as any)?.fechamentoEspNotaN || 'Nota {n}').replace(/\{n\}/g, String(idx + 1))}
+                                    {jaGuardado ? ` · ${(safeT as any)?.naBibliotecaDespesas || 'na Biblioteca'}` : ''}
+                                  </strong>
+                                  <span style={{ color: '#94a3b8', fontSize: 12 }}>
+                                    {rotuloIntervaloCobrancaEspecial(iv, {
+                                      locale: localeDatasCobranca,
+                                      diasCount: nDias,
+                                      labelDias: (safeT as any)?.fechamentoEspIntervaloNDias || '{n} dias',
+                                    })}
+                                    {ok ? ` · ${nDias} ${(safeT as any)?.dias || 'dias'}` : ''}
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                                  <label style={{ fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    {(safeT as any)?.fechamentoEspDataInicio || 'Início'}
+                                    <input
+                                      type="date"
+                                      value={iv.dataInicio || ''}
+                                      onChange={(e) => {
+                                        const v = e.target.value
+                                        setFechamentoCobrancaIntervalos((prev) =>
+                                          prev.map((x) =>
+                                            x.id === iv.id
+                                              ? { ...x, dataInicio: v, dataFim: x.dataFim || v, diaIds: undefined }
+                                              : x
+                                          )
+                                        )
+                                      }}
+                                      style={{
+                                        padding: '6px 8px',
+                                        borderRadius: 8,
+                                        border: '1px solid #555',
+                                        background: '#404040',
+                                        color: '#fff',
+                                      }}
+                                    />
+                                  </label>
+                                  <label style={{ fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    {(safeT as any)?.fechamentoEspDataFim || 'Fim'}
+                                    <input
+                                      type="date"
+                                      value={iv.dataFim || ''}
+                                      onChange={(e) => {
+                                        const v = e.target.value
+                                        setFechamentoCobrancaIntervalos((prev) =>
+                                          prev.map((x) =>
+                                            x.id === iv.id
+                                              ? { ...x, dataFim: v, dataInicio: x.dataInicio || v, diaIds: undefined }
+                                              : x
+                                          )
+                                        )
+                                      }}
+                                      style={{
+                                        padding: '6px 8px',
+                                        borderRadius: 8,
+                                        border: '1px solid #555',
+                                        background: '#404040',
+                                        color: '#fff',
+                                      }}
+                                    />
+                                  </label>
+                                  <button
+                                    type="button"
+                                    onClick={() => setFechamentoCobrancaIntervaloAtivoId(iv.id)}
+                                    style={{
+                                      padding: '7px 12px',
+                                      borderRadius: 8,
+                                      border: '1px solid rgba(0, 255, 0, 0.5)',
+                                      background: ativo ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
+                                      color: '#00ff00',
+                                      cursor: 'pointer',
+                                      fontSize: 12,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {ativo
+                                      ? (safeT as any)?.fechamentoEspNotaActiva || 'Nota activa'
+                                      : (safeT as any)?.fechamentoEspUsarNota || 'Usar esta nota'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setFechamentoCobrancaIntervalos((prev) => prev.filter((x) => x.id !== iv.id))
+                                      if (fechamentoCobrancaIntervaloAtivoId === iv.id) {
+                                        setFechamentoCobrancaIntervaloAtivoId(null)
+                                      }
+                                    }}
+                                    style={{
+                                      padding: '7px 12px',
+                                      borderRadius: 8,
+                                      border: '1px solid #666',
+                                      background: 'transparent',
+                                      color: '#f87171',
+                                      cursor: 'pointer',
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    {(safeT as any)?.remover || 'Remover'}
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const iv = criarIntervaloCobrancaEspecialVazio({
+                                nowMs: Date.now(),
+                                random: Math.random,
+                              })
+                              setFechamentoCobrancaIntervalos((prev) => [...prev, iv])
+                              setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                            }}
+                            style={{
+                              padding: '8px 14px',
+                              borderRadius: 8,
+                              border: '1px solid rgba(0, 255, 0, 0.45)',
+                              background: 'rgba(0, 255, 0, 0.1)',
+                              color: '#00ff00',
+                              cursor: 'pointer',
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {(safeT as any)?.fechamentoEspAdicionarIntervalo || '+ Adicionar intervalo'}
+                          </button>
+                        </div>
+                        {diasCobrancaEspLista.length > 0 ? (
+                          <div style={{ marginBottom: 10 }}>
+                            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>
+                              {(safeT as any)?.fechamentoEspSeleccionarDias ||
+                                'Ou seleccione dias da lista e crie um intervalo:'}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, maxHeight: 140, overflowY: 'auto' }}>
+                              {diasCobrancaEspLista.map((d) => {
+                                const on = fechamentoCobrancaDiasPick.includes(d.id)
+                                return (
+                                  <button
+                                    key={d.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setFechamentoCobrancaDiasPick((prev) =>
+                                        prev.includes(d.id) ? prev.filter((x) => x !== d.id) : [...prev, d.id]
+                                      )
+                                    }}
+                                    style={{
+                                      padding: '4px 8px',
+                                      borderRadius: 6,
+                                      border: on ? '1px solid #00ff00' : '1px solid #555',
+                                      background: on ? 'rgba(0, 255, 0, 0.18)' : '#333',
+                                      color: on ? '#00ff00' : '#ccc',
+                                      fontSize: 11,
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    {formatDataCobrancaUi(d.dataChave || d.data, localeDatasCobranca)}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            <button
+                              type="button"
+                              disabled={fechamentoCobrancaDiasPick.length === 0}
+                              onClick={() => {
+                                const iv = intervaloFromDiasSelecionados(
+                                  diasCobrancaEspLista,
+                                  fechamentoCobrancaDiasPick,
+                                  { nowMs: Date.now(), random: Math.random }
+                                )
+                                if (!iv) return
+                                setFechamentoCobrancaIntervalos((prev) => [...prev, iv])
+                                setFechamentoCobrancaIntervaloAtivoId(iv.id)
+                                setFechamentoCobrancaDiasPick([])
+                              }}
+                              style={{
+                                padding: '8px 14px',
+                                borderRadius: 8,
+                                border: '1px solid rgba(125, 211, 252, 0.5)',
+                                background: 'rgba(56, 189, 248, 0.12)',
+                                color: '#7dd3fc',
+                                cursor: fechamentoCobrancaDiasPick.length === 0 ? 'not-allowed' : 'pointer',
+                                fontSize: 13,
+                                opacity: fechamentoCobrancaDiasPick.length === 0 ? 0.5 : 1,
+                              }}
+                            >
+                              {(safeT as any)?.fechamentoEspCriarIntervaloDias ||
+                                'Criar nota com dias seleccionados'}
+                            </button>
+                          </div>
+                        ) : null}
+                        {sobreposicoesIntervalosEsp.length > 0 ? (
+                          <p style={{ margin: '8px 0 0', fontSize: 12, color: '#fbbf24', lineHeight: 1.4 }}>
+                            {(safeT as any)?.fechamentoEspIntervalosSobrepostosAviso ||
+                              'Atenção: há períodos que partilham o mesmo dia. Cada intervalo é inclusivo — ajuste as datas (ex.: 1–15 e 16–36) para evitar cobrança duplicada.'}
+                          </p>
+                        ) : null}
+                        {intervaloCobrancaAtivoOk && intervaloCobrancaAtivo ? (
+                          <p style={{ margin: '10px 0 0', fontSize: 12, color: '#86efac', lineHeight: 1.4 }}>
+                            {(
+                              (safeT as any)?.fechamentoEspNotaActivaResumo ||
+                              'Nota activa: {rotulo}. Os totais abaixo usam só estes dias. Guarde ou gere PDF; depois active outro intervalo para a 2.ª nota.'
+                            ).replace(
+                              /\{rotulo\}/g,
+                              rotuloIntervaloCobrancaEspecial(intervaloCobrancaAtivo, {
+                                locale: localeDatasCobranca,
+                                diasCount: (relatorioEspecialParaItens?.diasTrabalho || []).length,
+                                labelDias: (safeT as any)?.fechamentoEspIntervaloNDias || '{n} dias',
+                              })
+                            )}
+                          </p>
+                        ) : (
+                          <p style={{ margin: '10px 0 0', fontSize: 12, color: '#fbbf24', lineHeight: 1.4 }}>
+                            {(safeT as any)?.fechamentoEspIntervaloAtiveAntes ||
+                              'Active um intervalo válido antes de guardar esta nota.'}
+                          </p>
+                        )}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
                   <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 200, 83, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                     <button type="button" className="btn-primary" onClick={handleSalvarFechamentoNaBiblioteca} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 200, 83, 0.25)', border: '1px solid rgba(0, 200, 83, 0.6)', color: '#00c853', fontWeight: '600' }}>
                       💾{' '}
                       {relatorioSelecionado &&
-                      (fechamentosGuardadosBibliotecaIds.includes(relatorioSelecionado.id) ||
-                        fechamentoEditandoDespesasBibliotecaId === relatorioSelecionado.id)
+                      fechamentoPersistKey &&
+                      (fechamentosGuardadosBibliotecaIds.includes(fechamentoPersistKey) ||
+                        fechamentoEditandoDespesasBibliotecaId === fechamentoPersistKey)
                         ? (safeT as any)?.salvarAlteracoesBiblioteca || 'Guardar alterações na Biblioteca'
                         : (safeT as any)?.salvarEnviarBiblioteca || 'Salvar e enviar para a Biblioteca'}
                     </button>
@@ -66888,13 +67554,17 @@ A1;Peça exemplo;10`}
     ) : null
 
   const trSync = safeT as Record<string, string | undefined>
+  const localHubMode = isNonatoLocalHubMode()
   const syncTrafficPhase: 'boot' | 'syncing' | 'pending' | 'ok' = appInitialLoading
     ? 'boot'
-    : syncPullChecking || syncPushLoading || serverAutoPullActive
-      ? 'syncing'
-      : syncAutoSyncFailed
-        ? 'pending'
-        : 'ok'
+    : localHubMode
+      ? // Hub local: após o arranque não piscar azul/amarelo de «atualizar servidor».
+        'ok'
+      : syncPullChecking || syncPushLoading || serverAutoPullActive
+        ? 'syncing'
+        : syncAutoSyncFailed
+          ? 'pending'
+          : 'ok'
   const syncTrafficTopPad = isDemoMode && !isCompactLayout ? 52 : 10
   /** Ecrãs de entrada (splash/login) usam z-index ~99999 — o semáforo tem de ficar por cima para ser visível. */
   const syncTrafficOnEntryFullscreen =
@@ -66908,26 +67578,32 @@ A1;Peça exemplo;10`}
         : 10005
   const syncTrafficStatusText =
     syncTrafficPhase === 'boot'
-      ? trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
+      ? localHubMode
+        ? trSync.localHubSyncBoot || 'A preparar modo local…'
+        : trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
       : syncTrafficPhase === 'syncing'
         ? trSync.syncUpdatingNewInfo || trSync.syncTrafficBlue || 'A atualizar novas informações…'
-        : syncAutoSyncFailed
+        : syncAutoSyncFailed && !localHubMode
           ? syncAutoRiskSkipRef.current
             ? trSync.syncTrafficAutoRiskSkip ||
               'Sincronização automática adiada: o servidor parece incompleto. Use Administrador se precisar de enviar dados deste aparelho.'
             : trSync.syncTrafficAutoFail || 'Não foi possível sincronizar automaticamente — verifique a ligação ou use Administrador.'
-          : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
+          : localHubMode
+            ? `${trSync.localHubSyncOk || 'Modo local — dados neste PC.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
+            : `${trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor.'} ${trSync.syncTrafficAutoSave || 'Guarda automática — não precisa de botão «Salvar».'}`
   /** Texto curto na barra lateral — altura fixa, evita saltos ao mudar cor. */
   const syncTrafficSidebarCaption =
     syncTrafficPhase === 'boot'
       ? trSync.syncTrafficBootShort || 'A preparar…'
       : syncTrafficPhase === 'syncing'
         ? trSync.syncTrafficBlueShort || 'A atualizar…'
-        : syncAutoSyncFailed
+        : syncAutoSyncFailed && !localHubMode
           ? syncAutoRiskSkipRef.current
             ? trSync.syncTrafficAutoRiskSkipShort || 'Servidor incompleto'
             : trSync.syncTrafficAutoFailShort || 'Sem ligação'
-          : trSync.syncTrafficGreenShort || 'Sincronizado'
+          : localHubMode
+            ? trSync.localHubSyncOkShort || 'Local'
+            : trSync.syncTrafficGreenShort || 'Sincronizado'
   const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
   const syncTrafficLightsRow = (
     <div className="ns-sync-traffic__row" aria-hidden>
@@ -69797,7 +70473,7 @@ A1;Peça exemplo;10`}
 
       {/* Área Principal */}
       <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
-        {bibliotecaNovidadesServidor > 0 && !isDemoMode ? (
+        {bibliotecaNovidadesServidor > 0 && !isDemoMode && !isNonatoLocalHubMode() ? (
           <div className="biblioteca-aviso-global" role="status">
             <span className="biblioteca-aviso-global__text">
               <strong>{(safeT as any)?.bibliotecaSyncAvisoToolbar || '⚠ Servidor mais recente:'}</strong>{' '}
@@ -70444,8 +71120,9 @@ A1;Peça exemplo;10`}
         )}
       </div>
 
-      {/* Sincronização multi-dispositivo: um único fluxo com resumo (sem botões «Atualizar com segurança»). */}
-      {syncDecisionModalOpen && syncPendingRemote && (
+      {/* Sincronização multi-dispositivo: um único fluxo com resumo (sem botões «Atualizar com segurança»).
+          Hub local: não bloquear o ecrã com modal de «atualizar servidor» no dia a dia. */}
+      {syncDecisionModalOpen && syncPendingRemote && !isNonatoLocalHubMode() && (
         <div
           className="modal-overlay"
           role="dialog"

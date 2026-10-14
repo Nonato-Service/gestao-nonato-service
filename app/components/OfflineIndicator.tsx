@@ -10,6 +10,7 @@ import {
   probeServerReachable,
 } from '../utils/dataStorage'
 import { getStoredUiString } from '../translations'
+import { isNonatoLocalHubMode } from '../lib/localHubMode'
 
 const PROBE_FOCUS_DEBOUNCE_MS = 4000
 const PROBE_OFFLINE_INTERVAL_MS = 40_000
@@ -270,6 +271,11 @@ export function OfflineIndicator() {
   }, [lastConfirmed])
 
   const showFailed = Boolean(lastFailed) && showPending && pendingCount > 0 && !authMsg && !lastConfirmed
+
+  // Hub local (PC+tablet): silenciar chips «enviar ao servidor» / fila pendente.
+  // Mantém só aviso se o hub local estiver inacessível (!online) ou auth.
+  const localHubQuiet = isNonatoLocalHubMode()
+  if (localHubQuiet && online && !authMsg) return null
 
   const hidden =
     online &&

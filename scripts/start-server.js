@@ -148,19 +148,35 @@ const hasProductionBuild = fs.existsSync(buildIdPath);
 const onRailway = Boolean(
   process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_VOLUME_MOUNT_PATH
 );
-/** Hub local sem build: usar next/dev em vez de falhar com production-start-no-build-id. */
+/**
+ * Hub local: preferir next/dev (UI fresca após alterações de código).
+ * NONATO_FORCE_DEV=1 (INICIAR-NONATO-LOCAL.bat) ignora .next/BUILD_ID antigo.
+ * Railway nunca usa este fallback.
+ */
+const forceLocalDev =
+  !onRailway &&
+  (process.env.NONATO_FORCE_DEV === '1' || process.env.NONATO_LOCAL_DEV === '1');
 const useDevFallback =
-  !useStandalone && !hasProductionBuild && !onRailway && fs.existsSync(nextBin);
+  !useStandalone &&
+  fs.existsSync(nextBin) &&
+  !onRailway &&
+  (forceLocalDev || !hasProductionBuild);
 
-if (useStandalone) {
+if (useStandalone && !forceLocalDev) {
   console.log('[start-server] Modo: standalone (menos memória)', standaloneServer);
 } else if (!fs.existsSync(nextBin)) {
   console.error('[start-server] Next.js não encontrado. Execute npm ci && npm run build.');
   process.exit(1);
 } else if (useDevFallback) {
-  console.warn(
-    '[start-server] Sem .next/BUILD_ID — a iniciar next/dev (hub local). Para produção: npm run build'
-  );
+  if (forceLocalDev && hasProductionBuild) {
+    console.warn(
+      '[start-server] NONATO_FORCE_DEV=1 — a iniciar next/dev (ignora .next antigo). Ctrl+Shift+R no browser se ainda vir UI velha.'
+    );
+  } else {
+    console.warn(
+      '[start-server] Sem .next/BUILD_ID — a iniciar next/dev (hub local). Para produção: npm run build'
+    );
+  }
 } else if (!hasProductionBuild) {
   console.error(
     '[start-server] Sem build de produção (.next/BUILD_ID). Execute npm run build antes de npm start.'
@@ -182,17 +198,18 @@ const nextArgs = useDevFallback
   ? ['dev', '-H', '0.0.0.0', '-p', String(port)]
   : ['start', '-H', '0.0.0.0', '-p', String(port)];
 
-const child = useStandalone
-  ? spawn(process.execPath, [standaloneServer], {
-      stdio: 'inherit',
-      cwd: standaloneCwd,
-      env: childEnv,
-    })
-  : spawn(process.execPath, [nextBin, ...nextArgs], {
-      stdio: 'inherit',
-      cwd: appRoot,
-      env: childEnv,
-    });
+const child =
+  useStandalone && !useDevFallback
+    ? spawn(process.execPath, [standaloneServer], {
+        stdio: 'inherit',
+        cwd: standaloneCwd,
+        env: childEnv,
+      })
+    : spawn(process.execPath, [nextBin, ...nextArgs], {
+        stdio: 'inherit',
+        cwd: appRoot,
+        env: childEnv,
+      });
 
 function forwardSignal(sig) {
   if (child.exitCode === null && child.signalCode === null) {

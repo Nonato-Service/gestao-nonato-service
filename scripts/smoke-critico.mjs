@@ -2768,11 +2768,44 @@ try {
     idx.includes('coletarOpcoesLocalDiaEspecial') &&
     idx.includes('opcoesEquipamentoSelectDiaEspecial') &&
     idx.includes('aplicarSelecaoEquipamentoDiaEspecial') &&
-    idx.includes('formatHorasGrupoFechamentoEspecial')
+    idx.includes('formatHorasGrupoFechamentoEspecial') &&
+    idx.includes('relatorioEspecialComDiasDoIntervalo') &&
+    idx.includes('buildChaveFechamentoIntervalo') &&
+    idx.includes('relatorioTemFechamentoNaBiblioteca') &&
+    idx.includes('relatorioTemFechamentoCompletoNaBiblioteca') &&
+    idx.includes('listarChavesIntervaloFechamento')
   ) {
     ok('módulo relatorios-especiais exporta cálculos/fechamento/PDF')
   } else {
     fail('módulo relatorios-especiais incompleto (index.ts)')
+  }
+  
+if (exists('app/lib/localHubMode.ts')) {
+  ok('existe app/lib/localHubMode.ts')
+  const src = fs.readFileSync(path.join(root, 'app/lib/localHubMode.ts'), 'utf8')
+  if (src.includes('isNonatoLocalHubMode') && src.includes('NEXT_PUBLIC_NONATO_LOCAL_HUB')) ok('localHubMode: detecção hub local')
+  else fail('localHubMode incompleto')
+} else fail('em falta: app/lib/localHubMode.ts')
+
+if (exists('app/modules/relatorios-especiais/fechamentoIntervalos.ts')) {
+    const ivSrc = fs.readFileSync(
+      path.join(root, 'app/modules/relatorios-especiais/fechamentoIntervalos.ts'),
+      'utf8'
+    )
+    if (
+      ivSrc.includes('filtrarDiasPorIntervaloCobranca') &&
+      ivSrc.includes('intervalosCobrancaSobrepostos') &&
+      ivSrc.includes('FECHAMENTO_INTERVALO_SEP') &&
+      ivSrc.includes('relatorioTemFechamentoCompletoNaBiblioteca') &&
+      !ivSrc.includes('Date.now()') &&
+      !ivSrc.includes('Math.random')
+    ) {
+      ok('relatórios especiais: cobrança por intervalos de dias (puro)')
+    } else {
+      fail('fechamentoIntervalos.ts incompleto ou não puro')
+    }
+  } else {
+    fail('em falta: app/modules/relatorios-especiais/fechamentoIntervalos.ts')
   }
   const hub = fs.readFileSync(path.join(root, 'app/components/RelatorioEspecialHub.tsx'), 'utf8')
   {
@@ -8116,7 +8149,8 @@ try {
   const swReg = fs.readFileSync(path.join(root, 'app/RegisterSW.tsx'), 'utf8')
   if (
     swReg.includes('applyWaitingWorker') &&
-    swReg.includes('window.setInterval(checkForUpdates, 20_000)') &&
+    (swReg.includes('window.setInterval(checkForUpdates, 20_000)') ||
+      swReg.includes('window.setInterval(checkForUpdates, pollMs)')) &&
     !swReg.includes('pwaUpdateBtnLater') &&
     swReg.includes('if (reloadHandled.current) return')
   ) {

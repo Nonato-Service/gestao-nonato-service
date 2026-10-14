@@ -7,6 +7,7 @@ REM ============================================================================
 REM  Hub local: PC fica ligado; tablet na mesma Wi‑Fi abre http://IP:PORT
 REM  Dados em .\data-local (nunca apaga cadastros existentes)
 REM  Não altera configuração Railway — modo só local
+REM  SEMPRE next/dev (UI fresca) — NÃO serve .next de produção antigo
 REM ============================================================================
 
 cd /d "%~dp0"
@@ -17,6 +18,12 @@ set "DATA_DIR=%~dp0data-local"
 REM Remover barra final se existir (evita paths estranhos)
 if "%DATA_DIR:~-1%"=="\" set "DATA_DIR=%DATA_DIR:~0,-1%"
 
+REM Forçar next/dev mesmo se existir .next/BUILD_ID (evita UI desatualizada)
+set "NONATO_FORCE_DEV=1"
+set "NONATO_LOCAL_DEV=1"
+REM Cliente: silenciar nags de atualizar servidor / Railway no uso diario
+set "NEXT_PUBLIC_NONATO_LOCAL_HUB=1"
+
 echo.
 echo ========================================
 echo   NONATO SERVICE — MODO LOCAL PC
@@ -25,6 +32,7 @@ echo.
 echo  Pasta: %CD%
 echo  Dados: %DATA_DIR%
 echo  Escuta: %HOSTNAME%:%PORT%
+echo  Modo: next/dev ^(UI sempre fresca apos alteracoes^)
 echo.
 
 where node >nul 2>&1
@@ -52,6 +60,17 @@ if not exist "%DATA_DIR%" (
   echo [OK] Pasta de dados ja existe ^(cadastros preservados^)
 )
 
+REM Se data-local estiver vazia e existir .\data com cadastros, copiar (sem apagar .\data)
+set "SEED_SRC=%~dp0data"
+if exist "%SEED_SRC%\nonato-clientes.json" (
+  dir /b "%DATA_DIR%\*.json" >nul 2>&1
+  if errorlevel 1 (
+    echo [INFO] data-local vazia — a copiar cadastros de .\data ^(origem intacta^)...
+    robocopy "%SEED_SRC%" "%DATA_DIR%" /E /XO /R:1 /W:1 /NFL /NDL /NJH /NJS /nc /ns /np >nul
+    echo [OK] data-local semeada a partir de .\data
+  )
+)
+
 if not exist "node_modules\next\package.json" (
   echo.
   echo [INFO] A instalar dependencias ^(npm install^)...
@@ -64,25 +83,6 @@ if not exist "node_modules\next\package.json" (
   echo [OK] Dependencias instaladas.
 ) else (
   echo [OK] node_modules presente.
-)
-
-REM Opcional: forcar build de producao antes de arrancar
-if /i "%NONATO_LOCAL_BUILD%"=="1" (
-  echo.
-  echo [INFO] NONATO_LOCAL_BUILD=1 — a fazer build de producao...
-  call npm run build
-  if errorlevel 1 (
-    echo [AVISO] Build falhou — start-server.js pode usar next/dev no hub local.
-  ) else (
-    echo [OK] Build concluido.
-  )
-)
-
-if exist ".next\BUILD_ID" (
-  echo [OK] Build .next — npm start em producao ^(0.0.0.0^).
-) else (
-  echo [INFO] Sem BUILD_ID — start-server.js inicia next/dev em 0.0.0.0:%PORT%
-  echo        ^(Opcional depois: npm run build  ou  set NONATO_LOCAL_BUILD=1^)
 )
 
 REM IPs da LAN para o tablet
@@ -111,17 +111,23 @@ echo   - Deixe esta janela aberta; o PC deve ficar ligado.
 echo   - Tablet so na mesma Wi‑Fi ^(nao precisa Railway / nuvem^).
 echo   - Se o tablet nao ligar: Firewall do Windows - permitir porta %PORT% TCP.
 echo     ^(PowerShell Admin: netsh advfirewall firewall add rule name="Nonato Local %PORT%" dir=in action=allow protocol=TCP localport=%PORT%^)
+echo   - Apos actualizar codigo: feche o bat, volte a abrir, e no browser Ctrl+Shift+R
+echo     ^(recarregar forçado — limpa cache PWA/antiga^).
+echo   - «Por periodos» esta em Cobrança / Ir ao fechamento ^(nao so em Fechamento de horas^).
 echo   - Guia: MODO-LOCAL-PC-TABLET.md
 echo ========================================
 echo.
-echo [INFO] A iniciar servidor... NAO FECHE ESTA JANELA.
+echo [INFO] A iniciar next/dev... NAO FECHE ESTA JANELA.
 echo.
 
 set "PORT=%PORT%"
 set "HOSTNAME=%HOSTNAME%"
 set "DATA_DIR=%DATA_DIR%"
+set "NONATO_FORCE_DEV=%NONATO_FORCE_DEV%"
+set "NONATO_LOCAL_DEV=%NONATO_LOCAL_DEV%"
+set "NEXT_PUBLIC_NONATO_LOCAL_HUB=%NEXT_PUBLIC_NONATO_LOCAL_HUB%"
 
-REM start-server.js: producao se houver BUILD_ID; senao next/dev local ^(nunca no Railway^)
+REM start-server.js com NONATO_FORCE_DEV=1 → sempre next/dev no hub local (nao rebuild a cada clique)
 call npm start
 
 echo.

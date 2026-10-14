@@ -18,7 +18,7 @@ export const viewport: Viewport = {
   minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#00c853',
+  themeColor: '#10b981',
   viewportFit: 'cover',
 }
 
@@ -59,7 +59,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="NONATO SERVICE" />
-        <meta name="theme-color" content="#00c853" />
+        <meta name="theme-color" content="#10b981" />
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body suppressHydrationWarning>

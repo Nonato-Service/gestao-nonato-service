@@ -33,7 +33,15 @@ netsh advfirewall firewall add rule name="Nonato Local 3000" dir=in action=allow
 
 Neste modo **não é necessário** Railway nem internet para o dia a dia — só a rede Wi‑Fi local.
 
+Avisos de «atualizar / enviar ao servidor» e a fila offline ficam **silenciados** no hub local (`NEXT_PUBLIC_NONATO_LOCAL_HUB=1`). O banner «Nova versão» da PWA continua quando há Service Worker realmente novo.
+
+Se `data-local\` estiver vazia e existir `data\` com cadastros, o `.bat` copia para `data-local` **sem apagar** a pasta `data\`.
+
 A configuração de deploy Railway do repositório **não é alterada**; quem ainda usar a nuvem continua com o fluxo habitual (`ATUALIZAR-DEPLOY.bat`, etc.).
+
+### Cobrança por períodos (Relatório Especial)
+
+Em **Fechamento de horas** aparece o banner verde **Cobrança completa | Por períodos**. Também há o botão **Por períodos** na lista do relatório especial e no ecrã de cobrança.
 
 ## 5. Limitações
 

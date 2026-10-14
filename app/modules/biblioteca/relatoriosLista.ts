@@ -4,7 +4,12 @@
 import type { FechamentoItem } from '../fechamento'
 import { normalizeOsNumeroRelatorio, findClienteByRelatorio } from '../relatorio-servico'
 import type { RelatorioEspecial } from '../relatorios-especiais'
-import { adaptRelatorioEspecialParaFechamentoShape } from '../relatorios-especiais'
+import {
+  adaptRelatorioEspecialParaFechamentoShape,
+  isChaveFechamentoIntervalo,
+  parseChaveFechamentoIntervalo,
+  formatDataCobrancaUi,
+} from '../relatorios-especiais'
 import {
   nomesClienteCorrespondem,
   resolverClienteIdRelatorioFlexivel,
@@ -410,6 +415,29 @@ export function buildBibliotecaRelatoriosPorCliente(
           })
         }
       }
+      for (const key of fechamentosGuardadosBibliotecaIds) {
+        if (!isChaveFechamentoIntervalo(key)) continue
+        const parsed = parseChaveFechamentoIntervalo(key)
+        if (!parsed || parsed.parentId !== relEsp.id) continue
+        const itensIv = fechamentosRelatorios[key]
+        if (!itensIv?.length) continue
+        if (despesas.some((d) => d.relatorio.id === key)) continue
+        const base = adaptRelatorioEspecialParaFechamentoShape(relEsp) as RelatorioServicoBibliotecaLike
+        const rotuloPeriodo =
+          parsed.dataInicio && parsed.dataFim
+            ? `${formatDataCobrancaUi(parsed.dataInicio)} – ${formatDataCobrancaUi(parsed.dataFim)}`
+            : parsed.diaIds && parsed.diaIds.length > 0
+              ? `${parsed.diaIds.length} dias`
+              : 'período'
+        despesas.push({
+          relatorio: {
+            ...base,
+            id: key,
+            numero: `${String(base.numero || '').trim() || '—'} · ${rotuloPeriodo}`,
+          },
+          itens: itensIv,
+        })
+      }
     }
     despesas.sort((a, b) =>
       cmpBibliotecaLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
@@ -485,16 +513,18 @@ export function buildBibliotecaRelatoriosPorCliente(
   }
 
   /** Relatórios especiais com fechamento na Biblioteca sem pasta de cliente indexada. */
-  const especiaisOrfaos = relatoriosEspeciais.filter(
-    (r) =>
-      r != null &&
-      typeof r === 'object' &&
-      Boolean(r.id) &&
+  const especiaisOrfaos = relatoriosEspeciais.filter((r) => {
+    if (!r?.id || idsIndexados.has(r.id)) return false
+    const fullOk =
       fechamentosGuardadosBibliotecaIds.includes(r.id) &&
       Array.isArray(fechamentosRelatorios[r.id]) &&
-      (fechamentosRelatorios[r.id]?.length || 0) > 0 &&
-      !idsIndexados.has(r.id)
-  )
+      (fechamentosRelatorios[r.id]?.length || 0) > 0
+    if (fullOk) return true
+    return fechamentosGuardadosBibliotecaIds.some((k) => {
+      const p = parseChaveFechamentoIntervalo(k)
+      return p?.parentId === r.id && (fechamentosRelatorios[k]?.length || 0) > 0
+    })
+  })
   if (especiaisOrfaos.length > 0) {
     const porNome = new Map<string, RelatorioEspecial[]>()
     for (const r of especiaisOrfaos) {
@@ -511,12 +541,45 @@ export function buildBibliotecaRelatoriosPorCliente(
         equipamentos: [],
         relatorios: {},
       } as ClienteBibliotecaLike
-      const despesasOrfaos = listaEsp.map((r) => ({
-        relatorio: adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServicoBibliotecaLike,
-        itens: fechamentosRelatorios[r.id] || [],
-      }))
+      const despesasOrfaos: Array<{
+        relatorio: RelatorioServicoBibliotecaLike
+        itens: FechamentoItem[]
+      }> = []
+      for (const r of listaEsp) {
+        if (
+          fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+          (fechamentosRelatorios[r.id]?.length || 0) > 0
+        ) {
+          despesasOrfaos.push({
+            relatorio: adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServicoBibliotecaLike,
+            itens: fechamentosRelatorios[r.id] || [],
+          })
+        }
+        for (const key of fechamentosGuardadosBibliotecaIds) {
+          const parsed = parseChaveFechamentoIntervalo(key)
+          if (!parsed || parsed.parentId !== r.id) continue
+          const itensIv = fechamentosRelatorios[key]
+          if (!itensIv?.length) continue
+          const base = adaptRelatorioEspecialParaFechamentoShape(r) as RelatorioServicoBibliotecaLike
+          const rotuloPeriodo =
+            parsed.dataInicio && parsed.dataFim
+              ? `${formatDataCobrancaUi(parsed.dataInicio)} – ${formatDataCobrancaUi(parsed.dataFim)}`
+              : parsed.diaIds && parsed.diaIds.length > 0
+                ? `${parsed.diaIds.length} dias`
+                : 'período'
+          despesasOrfaos.push({
+            relatorio: {
+              ...base,
+              id: key,
+              numero: `${String(base.numero || '').trim() || '—'} · ${rotuloPeriodo}`,
+            },
+            itens: itensIv,
+          })
+          idsIndexados.add(key)
+        }
+        idsIndexados.add(r.id)
+      }
       rows.push({ cliente: clienteOrfaos, equipamentos: [], despesas: despesasOrfaos })
-      for (const r of listaEsp) idsIndexados.add(r.id)
     }
   }
 

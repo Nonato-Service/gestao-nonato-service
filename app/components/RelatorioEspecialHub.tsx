@@ -103,7 +103,8 @@ export type RelatorioEspecialHubProps = {
   onAbrirFechamentoCobranca?: (
     relatorioId: string,
     numero: string,
-    relatorioAtualizado?: RelatorioEspecial
+    relatorioAtualizado?: RelatorioEspecial,
+    opts?: { modoCobranca?: 'completo' | 'intervalos' }
   ) => void
   getResumoCobrancaFase?: (relatorioId: string) => 'laranja' | 'azul' | 'verde' | 'biblioteca'
   onClickResumoCobranca?: (relatorioId: string) => void
@@ -1296,17 +1297,47 @@ export default function RelatorioEspecialHub({
                       </div>
                       {(onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) && (
                         <div className="relatorio-especial-card__cobranca-bar" aria-label={t.relatorioEspecialFechamentoCobranca || 'Fechamento / Cobrança'}>
-                          {onAbrirFechamentoCobranca && rel.servicoConcluido ? (
-                            <RelatorioCobrancaAcoes
-                              concluido
-                              compact
-                              labels={t}
-                              grupos={gruposTipoCobranca}
-                              grupoIdAtual={getGrupoTipoCobranca?.(rel.id) || ''}
-                              grupoSugeridoNome={getGrupoSugeridoNome?.(rel.id)}
-                              onSelectGrupo={(gid) => onSelectGrupoTipoCobranca?.(rel.id, gid)}
-                              onIrAoFechamento={() => onAbrirFechamentoCobranca(rel.id, rel.numero)}
-                            />
+                          {onAbrirFechamentoCobranca ? (
+                            <>
+                              <RelatorioCobrancaAcoes
+                                concluido
+                                compact
+                                labels={t}
+                                grupos={gruposTipoCobranca}
+                                grupoIdAtual={getGrupoTipoCobranca?.(rel.id) || ''}
+                                grupoSugeridoNome={getGrupoSugeridoNome?.(rel.id)}
+                                onSelectGrupo={(gid) => onSelectGrupoTipoCobranca?.(rel.id, gid)}
+                                onIrAoFechamento={() =>
+                                  onAbrirFechamentoCobranca(rel.id, rel.numero, undefined, {
+                                    modoCobranca: 'completo',
+                                  })
+                                }
+                              />
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() =>
+                                  onAbrirFechamentoCobranca(rel.id, rel.numero, undefined, {
+                                    modoCobranca: 'intervalos',
+                                  })
+                                }
+                                style={{
+                                  padding: '8px 12px',
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  border: '2px solid #00ff00',
+                                  background: 'rgba(0, 255, 0, 0.18)',
+                                  color: '#00ff00',
+                                  whiteSpace: 'nowrap',
+                                }}
+                                title={
+                                  (t.fechamentoEspCobrancaPorPeriodos as string) ||
+                                  'Por períodos (várias notas)'
+                                }
+                              >
+                                {(t.fechamentoEspCobrancaPorPeriodos as string) || 'Por períodos'}
+                              </button>
+                            </>
                           ) : null}
                           {getResumoCobrancaFase && onClickResumoCobranca ? (
                             <button
@@ -1375,6 +1406,26 @@ export default function RelatorioEspecialHub({
 
   if (modo === 'fechamento') {
     const eqs = formComTotais.equipamentos || []
+    const irCobranca = (modoCobranca: 'completo' | 'intervalos') => {
+      if (!onAbrirFechamentoCobranca || !editandoId) return
+      const preparado = aplicarTotaisNoRelatorioEspecial({
+        ...formComTotais,
+        id: editandoId,
+        servicoConcluido: true,
+      })
+      void (async () => {
+        const lista = upsertRelatorioEspecialNaLista(relatorios, preparado, editandoId)
+        const ok = await onSaveAll(lista)
+        if (!ok) {
+          alert(t.erroSalvar || 'Não foi possível guardar. Verifique a ligação e tente novamente.')
+          return
+        }
+        marcarSnapshot(preparado)
+        onAbrirFechamentoCobranca(editandoId, preparado.numero || form.numero, preparado, {
+          modoCobranca,
+        })
+      })()
+    }
     return (
       <div className="relatorio-especial-fechamento" style={{ padding: '16px 0', maxWidth: 720 }}>
         <div className="mobile-sticky-toolbar relatorio-especial-mobile-bar">
@@ -1396,6 +1447,67 @@ export default function RelatorioEspecialHub({
         <button type="button" className="btn-secondary relatorio-especial-desktop-nav" style={{ marginBottom: 16 }} onClick={voltarLista}>
           ← {t.voltar || 'Voltar'}
         </button>
+        {onAbrirFechamentoCobranca && editandoId ? (
+          <div
+            id="fechamento-esp-horas-banner-cobranca"
+            role="region"
+            aria-label={t.fechamentoEspIntervalosTitulo || 'Cobrança por períodos'}
+            style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 40,
+              marginBottom: 16,
+              padding: '16px 14px',
+              borderRadius: 12,
+              border: '3px solid #00ff00',
+              background: 'rgba(0, 36, 10, 0.97)',
+              boxShadow: '0 0 28px rgba(0, 255, 0, 0.28)',
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#00ff00', marginBottom: 6, letterSpacing: 0.02 }}>
+              {(t.fechamentoEspBannerIrCobrancaTitulo as string) ||
+                'Cobrança: Cobrança completa | Por períodos'}
+            </div>
+            <p style={{ margin: '0 0 12px', fontSize: 13, lineHeight: 1.45, color: 'rgba(226, 232, 240, 0.95)' }}>
+              {(t.fechamentoEspBannerIrCobrancaHint as string) ||
+                'Este ecrã é só fecho de HORAS. Para emitir notas (completa ou por períodos com datas), abra a cobrança:'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={salvando}
+                onClick={() => irCobranca('completo')}
+                style={{
+                  padding: '12px 18px',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  border: '2px solid #00ff00',
+                  background: 'rgba(0, 255, 0, 0.2)',
+                  color: '#00ff00',
+                }}
+              >
+                {(t.fechamentoEspCobrancaCompleta as string) || 'Cobrança completa (todos os dias)'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={salvando}
+                onClick={() => irCobranca('intervalos')}
+                style={{
+                  padding: '12px 18px',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  border: '2px solid #00ff00',
+                  background: 'rgba(0, 255, 0, 0.28)',
+                  color: '#00ff00',
+                }}
+              >
+                {(t.fechamentoEspCobrancaPorPeriodos as string) || 'Por períodos (várias notas)'}
+              </button>
+            </div>
+          </div>
+        ) : null}
         <h2>{t.relatorioEspecialFechamentoHorasMes || t.relatorioEspecialFechamentoMes || 'Fechamento de horas do mês'}</h2>
         <p style={{ fontSize: 13, color: '#ccc' }}>
           {form.numero} · {form.cliente}
@@ -1780,7 +1892,8 @@ export default function RelatorioEspecialHub({
 
           {!somenteLeitura && editandoId && (onAbrirFechamentoCobranca || (getResumoCobrancaFase && onClickResumoCobranca)) ? (
             <div className="relatorio-especial-form__cobranca-bar relatorio-especial-form__cobranca-bar--row">
-              {onAbrirFechamentoCobranca && form.servicoConcluido ? (
+              {onAbrirFechamentoCobranca ? (
+                <>
                 <RelatorioCobrancaAcoes
                   concluido
                   labels={t}
@@ -1823,10 +1936,63 @@ export default function RelatorioEspecialHub({
                         return
                       }
                       marcarSnapshot(preparado)
-                      onAbrirFechamentoCobranca(editandoId, form.numero, preparado)
+                      onAbrirFechamentoCobranca(editandoId, form.numero, preparado, {
+                        modoCobranca: 'completo',
+                      })
                     })()
                   }}
                 />
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    void (async () => {
+                      const equipamentosOk = (form.equipamentos || [])
+                        .filter((e) => e.equipamentoId || e.maquinaModelo || e.numeroMaquina)
+                        .map((e) =>
+                          preservarVinculoClienteLinhaEquipamentoRelatorio(e, {
+                            clientePrincipalId: form.clienteId,
+                            clientes,
+                            equipamentosArmazem,
+                          })
+                        )
+                      if (equipamentosOk.length === 0) {
+                        alert(
+                          t.relatorioEspecialSemEquipamentos ||
+                            'Adicione pelo menos um equipamento ao relatório.'
+                        )
+                        return
+                      }
+                      const preparado = aplicarTotaisNoRelatorioEspecial({
+                        ...form,
+                        id: editandoId,
+                        equipamentos: equipamentosOk,
+                        servicoConcluido: true,
+                      })
+                      const lista = upsertRelatorioEspecialNaLista(relatorios, preparado, editandoId)
+                      const ok = await onSaveAll(lista)
+                      if (!ok) {
+                        alert(t.erroSalvar || 'Não foi possível guardar. Verifique a ligação e tente novamente.')
+                        return
+                      }
+                      marcarSnapshot(preparado)
+                      onAbrirFechamentoCobranca(editandoId, form.numero, preparado, {
+                        modoCobranca: 'intervalos',
+                      })
+                    })()
+                  }}
+                  style={{
+                    padding: '10px 14px',
+                    fontSize: 13,
+                    fontWeight: 800,
+                    border: '2px solid #00ff00',
+                    background: 'rgba(0, 255, 0, 0.2)',
+                    color: '#00ff00',
+                  }}
+                >
+                  {(t.fechamentoEspCobrancaPorPeriodos as string) || 'Por períodos (várias notas)'}
+                </button>
+                </>
               ) : null}
               {getResumoCobrancaFase && onClickResumoCobranca ? (
                 <button
